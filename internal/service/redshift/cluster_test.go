@@ -422,58 +422,6 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftCluster_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrFinalSnapshotIdentifier,
-					"master_password",
-					"skip_final_snapshot",
-					names.AttrApplyImmediately,
-				},
-			},
-			{
-				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRedshiftCluster_masterUsername(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Cluster
@@ -1613,47 +1561,6 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot   = true
 }
 `, rName)
-}
-
-func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "ra3.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "ra3.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {

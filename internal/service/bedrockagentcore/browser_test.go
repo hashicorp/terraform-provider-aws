@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -55,6 +56,10 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-custom/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode":      tfknownvalue.StringExact(awstypes.BrowserNetworkModePublic),
+						names.AttrVPCConfig: knownvalue.ListSizeExact(0),
+					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -245,6 +250,15 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode": tfknownvalue.StringExact(awstypes.BrowserNetworkModeVpc),
+						names.AttrVPCConfig: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroups: knownvalue.SetSizeExact(1),
+							names.AttrSubnets:        knownvalue.SetSizeExact(2),
+						})}),
+					})})),
 				},
 			},
 			{
@@ -455,7 +469,7 @@ resource "aws_bedrockagentcore_browser" "test" {
   network_configuration {
     network_mode = "VPC"
 
-    network_mode_config {
+    vpc_config {
       security_groups = [aws_security_group.test.id]
       subnets         = aws_subnet.test[*].id
     }

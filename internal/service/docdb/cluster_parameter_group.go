@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -289,7 +289,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -317,7 +317,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		}
 
 		for _, v := range page.Parameters {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

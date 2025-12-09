@@ -411,11 +411,15 @@ func flattenAddonPodIdentityAssociations(ctx context.Context, associations []str
 }
 
 func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, addonName string) (*types.Addon, error) {
-	input := &eks.DescribeAddonInput{
+	input := eks.DescribeAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
 	}
 
+	return findAddon(ctx, conn, &input)
+}
+
+func findAddon(ctx context.Context, conn *eks.Client, input *eks.DescribeAddonInput) (*types.Addon, error) {
 	output, err := conn.DescribeAddon(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -437,30 +441,13 @@ func findAddonByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, a
 }
 
 func findAddonUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) (*types.Update, error) {
-	input := &eks.DescribeUpdateInput{
+	input := eks.DescribeUpdateInput{
 		AddonName: aws.String(addonName),
 		Name:      aws.String(clusterName),
 		UpdateId:  aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Update, nil
+	return findUpdate(ctx, conn, &input)
 }
 
 func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {

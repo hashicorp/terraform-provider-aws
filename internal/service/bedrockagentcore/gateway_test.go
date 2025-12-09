@@ -72,6 +72,41 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_xrayDelivery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+	deliveryResourceName := "aws_cloudwatch_log_delivery.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_xrayDelivery(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					resource.TestCheckResourceAttrSet(deliveryResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(deliveryResourceName, "delivery_source_name", rName+"-source"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(deliveryResourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -179,6 +214,42 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_interceptorConfigurations(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
 			},
 		},
 	})
@@ -492,6 +563,41 @@ resource "aws_bedrockagentcore_gateway" "test" {
 `, rName))
 }
 
+func testAccGatewayConfig_xrayDelivery(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+
+resource "aws_cloudwatch_log_delivery_source" "test" {
+  name         = "%[1]s-source"
+  log_type     = "TRACES"
+  resource_arn = aws_bedrockagentcore_gateway.test.gateway_arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name                      = "%[1]s-destination"
+  delivery_destination_type = "XRAY"
+}
+
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+}
+`, rName))
+}
+
 func testAccGatewayConfig_protocolConfiguration(rName, instructions string) string {
 	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway" "test" {
@@ -625,4 +731,53 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccGatewayConfig_interceptorConfigurations(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST", "RESPONSE"]
+
+    interceptor {
+      lambda {
+        arn = aws_lambda_function.test.arn
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
+    }
+  }
+}
+`, rName))
 }

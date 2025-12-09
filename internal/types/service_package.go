@@ -144,6 +144,7 @@ type Identity struct {
 	IsCustomInherentRegion     bool
 	customInherentRegionParser RegionalCustomInherentRegionIdentityFunc
 	version                    int64
+	sdkv2IdentityUpgraders     []schema.IdentityUpgrader
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -164,6 +165,10 @@ func (i Identity) HasInherentRegion() bool {
 
 func (i Identity) Version() int64 {
 	return i.version
+}
+
+func (i Identity) SDKv2IdentityUpgraders() []schema.IdentityUpgrader {
+	return i.sdkv2IdentityUpgraders
 }
 
 func (i Identity) CustomInherentRegionParser() RegionalCustomInherentRegionIdentityFunc {
@@ -421,11 +426,6 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	return identity
 }
 
-func VersionedIdentity(version int64, base Identity) Identity {
-	base.version = version
-	return base
-}
-
 type IdentityOptsFunc func(opts *Identity)
 
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
@@ -454,6 +454,18 @@ func WithIdentityFix() IdentityOptsFunc {
 func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
+	}
+}
+
+func WithVersion(version int64) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.version = version
+	}
+}
+
+func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.sdkv2IdentityUpgraders = identityUpgraders
 	}
 }
 

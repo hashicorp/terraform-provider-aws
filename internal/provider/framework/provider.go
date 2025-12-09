@@ -199,6 +199,14 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
 			},
+			"tag_policy_compliance": schema.StringAttribute{
+				Optional: true,
+				Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+					`At this time this only includes compliance with required tag keys by resource type. ` +
+					`Valid values are "error", "warning", and "disabled". ` +
+					`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+					`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
+			},
 			"token": schema.StringAttribute{
 				Optional:    true,
 				Description: "session token. A session token is only required if you are\nusing temporary security credentials.",

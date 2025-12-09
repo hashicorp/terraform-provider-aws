@@ -307,6 +307,10 @@ func (c mockClient) IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig {
 	panic("not implemented") //lintignore:R009
 }
 
+func (c mockClient) TagPolicyConfig(ctx context.Context) *tftags.TagPolicyConfig {
+	panic("not implemented") //lintignore:R009
+}
+
 func (c mockClient) Partition(context.Context) string {
 	panic("not implemented") //lintignore:R009
 }

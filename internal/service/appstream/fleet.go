@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -699,7 +699,7 @@ func expandComputeCapacity(tfList []any) *awstypes.ComputeCapacity {
 		apiObject.DesiredSessions = aws.Int32(int32(v.(int)))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -762,7 +762,7 @@ func expandDomainJoinInfo(tfList []any) *awstypes.DomainJoinInfo {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -808,7 +808,7 @@ func expandVPCConfig(tfList []any) *awstypes.VpcConfig {
 		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 

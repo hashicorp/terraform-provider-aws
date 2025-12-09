@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -73,15 +74,16 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
-				Required: true,
+				Optional: true,
 				Validators: []validator.Int64{
 					int64validator.Between(20, 16384),
 				},
-				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
+				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).
+					This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).`,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrBucket: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -92,9 +94,12 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 						"",
 					),
 				},
-				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. 
-					A bucket combines the concept of a database and a retention period (the duration of time 
-					that each data point persists). A bucket belongs to an organization.`,
+				Description: `Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket.
+					A bucket combines the concept of a database and a retention period (the duration of time
+					that each data point persists). A bucket belongs to an organization. Along with organization,
+					username, and password, this argument will be stored in the secret referred to by the
+					influx_auth_parameters_secret_arn attribute. This field is forbidden for InfluxDB V3 clusters
+					(when using an InfluxDB V3 db parameter group).`,
 			},
 			"db_instance_type": schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
@@ -136,12 +141,19 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.ClusterDeploymentType](),
 				Optional:   true,
 				Computed:   true,
-				Default:    stringdefault.StaticString(string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: `Specifies the type of cluster to create.`,
+				Description: `Specifies the type of cluster to create. This field is forbidden for InfluxDB V3 clusters
+					(when using an InfluxDB V3 db parameter group).`,
+			},
+			"engine_type": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The database engine type of the DB cluster.`,
 			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
@@ -167,9 +179,9 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the 
-					initial InfluxDB authorization parameters. The secret value is a JSON formatted 
-					key-value pair holding InfluxDB authorization values: organization, bucket, 
-					username, and password.`,
+					initial InfluxDB authorization parameters. For InfluxDB V2 clusters, the secret value is a JSON
+					formatted key-value pair holding InfluxDB authorization values: organization, bucket,
+					username, and password. For InfluxDB V3 clusters, the secret contains the InfluxDB admin token.`,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -203,18 +215,21 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
 				},
-				Description: `The name of the initial organization for the initial admin user in InfluxDB. An 
-					InfluxDB organization is a workspace for a group of users.`,
+				Description: `Name of the initial organization for the initial admin user in InfluxDB. An
+					InfluxDB organization is a workspace for a group of users. Along with bucket, username,
+					and password, this argument will be stored in the secret referred to by the
+					influx_auth_parameters_secret_arn attribute. This field is forbidden for InfluxDB V3 clusters
+					(when using an InfluxDB V3 db parameter group).`,
 			},
 			names.AttrPassword: schema.StringAttribute{
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -223,10 +238,12 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringvalidator.LengthBetween(8, 64),
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
 				},
-				Description: `The password of the initial admin user created in InfluxDB. This password will 
-					allow you to access the InfluxDB UI to perform various administrative tasks and 
-					also use the InfluxDB CLI to create an operator token. These attributes will be 
-					stored in a Secret created in AWS SecretManager in your account.`,
+				Description: `Password of the initial admin user created in InfluxDB. This password will
+					allow you to access the InfluxDB UI to perform various administrative tasks and
+					also use the InfluxDB CLI to create an operator token. Along with bucket, username,
+					and organization, this argument will be stored in the secret referred to by the
+					influx_auth_parameters_secret_arn attribute. This field is forbidden for InfluxDB V3 clusters
+					(when using an InfluxDB V3 db parameter group) as the AWS API rejects it.`,
 			},
 			names.AttrPort: schema.Int32Attribute{
 				Optional: true,
@@ -258,7 +275,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					read-only operations.`,
 			},
 			names.AttrUsername: schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -269,13 +286,12 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 						consecutive hyphens`,
 					),
 				},
-				Description: `The username of the initial admin user created in InfluxDB. 
-					Must start with a letter and can't end with a hyphen or contain two 
-					consecutive hyphens. For example, my-user1. This username will allow 
-					you to access the InfluxDB UI to perform various administrative tasks 
-					and also use the InfluxDB CLI to create an operator token. These 
-					attributes will be stored in a Secret created in Amazon Secrets 
-					Manager in your account.`,
+				Description: `Username of the initial admin user created in InfluxDB. Must start with a letter
+					and can't end with a hyphen or contain two consecutive hyphens. This username will allow
+					you to access the InfluxDB UI to perform various administrative tasks and also use the
+					InfluxDB CLI to create an operator token. Along with bucket, organization, and password,
+					this argument will be stored in the secret referred to by the influx_auth_parameters_secret_arn
+					attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group).`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
@@ -555,31 +571,154 @@ func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
+func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, parameterGroupID string) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	out, err := findDBParameterGroupByID(ctx, conn, parameterGroupID)
+
+	if tfresource.NotFound(err) {
+		return false, diags
+	}
+
+	if err != nil {
+		diags.AddWarning(
+			"Unable to query parameter group",
+			"Could not determine parameter group type. Validation will be skipped.",
+		)
+		return false, diags
+	}
+
+	switch out.Parameters.(type) {
+	case *awstypes.ParametersMemberInfluxDBv3Core:
+		return true, diags
+	case *awstypes.ParametersMemberInfluxDBv3Enterprise:
+		return true, diags
+	default:
+		return false, diags
+	}
+}
+
 func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var allocatedStorage types.Int64
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
+	var data dbClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if allocatedStorage.IsNull() || allocatedStorage.IsUnknown() {
-		return
+	isNullOrUnknown := func(val attr.Value) bool {
+		return val.IsNull() || val.IsUnknown()
 	}
 
-	if allocatedStorage.ValueInt64() > math.MaxInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was greater than the maximum allowed value for int32",
-		)
-		return
+	if !isNullOrUnknown(data.AllocatedStorage) {
+		switch v := data.AllocatedStorage.ValueInt64(); {
+		case v > math.MaxInt32:
+			resp.Diagnostics.AddError(
+				"Invalid value for allocated_storage",
+				"allocated_storage was greater than the maximum allowed value for int32",
+			)
+			return
+		case v < math.MinInt32:
+			resp.Diagnostics.AddError(
+				"Invalid value for allocated_storage",
+				"allocated_storage was less than the minimum allowed value for int32",
+			)
+			return
+		}
 	}
 
-	if allocatedStorage.ValueInt64() < math.MinInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was less than the minimum allowed value for int32",
-		)
-		return
+	hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
+		!isNullOrUnknown(data.Bucket) ||
+		!isNullOrUnknown(data.DeploymentType) ||
+		!isNullOrUnknown(data.Organization) ||
+		!isNullOrUnknown(data.Password) ||
+		!isNullOrUnknown(data.Username)
+
+	var isV3Cluster bool
+	if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
+		meta := r.Meta()
+		if meta == nil {
+			return
+		}
+		paramGroupID := data.DBParameterGroupIdentifier.ValueString()
+		isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		isV3Cluster = isV3
+
+		if !hasV2Fields && !isV3Cluster {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("db_parameter_group_identifier"),
+				"Invalid Parameter Group Type",
+				"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
+			)
+		}
+	}
+
+	if isV3Cluster {
+		for _, v := range []struct {
+			val  attr.Value
+			path string
+		}{
+			{data.AllocatedStorage, names.AttrAllocatedStorage},
+			{data.Bucket, names.AttrBucket},
+			{data.DeploymentType, "deployment_type"},
+			{data.Organization, "organization"},
+			{data.Password, names.AttrPassword},
+			{data.Username, names.AttrUsername},
+		} {
+			if !isNullOrUnknown(v.val) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root(v.path),
+					"Invalid Configuration for InfluxDB V3",
+					v.path+" must not be set when using an InfluxDB V3 db parameter group",
+				)
+			}
+		}
+	} else {
+		for _, v := range []struct {
+			val  attr.Value
+			path string
+		}{
+			{data.AllocatedStorage, names.AttrAllocatedStorage},
+			{data.Bucket, names.AttrBucket},
+			{data.Organization, "organization"},
+			{data.Password, names.AttrPassword},
+			{data.Username, names.AttrUsername},
+		} {
+			if isNullOrUnknown(v.val) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root(v.path),
+					"Missing Required Configuration for InfluxDB V2",
+					v.path+" is required for InfluxDB V2 clusters",
+				)
+			}
+		}
+	}
+}
+
+func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.Plan.Raw.IsNull() {
+		var data dbClusterResourceModel
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		var isV3Cluster bool
+		if !data.DBParameterGroupIdentifier.IsNull() {
+			isV3, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), data.DBParameterGroupIdentifier.ValueString())
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			isV3Cluster = isV3
+		}
+
+		if !isV3Cluster && data.DeploymentType.IsUnknown() {
+			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
+		}
 	}
 }
 
@@ -589,7 +728,6 @@ func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -607,7 +745,6 @@ func waitDBClusterUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -651,11 +788,43 @@ func statusDBCluster(conn *timestreaminfluxdb.Client, id string) retry.StateRefr
 }
 
 func findDBClusterByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbClusterOutput, error) {
-	in := &timestreaminfluxdb.GetDbClusterInput{
+	in := timestreaminfluxdb.GetDbClusterInput{
 		DbClusterId: aws.String(id),
 	}
 
+	return findDBCluster(ctx, conn, &in)
+}
+
+func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *timestreaminfluxdb.GetDbClusterInput) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	out, err := conn.GetDbCluster(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Id == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func findDBParameterGroupByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbParameterGroupOutput, error) {
+	in := timestreaminfluxdb.GetDbParameterGroupInput{
+		Identifier: aws.String(id),
+	}
+
+	return findDBParameterGroup(ctx, conn, &in)
+}
+
+func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, in *timestreaminfluxdb.GetDbParameterGroupInput) (*timestreaminfluxdb.GetDbParameterGroupOutput, error) {
+	out, err := conn.GetDbParameterGroup(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -683,6 +852,7 @@ type dbClusterResourceModel struct {
 	DBParameterGroupIdentifier    types.String                                                           `tfsdk:"db_parameter_group_identifier"`
 	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                             `tfsdk:"db_storage_type"`
 	DeploymentType                fwtypes.StringEnum[awstypes.ClusterDeploymentType]                     `tfsdk:"deployment_type"`
+	EngineType                    types.String                                                           `tfsdk:"engine_type"`
 	Endpoint                      types.String                                                           `tfsdk:"endpoint"`
 	FailoverMode                  fwtypes.StringEnum[awstypes.FailoverMode]                              `tfsdk:"failover_mode"`
 	ID                            types.String                                                           `tfsdk:"id"`

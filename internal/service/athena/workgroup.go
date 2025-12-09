@@ -40,6 +40,8 @@ func resourceWorkGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: managedQueryResultsValidation,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -102,6 +104,33 @@ func resourceWorkGroup() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"managed_query_results_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									names.AttrEncryptionConfiguration: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrKMSKey: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -379,6 +408,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]any))
 	}
 
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configuration.ManagedQueryResultsConfiguration = expandWorkGroupManagedQueryResultsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
@@ -435,6 +468,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 
 	if v, ok := m["execution_role"].(string); ok && v != "" {
 		configurationUpdates.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandWorkGroupManagedQueryResultsConfigurationUpdates(v.([]any))
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
@@ -556,20 +593,84 @@ func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfigurat
 	return encryptionConfiguration
 }
 
+func expandWorkGroupManagedQueryResultsConfiguration(l []any) *types.ManagedQueryResultsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	managedQueryResultsConfiguration := &types.ManagedQueryResultsConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfiguration.Enabled = v
+	}
+
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		managedQueryResultsConfiguration.EncryptionConfiguration = expandManagedQueryResultsEncryptionConfiguration(v.([]any))
+	}
+
+	return managedQueryResultsConfiguration
+}
+
+func expandManagedQueryResultsEncryptionConfiguration(l []any) *types.ManagedQueryResultsEncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	if v, ok := m[names.AttrKMSKey].(string); !ok || v == "" {
+		return nil
+	}
+	managedQueryResultsEncryptionConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
+	managedQueryResultsEncryptionConfiguration.KmsKey = aws.String(m[names.AttrKMSKey].(string))
+
+	return managedQueryResultsEncryptionConfiguration
+}
+
+func expandWorkGroupManagedQueryResultsConfigurationUpdates(l []any) *types.ManagedQueryResultsConfigurationUpdates {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	managedQueryResultsConfigurationUpdates := &types.ManagedQueryResultsConfigurationUpdates{}
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfigurationUpdates.Enabled = aws.Bool(v)
+		if !v {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+			return managedQueryResultsConfigurationUpdates
+		}
+	}
+
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		encConfig := expandManagedQueryResultsEncryptionConfiguration(v.([]any))
+		if encConfig != nil {
+			managedQueryResultsConfigurationUpdates.EncryptionConfiguration = encConfig
+		} else {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+		}
+	}
+
+	return managedQueryResultsConfigurationUpdates
+}
+
 func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []any {
 	if configuration == nil {
 		return []any{}
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                     aws.ToString(configuration.ExecutionRole),
-		"identity_center_configuration":      flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
-		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
+		"bytes_scanned_cutoff_per_query":      aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"enforce_workgroup_configuration":     aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:               flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                      aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":       flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"managed_query_results_configuration": flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
 	}
 
 	return []any{m}
@@ -645,4 +746,70 @@ func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []any {
 	}
 
 	return []any{m}
+}
+
+func flattenWorkGroupManagedQueryResultsConfiguration(managedQueryResultsConfiguration *types.ManagedQueryResultsConfiguration) []any {
+	if managedQueryResultsConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled:                 aws.ToBool(&managedQueryResultsConfiguration.Enabled),
+		names.AttrEncryptionConfiguration: flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsConfiguration.EncryptionConfiguration),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsEncryptionConfiguration *types.ManagedQueryResultsEncryptionConfiguration) []any {
+	if managedQueryResultsEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrKMSKey: aws.ToString(managedQueryResultsEncryptionConfiguration.KmsKey),
+	}
+
+	return []any{m}
+}
+
+func managedQueryResultsValidation(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	configRaw, configOk := diff.GetOk(names.AttrConfiguration)
+	if !configOk {
+		return nil
+	}
+
+	configList, ok := configRaw.([]any)
+	if !ok || len(configList) == 0 || configList[0] == nil {
+		return nil
+	}
+
+	config := configList[0].(map[string]any)
+
+	mqrEnabled := false
+	if mqrRaw, mqrOk := config["managed_query_results_configuration"]; mqrOk {
+		if mqrList, ok := mqrRaw.([]any); ok && len(mqrList) > 0 && mqrList[0] != nil {
+			if mqrConfig, ok := mqrList[0].(map[string]any); ok {
+				if enabled, ok := mqrConfig[names.AttrEnabled].(bool); ok {
+					mqrEnabled = enabled
+				}
+			}
+		}
+	}
+
+	if !mqrEnabled {
+		return nil
+	}
+
+	if rcRaw, rcOk := config["result_configuration"]; rcOk {
+		if rcList, ok := rcRaw.([]any); ok && len(rcList) > 0 && rcList[0] != nil {
+			if rcConfig, ok := rcList[0].(map[string]any); ok {
+				if outputLoc, ok := rcConfig["output_location"].(string); ok && outputLoc != "" {
+					return fmt.Errorf("configuration.result_configuration.output_location cannot be specified when configuration.managed_query_results_configuration.enabled is true")
+				}
+			}
+		}
+	}
+
+	return nil
 }

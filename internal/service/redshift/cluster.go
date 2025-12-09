@@ -38,6 +38,8 @@ import (
 
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="final_snapshot_identifier;master_password;skip_final_snapshot;apply_immediately")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,

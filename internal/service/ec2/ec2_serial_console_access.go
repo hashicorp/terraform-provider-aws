@@ -5,21 +5,26 @@ package ec2
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
-// @Region(global=true)
 // @SingletonIdentity
+// @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// @Testing(identityTest=false)
+// @Testing(identityVersion="0;v6.0.0")
+// @Testing(identityVersion="1;v6.21.0")
 func resourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
@@ -39,7 +44,6 @@ func resourceSerialConsoleAccess() *schema.Resource {
 
 func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	enabled := d.Get(names.AttrEnabled).(bool)
@@ -47,18 +51,22 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceSerialConsoleAccessRead(ctx, d, meta)...)
 }
 
 func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := ec2.GetSerialConsoleAccessStatusInput{}
-	output, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
+	output, err := findSerialConsoleAccessStatus(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Serial Console Access %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)
@@ -71,7 +79,6 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 
 func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	enabled := d.Get(names.AttrEnabled).(bool)
@@ -84,7 +91,6 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Removing the resource disables serial console access.
@@ -99,12 +105,20 @@ func setSerialConsoleAccess(ctx context.Context, conn *ec2.Client, enabled bool)
 	var err error
 
 	if enabled {
-		input := ec2.EnableSerialConsoleAccessInput{}
+		var input ec2.EnableSerialConsoleAccessInput
 		_, err = conn.EnableSerialConsoleAccess(ctx, &input)
 	} else {
-		input := ec2.DisableSerialConsoleAccessInput{}
+		var input ec2.DisableSerialConsoleAccessInput
 		_, err = conn.DisableSerialConsoleAccess(ctx, &input)
 	}
 
 	return err
+}
+
+var serialConsoleAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
+	Version: 0,
+	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
+		return rawState, nil
+	},
 }

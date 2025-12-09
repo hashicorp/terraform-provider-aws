@@ -80,7 +80,7 @@ func resourceAccountAssignment() *schema.Resource {
 			},
 			"target_type": {
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
 			},

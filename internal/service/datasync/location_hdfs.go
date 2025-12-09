@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -196,7 +196,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 		input.KerberosKeytab = []byte(v.(string))
 	} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
 		v := v.(string)
-		b, err := itypes.Base64Decode(v)
+		b, err := inttypes.Base64Decode(v)
 		if err != nil {
 			b = []byte(v)
 		}
@@ -207,7 +207,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 		input.KerberosKrb5Conf = []byte(v.(string))
 	} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
 		v := v.(string)
-		b, err := itypes.Base64Decode(v)
+		b, err := inttypes.Base64Decode(v)
 		if err != nil {
 			b = []byte(v)
 		}
@@ -313,7 +313,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 				input.KerberosKeytab = []byte(v.(string))
 			} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
 				v := v.(string)
-				b, err := itypes.Base64Decode(v)
+				b, err := inttypes.Base64Decode(v)
 				if err != nil {
 					b = []byte(v)
 				}
@@ -326,7 +326,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 				input.KerberosKrb5Conf = []byte(v.(string))
 			} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
 				v := v.(string)
-				b, err := itypes.Base64Decode(v)
+				b, err := inttypes.Base64Decode(v)
 				if err != nil {
 					b = []byte(v)
 				}

@@ -468,7 +468,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}

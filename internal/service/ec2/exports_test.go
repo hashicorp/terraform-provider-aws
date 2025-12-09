@@ -107,6 +107,7 @@ var (
 	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
+	ResourceVPCEncryptionControl                          = newResourceVPCEncryptionControl
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
 	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
@@ -121,6 +122,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -212,6 +214,7 @@ var (
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription
@@ -244,6 +247,7 @@ var (
 	FindVPCBlockPublicAccessExclusionByID                       = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                             = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                               = findVPCDHCPOptionsAssociation
+	FindVPCEncryptionControlByID                                = findVPCEncryptionControlByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID        = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                   = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                  = findVPCEndpointRouteTableAssociationExists
@@ -253,6 +257,7 @@ var (
 	FindVPCEndpointSubnetAssociationExists                      = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                         = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                                = findVPCPeeringConnectionByID
+	FindVPNConcentratorByID                                     = findVPNConcentratorByID
 	FindVPNConnectionByID                                       = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                          = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                          = findVPNGatewayByID

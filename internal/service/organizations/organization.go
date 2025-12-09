@@ -343,37 +343,35 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChange("aws_service_access_principals") {
-		o, n := d.GetChange("aws_service_access_principals")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+	if d.HasChanges("aws_service_access_principals", "enabled_policy_types") {
+		oa, na := d.GetChange("aws_service_access_principals")
+		oas, nas := oa.(*schema.Set), na.(*schema.Set)
+		adda, dela := flex.ExpandStringValueSet(nas.Difference(oas)), flex.ExpandStringValueSet(oas.Difference(nas))
 
-		for _, v := range del {
-			if err := disableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		for _, v := range add {
-			if err := enableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-	}
-
-	if d.HasChange("enabled_policy_types") {
 		defaultRootID := d.Get("roots.0.id").(string)
-		o, n := d.GetChange("enabled_policy_types")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+		ot, nt := d.GetChange("enabled_policy_types")
+		ots, nts := ot.(*schema.Set), nt.(*schema.Set)
+		addt, delt := flex.ExpandStringValueSet(nts.Difference(ots)), flex.ExpandStringValueSet(ots.Difference(nts))
 
-		for _, v := range del {
+		for _, v := range delt {
 			if err := disablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		for _, v := range add {
+		for _, v := range dela {
+			if err := disableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range adda {
+			if err := enableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range addt {
 			if err := enablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

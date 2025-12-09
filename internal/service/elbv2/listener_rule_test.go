@@ -1278,6 +1278,57 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRule_jwtValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+	listenerResourceName := "aws_lb_listener.test"
+	targetGroupResourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_jwtValidation(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "jwt-validation"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.jwks_endpoint", "https://example.com/.well-known/jwks.json"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.additional_claim.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "string-array",
+						names.AttrName:   "claim_name1",
+						"values.#":       "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "single-string",
+						names.AttrName:   "claim_name2",
+						"values.#":       "1",
+						"values.0":       acctest.CtValue1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
@@ -3997,6 +4048,68 @@ resource "aws_lb_listener" "test" {
 
   tags = {
     Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerRuleConfig_jwtValidation(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))

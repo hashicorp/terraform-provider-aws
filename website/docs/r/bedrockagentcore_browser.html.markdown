@@ -34,7 +34,7 @@ resource "aws_bedrockagentcore_browser" "vpc_example" {
 
   network_configuration {
     network_mode = "VPC"
-    network_mode_config {
+    vpc_config {
       security_groups = ["sg-12345678"]
       subnets         = ["subnet-12345678", "subnet-87654321"]
     }
@@ -104,11 +104,11 @@ The following arguments are optional:
 The `network_configuration` object supports the following:
 
 * `network_mode` - (Required) Network mode for the browser. Valid values: `PUBLIC`, `VPC`.
-* `network_mode_config` - (Optional) VPC configuration when `network_mode` is `VPC`. See [`network_mode_config`](#network_mode_config) below.
+* `vpc_config` - (Optional) VPC configuration when `network_mode` is `VPC`. See [`vpc_config`](#vpc_config) below.
 
-### `network_mode_config`
+### `vpc_config`
 
-The `network_mode_config` object supports the following:
+The `vpc_config` object supports the following:
 
 * `security_groups` - (Required) Set of security group IDs for the VPC configuration.
 * `subnets` - (Required) Set of subnet IDs for the VPC configuration.

@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -329,7 +329,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	callAs := d.Get("call_as").(string)
 
-	if itypes.IsAWSAccountID(accountOrOrgID) {
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
 		// Stack instances deployed by account ID
 		stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 

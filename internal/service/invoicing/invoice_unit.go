@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -75,6 +76,9 @@ func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.Schem
 			"tax_inheritance_disabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -215,11 +219,13 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		_, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		var output *invoicing.GetInvoiceUnitOutput
+		output, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ARN.ValueString())
 			return
 		}
+		new.LastModified = fwflex.TimeToFramework(ctx, output.LastModified)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, new))

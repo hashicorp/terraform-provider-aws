@@ -54,6 +54,7 @@ This resource supports the following arguments:
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 * `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
+* `managed_query_results_configuration` - (Optional) Configuration block for storing results in Athena owned storage. See [Managed Query Results Configuration](#managed-query-results-configuration) below.
 
 #### Engine Version
 
@@ -79,6 +80,15 @@ This resource supports the following arguments:
 
 * `encryption_option` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`SSE_S3`), server-side encryption with KMS-managed keys (`SSE_KMS`), or client-side encryption with KMS-managed keys (`CSE_KMS`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
 * `kms_key_arn` - (Optional) For `SSE_KMS` and `CSE_KMS`, this is the KMS key ARN.
+
+#### Managed Query Results Configuration
+
+* `enabled` - (Optional) If set to `true`, allows you to store query results in Athena owned storage. If set to `false`, workgroup member stores query results in the location specified under `result_configuration.output_location`. The default is `false`. A workgroup cannot have the `result_configuration.output_location` set when this is `true`.
+* `encryption_configuration` - (Optional) Configuration block for the encryption configuration. See [Managed Query Results Encryption Configuration](#managed-query-results-encryption-configuration) below.
+
+##### Managed Query Results Encryption Configuration
+
+* `kms_key` - (Optional) KMS key ARN for encrypting managed query results.
 
 ## Attribute Reference
 

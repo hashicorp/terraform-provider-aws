@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +23,7 @@ func TestAccS3TablesTableBucket_Identity_Basic(t *testing.T) {
 
 	var v s3tables.GetTableBucketOutput
 	resourceName := "aws_s3tables_table_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -64,7 +63,7 @@ func TestAccS3TablesTableBucket_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -80,7 +79,7 @@ func TestAccS3TablesTableBucket_Identity_Basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc: testAccTableBucketImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -113,7 +112,7 @@ func TestAccS3TablesTableBucket_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3tables_table_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -152,7 +151,7 @@ func TestAccS3TablesTableBucket_Identity_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTableBucketImportStateIdFunc),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -167,7 +166,7 @@ func TestAccS3TablesTableBucket_Identity_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -184,7 +183,7 @@ func TestAccS3TablesTableBucket_Identity_RegionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTableBucketImportStateIdFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -203,7 +202,7 @@ func TestAccS3TablesTableBucket_Identity_RegionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc: testAccTableBucketImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -239,7 +238,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource(t *testing.T) {
 
 	var v s3tables.GetTableBucketOutput
 	resourceName := "aws_s3tables_table_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -298,7 +297,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource_NoRefresh_NoChange(t *
 
 	var v s3tables.GetTableBucketOutput
 	resourceName := "aws_s3tables_table_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

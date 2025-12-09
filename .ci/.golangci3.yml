@@ -5,6 +5,7 @@ linters:
     - goconst
     - gocritic
     - govet
+    - importas
     - ineffassign
     - makezero
     - misspell
@@ -25,6 +26,11 @@ linters:
         - opinionated
         - performance
         - style
+    importas:
+      no-unaliased: true
+      alias:
+        - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
+          alias: inttypes
     mnd:
       checks:
         - argument

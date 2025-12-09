@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -208,7 +208,7 @@ func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *t
 }
 
 func expectFullDetectorDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfguardduty.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfguardduty.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}), knownValue)
 }

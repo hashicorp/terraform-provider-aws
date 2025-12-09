@@ -28,7 +28,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -772,7 +772,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}

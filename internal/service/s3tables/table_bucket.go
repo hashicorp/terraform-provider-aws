@@ -29,7 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,7 +38,10 @@ import (
 // @FrameworkResource("aws_s3tables_table_bucket", name="Table Bucket")
 // @ArnIdentity
 // @ArnFormat("bucket/{name}")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableBucketImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -88,16 +92,16 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringMustContainLowerCaseLettersNumbersHypens,
-					stringMustStartWithLetterOrNumber,
-					stringMustEndWithLetterOrNumber,
-					validators.PrefixNoneOf(
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens,
+					tfstringvalidator.StartsWithLetterOrNumber,
+					tfstringvalidator.EndsWithLetterOrNumber,
+					tfstringvalidator.PrefixNoneOf(
 						"xn--",
 						"sthree-",
 						"sthree-configurator",
 						"amzn-s3-demo-",
 					),
-					validators.SuffixNoneOf(
+					tfstringvalidator.SuffixNoneOf(
 						"-s3alias",
 						"--ol-s3",
 						".mrap",
@@ -111,6 +115,8 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -130,6 +136,9 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	outputCTB, err := conn.CreateTableBucket(ctx, &input)
 
@@ -537,6 +546,8 @@ type tableBucketResourceModel struct {
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
 	Name                     types.String                                                    `tfsdk:"name"`
 	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
+	Tags                     tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                      `tfsdk:"tags_all"`
 }
 type encryptionConfigurationModel struct {
 	KMSKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -52,7 +53,7 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta any) bool {
-				return semver.LessThan(new.(string), old.(string))
+				return semver.LessThan(normalizeKafkaVersion(new.(string)), normalizeKafkaVersion(old.(string)))
 			}),
 			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta any) bool {
 				return types.StorageMode(new.(string)) == types.StorageModeLocal
@@ -520,6 +521,22 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"rebalancing": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RebalancingStatus](),
+						},
+					},
+				},
+			},
 			"storage_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -545,7 +562,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	name := d.Get(names.AttrClusterName).(string)
-	input := &kafka.CreateClusterInput{
+	input := kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
 		NumberOfBrokerNodes: aws.Int32(int32(d.Get("number_of_broker_nodes").(int))),
@@ -586,11 +603,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("rebalancing"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Rebalancing = expandRebalancing(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("storage_mode"); ok {
 		input.StorageMode = types.StorageMode(v.(string))
 	}
 
-	output, err := conn.CreateCluster(ctx, input)
+	output, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MSK Cluster (%s): %s", name, err)
@@ -605,7 +626,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if vpcConnectivity != nil {
-		input := &kafka.UpdateConnectivityInput{
+		input := kafka.UpdateConnectivityInput{
 			ClusterArn: aws.String(d.Id()),
 			ConnectivityInfo: &types.ConnectivityInfo{
 				VpcConnectivity: vpcConnectivity,
@@ -613,7 +634,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			CurrentVersion: cluster.CurrentVersion,
 		}
 
-		output, err := conn.UpdateConnectivity(ctx, input)
+		output, err := conn.UpdateConnectivity(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
@@ -716,6 +737,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("open_monitoring", nil)
 	}
+	if cluster.Rebalancing != nil {
+		if err := d.Set("rebalancing", []any{flattenRebalancing(cluster.Rebalancing)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rebalancing: %s", err)
+		}
+	} else {
+		d.Set("rebalancing", nil)
+	}
 	d.Set("storage_mode", cluster.StorageMode)
 	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
@@ -730,7 +758,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	if d.HasChange("broker_node_group_info.0.connectivity_info") {
-		input := &kafka.UpdateConnectivityInput{
+		input := kafka.UpdateConnectivityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
@@ -739,7 +767,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ConnectivityInfo = expandConnectivityInfo(v.([]any)[0].(map[string]any))
 		}
 
-		output, err := conn.UpdateConnectivity(ctx, input)
+		output, err := conn.UpdateConnectivity(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
@@ -758,13 +786,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("broker_node_group_info.0.instance_type") {
-		input := &kafka.UpdateBrokerTypeInput{
+		input := kafka.UpdateBrokerTypeInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
 			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
 		}
 
-		output, err := conn.UpdateBrokerType(ctx, input)
+		output, err := conn.UpdateBrokerType(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker type: %s", d.Id(), err)
@@ -783,7 +811,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChanges("broker_node_group_info.0.storage_info") {
-		input := &kafka.UpdateBrokerStorageInput{
+		input := kafka.UpdateBrokerStorageInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 			TargetBrokerEBSVolumeInfo: []types.BrokerEBSVolumeInfo{{
@@ -799,7 +827,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = &types.ProvisionedThroughput{Enabled: aws.Bool(false)}
 		}
 
-		output, err := conn.UpdateBrokerStorage(ctx, input)
+		output, err := conn.UpdateBrokerStorage(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
@@ -818,13 +846,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("number_of_broker_nodes") {
-		input := &kafka.UpdateBrokerCountInput{
+		input := kafka.UpdateBrokerCountInput{
 			ClusterArn:                aws.String(d.Id()),
 			CurrentVersion:            aws.String(d.Get("current_version").(string)),
 			TargetNumberOfBrokerNodes: aws.Int32(int32(d.Get("number_of_broker_nodes").(int))),
 		}
 
-		output, err := conn.UpdateBrokerCount(ctx, input)
+		output, err := conn.UpdateBrokerCount(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker count: %s", d.Id(), err)
@@ -843,7 +871,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChanges("enhanced_monitoring", "logging_info", "open_monitoring") {
-		input := &kafka.UpdateMonitoringInput{
+		input := kafka.UpdateMonitoringInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
 			EnhancedMonitoring: types.EnhancedMonitoring(d.Get("enhanced_monitoring").(string)),
@@ -857,7 +885,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]any)[0].(map[string]any))
 		}
 
-		output, err := conn.UpdateMonitoring(ctx, input)
+		output, err := conn.UpdateMonitoring(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
@@ -876,7 +904,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
-		input := &kafka.UpdateClusterConfigurationInput{
+		input := kafka.UpdateClusterConfigurationInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
@@ -885,7 +913,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ConfigurationInfo = expandConfigurationInfo(v.([]any)[0].(map[string]any))
 		}
 
-		output, err := conn.UpdateClusterConfiguration(ctx, input)
+		output, err := conn.UpdateClusterConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) configuration: %s", d.Id(), err)
@@ -904,7 +932,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("kafka_version") {
-		input := &kafka.UpdateClusterKafkaVersionInput{
+		input := kafka.UpdateClusterKafkaVersionInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
 			TargetKafkaVersion: aws.String(d.Get("kafka_version").(string)),
@@ -916,7 +944,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		output, err := conn.UpdateClusterKafkaVersion(ctx, input)
+		output, err := conn.UpdateClusterKafkaVersion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
@@ -935,7 +963,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChanges("encryption_info", "client_authentication") {
-		input := &kafka.UpdateSecurityInput{
+		input := kafka.UpdateSecurityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
@@ -958,7 +986,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		output, err := conn.UpdateSecurity(ctx, input)
+		output, err := conn.UpdateSecurity(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) security: %s", d.Id(), err)
@@ -1001,6 +1029,34 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if d.HasChange("rebalancing") {
+		input := kafka.UpdateRebalancingInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		if v, ok := d.GetOk("rebalancing"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Rebalancing = expandRebalancing(v.([]any)[0].(map[string]any))
+		}
+
+		output, err := conn.UpdateRebalancing(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) rebalancing: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -1009,9 +1065,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(ctx, &kafka.DeleteClusterInput{
+	input := kafka.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCluster(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -1043,10 +1100,14 @@ func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func findClusterByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.ClusterInfo, error) {
-	input := &kafka.DescribeClusterInput{
+	input := kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
 
+	return findCluster(ctx, conn, &input)
+}
+
+func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.DescribeClusterInput) (*types.ClusterInfo, error) {
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -1068,10 +1129,14 @@ func findClusterByARN(ctx context.Context, conn *kafka.Client, arn string) (*typ
 }
 
 func findClusterV2ByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.Cluster, error) {
-	input := &kafka.DescribeClusterV2Input{
+	input := kafka.DescribeClusterV2Input{
 		ClusterArn: aws.String(arn),
 	}
 
+	return findClusterV2(ctx, conn, &input)
+}
+
+func findClusterV2(ctx context.Context, conn *kafka.Client, input *kafka.DescribeClusterV2Input) (*types.Cluster, error) {
 	output, err := conn.DescribeClusterV2(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -1093,10 +1158,14 @@ func findClusterV2ByARN(ctx context.Context, conn *kafka.Client, arn string) (*t
 }
 
 func findClusterOperationByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.ClusterOperationInfo, error) {
-	input := &kafka.DescribeClusterOperationInput{
+	input := kafka.DescribeClusterOperationInput{
 		ClusterOperationArn: aws.String(arn),
 	}
 
+	return findClusterOperation(ctx, conn, &input)
+}
+
+func findClusterOperation(ctx context.Context, conn *kafka.Client, input *kafka.DescribeClusterOperationInput) (*types.ClusterOperationInfo, error) {
 	output, err := conn.DescribeClusterOperation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -1118,10 +1187,14 @@ func findClusterOperationByARN(ctx context.Context, conn *kafka.Client, arn stri
 }
 
 func findBootstrapBrokersByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.GetBootstrapBrokersOutput, error) {
-	input := &kafka.GetBootstrapBrokersInput{
+	input := kafka.GetBootstrapBrokersInput{
 		ClusterArn: aws.String(arn),
 	}
 
+	return findBootstrapBrokers(ctx, conn, &input)
+}
+
+func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.GetBootstrapBrokersInput) (*kafka.GetBootstrapBrokersOutput, error) {
 	output, err := conn.GetBootstrapBrokers(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -1244,11 +1317,24 @@ func clusterUUIDFromARN(clusterARN string) (string, error) {
 	}
 
 	// arn:${Partition}:kafka:${Region}:${Account}:cluster/${ClusterName}/${Uuid}
+	if parsedARN.Service != "kafka" {
+		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
+	}
+
 	parts := strings.Split(parsedARN.Resource, "/")
 	if len(parts) != 3 || parts[0] != "cluster" || parts[1] == "" || parts[2] == "" {
 		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
 	}
 	return parts[2], nil
+}
+
+// normalizeKafkaVersion removes any trailing non-numeric components from the version string.
+func normalizeKafkaVersion(version string) string { // nosemgrep:ci.kafka-in-func-name
+	loc := regexache.MustCompile(`\.[[:alpha:]]+(\.[[:alpha:]]+)?$`).FindStringIndex(version)
+	if loc == nil || loc[1] != len(version) {
+		return version
+	}
+	return version[:loc[0]]
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]any) *types.BrokerNodeGroupInfo {
@@ -1696,6 +1782,20 @@ func expandNodeExporterInfo(tfMap map[string]any) *types.NodeExporterInfo {
 	return apiObject
 }
 
+func expandRebalancing(tfMap map[string]any) *types.Rebalancing {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Rebalancing{}
+
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+		apiObject.Status = types.RebalancingStatus(v)
+	}
+
+	return apiObject
+}
+
 func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -2128,6 +2228,18 @@ func flattenNodeExporter(apiObject *types.NodeExporter) map[string]any {
 
 	if v := apiObject.EnabledInBroker; v != nil {
 		tfMap["enabled_in_broker"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func flattenRebalancing(apiObject *types.Rebalancing) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap

@@ -6617,7 +6617,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -6625,7 +6625,60 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"latest_restorable_time", // This causes intermittent failures when the value increments
+					"blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroupNonTFamilyInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	parameterGroupResourceName := "aws_db_parameter_group.test"
+	parameterGroupDataSource := "data.aws_db_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupDataSource, names.AttrName),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
@@ -14166,10 +14219,14 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -14232,10 +14289,14 @@ resource "aws_db_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_basic(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_basic(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 data "aws_db_parameter_group" "test" {
   name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"

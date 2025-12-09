@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_redshift_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.ClusterParameterGroup")
 func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
