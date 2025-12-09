@@ -34,7 +34,7 @@ func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, op
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Table, nil
@@ -78,7 +78,7 @@ func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName s
 	}
 
 	if output == nil || output.ContinuousBackupsDescription == nil || output.ContinuousBackupsDescription.PointInTimeRecoveryDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContinuousBackupsDescription.PointInTimeRecoveryDescription, nil
@@ -103,7 +103,7 @@ func findTTLByTableName(ctx context.Context, conn *dynamodb.Client, tableName st
 	}
 
 	if output == nil || output.TimeToLiveDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TimeToLiveDescription, nil
@@ -128,7 +128,7 @@ func findImportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*a
 	}
 
 	if output == nil || output.ImportTableDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImportTableDescription, nil
