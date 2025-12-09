@@ -193,7 +193,13 @@ clean-tidy: prereq-go ## Clean up tidy
 
 copyright: ## [CI] Copyright Checks / add headers check
 	@echo "make: Copyright Checks / add headers check..."
-	@copywrite headers
+	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop@latest
+	@copyplop check
+
+copyright-fix: ## Fix copyright headers
+	@echo "make: Fixing copyright headers..."
+	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop@latest
+	@copyplop fix
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
