@@ -3,12 +3,12 @@ subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_key"
 description: |-
-  Lists KMS keys.
+  Lists single-Region or multi-Region primary KMS keys.
 ---
 
 # List Resource: aws_kms_key
 
-Lists KMS keys.
+Lists single-Region or multi-Region primary KMS keys.
 
 ## Example Usage
 
