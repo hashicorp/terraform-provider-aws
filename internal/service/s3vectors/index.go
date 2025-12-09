@@ -273,7 +273,7 @@ func findIndex(ctx context.Context, conn *s3vectors.Client, input *s3vectors.Get
 	}
 
 	if output == nil || output.Index == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Index, nil
