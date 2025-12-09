@@ -152,7 +152,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafregional.Client, arn 
 	}
 
 	if output == nil || output.WebACLSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACLSummary, nil
