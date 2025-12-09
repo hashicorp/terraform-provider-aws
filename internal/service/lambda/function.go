@@ -1324,7 +1324,7 @@ func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string
 	return func() (any, string, error) {
 		output, err := findDurableExecution(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

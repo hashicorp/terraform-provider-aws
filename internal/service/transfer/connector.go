@@ -545,7 +545,7 @@ func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkr
 	return func() (any, string, error) {
 		output, err := findConnectorByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
