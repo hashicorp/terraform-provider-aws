@@ -84,7 +84,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 		policy = attributes[topicAttributeNamePolicy]
 
 		if policy == "" {
-			err = tfresource.NewEmptyResultError(d.Id())
+			err = tfresource.NewEmptyResultError()
 		}
 	}
 
