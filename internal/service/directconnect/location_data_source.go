@@ -92,7 +92,7 @@ func findLocations(ctx context.Context, conn *directconnect.Client, input *direc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Locations, tfslices.PredicateValue(filter)), nil
