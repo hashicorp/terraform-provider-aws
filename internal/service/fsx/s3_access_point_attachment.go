@@ -381,7 +381,7 @@ func findS3AccessPointAttachmentByName(ctx context.Context, conn *fsx.Client, na
 	}
 
 	if output.S3AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
