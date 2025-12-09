@@ -1605,7 +1605,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationDetail, nil
@@ -1719,7 +1719,7 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	}
 
 	if output == nil || output.ApplicationOperationInfoDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationOperationInfoDetails, nil
