@@ -2332,7 +2332,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 	}
 
 	if output == nil || output.WarmPoolConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
