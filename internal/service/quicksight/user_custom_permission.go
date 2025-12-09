@@ -198,7 +198,7 @@ func findUserCustomPermissionByThreePartKey(ctx context.Context, conn *quicksigh
 	}
 
 	if aws.ToString(output.CustomPermissionsName) == "" {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CustomPermissionsName, nil
