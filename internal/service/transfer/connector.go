@@ -366,7 +366,7 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	}
 
 	if output == nil || output.Connector == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connector, nil
