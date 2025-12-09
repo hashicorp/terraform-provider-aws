@@ -394,7 +394,7 @@ func findReportPlan(ctx context.Context, conn *backup.Client, input *backup.Desc
 	}
 
 	if output == nil || output.ReportPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReportPlan, nil

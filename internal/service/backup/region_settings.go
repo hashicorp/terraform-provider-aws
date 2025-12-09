@@ -105,7 +105,7 @@ func findRegionSettings(ctx context.Context, conn *backup.Client) (*backup.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

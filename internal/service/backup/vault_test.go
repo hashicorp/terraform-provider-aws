@@ -302,7 +302,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
