@@ -218,7 +218,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Listener, nil
