@@ -198,7 +198,7 @@ func findAccountPasswordPolicy(ctx context.Context, conn *iam.Client) (*awstypes
 	}
 
 	if output == nil || output.PasswordPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PasswordPolicy, nil

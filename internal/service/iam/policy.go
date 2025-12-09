@@ -412,7 +412,7 @@ func findPolicy(ctx context.Context, conn *iam.Client, input *iam.GetPolicyInput
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -483,7 +483,7 @@ func findPolicyVersion(ctx context.Context, conn *iam.Client, input *iam.GetPoli
 	}
 
 	if output == nil || output.PolicyVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PolicyVersion, nil
