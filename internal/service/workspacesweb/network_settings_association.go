@@ -20,7 +20,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_network_settings_association", name="Network Settings Association")
@@ -92,7 +92,7 @@ func (r *networkSettingsAssociationResource) Read(ctx context.Context, request r
 
 	// Check if the association exists by getting the network settings and checking associated portals
 	output, err := findNetworkSettingsByARN(ctx, conn, data.NetworkSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

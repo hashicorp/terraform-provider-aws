@@ -33,6 +33,8 @@ linters:
           alias: sdkretry
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
+        - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
+          alias: ""
     mnd:
       checks:
         - argument
