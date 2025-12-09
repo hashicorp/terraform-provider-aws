@@ -87,6 +87,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceDataProvider,
+			TypeName: "aws_dms_data_provider",
+			Name:     "Data Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "data_provider_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceEndpoint,
 			TypeName: "aws_dms_endpoint",
 			Name:     "Endpoint",
