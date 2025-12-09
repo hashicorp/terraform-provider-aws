@@ -347,7 +347,7 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	}
 
 	if output == nil || output.SourceApiAssociation == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.SourceApiAssociation, nil
