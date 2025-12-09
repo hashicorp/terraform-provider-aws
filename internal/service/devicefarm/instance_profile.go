@@ -218,7 +218,7 @@ func findInstanceProfileByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil
