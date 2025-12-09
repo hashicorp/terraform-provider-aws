@@ -377,7 +377,7 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerModel_vpcVpcConfigUpdate(t *testing.T) {
+func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
