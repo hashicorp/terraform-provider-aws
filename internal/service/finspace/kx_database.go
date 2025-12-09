@@ -218,7 +218,7 @@ func findKxDatabaseByID(ctx context.Context, conn *finspace.Client, id string) (
 	}
 
 	if out == nil || out.DatabaseArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
