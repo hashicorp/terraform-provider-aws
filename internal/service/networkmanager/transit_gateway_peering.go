@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -186,7 +186,7 @@ func findTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Cli
 	output, err := conn.GetTransitGatewayPeering(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -203,7 +203,7 @@ func findTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Cli
 	return output.TransitGatewayPeering, nil
 }
 
-func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayPeeringByID(ctx, conn, id)
 
@@ -220,7 +220,7 @@ func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PeeringStateCreating),
 		Target:     enum.Slice(awstypes.PeeringStateAvailable),
 		Timeout:    timeout,
@@ -241,7 +241,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PeeringStateDeleting),
 		Target:     []string{},
 		Timeout:    timeout,

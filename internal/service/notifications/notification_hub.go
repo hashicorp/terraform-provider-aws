@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -197,7 +197,7 @@ func findNotificationHubs(ctx context.Context, conn *notifications.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -217,7 +217,7 @@ func findNotificationHubs(ctx context.Context, conn *notifications.Client, input
 	return output, nil
 }
 
-func statusNotificationHub(ctx context.Context, conn *notifications.Client, region string) retry.StateRefreshFunc {
+func statusNotificationHub(ctx context.Context, conn *notifications.Client, region string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNotificationHubByRegion(ctx, conn, region)
 
@@ -234,7 +234,7 @@ func statusNotificationHub(ctx context.Context, conn *notifications.Client, regi
 }
 
 func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.NotificationHubStatusRegistering),
 		Target:                    enum.Slice(awstypes.NotificationHubStatusActive),
 		Refresh:                   statusNotificationHub(ctx, conn, region),
@@ -254,7 +254,7 @@ func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client,
 }
 
 func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotificationHubStatusDeregistering),
 		Target:  []string{},
 		Refresh: statusNotificationHub(ctx, conn, region),

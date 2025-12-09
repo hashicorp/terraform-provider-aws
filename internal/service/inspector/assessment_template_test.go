@@ -12,7 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -202,7 +202,7 @@ func testAccCheckAssessmentTemplateDestroy(ctx context.Context) resource.TestChe
 			}
 
 			_, err := tfinspector.FindAssessmentTemplateByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
+			if errs.IsA[*sdkretry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {

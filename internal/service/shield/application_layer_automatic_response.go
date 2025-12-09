@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -257,7 +257,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	}
 
 	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: arn,
 		}
@@ -266,7 +266,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	return output.ApplicationLayerAutomaticResponseConfiguration, nil
 }
 
-func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
+func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
@@ -283,7 +283,7 @@ func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.C
 }
 
 func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
@@ -302,7 +302,7 @@ func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shi
 }
 
 func waitApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Target:  []string{},
 		Refresh: statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),

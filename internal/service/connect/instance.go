@@ -17,7 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -333,7 +333,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	output, err := conn.DescribeInstance(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -363,7 +363,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	output, err := conn.DescribeInstanceAttribute(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -380,7 +380,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	return output.Attribute, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
+func statusInstance(ctx context.Context, conn *connect.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
@@ -397,7 +397,7 @@ func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.
 }
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.InstanceStatusActive),
 		Refresh: statusInstance(ctx, conn, id),
@@ -418,7 +418,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 }
 
 func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
 		Refresh: statusInstance(ctx, conn, id),

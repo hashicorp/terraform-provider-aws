@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -946,7 +946,7 @@ func findEventSourceMapping(ctx context.Context, conn *lambda.Client, input *lam
 	output, err := conn.GetEventSourceMapping(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -971,7 +971,7 @@ func findEventSourceMappingByID(ctx context.Context, conn *lambda.Client, uuid s
 	return findEventSourceMapping(ctx, conn, input)
 }
 
-func statusEventSourceMapping(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
+func statusEventSourceMapping(ctx context.Context, conn *lambda.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEventSourceMappingByID(ctx, conn, id)
 
@@ -991,7 +991,7 @@ func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMapping(ctx, conn, id),
@@ -1013,7 +1013,7 @@ func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMapping(ctx, conn, id),
@@ -1035,7 +1035,7 @@ func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id 
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
 		Refresh: statusEventSourceMapping(ctx, conn, id),

@@ -20,7 +20,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_session_logger_association", name="Session Logger Association")
@@ -92,7 +92,7 @@ func (r *sessionLoggerAssociationResource) Read(ctx context.Context, request res
 
 	// Check if the association exists by getting the session logger and checking associated portals
 	output, err := findSessionLoggerByARN(ctx, conn, data.SessionLoggerARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

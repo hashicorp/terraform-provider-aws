@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -226,7 +226,7 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, 
 	out, err := conn.DescribeDataShares(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -254,7 +254,7 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, 
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastError:   err,
 		LastRequest: in,
 	}

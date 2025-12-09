@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -201,7 +201,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	output, err := conn.GetProvisionedModelThroughput(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -218,7 +218,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	return output, nil
 }
 
-func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
+func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findProvisionedModelThroughputByID(ctx, conn, id)
 
@@ -235,7 +235,7 @@ func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client,
 }
 
 func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetProvisionedModelThroughputOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedModelStatusCreating),
 		Target:  enum.Slice(awstypes.ProvisionedModelStatusInService),
 		Refresh: statusProvisionedModelThroughput(ctx, conn, id),

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2079,12 +2079,12 @@ func findDBClusterByID(ctx context.Context, conn *rds.Client, id string, optFns 
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.ToString(output.DBClusterArn) != id {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: input,
 			}
 		}
 	} else if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -2110,7 +2110,7 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2130,7 +2130,7 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id, optFns...)
 
@@ -2169,7 +2169,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 		clusterStatusUpgrading,
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
@@ -2188,7 +2188,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusCreating,
@@ -2230,7 +2230,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
@@ -2249,7 +2249,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusBackingUp,

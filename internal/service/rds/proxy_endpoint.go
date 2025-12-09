@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -258,7 +258,7 @@ func findDBProxyEndpointByTwoPartKey(ctx context.Context, conn *rds.Client, dbPr
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBProxyName) != dbProxyName || aws.ToString(output.DBProxyEndpointName) != dbProxyEndpointName {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -284,7 +284,7 @@ func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.Desc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) || errs.IsA[*types.DBProxyEndpointNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -304,7 +304,7 @@ func findDBProxyEndpoints(ctx context.Context, conn *rds.Client, input *rds.Desc
 	return output, nil
 }
 
-func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) retry.StateRefreshFunc {
+func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBProxyEndpointByTwoPartKey(ctx, conn, dbProxyName, dbProxyEndpointName)
 
@@ -321,7 +321,7 @@ func statusDBProxyEndpoint(ctx context.Context, conn *rds.Client, dbProxyName, d
 }
 
 func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string, timeout time.Duration) (*types.DBProxyEndpoint, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyEndpointStatusCreating, types.DBProxyEndpointStatusModifying),
 		Target:  enum.Slice(types.DBProxyEndpointStatusAvailable),
 		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),
@@ -338,7 +338,7 @@ func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.Client, dbProxy
 }
 
 func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.Client, dbProxyName, dbProxyEndpointName string, timeout time.Duration) (*types.DBProxyEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDBProxyEndpoint(ctx, conn, dbProxyName, dbProxyEndpointName),

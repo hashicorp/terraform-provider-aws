@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -226,7 +226,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	output, err := conn.DescribeApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -243,7 +243,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	return output.ApplicationInfo, nil
 }
 
-func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) retry.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationByName(ctx, conn, name)
 
@@ -263,7 +263,7 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Clien
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
 		Refresh: statusApplication(ctx, conn, name),
@@ -283,7 +283,7 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),

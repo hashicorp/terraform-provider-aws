@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -358,7 +358,7 @@ func findDevices(ctx context.Context, conn *networkmanager.Client, input *networ
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -388,7 +388,7 @@ func findDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.Client, gl
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.DeviceId) != deviceID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -396,7 +396,7 @@ func findDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.Client, gl
 	return output, nil
 }
 
-func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string) retry.StateRefreshFunc {
+func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
@@ -413,7 +413,7 @@ func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStatePending),
 		Target:  enum.Slice(awstypes.DeviceStateAvailable),
 		Timeout: timeout,
@@ -430,7 +430,7 @@ func waitDeviceCreated(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -447,7 +447,7 @@ func waitDeviceDeleted(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStateUpdating),
 		Target:  enum.Slice(awstypes.DeviceStateAvailable),
 		Timeout: timeout,

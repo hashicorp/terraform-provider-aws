@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -179,7 +179,7 @@ func findLinkAssociations(ctx context.Context, conn *networkmanager.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -209,7 +209,7 @@ func findLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 	}
 
 	if state := output.LinkAssociationState; state == awstypes.LinkAssociationStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -217,7 +217,7 @@ func findLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.LinkId) != linkID || aws.ToString(output.DeviceId) != deviceID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -225,7 +225,7 @@ func findLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 	return output, nil
 }
 
-func statusLinkAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID, deviceID string) retry.StateRefreshFunc {
+func statusLinkAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID, deviceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLinkAssociationByThreePartKey(ctx, conn, globalNetworkID, linkID, deviceID)
 
@@ -242,7 +242,7 @@ func statusLinkAssociationState(ctx context.Context, conn *networkmanager.Client
 }
 
 func waitLinkAssociationCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID, deviceID string, timeout time.Duration) (*awstypes.LinkAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LinkAssociationStatePending),
 		Target:  enum.Slice(awstypes.LinkAssociationStateAvailable),
 		Timeout: timeout,
@@ -259,7 +259,7 @@ func waitLinkAssociationCreated(ctx context.Context, conn *networkmanager.Client
 }
 
 func waitLinkAssociationDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID, deviceID string, timeout time.Duration) (*awstypes.LinkAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LinkAssociationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,

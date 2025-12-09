@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -350,7 +350,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -378,7 +378,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 	output, err := conn.GetEnabledControl(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -402,7 +402,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	output, err := conn.GetControlOperation(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -419,7 +419,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
@@ -436,7 +436,7 @@ func statusControlOperation(ctx context.Context, conn *controltower.Client, id s
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ControlOperationStatusInProgress),
 		Target:  enum.Slice(types.ControlOperationStatusSucceeded),
 		Refresh: statusControlOperation(ctx, conn, id),

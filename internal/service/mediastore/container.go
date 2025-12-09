@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediastore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -141,7 +141,7 @@ func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn string) retry.StateRefreshFunc {
+func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := findContainerByName(ctx, conn, cn)
 
@@ -165,7 +165,7 @@ func findContainerByName(ctx context.Context, conn *mediastore.Client, id string
 	output, err := conn.DescribeContainer(ctx, input)
 
 	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -183,7 +183,7 @@ func findContainerByName(ctx context.Context, conn *mediastore.Client, id string
 }
 
 func waitContainerActive(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ContainerStatusCreating),
 		Target:     enum.Slice(awstypes.ContainerStatusActive),
 		Refresh:    containerRefreshStatusFunc(ctx, conn, id),
@@ -201,7 +201,7 @@ func waitContainerActive(ctx context.Context, conn *mediastore.Client, id string
 }
 
 func waitContainerDeleted(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ContainerStatusDeleting),
 		Target:     []string{},
 		Refresh:    containerRefreshStatusFunc(ctx, conn, id),

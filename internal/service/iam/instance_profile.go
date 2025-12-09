@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -324,7 +324,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	output, err := conn.GetInstanceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -346,7 +346,7 @@ const (
 	instanceProfileInvalidARNState = "InvalidARN"
 )
 
-func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) retry.StateRefreshFunc {
+func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findInstanceProfileByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
@@ -367,7 +367,7 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) r
 }
 
 func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{"", instanceProfileInvalidARNState},
 		Target:                    enum.Slice(instanceProfileFoundState),
 		Refresh:                   statusInstanceProfile(ctx, conn, id),

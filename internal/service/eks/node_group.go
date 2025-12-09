@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -685,7 +685,7 @@ func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNod
 	output, err := conn.DescribeNodegroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -712,7 +712,7 @@ func findNodegroupUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cl
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) retry.StateRefreshFunc {
+func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
@@ -728,7 +728,7 @@ func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGro
 	}
 }
 
-func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) retry.StateRefreshFunc {
+func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNodegroupUpdateByThreePartKey(ctx, conn, clusterName, nodeGroupName, id)
 
@@ -745,7 +745,7 @@ func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, n
 }
 
 func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusCreating),
 		Target:  enum.Slice(types.NodegroupStatusActive),
 		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
@@ -766,7 +766,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusActive, types.NodegroupStatusDeleting),
 		Target:  []string{},
 		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
@@ -787,7 +787,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
 		Refresh: statusNodegroupUpdate(ctx, conn, clusterName, nodeGroupName, id),

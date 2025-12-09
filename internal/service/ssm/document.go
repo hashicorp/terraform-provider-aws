@@ -19,7 +19,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -548,7 +548,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	output, err := conn.DescribeDocument(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -565,7 +565,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	return output.Document, nil
 }
 
-func statusDocument(ctx context.Context, conn *ssm.Client, name string) retry.StateRefreshFunc {
+func statusDocument(ctx context.Context, conn *ssm.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDocumentByName(ctx, conn, name)
 
@@ -585,7 +585,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusCreating, awstypes.DocumentStatusUpdating),
 		Target:  enum.Slice(awstypes.DocumentStatusActive),
 		Refresh: statusDocument(ctx, conn, name),
@@ -607,7 +607,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDocument(ctx, conn, name),

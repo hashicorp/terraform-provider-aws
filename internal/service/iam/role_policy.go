@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -195,7 +195,7 @@ func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	output, err := conn.GetRolePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

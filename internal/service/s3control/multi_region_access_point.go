@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -278,7 +278,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -307,7 +307,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -324,7 +324,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	return output.AsyncOperation, nil
 }
 
-func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string) retry.StateRefreshFunc {
+func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMultiRegionAccessPointOperationByTwoPartKey(ctx, conn, accountID, requestTokenARN)
 
@@ -346,7 +346,7 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 		asyncOperationRequestStatusFailed    = "FAILED"
 		asyncOperationRequestStatusSucceeded = "SUCCEEDED"
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:     []string{asyncOperationRequestStatusSucceeded},
 		Timeout:    timeout,
 		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenARN),

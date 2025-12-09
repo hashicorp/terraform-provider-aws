@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -394,7 +394,7 @@ func findDBInstanceByID(ctx context.Context, conn *docdb.Client, id string) (*aw
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -420,7 +420,7 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: input,
 				LastError:   err,
 			}
@@ -436,7 +436,7 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
@@ -453,7 +453,7 @@ func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
 			"configuring-enhanced-monitoring",
@@ -487,7 +487,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string,
 }
 
 func waitDBInstanceDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			"configuring-log-exports",
 			"modifying",

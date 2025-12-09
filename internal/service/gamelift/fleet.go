@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -482,7 +482,7 @@ func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.Desc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -514,7 +514,7 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -534,7 +534,7 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *gamelift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
@@ -551,7 +551,7 @@ func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.St
 }
 
 func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActivating,
 			awstypes.FleetStatusBuilding,
@@ -578,7 +578,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 }
 
 func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActive,
 			awstypes.FleetStatusDeleting,

@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -154,7 +154,7 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -171,7 +171,7 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	return output.ServiceSetting, nil
 }
 
-func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
+func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceSettingByID(ctx, conn, id)
 
@@ -188,7 +188,7 @@ func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) retr
 }
 
 func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),
@@ -205,7 +205,7 @@ func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string,
 }
 
 func waitServiceSettingReset(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),

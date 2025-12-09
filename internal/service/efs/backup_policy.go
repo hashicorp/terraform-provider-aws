@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -165,7 +165,7 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	output, err := conn.DescribeBackupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -182,7 +182,7 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	return output.BackupPolicy, nil
 }
 
-func statusBackupPolicy(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
+func statusBackupPolicy(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBackupPolicyByID(ctx, conn, id)
 
@@ -202,7 +202,7 @@ func waitBackupPolicyEnabled(ctx context.Context, conn *efs.Client, id string) (
 	const (
 		backupPoltimeoutcyEnabledTimeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusEnabling),
 		Target:  enum.Slice(awstypes.StatusEnabled),
 		Refresh: statusBackupPolicy(ctx, conn, id),
@@ -222,7 +222,7 @@ func waitBackupPolicyDisabled(ctx context.Context, conn *efs.Client, id string) 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusDisabling),
 		Target:  enum.Slice(awstypes.StatusDisabled),
 		Refresh: statusBackupPolicy(ctx, conn, id),

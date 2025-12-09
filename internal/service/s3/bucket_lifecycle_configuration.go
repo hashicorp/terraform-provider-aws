@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -621,7 +621,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	output, err := conn.GetBucketLifecycleConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -658,7 +658,7 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	return true
 }
 
-func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
+func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
@@ -675,7 +675,7 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 }
 
 func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
 		Timeout: timeout,

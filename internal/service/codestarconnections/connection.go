@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -163,7 +163,7 @@ func findConnectionByARN(ctx context.Context, conn *codestarconnections.Client, 
 	output, err := conn.GetConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

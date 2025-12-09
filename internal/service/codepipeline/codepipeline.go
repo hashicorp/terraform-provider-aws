@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -769,7 +769,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	output, err := conn.GetPipeline(ctx, input)
 
 	if errs.IsA[*types.PipelineNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

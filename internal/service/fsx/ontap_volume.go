@@ -16,7 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -648,7 +648,7 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.VolumeNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -668,7 +668,7 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 	return output, nil
 }
 
-func statusVolume(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusVolume(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVolumeByID(ctx, conn, id)
 
@@ -685,7 +685,7 @@ func statusVolume(ctx context.Context, conn *fsx.Client, id string) retry.StateR
 }
 
 func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecycleCreating, awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
 		Refresh: statusVolume(ctx, conn, id),
@@ -707,7 +707,7 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 }
 
 func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
 		Refresh: statusVolume(ctx, conn, id),
@@ -747,7 +747,7 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 }
 
 func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
 		Target:       []string{},
 		Refresh:      statusVolume(ctx, conn, id),
@@ -786,7 +786,7 @@ func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
@@ -803,7 +803,7 @@ func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, vol
 }
 
 func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
 		Refresh: statusVolumeAdministrativeAction(ctx, conn, volID, actionType),

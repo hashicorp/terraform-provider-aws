@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -482,7 +482,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 	output, err := conn.GetQueueAttributes(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -517,7 +517,7 @@ const (
 	queueAttributeStateEqual    = "equal"
 )
 
-func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.StateRefreshFunc {
+func statusQueueState(ctx context.Context, conn *sqs.Client, url string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
@@ -533,7 +533,7 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.S
 	}
 }
 
-func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
+func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		attributesMatch := func(got map[types.QueueAttributeName]string) string {
 			for k, e := range expected {
@@ -603,7 +603,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 }
 
 func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
@@ -619,7 +619,7 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 }
 
 func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),

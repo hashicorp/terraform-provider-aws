@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -297,7 +297,7 @@ func findExportTasks(ctx context.Context, conn *rds.Client, input *rds.DescribeE
 	return output, nil
 }
 
-func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findExportTaskByID(ctx, conn, id)
 
@@ -314,7 +314,7 @@ func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.St
 }
 
 func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{exportTaskStatusStarting, exportTaskStatusInProgress},
 		Target:     []string{exportTaskStatusComplete, exportTaskStatusFailed},
 		Refresh:    statusExportTask(ctx, conn, id),
@@ -335,7 +335,7 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{exportTaskStatusStarting, exportTaskStatusInProgress, exportTaskStatusCanceling},
 		Target:  []string{},
 		Refresh: statusExportTask(ctx, conn, id),

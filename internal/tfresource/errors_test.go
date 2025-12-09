@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -31,7 +31,7 @@ func TestNotFound(t *testing.T) {
 		},
 		{
 			Name:     "not found error",
-			Err:      &retry.NotFoundError{LastError: errors.New("test")},
+			Err:      &sdkretry.NotFoundError{LastError: errors.New("test")},
 			Expected: true,
 		},
 		{
@@ -40,7 +40,7 @@ func TestNotFound(t *testing.T) {
 		},
 		{
 			Name:     "wrapped not found error",
-			Err:      fmt.Errorf("test: %w", &retry.NotFoundError{LastError: errors.New("test")}),
+			Err:      fmt.Errorf("test: %w", &sdkretry.NotFoundError{LastError: errors.New("test")}),
 			Expected: true,
 		},
 	}
@@ -76,12 +76,12 @@ func TestTimedOut(t *testing.T) {
 		},
 		{
 			Name:     "timeout error",
-			Err:      &retry.TimeoutError{},
+			Err:      &sdkretry.TimeoutError{},
 			Expected: true,
 		},
 		{
 			Name: "timeout error non-nil last error",
-			Err:  &retry.TimeoutError{LastError: errors.New("test")},
+			Err:  &sdkretry.TimeoutError{LastError: errors.New("test")},
 		},
 		{
 			Name: "wrapped other error",
@@ -89,11 +89,11 @@ func TestTimedOut(t *testing.T) {
 		},
 		{
 			Name: "wrapped timeout error",
-			Err:  fmt.Errorf("test: %w", &retry.TimeoutError{}),
+			Err:  fmt.Errorf("test: %w", &sdkretry.TimeoutError{}),
 		},
 		{
 			Name: "wrapped timeout error non-nil last error",
-			Err:  fmt.Errorf("test: %w", &retry.TimeoutError{LastError: errors.New("test")}),
+			Err:  fmt.Errorf("test: %w", &sdkretry.TimeoutError{LastError: errors.New("test")}),
 		},
 	}
 
@@ -129,40 +129,40 @@ func TestSetLastError(t *testing.T) {
 		},
 		{
 			Name: "timeout error lastErr is nil",
-			Err:  &retry.TimeoutError{},
+			Err:  &sdkretry.TimeoutError{},
 		},
 		{
 			Name:     "timeout error",
-			Err:      &retry.TimeoutError{},
+			Err:      &sdkretry.TimeoutError{},
 			LastErr:  errors.New("lasttest"),
 			Expected: true,
 		},
 		{
 			Name: "timeout error non-nil last error lastErr is nil",
-			Err:  &retry.TimeoutError{LastError: errors.New("test")},
+			Err:  &sdkretry.TimeoutError{LastError: errors.New("test")},
 		},
 		{
 			Name:    "timeout error non-nil last error no overwrite",
-			Err:     &retry.TimeoutError{LastError: errors.New("test")},
+			Err:     &sdkretry.TimeoutError{LastError: errors.New("test")},
 			LastErr: errors.New("lasttest"),
 		},
 		{
 			Name: "unexpected state error lastErr is nil",
-			Err:  &retry.UnexpectedStateError{},
+			Err:  &sdkretry.UnexpectedStateError{},
 		},
 		{
 			Name:     "unexpected state error",
-			Err:      &retry.UnexpectedStateError{},
+			Err:      &sdkretry.UnexpectedStateError{},
 			LastErr:  errors.New("lasttest"),
 			Expected: true,
 		},
 		{
 			Name: "unexpected state error non-nil last error lastErr is nil",
-			Err:  &retry.UnexpectedStateError{LastError: errors.New("test")},
+			Err:  &sdkretry.UnexpectedStateError{LastError: errors.New("test")},
 		},
 		{
 			Name:    "unexpected state error non-nil last error no overwrite",
-			Err:     &retry.UnexpectedStateError{LastError: errors.New("test")},
+			Err:     &sdkretry.UnexpectedStateError{LastError: errors.New("test")},
 			LastErr: errors.New("lasttest"),
 		},
 	}

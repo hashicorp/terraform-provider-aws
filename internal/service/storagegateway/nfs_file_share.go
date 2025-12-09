@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -416,7 +416,7 @@ func findNFSFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	output, err := conn.DescribeNFSFileShares(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -433,7 +433,7 @@ func findNFSFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	return output.NFSFileShareInfoList, nil
 }
 
-func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNFSFileShareByARN(ctx, conn, arn)
 
@@ -450,7 +450,7 @@ func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn st
 }
 
 func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusNFSFileShare(ctx, conn, arn),
@@ -468,7 +468,7 @@ func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.Client, a
 }
 
 func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
 		Refresh: statusNFSFileShare(ctx, conn, arn),
@@ -486,7 +486,7 @@ func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.Client, a
 }
 
 func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
 		Refresh:        statusNFSFileShare(ctx, conn, arn),

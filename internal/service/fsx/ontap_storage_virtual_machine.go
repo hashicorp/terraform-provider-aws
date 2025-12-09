@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -393,7 +393,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -413,7 +413,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 	return output, nil
 }
 
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStorageVirtualMachineByID(ctx, conn, id)
 
@@ -430,7 +430,7 @@ func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id strin
 }
 
 func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
 		Refresh: statusStorageVirtualMachine(ctx, conn, id),
@@ -452,7 +452,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 }
 
 func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
 		Refresh: statusStorageVirtualMachine(ctx, conn, id),
@@ -474,7 +474,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 }
 
 func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
 		Target:       []string{},
 		Refresh:      statusStorageVirtualMachine(ctx, conn, id),
