@@ -189,7 +189,7 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Client, id str
 	}
 
 	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &entry, nil
