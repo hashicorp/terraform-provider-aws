@@ -365,7 +365,7 @@ func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emr
 	}
 
 	if output == nil || output.JobTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.JobTemplate, nil

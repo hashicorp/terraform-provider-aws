@@ -221,7 +221,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *
 	}
 
 	if output == nil || output.VirtualCluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualCluster, nil
