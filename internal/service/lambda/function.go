@@ -1302,7 +1302,7 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	output, err := conn.GetDurableExecution(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1319,7 +1319,7 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	return output, nil
 }
 
-func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) retry.StateRefreshFunc {
+func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDurableExecution(ctx, conn, arn)
 
@@ -1336,7 +1336,7 @@ func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string
 }
 
 func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
 		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
 		Refresh: statusDurableExecution(ctx, conn, arn),
@@ -1648,7 +1648,7 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 }
 
 func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
 		Target:  []string{},
 		Refresh: statusFunctionState(ctx, conn, name),
