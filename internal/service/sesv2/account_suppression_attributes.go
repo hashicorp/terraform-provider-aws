@@ -143,7 +143,7 @@ func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (
 	}
 
 	if output.SuppressionAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SuppressionAttributes, nil
