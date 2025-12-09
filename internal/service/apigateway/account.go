@@ -260,7 +260,7 @@ func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetA
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
