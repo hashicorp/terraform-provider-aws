@@ -1248,6 +1248,10 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 		tfMap["max_unavailable_percentage"] = aws.ToInt32(v)
 	}
 
+	if apiObject.UpdateStrategy != "" {
+		tfMap["update_strategy"] = string(apiObject.UpdateStrategy)
+	}
+
 	return tfMap
 }
 
