@@ -317,9 +317,9 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.64.0
 	go.opentelemetry.io/otel v1.39.0
-	golang.org/x/crypto v0.45.0
-	golang.org/x/text v0.31.0
-	golang.org/x/tools v0.39.0
+	golang.org/x/crypto v0.46.0
+	golang.org/x/text v0.32.0
+	golang.org/x/tools v0.40.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
 )
 
@@ -383,9 +383,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
-	golang.org/x/mod v0.30.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
