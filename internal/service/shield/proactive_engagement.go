@@ -133,7 +133,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 	subscription, err := findSubscription(ctx, conn)
 
 	if err == nil && subscription.ProactiveEngagementStatus == "" {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	var emergencyContacts []awstypes.EmergencyContact
@@ -310,7 +310,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 	}
 
 	if output == nil || len(output.EmergencyContactList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmergencyContactList, nil
@@ -333,7 +333,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 	}
 
 	if output == nil || output.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Subscription, nil
