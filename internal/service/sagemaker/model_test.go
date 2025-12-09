@@ -374,7 +374,7 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
 							names.AttrSubnets:          knownvalue.SetSizeExact(2),
@@ -413,7 +413,7 @@ func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
 							names.AttrSubnets:          knownvalue.SetSizeExact(2),
@@ -432,7 +432,7 @@ func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
 							names.AttrSubnets:          knownvalue.SetSizeExact(3),
@@ -451,7 +451,7 @@ func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(3),
 							names.AttrSubnets:          knownvalue.SetSizeExact(3),
