@@ -212,9 +212,10 @@ func resourceDataProviderDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Data Provider: %s", d.Id())
-	_, err := conn.DeleteDataProvider(ctx, &dms.DeleteDataProviderInput{
+	input := dms.DeleteDataProviderInput{
 		DataProviderIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataProvider(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
