@@ -5,6 +5,7 @@ FEATURES:
 * **New List Resource:** `aws_batch_job_definition` ([#45401](https://github.com/hashicorp/terraform-provider-aws/issues/45401))
 * **New List Resource:** `aws_codebuild_project` ([#45400](https://github.com/hashicorp/terraform-provider-aws/issues/45400))
 * **New List Resource:** `aws_lambda_capacity_provider` ([#45467](https://github.com/hashicorp/terraform-provider-aws/issues/45467))
+* **New List Resource:** `aws_ssm_parameter` ([#45512](https://github.com/hashicorp/terraform-provider-aws/issues/45512))
 * **New Resource:** `aws_iam_outbound_web_identity_federation` ([#45217](https://github.com/hashicorp/terraform-provider-aws/issues/45217))
 
 ENHANCEMENTS:
