@@ -59,27 +59,32 @@ This resource supports the following arguments:
 * `settings` - (Required) Configuration block for data provider settings. See [`settings`](#settings) below.
 * `data_provider_name` - (Optional) User-friendly name for the data provider.
 * `description` - (Optional) Description of the data provider.
+* `virtual` - (Optional) Indicates whether the data provider is virtual.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### settings
 
 The `settings` block supports one of the following:
 
-* `postgres_settings` - (Optional) Configuration for PostgreSQL. See [`postgres_settings`](#postgres_settings) below.
-* `mysql_settings` - (Optional) Configuration for MySQL. See [`mysql_settings`](#mysql_settings) below.
+* `docdb_settings` - (Optional) Configuration for DocumentDB. See [common settings](#common-settings) below.
+* `ibm_db2_luw_settings` - (Optional) Configuration for IBM DB2 LUW. See [common settings](#common-settings) below.
+* `ibm_db2_zos_settings` - (Optional) Configuration for IBM DB2 for z/OS. See [common settings](#common-settings) below.
+* `mariadb_settings` - (Optional) Configuration for MariaDB. See [common settings](#common-settings) below.
+* `microsoft_sql_server_settings` - (Optional) Configuration for Microsoft SQL Server. See [common settings](#common-settings) below.
+* `mongodb_settings` - (Optional) Configuration for MongoDB. See [common settings](#common-settings) below.
+* `mysql_settings` - (Optional) Configuration for MySQL. See [common settings](#common-settings) below.
+* `oracle_settings` - (Optional) Configuration for Oracle. See [common settings](#common-settings) below.
+* `postgres_settings` - (Optional) Configuration for PostgreSQL. See [common settings](#common-settings) below.
+* `redshift_settings` - (Optional) Configuration for Redshift. See [common settings](#common-settings) below.
+* `sybase_ase_settings` - (Optional) Configuration for SAP ASE. See [common settings](#common-settings) below.
 
-### postgres_settings
+### Common Settings
+
+All settings blocks support the following common attributes:
 
 * `server_name` - (Optional) Server name.
 * `port` - (Optional) Port number.
 * `database_name` - (Optional) Database name.
-* `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
-* `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
-
-### mysql_settings
-
-* `server_name` - (Optional) Server name.
-* `port` - (Optional) Port number.
 * `ssl_mode` - (Optional) SSL mode. Valid values: `none`, `require`, `verify-ca`, `verify-full`.
 * `certificate_arn` - (Optional) ARN of the certificate for SSL connection.
 

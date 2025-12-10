@@ -6,6 +6,7 @@ package dms
 import (
 	"context"
 	"log"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
@@ -58,65 +59,58 @@ func resourceDataProvider() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"postgres_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCertificateARN: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrDatabaseName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrPort: {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"server_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"ssl_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"mysql_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCertificateARN: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrPort: {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"server_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"ssl_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
+						"docdb_settings":                dataProviderSettingsSchema(),
+						"ibm_db2_luw_settings":          dataProviderSettingsSchema(),
+						"ibm_db2_zos_settings":          dataProviderSettingsSchema(),
+						"mariadb_settings":              dataProviderSettingsSchema(),
+						"microsoft_sql_server_settings": dataProviderSettingsSchema(),
+						"mongodb_settings":              dataProviderSettingsSchema(),
+						"mysql_settings":                dataProviderSettingsSchema(),
+						"oracle_settings":               dataProviderSettingsSchema(),
+						"postgres_settings":             dataProviderSettingsSchema(),
+						"redshift_settings":             dataProviderSettingsSchema(),
+						"sybase_ase_settings":           dataProviderSettingsSchema(),
 					},
 				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"virtual": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func dataProviderSettingsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"server_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ssl_mode": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
 		},
 	}
 }
@@ -137,6 +131,10 @@ func resourceDataProviderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("virtual"); ok {
+		input.Virtual = aws.Bool(v.(bool))
 	}
 
 	output, err := conn.CreateDataProvider(ctx, input)
@@ -170,6 +168,7 @@ func resourceDataProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("data_provider_name", provider.DataProviderName)
 	d.Set(names.AttrDescription, provider.Description)
 	d.Set(names.AttrEngine, provider.Engine)
+	d.Set("virtual", provider.Virtual)
 	if err := d.Set("settings", flattenDataProviderSettings(provider.Settings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting settings: %s", err)
 	}
@@ -261,77 +260,162 @@ func expandDataProviderSettings(tfList []interface{}) awstypes.DataProviderSetti
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["postgres_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		return expandPostgreSQLDataProviderSettings(v)
+	if v, ok := tfMap["docdb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberDocDbSettings{
+			Value: *expandDocDbDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["ibm_db2_luw_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberIbmDb2LuwSettings{
+			Value: *expandIbmDb2LuwDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["ibm_db2_zos_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberIbmDb2zOsSettings{
+			Value: *expandIbmDb2zOsDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["mariadb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberMariaDbSettings{
+			Value: *expandMariaDbDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["microsoft_sql_server_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings{
+			Value: *expandMicrosoftSqlServerDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["mongodb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberMongoDbSettings{
+			Value: *expandMongoDbDataProviderSettings(v),
+		}
 	}
 
 	if v, ok := tfMap["mysql_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		return expandMySQLDataProviderSettings(v)
+		return &awstypes.DataProviderSettingsMemberMySqlSettings{
+			Value: *expandMySQLDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["oracle_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberOracleSettings{
+			Value: *expandOracleDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["postgres_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberPostgreSqlSettings{
+			Value: *expandPostgreSQLDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["redshift_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberRedshiftSettings{
+			Value: *expandRedshiftDataProviderSettings(v),
+		}
+	}
+
+	if v, ok := tfMap["sybase_ase_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		return &awstypes.DataProviderSettingsMemberSybaseAseSettings{
+			Value: *expandSybaseAseDataProviderSettings(v),
+		}
 	}
 
 	return nil
 }
 
-func expandPostgreSQLDataProviderSettings(tfList []interface{}) *awstypes.DataProviderSettingsMemberPostgreSqlSettings {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]interface{})
-	settings := &awstypes.PostgreSqlDataProviderSettings{}
-
-	if v, ok := tfMap[names.AttrCertificateARN].(string); ok && v != "" {
-		settings.CertificateArn = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
-		settings.DatabaseName = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
-		settings.Port = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["server_name"].(string); ok && v != "" {
-		settings.ServerName = aws.String(v)
-	}
-
-	if v, ok := tfMap["ssl_mode"].(string); ok && v != "" {
-		settings.SslMode = awstypes.DmsSslModeValue(v)
-	}
-
-	return &awstypes.DataProviderSettingsMemberPostgreSqlSettings{
-		Value: *settings,
-	}
+func expandPostgreSQLDataProviderSettings(tfList []interface{}) *awstypes.PostgreSqlDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.PostgreSqlDataProviderSettings](tfList)
 }
 
-func expandMySQLDataProviderSettings(tfList []interface{}) *awstypes.DataProviderSettingsMemberMySqlSettings {
+func expandMySQLDataProviderSettings(tfList []interface{}) *awstypes.MySqlDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.MySqlDataProviderSettings](tfList)
+}
+
+func expandDocDbDataProviderSettings(tfList []interface{}) *awstypes.DocDbDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.DocDbDataProviderSettings](tfList)
+}
+
+func expandIbmDb2LuwDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2LuwDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.IbmDb2LuwDataProviderSettings](tfList)
+}
+
+func expandIbmDb2zOsDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2zOsDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.IbmDb2zOsDataProviderSettings](tfList)
+}
+
+func expandMariaDbDataProviderSettings(tfList []interface{}) *awstypes.MariaDbDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.MariaDbDataProviderSettings](tfList)
+}
+
+func expandSybaseAseDataProviderSettings(tfList []interface{}) *awstypes.SybaseAseDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.SybaseAseDataProviderSettings](tfList)
+}
+
+func expandMicrosoftSqlServerDataProviderSettings(tfList []interface{}) *awstypes.MicrosoftSqlServerDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.MicrosoftSqlServerDataProviderSettings](tfList)
+}
+
+func expandMongoDbDataProviderSettings(tfList []interface{}) *awstypes.MongoDbDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.MongoDbDataProviderSettings](tfList)
+}
+
+func expandOracleDataProviderSettings(tfList []interface{}) *awstypes.OracleDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.OracleDataProviderSettings](tfList)
+}
+
+func expandRedshiftDataProviderSettings(tfList []interface{}) *awstypes.RedshiftDataProviderSettings {
+	return expandGenericDataProviderSettings[awstypes.RedshiftDataProviderSettings](tfList)
+}
+
+func expandGenericDataProviderSettings[T any](tfList []interface{}) *T {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
-	settings := &awstypes.MySqlDataProviderSettings{}
+	var settings T
+	v := &settings
 
-	if v, ok := tfMap[names.AttrCertificateARN].(string); ok && v != "" {
-		settings.CertificateArn = aws.String(v)
+	// Use reflection to set common fields
+	val := reflect.ValueOf(v).Elem()
+	
+	if certArn, ok := tfMap[names.AttrCertificateARN].(string); ok && certArn != "" {
+		if field := val.FieldByName("CertificateArn"); field.IsValid() && field.CanSet() {
+			field.Set(reflect.ValueOf(aws.String(certArn)))
+		}
 	}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
-		settings.Port = aws.Int32(int32(v))
+	if dbName, ok := tfMap[names.AttrDatabaseName].(string); ok && dbName != "" {
+		if field := val.FieldByName("DatabaseName"); field.IsValid() && field.CanSet() {
+			field.Set(reflect.ValueOf(aws.String(dbName)))
+		}
 	}
 
-	if v, ok := tfMap["server_name"].(string); ok && v != "" {
-		settings.ServerName = aws.String(v)
+	if port, ok := tfMap[names.AttrPort].(int); ok && port != 0 {
+		if field := val.FieldByName("Port"); field.IsValid() && field.CanSet() {
+			field.Set(reflect.ValueOf(aws.Int32(int32(port))))
+		}
 	}
 
-	if v, ok := tfMap["ssl_mode"].(string); ok && v != "" {
-		settings.SslMode = awstypes.DmsSslModeValue(v)
+	if serverName, ok := tfMap["server_name"].(string); ok && serverName != "" {
+		if field := val.FieldByName("ServerName"); field.IsValid() && field.CanSet() {
+			field.Set(reflect.ValueOf(aws.String(serverName)))
+		}
 	}
 
-	return &awstypes.DataProviderSettingsMemberMySqlSettings{
-		Value: *settings,
+	if sslMode, ok := tfMap["ssl_mode"].(string); ok && sslMode != "" {
+		if field := val.FieldByName("SslMode"); field.IsValid() && field.CanSet() {
+			field.Set(reflect.ValueOf(awstypes.DmsSslModeValue(sslMode)))
+		}
 	}
+
+	return v
 }
 
 func flattenDataProviderSettings(settings awstypes.DataProviderSettings) []interface{} {
@@ -342,66 +426,61 @@ func flattenDataProviderSettings(settings awstypes.DataProviderSettings) []inter
 	m := map[string]interface{}{}
 
 	switch v := settings.(type) {
-	case *awstypes.DataProviderSettingsMemberPostgreSqlSettings:
-		m["postgres_settings"] = flattenPostgreSQLDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberDocDbSettings:
+		m["docdb_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberIbmDb2LuwSettings:
+		m["ibm_db2_luw_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberIbmDb2zOsSettings:
+		m["ibm_db2_zos_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberMariaDbSettings:
+		m["mariadb_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings:
+		m["microsoft_sql_server_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberMongoDbSettings:
+		m["mongodb_settings"] = flattenGenericDataProviderSettings(&v.Value)
 	case *awstypes.DataProviderSettingsMemberMySqlSettings:
-		m["mysql_settings"] = flattenMySQLDataProviderSettings(&v.Value)
+		m["mysql_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberOracleSettings:
+		m["oracle_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberPostgreSqlSettings:
+		m["postgres_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberRedshiftSettings:
+		m["redshift_settings"] = flattenGenericDataProviderSettings(&v.Value)
+	case *awstypes.DataProviderSettingsMemberSybaseAseSettings:
+		m["sybase_ase_settings"] = flattenGenericDataProviderSettings(&v.Value)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenPostgreSQLDataProviderSettings(settings *awstypes.PostgreSqlDataProviderSettings) []interface{} {
+func flattenGenericDataProviderSettings(settings interface{}) []interface{} {
 	if settings == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
+	val := reflect.ValueOf(settings).Elem()
 
-	if v := settings.CertificateArn; v != nil {
-		m[names.AttrCertificateARN] = aws.ToString(v)
+	if field := val.FieldByName("CertificateArn"); field.IsValid() && !field.IsNil() {
+		m[names.AttrCertificateARN] = aws.ToString(field.Interface().(*string))
 	}
 
-	if v := settings.DatabaseName; v != nil {
-		m[names.AttrDatabaseName] = aws.ToString(v)
+	if field := val.FieldByName("DatabaseName"); field.IsValid() && !field.IsNil() {
+		m[names.AttrDatabaseName] = aws.ToString(field.Interface().(*string))
 	}
 
-	if v := settings.Port; v != nil {
-		m[names.AttrPort] = aws.ToInt32(v)
+	if field := val.FieldByName("Port"); field.IsValid() && !field.IsNil() {
+		m[names.AttrPort] = aws.ToInt32(field.Interface().(*int32))
 	}
 
-	if v := settings.ServerName; v != nil {
-		m["server_name"] = aws.ToString(v)
+	if field := val.FieldByName("ServerName"); field.IsValid() && !field.IsNil() {
+		m["server_name"] = aws.ToString(field.Interface().(*string))
 	}
 
-	if v := settings.SslMode; v != "" {
-		m["ssl_mode"] = string(v)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenMySQLDataProviderSettings(settings *awstypes.MySqlDataProviderSettings) []interface{} {
-	if settings == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if v := settings.CertificateArn; v != nil {
-		m[names.AttrCertificateARN] = aws.ToString(v)
-	}
-
-	if v := settings.Port; v != nil {
-		m[names.AttrPort] = aws.ToInt32(v)
-	}
-
-	if v := settings.ServerName; v != nil {
-		m["server_name"] = aws.ToString(v)
-	}
-
-	if v := settings.SslMode; v != "" {
-		m["ssl_mode"] = string(v)
+	if field := val.FieldByName("SslMode"); field.IsValid() {
+		if sslMode := field.Interface().(awstypes.DmsSslModeValue); sslMode != "" {
+			m["ssl_mode"] = string(sslMode)
+		}
 	}
 
 	return []interface{}{m}
