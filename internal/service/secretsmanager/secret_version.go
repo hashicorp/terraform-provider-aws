@@ -427,7 +427,7 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 	}
 
 	return nil, nil, &retry.NotFoundError{
-		LastError: tfresource.NewEmptyResultError(input),
+		LastError: tfresource.NewEmptyResultError(),
 	}
 }
 
