@@ -229,11 +229,6 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 	state := plan
 	state.ID = flex.StringValueToFramework(ctx, aws.ToString(output.IdentitySourceId))
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	// Get call to retrieve computed values not included in create response.
 	out, err := findIdentitySourceByIDAndPolicyStoreID(ctx, conn, state.ID.ValueString(), state.PolicyStoreID.ValueString())
 	if err != nil {
