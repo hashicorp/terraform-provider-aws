@@ -71,6 +71,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Required field. The unique identifier of the ODB network that initiates the peering connection. " +
 					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
@@ -112,6 +113,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -155,6 +157,34 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *resourceNetworkPeeringConnection) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data odbNetworkPeeringConnectionResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//Neither is present
+	if data.OdbNetworkId.IsNull() && data.OdbNetworkArn.IsNull() {
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Neither is present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	//Both are present
+	if !data.OdbNetworkId.IsNull() && !data.OdbNetworkArn.IsNull() {
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Both are present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
 	}
 }
 
