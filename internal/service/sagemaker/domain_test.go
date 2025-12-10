@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -272,13 +273,18 @@ func testAccDomain_sharingSettings(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_sharingSettings(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
-					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+					resource.TestMatchResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path", regexache.MustCompile(`^s3://tf-acc-.+/sharing$`)),
 				),
 			},
 			{
@@ -286,6 +292,23 @@ func testAccDomain_sharingSettings(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_sharingSettingsUpdated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+					resource.TestMatchResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path", regexache.MustCompile(`^s3://tf-acc-.+/sharing-updated$`)),
+				),
 			},
 		},
 	})
@@ -2102,6 +2125,44 @@ resource "aws_sagemaker_domain" "test" {
       notebook_output_option = "Allowed"
       s3_kms_key_id          = aws_kms_key.test.key_id
       s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_sharingSettingsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = "VpcOnly"
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    sharing_settings {
+      notebook_output_option = "Allowed"
+      s3_kms_key_id          = aws_kms_key.test.key_id
+      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing-updated"
     }
   }
 
