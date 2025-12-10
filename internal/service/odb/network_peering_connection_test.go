@@ -337,9 +337,9 @@ resource "aws_vpc" "test" {
 }
 
 variable odb_network_id {
-default     = "odbnet_3l9st3litg"
-type        = string
-description = "ODB Network"
+  default     = "odbnet_3l9st3litg"
+  type        = string
+  description = "ODB Network"
 }
 
 resource "aws_odb_network_peering_connection" "test" {
