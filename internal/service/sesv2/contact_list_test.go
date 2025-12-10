@@ -18,18 +18,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSESV2ContactList_serial(t *testing.T) {
+// It is one Contact List allowed per account. Serializing these tests simplifies running all
+// Contact tests without risk of hitting the account limit.
+func TestAccSESV2Contact_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccContactList_basic,
-		acctest.CtDisappears: testAccContactList_disappears,
-		"tags":               testAccSESV2ContactList_tagsSerial,
-		"description":        testAccContactList_description,
-		"topic":              testAccContactList_topic,
+	testCases := map[string]map[string]func(t *testing.T){
+		"ContactList": {
+			acctest.CtBasic:      testAccContactList_basic,
+			acctest.CtDisappears: testAccContactList_disappears,
+			"tags":               testAccSESV2ContactList_tagsSerial,
+			"description":        testAccContactList_description,
+			"topic":              testAccContactList_topic,
+		},
+		"Contact": {
+			acctest.CtBasic:      testAccContact_basic,
+			acctest.CtDisappears: testAccContact_disappears,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccContactList_basic(t *testing.T) {

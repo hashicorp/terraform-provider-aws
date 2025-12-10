@@ -29,6 +29,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Account Suppression Attributes",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newResourceContact,
+			TypeName: "aws_sesv2_contact",
+			Name:     "Contact",
+		},
 	}
 }
 

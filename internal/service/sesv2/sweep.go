@@ -21,9 +21,12 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_sesv2_contact_list", &resource.Sweeper{
-		Name: "aws_sesv2_contact_list",
-		F:    sweepContactLists,
+		Name:         "aws_sesv2_contact_list",
+		F:            sweepContactLists,
+		Dependencies: []string{"aws_sesv2_contact"},
 	})
+
+	awsv2.Register("aws_sesv2_contact", sweepContacts)
 }
 
 func sweepConfigurationSets(region string) error {
