@@ -55,6 +55,46 @@ resource "aws_bedrockagent_knowledge_base" "kendra_example" {
 }
 ```
 
+### Structured Data Store
+
+```hcl
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "example-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "SQL"
+
+    sql_knowledge_base_configuration {
+      type = "REDSHIFT"
+
+      redshift_configuration {
+        query_engine_configuration {
+          type = "PROVISIONED"
+
+          provisioned_configuration {
+            cluster_identifier = aws_redshift_cluster.example.cluster_identifier
+
+            auth_configuration {
+              type          = "USERNAME"
+              database_user = aws_redshift_cluster.example.master_username
+            }
+          }
+        }
+
+        storage_configuration {
+          type = "REDSHIFT"
+
+          redshift_configuration {
+            database_name = aws_redshift_cluster.example.database_name
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### OpenSearch Managed Cluster Configuration
 
 ```terraform
