@@ -9,12 +9,16 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_db_instance: Add `upgrade_rollout_order` attribute ([#45527](https://github.com/hashicorp/terraform-provider-aws/issues/45527))
 * data-source/aws_eks_node_group : Add `update_config` block including `update_strategy` attribute ([#41487](https://github.com/hashicorp/terraform-provider-aws/issues/41487))
+* data-source/aws_rds_cluster: Add `upgrade_rollout_order` attribute ([#45527](https://github.com/hashicorp/terraform-provider-aws/issues/45527))
 * resource/aws_bedrockagent_agent: Add `session_summary_configuration.max_recent_sessions` argument ([#45449](https://github.com/hashicorp/terraform-provider-aws/issues/45449))
+* resource/aws_db_instance: Add `upgrade_rollout_order` attribute ([#45527](https://github.com/hashicorp/terraform-provider-aws/issues/45527))
 * resource/aws_eks_node_group : Add `update_config.update_strategy` attribute ([#41487](https://github.com/hashicorp/terraform-provider-aws/issues/41487))
 * resource/aws_kinesisanalyticsv2_application: Add `application_configuration.application_encryption_configuration` argument ([#45356](https://github.com/hashicorp/terraform-provider-aws/issues/45356))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_20` as a valid value for `runtime_environment` ([#45356](https://github.com/hashicorp/terraform-provider-aws/issues/45356))
 * resource/aws_lambda_capacity_provider: Add resource identity support ([#45456](https://github.com/hashicorp/terraform-provider-aws/issues/45456))
+* resource/aws_rds_cluster: Add `upgrade_rollout_order` attribute ([#45527](https://github.com/hashicorp/terraform-provider-aws/issues/45527))
 * resource/aws_s3vectors_index: Add `encryption_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
 * resource/aws_s3vectors_index: Add `metadata_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
 
