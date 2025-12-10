@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
@@ -216,8 +217,9 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 	clientToken := id.UniqueId()
 	input.ClientToken = aws.String(clientToken)
 
-	output, err := conn.CreateIdentitySource(ctx, input)
-
+	output, err := tfresource.RetryWhenIsA[*verifiedpermissions.CreateIdentitySourceOutput, *awstypes.ResourceNotFoundException](ctx, 1*time.Minute, func(ctx context.Context) (*verifiedpermissions.CreateIdentitySourceOutput, error) {
+		return conn.CreateIdentitySource(ctx, input)
+	})
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionCreating, ResNameIdentitySource, clientToken, err),
