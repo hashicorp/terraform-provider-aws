@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -167,7 +167,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 	output, err := conn.DescribeVpcConnector(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -182,7 +182,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 	}
 
 	if status := output.VpcConnector.Status; status == types.VpcConnectorStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -191,7 +191,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 	return output.VpcConnector, nil
 }
 
-func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCConnectorByARN(ctx, conn, arn)
 
@@ -211,7 +211,7 @@ func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.Client, arn st
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:  enum.Slice(types.VpcConnectorStatusActive),
 		Refresh: statusVPCConnector(ctx, conn, arn),
 		Timeout: timeout,
@@ -230,7 +230,7 @@ func waitVPCConnectorDeleted(ctx context.Context, conn *apprunner.Client, arn st
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.VpcConnectorStatusActive),
 		Target:  []string{},
 		Refresh: statusVPCConnector(ctx, conn, arn),

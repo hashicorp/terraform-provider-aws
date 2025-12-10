@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -264,7 +264,7 @@ func findConnections(ctx context.Context, conn *networkmanager.Client, input *ne
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -294,7 +294,7 @@ func findConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.ConnectionId) != connectionID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -302,7 +302,7 @@ func findConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string) retry.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
@@ -319,7 +319,7 @@ func statusConnectionState(ctx context.Context, conn *networkmanager.Client, glo
 }
 
 func waitConnectionCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,
@@ -336,7 +336,7 @@ func waitConnectionCreated(ctx context.Context, conn *networkmanager.Client, glo
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -353,7 +353,7 @@ func waitConnectionDeleted(ctx context.Context, conn *networkmanager.Client, glo
 }
 
 func waitConnectionUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,

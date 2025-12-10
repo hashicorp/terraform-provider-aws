@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -235,7 +235,7 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name s
 	output, err := conn.DescribeClusterParameterGroups(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -253,7 +253,7 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name s
 
 	// Eventual consistency check.
 	if aws.ToString(parameterGroup.ParameterGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}

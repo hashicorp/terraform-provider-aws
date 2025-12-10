@@ -190,13 +190,13 @@ rules:
 
   - id: go-no-tfresource-notfound
     languages: [go]
-    message: Use intretry.NotFound instead of tfresource.NotFound (migrate to smarterr).
+    message: Use retry.NotFound instead of tfresource.NotFound (migrate to smarterr).
     severity: ERROR
     patterns:
       - pattern: |
           tfresource.NotFound($ERR)
       - pattern-not-inside: |
-          intretry.NotFound(...)
+          retry.NotFound(...)
     paths:
       include:
         - "/internal/service/appsync/"

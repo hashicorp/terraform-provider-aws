@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1029,7 +1029,7 @@ func stopChannel(ctx context.Context, conn *medialive.Client, timeout time.Durat
 }
 
 func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateCreating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
 		Refresh:                   statusChannel(ctx, conn, id),
@@ -1047,7 +1047,7 @@ func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateUpdating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
 		Refresh:                   statusChannel(ctx, conn, id),
@@ -1065,7 +1065,7 @@ func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateDeleting),
 		Target:  []string{},
 		Refresh: statusChannel(ctx, conn, id),
@@ -1081,7 +1081,7 @@ func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStarting),
 		Target:  enum.Slice(types.ChannelStateRunning),
 		Refresh: statusChannel(ctx, conn, id),
@@ -1097,7 +1097,7 @@ func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStopping),
 		Target:  enum.Slice(types.ChannelStateIdle),
 		Refresh: statusChannel(ctx, conn, id),
@@ -1112,7 +1112,7 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 	return nil, err
 }
 
-func statusChannel(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
+func statusChannel(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findChannelByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -1134,7 +1134,7 @@ func findChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	out, err := conn.DescribeChannel(ctx, in)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -1151,7 +1151,7 @@ func findChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	// Channel can still be found with a state of DELETED.
 	// Set result as not found when the state is deleted.
 	if out.State == types.ChannelStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastResponse: string(types.ChannelStateDeleted),
 			LastRequest:  in,
 		}

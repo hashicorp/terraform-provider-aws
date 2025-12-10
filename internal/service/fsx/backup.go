@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -206,7 +206,7 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.BackupNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -226,7 +226,7 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 	return output, nil
 }
 
-func statusBackup(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusBackup(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBackupByID(ctx, conn, id)
 
@@ -246,7 +246,7 @@ func waitBackupAvailable(ctx context.Context, conn *fsx.Client, id string) (*aws
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring),
 		Target:  enum.Slice(awstypes.BackupLifecycleAvailable),
 		Refresh: statusBackup(ctx, conn, id),
@@ -266,7 +266,7 @@ func waitBackupDeleted(ctx context.Context, conn *fsx.Client, id string) (*awsty
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusBackup(ctx, conn, id),

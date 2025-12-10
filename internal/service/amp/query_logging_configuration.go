@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -270,7 +270,7 @@ func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id
 	output, err := conn.DescribeQueryLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -287,7 +287,7 @@ func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id
 	return output.QueryLoggingConfiguration, nil
 }
 
-func statusQueryLoggingConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
+func statusQueryLoggingConfiguration(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findQueryLoggingConfigurationByID(ctx, conn, id)
 
@@ -304,7 +304,7 @@ func statusQueryLoggingConfiguration(ctx context.Context, conn *amp.Client, id s
 }
 
 func waitQueryLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.QueryLoggingConfigurationMetadata, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.QueryLoggingConfigurationStatusCodeCreating),
 		Target:  enum.Slice(awstypes.QueryLoggingConfigurationStatusCodeActive),
 		Refresh: statusQueryLoggingConfiguration(ctx, conn, id),
@@ -323,7 +323,7 @@ func waitQueryLoggingConfigurationCreated(ctx context.Context, conn *amp.Client,
 }
 
 func waitQueryLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.QueryLoggingConfigurationMetadata, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.QueryLoggingConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.QueryLoggingConfigurationStatusCodeActive),
 		Refresh: statusQueryLoggingConfiguration(ctx, conn, id),
@@ -342,7 +342,7 @@ func waitQueryLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client,
 }
 
 func waitQueryLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.QueryLoggingConfigurationMetadata, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.QueryLoggingConfigurationStatusCodeDeleting, awstypes.QueryLoggingConfigurationStatusCodeActive),
 		Target:  []string{},
 		Refresh: statusQueryLoggingConfiguration(ctx, conn, id),

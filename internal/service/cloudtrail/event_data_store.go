@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -368,7 +368,7 @@ func findEventDataStoreByARN(ctx context.Context, conn *cloudtrail.Client, arn s
 	}
 
 	if status := output.Status; status == types.EventDataStoreStatusPendingDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -381,7 +381,7 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 	output, err := conn.GetEventDataStore(ctx, input)
 
 	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -398,7 +398,7 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 	return output, nil
 }
 
-func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) retry.StateRefreshFunc {
+func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEventDataStoreByARN(ctx, conn, arn)
 
@@ -451,7 +451,7 @@ func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, a
 }
 
 func waitEventDataStoreCreated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled, types.EventDataStoreStatusStoppedIngestion),
 		Refresh: statusEventDataStore(ctx, conn, arn),
@@ -468,7 +468,7 @@ func waitEventDataStoreCreated(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreUpdated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
 		Refresh: statusEventDataStore(ctx, conn, arn),
@@ -485,7 +485,7 @@ func waitEventDataStoreUpdated(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusEnabled),
 		Target:  []string{},
 		Refresh: statusEventDataStore(ctx, conn, arn),
@@ -502,7 +502,7 @@ func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn
 }
 
 func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusStartingIngestion),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
 		Refresh: statusEventDataStore(ctx, conn, arn),
@@ -519,7 +519,7 @@ func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Cl
 }
 
 func waitEventDataStoreIngestionStopped(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusStoppingIngestion),
 		Target:  enum.Slice(types.EventDataStoreStatusStoppedIngestion),
 		Refresh: statusEventDataStore(ctx, conn, arn),

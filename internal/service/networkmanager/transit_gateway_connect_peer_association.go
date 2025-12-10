@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -201,7 +201,7 @@ func findTransitGatewayConnectPeerAssociations(ctx context.Context, conn *networ
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -230,7 +230,7 @@ func findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 	}
 
 	if state := output.State; state == awstypes.TransitGatewayConnectPeerAssociationStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -238,7 +238,7 @@ func findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.TransitGatewayConnectPeerArn) != connectPeerARN {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -246,7 +246,7 @@ func findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 	return output, nil
 }
 
-func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string) retry.StateRefreshFunc {
+func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
@@ -263,7 +263,7 @@ func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *
 }
 
 func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string, timeout time.Duration) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStatePending),
 		Target:  enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStateAvailable),
 		Timeout: timeout,
@@ -280,7 +280,7 @@ func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *
 }
 
 func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string, timeout time.Duration) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStateAvailable, awstypes.TransitGatewayConnectPeerAssociationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,

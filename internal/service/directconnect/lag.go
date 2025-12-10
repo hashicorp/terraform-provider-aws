@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -249,7 +249,7 @@ func findLagByID(ctx context.Context, conn *directconnect.Client, id string) (*a
 	}
 
 	if state := output.LagState; state == awstypes.LagStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -272,7 +272,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	output, err := conn.DescribeLags(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -289,7 +289,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	return tfslices.Filter(output.Lags, tfslices.PredicateValue(filter)), nil
 }
 
-func statusLag(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+func statusLag(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLagByID(ctx, conn, id)
 
@@ -309,7 +309,7 @@ func waitLagDeleted(ctx context.Context, conn *directconnect.Client, id string) 
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LagStateAvailable, awstypes.LagStateRequested, awstypes.LagStatePending, awstypes.LagStateDeleting),
 		Target:  []string{},
 		Refresh: statusLag(ctx, conn, id),

@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -223,7 +223,7 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	output, err := conn.GetDNSSEC(ctx, input)
 
 	if errs.IsA[*awstypes.DNSSECNotFound](err) || errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -240,7 +240,7 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	return output, nil
 }
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
+func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
@@ -260,7 +260,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:     []string{status},
 		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,

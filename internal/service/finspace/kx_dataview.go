@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -329,7 +329,7 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 		var nfe *types.ResourceNotFoundException
 
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -344,7 +344,7 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 }
 
 func waitKxDataviewCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusCreating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
 		Refresh:                   statusKxDataview(ctx, conn, id),
@@ -361,7 +361,7 @@ func waitKxDataviewCreated(ctx context.Context, conn *finspace.Client, id string
 }
 
 func waitKxDataviewUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusUpdating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
 		Refresh:                   statusKxDataview(ctx, conn, id),
@@ -378,7 +378,7 @@ func waitKxDataviewUpdated(ctx context.Context, conn *finspace.Client, id string
 }
 
 func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.KxDataviewStatusDeleting),
 		Target:  []string{},
 		Refresh: statusKxDataview(ctx, conn, id),
@@ -393,7 +393,7 @@ func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string
 	return nil, err
 }
 
-func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindKxDataviewById(ctx, conn, id)
 		if tfresource.NotFound(err) {

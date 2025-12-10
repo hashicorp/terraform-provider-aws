@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -236,7 +236,7 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	output, err := conn.DescribeBotVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -253,7 +253,7 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	return output, nil
 }
 
-func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) retry.StateRefreshFunc {
+func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
 
@@ -270,7 +270,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botV
 }
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusCreating, awstypes.BotStatusVersioning),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBotVersion(ctx, conn, botID, botVersion),
@@ -290,7 +290,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID,
 }
 
 func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusBotVersion(ctx, conn, botID, botVersion),

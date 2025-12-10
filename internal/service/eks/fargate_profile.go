@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -234,7 +234,7 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	output, err := conn.DescribeFargateProfile(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -251,7 +251,7 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	return output.FargateProfile, nil
 }
 
-func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
+func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
@@ -268,7 +268,7 @@ func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fa
 }
 
 func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusCreating),
 		Target:  enum.Slice(types.FargateProfileStatusActive),
 		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
@@ -285,7 +285,7 @@ func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterNam
 }
 
 func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusActive, types.FargateProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -404,7 +404,7 @@ func (r *exportResource) UpgradeState(ctx context.Context) map[int64]resource.St
 }
 
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
@@ -422,7 +422,7 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 }
 
 func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
@@ -439,7 +439,7 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	return nil, err
 }
 
-func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
+func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findExportByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -461,7 +461,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 
 	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}

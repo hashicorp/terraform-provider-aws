@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -416,7 +416,7 @@ func findFileSystems(ctx context.Context, conn *efs.Client, input *efs.DescribeF
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -448,7 +448,7 @@ func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awst
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -457,7 +457,7 @@ func findFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awst
 	return output, nil
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
+func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
@@ -477,7 +477,7 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.Client, fileSystemID
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating, awstypes.LifeCycleStateUpdating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
@@ -499,7 +499,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:     []string{},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),

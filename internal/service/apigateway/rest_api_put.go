@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -188,7 +188,7 @@ const (
 )
 
 func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id string, timeout time.Duration) (*apigateway.GetRestApiOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusRestAPIPut(ctx, conn, id),
@@ -205,7 +205,7 @@ func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id stri
 	return nil, err
 }
 
-func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) retry.StateRefreshFunc {
+func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findRestAPIByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

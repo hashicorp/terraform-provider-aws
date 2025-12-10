@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -312,7 +312,7 @@ func findTheme(ctx context.Context, conn *quicksight.Client, input *quicksight.D
 	output, err := conn.DescribeTheme(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -342,7 +342,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	output, err := conn.DescribeThemePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -359,7 +359,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	return output.Permissions, nil
 }
 
-func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) retry.StateRefreshFunc {
+func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
@@ -376,7 +376,7 @@ func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, the
 }
 
 func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),
@@ -397,7 +397,7 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID
 }
 
 func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),

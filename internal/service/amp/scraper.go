@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -509,7 +509,7 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	output, err := conn.DescribeScraper(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -526,7 +526,7 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	return output.Scraper, nil
 }
 
-func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
+func statusScraper(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findScraperByID(ctx, conn, id)
 
@@ -543,7 +543,7 @@ func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.State
 }
 
 func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeCreating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
 		Refresh: statusScraper(ctx, conn, id),
@@ -562,7 +562,7 @@ func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeou
 }
 
 func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
 		Refresh: statusScraper(ctx, conn, id),
@@ -581,7 +581,7 @@ func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeou
 }
 
 func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeActive, awstypes.ScraperStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),

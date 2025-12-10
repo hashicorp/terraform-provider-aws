@@ -15,7 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -381,7 +381,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		tags, err := listTags(ctx, conn, keyID)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{LastError: err}
+			return nil, &sdkretry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -407,7 +407,7 @@ func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
 	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -420,7 +420,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -459,7 +459,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -484,7 +484,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -630,7 +630,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
+func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
@@ -675,7 +675,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
 		Refresh: statusKeyState(ctx, conn, keyID),

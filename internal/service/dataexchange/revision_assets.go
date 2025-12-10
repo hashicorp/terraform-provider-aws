@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -853,7 +853,7 @@ func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId,
 	output, err := conn.GetRevision(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -957,7 +957,7 @@ type kmsKeyToGrantModel struct {
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StateWaiting, awstypes.StateInProgress),
 		Target:       enum.Slice(awstypes.StateCompleted),
 		Refresh:      statusJob(ctx, conn, jobID),
@@ -993,7 +993,7 @@ func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error 
 	return err
 }
 
-func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) retry.StateRefreshFunc {
+func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, jobID)
 
@@ -1017,7 +1017,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	out, err := conn.GetJob(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError: err,
 			}
 		}

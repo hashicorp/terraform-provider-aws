@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -239,7 +239,7 @@ func findClusterByID(ctx context.Context, conn *cloudhsmv2.Client, id string) (*
 	}
 
 	if state := output.State; state == types.ClusterStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -247,7 +247,7 @@ func findClusterByID(ctx context.Context, conn *cloudhsmv2.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.ClusterId) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -282,7 +282,7 @@ func findClusters(ctx context.Context, conn *cloudhsmv2.Client, input *cloudhsmv
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
@@ -299,7 +299,7 @@ func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) retr
 }
 
 func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateActive),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -320,7 +320,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, 
 }
 
 func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateDeleteInProgress),
 		Target:     []string{},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -341,7 +341,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string,
 }
 
 func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateUninitialized),
 		Refresh:    statusCluster(ctx, conn, id),

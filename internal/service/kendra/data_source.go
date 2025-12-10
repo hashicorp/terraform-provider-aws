@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -853,7 +853,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusCreating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -875,7 +875,7 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -897,7 +897,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -915,7 +915,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 

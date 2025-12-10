@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -352,7 +352,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	output, err := conn.GetDeployment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -369,7 +369,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
@@ -386,7 +386,7 @@ func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deplo
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeploying),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
 		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
@@ -405,7 +405,7 @@ func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, 
 }
 
 func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeployUpdate),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
 		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),

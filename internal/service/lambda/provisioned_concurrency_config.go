@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -208,7 +208,7 @@ func findProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, 
 	output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ProvisionedConcurrencyConfigNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -234,7 +234,7 @@ func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lam
 	return findProvisionedConcurrencyConfig(ctx, conn, input)
 }
 
-func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
+func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
@@ -251,7 +251,7 @@ func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client
 }
 
 func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetProvisionedConcurrencyConfigOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumInProgress),
 		Target:  enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumReady),
 		Refresh: statusProvisionedConcurrencyConfig(ctx, conn, functionName, qualifier),

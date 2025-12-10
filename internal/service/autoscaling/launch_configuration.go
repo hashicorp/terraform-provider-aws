@@ -18,7 +18,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -819,7 +819,7 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.LaunchConfigurationName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -864,7 +864,7 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID stri
 	}
 
 	if rootDeviceName == "" {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("finding root device name for EC2 AMI (%s)", imageID),
 		}
 	}
