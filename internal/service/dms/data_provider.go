@@ -384,7 +384,7 @@ func expandGenericDataProviderSettings[T any](tfList []interface{}) *T {
 
 	// Use reflection to set common fields
 	val := reflect.ValueOf(v).Elem()
-	
+
 	if certArn, ok := tfMap[names.AttrCertificateARN].(string); ok && certArn != "" {
 		if field := val.FieldByName("CertificateArn"); field.IsValid() && field.CanSet() {
 			field.Set(reflect.ValueOf(aws.String(certArn)))
