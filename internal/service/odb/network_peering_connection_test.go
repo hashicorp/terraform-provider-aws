@@ -98,7 +98,7 @@ func TestAccODBNetworkPeeringConnection_withARN(t *testing.T) {
 		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNwkPeeringTestResource.basicConfigWithArn(vpcName, odbNetName, odbPeeringDisplayName),
+				Config: oracleDBNwkPeeringTestResource.basicConfigWithARN(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -299,7 +299,7 @@ resource "aws_odb_network_peering_connection" "test" {
 `, vpcName, odbNetName, odbPeeringName)
 }
 
-func (oracleDBNwkPeeringResourceTest) basicConfigWithArn(vpcName, odbNetName, odbPeeringName string) string {
+func (oracleDBNwkPeeringResourceTest) basicConfigWithARN(vpcName, odbNetName, odbPeeringName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

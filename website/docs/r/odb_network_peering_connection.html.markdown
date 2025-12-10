@@ -35,6 +35,7 @@ The following arguments are required:
 * `display_name` - (Required) Display name of the ODB network peering connection. Changing this will force Terraform to create a new resource.
 
 The following arguments are optional:
+
 * `odb_network_id` - (Optional) The unique identifier of the ODB network that initiates the peering connection. A sample ID is `odbpcx-abcdefgh12345678`. Changing this will force Terraform to create a new resource.
 * `odb_network_arn` - (Optional) ARN of the ODB network that initiates the peering connection. Changing this will force Terraform to create a new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
