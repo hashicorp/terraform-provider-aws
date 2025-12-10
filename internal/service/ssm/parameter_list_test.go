@@ -41,7 +41,7 @@ func TestAccSSMParameter_List_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/parameter/list_basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Parameter/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -57,7 +57,7 @@ func TestAccSSMParameter_List_basic(t *testing.T) {
 			{
 				Query:                    true,
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/parameter/list_basic/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Parameter/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
