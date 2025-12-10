@@ -631,7 +631,7 @@ func TestAccElastiCacheReplicationGroup_authToRbacMigration(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_ForMigrationAuthTokenSetup(rName),
+				Config: testAccReplicationGroupConfig_authTokenMigrationBase(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 				),
@@ -645,7 +645,7 @@ func TestAccElastiCacheReplicationGroup_authToRbacMigration(t *testing.T) {
 			{
 				// When adding an auth_token to a previously passwordless replication
 				// group, the SET strategy can be used.
-				Config: testAccReplicationGroupConfig_ForMigrationAuthToken(rName, token1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
+				Config: testAccReplicationGroupConfig_authTokenUpdateStrategyMigration(rName, token1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
@@ -657,7 +657,7 @@ func TestAccElastiCacheReplicationGroup_authToRbacMigration(t *testing.T) {
 				// To migrate from AUTH to RBAC, modify request should not include the auth_token and
 				// need to keep DELETE auth_token_update_strategy
 				// Ref: https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Clusters.RBAC.html#Migrate-From-RBAC-to-Auth
-				Config: testAccReplicationGroupConfig_ForMigrationUserGroup(rName, userId, userGroup),
+				Config: testAccReplicationGroupConfig_userGroupMigration(rName, userId, userGroup),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					testAccCheckReplicationGroupUserGroup(ctx, t, resourceName, userGroup),
@@ -4725,7 +4725,7 @@ resource "aws_security_group" "test" {
 `, rName, authToken, updateStrategy))
 }
 
-func testAccReplicationGroupConfig_ForMigrationAuthTokenSetup(rName string) string {
+func testAccReplicationGroupConfig_authTokenMigrationBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
@@ -4761,7 +4761,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccReplicationGroupConfig_ForMigrationAuthToken(rName string, authToken string, updateStrategy string) string {
+func testAccReplicationGroupConfig_authTokenUpdateStrategyMigration(rName string, authToken string, updateStrategy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
@@ -4801,7 +4801,7 @@ resource "aws_security_group" "test" {
 `, rName, authToken, updateStrategy))
 }
 
-func testAccReplicationGroupConfig_ForMigrationUserGroup(rName string, userId string, userGroup string) string {
+func testAccReplicationGroupConfig_userGroupMigration(rName string, userId string, userGroup string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
