@@ -558,6 +558,66 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 	})
 }
 
+func testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var knowledgebase awstypes.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_StructuredDataStore_redshiftProvisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrType: tfknownvalue.StringExact(awstypes.QueryEngineTypeRedshift),
+									"redshift_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"query_engine_configuration": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													names.AttrType:              tfknownvalue.StringExact(awstypes.RedshiftQueryEngineTypeProvisioned),
+													"provisioned_configuration": knownvalue.ListSizeExact(1),
+													"serverless_configuration":  knownvalue.ListSizeExact(0),
+												}),
+											}),
+											"query_generation_configuration": knownvalue.ListSizeExact(0),
+											"storage_configuration": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													names.AttrType:                   tfknownvalue.StringExact(awstypes.RedshiftQueryEngineStorageTypeRedshift),
+													"aws_data_catalog_configuration": knownvalue.ListSizeExact(0),
+													"redshift_configuration":         knownvalue.ListSizeExact(1),
+												}),
+											}),
+										}),
+									}),
+								}),
+							}),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeSql),
+							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -1776,4 +1836,141 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 }
 `, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_StructuredDataStore_redshiftProvisioned(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "bedrock.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "%[1]s-bedrock"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "RedshiftDataAPIStatementPermissions"
+        Effect = "Allow"
+        Action = [
+          "redshift-data:GetStatementResult",
+          "redshift-data:DescribeStatement",
+          "redshift-data:CancelStatement"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "RedshiftDataAPIExecutePermissions"
+        Effect = "Allow"
+        Action = [
+          "redshift-data:ExecuteStatement"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "SqlWorkbenchAccess"
+        Effect = "Allow"
+        Action = [
+          "sqlworkbench:GetSqlRecommendations",
+          "sqlworkbench:PutSqlGenerationContext",
+          "sqlworkbench:GetSqlGenerationContext",
+          "sqlworkbench:DeleteSqlGenerationContext"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "GenerateQueryAccess"
+        Effect = "Allow"
+        Action = [
+          "bedrock:GenerateQuery"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "GetCredentialsWithClusterCredentials"
+        Effect = "Allow"
+        Action = [
+          "redshift:GetClusterCredentials"
+        ]
+        Resource = ["*"]
+      }
+    ]
+  })
+}
+
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    type = "SQL"
+
+    sql_knowledge_base_configuration {
+      type = "REDSHIFT"
+
+      redshift_configuration {
+        query_engine_configuration {
+          type = "PROVISIONED"
+
+          provisioned_configuration {
+            cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+
+            auth_configuration {
+              type          = "USERNAME"
+              database_user = aws_redshift_cluster.test.master_username
+            }
+          }
+        }
+
+        storage_configuration {
+          type = "REDSHIFT"
+
+          redshift_configuration {
+            database_name = aws_redshift_cluster.test.database_name
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName)
 }
