@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -108,20 +109,20 @@ func resourceDomainSAMLOptions() *schema.Resource {
 	}
 }
 
-func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		AdvancedSecurityOptions: &awstypes.AdvancedSecurityOptionsInput{
-			SAMLOptions: expandESSAMLOptions(d.Get("saml_options").([]interface{})),
+			SAMLOptions: expandESSAMLOptions(d.Get("saml_options").([]any)),
 		},
 		DomainName: aws.String(domainName),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateElasticsearchDomainConfig(ctx, input)
 		}, "A change/update is in progress")
 
@@ -140,13 +141,13 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	output, err := findDomainSAMLOptionByDomainName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -164,7 +165,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -190,8 +191,8 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
-	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
+	if v, ok := d.Get("saml_options").([]any); ok && len(v) > 0 {
+		if enabled, ok := v[0].(map[string]any)[names.AttrEnabled].(bool); ok && !enabled {
 			return true
 		}
 	}

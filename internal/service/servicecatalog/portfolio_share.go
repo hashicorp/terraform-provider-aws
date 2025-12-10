@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -13,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -102,11 +102,13 @@ func resourcePortfolioShare() *schema.Resource {
 	}
 }
 
-func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+const portfolioShareMutexKey = "aws_servicecatalog_portfolio_share"
+
+func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.CreatePortfolioShareInput{
+	input := servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
 		SharePrincipals: d.Get("share_principals").(bool),
 		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
@@ -132,26 +134,25 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = v.(bool)
 	}
 
+	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
+	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
+
 	var output *servicecatalog.CreatePortfolioShareOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
-		output, err = conn.CreatePortfolioShare(ctx, input)
+		output, err = conn.CreatePortfolioShare(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreatePortfolioShare(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: %s", err)
@@ -182,7 +183,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -199,7 +200,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := waitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -220,11 +221,11 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.UpdatePortfolioShareInput{
+	input := servicecatalog.UpdatePortfolioShareInput{
 		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
 		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
 	}
@@ -253,23 +254,19 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.OrganizationNode = orgNode
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.UpdatePortfolioShare(ctx, input)
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.UpdatePortfolioShare(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdatePortfolioShare(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Portfolio Share (%s): %s", d.Id(), err)
@@ -278,11 +275,11 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
-func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.DeletePortfolioShareInput{
+	input := servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
 	}
 
@@ -306,7 +303,10 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.OrganizationNode = orgNode
 	}
 
-	output, err := conn.DeletePortfolioShare(ctx, input)
+	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
+	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
+
+	output, err := conn.DeletePortfolioShare(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -11,7 +11,9 @@ var (
 	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
+	ResourceFlow                          = newFlowResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
+	ResourcePrompt                        = newPromptResource
 
 	FindAgentByID                                  = findAgentByID
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
@@ -19,5 +21,7 @@ var (
 	FindAgentCollaboratorByThreePartKey            = findAgentCollaboratorByThreePartKey
 	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
 	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
+	FindFlowByID                                   = findFlowByID
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
+	FindPromptByID                                 = findPromptByID
 )

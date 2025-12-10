@@ -43,10 +43,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/license-manager/latest/APIReference/API_ListReceivedLicenses.html#API_ListReceivedLicenses_RequestSyntax).
@@ -85,4 +89,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - List of all the license ARNs found.
 
-<!-- cache-key: cdktf-0.20.8 input-9e7d7fb591954c8a5486067c8e8ee9eec8da84299f8bb0a76f259725c8df90f0 -->
+<!-- cache-key: cdktf-0.20.8 input-e6cbc1449ea2e079126729ade5a8af26a82457a4a1b8bab51b5aa9567db180c5 -->

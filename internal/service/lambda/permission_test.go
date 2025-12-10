@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,7 +47,7 @@ func TestPermissionUnmarshalling(t *testing.T) {
 	}
 
 	expectedPrincipal := "events.amazonaws.com"
-	service := stmt.Principal.(map[string]interface{})["Service"]
+	service := stmt.Principal.(map[string]any)["Service"]
 	if service != expectedPrincipal {
 		t.Fatalf("Expected Principal to match (%q != %q)", service, expectedPrincipal)
 	}
@@ -644,6 +644,7 @@ func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 
 	resourceName := "aws_lambda_permission.test"
 	functionResourceName := "aws_lambda_function.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -656,7 +657,7 @@ func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
@@ -680,6 +681,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 
 	resourceName := "aws_lambda_permission.test"
 	functionResourceName := "aws_lambda_function.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -692,7 +694,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
@@ -745,7 +747,7 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflambda.FindPolicyStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.ID, rs.Primary.Attributes["qualifier"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1060,7 +1062,7 @@ resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionWithIAM"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.test.function_name
-  principal              = "*"
+  principal              = aws_iam_role.test.arn
   function_url_auth_type = "AWS_IAM"
 }
 `)
@@ -1072,7 +1074,7 @@ resource "aws_lambda_permission" "test" {
   statement_id           = "AllowExecutionFromWithoutAuth"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.test.function_name
-  principal              = "*"
+  principal              = aws_iam_role.test.arn
   function_url_auth_type = "NONE"
 }
 `)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -11,8 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
 		Refresh:    statusClusterAvailability(ctx, conn, id),
@@ -43,7 +44,7 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying},
 		Target:  []string{},
 		Refresh: statusClusterAvailability(ctx, conn, id),
@@ -62,7 +63,7 @@ func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:  []string{clusterAvailabilityStatusAvailable},
 		Refresh: statusClusterAvailability(ctx, conn, id),
@@ -81,7 +82,7 @@ func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
 		Refresh: statusClusterAvailabilityZoneRelocation(ctx, conn, id),
@@ -98,7 +99,7 @@ func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Cli
 }
 
 func waitClusterRebooted(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterStatusRebooting, clusterStatusModifying},
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -118,7 +119,7 @@ func waitClusterRebooted(ctx context.Context, conn *redshift.Client, id string, 
 }
 
 func waitClusterAquaApplied(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.AquaStatusApplying),
 		Target:     enum.Slice(awstypes.AquaStatusDisabled, awstypes.AquaStatusEnabled),
 		Refresh:    statusClusterAqua(ctx, conn, id),
@@ -138,7 +139,7 @@ func waitClusterAquaApplied(ctx context.Context, conn *redshift.Client, id strin
 }
 
 func waitEndpointAccessActive(ctx context.Context, conn *redshift.Client, id string) (*awstypes.EndpointAccess, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusCreating, endpointAccessStatusModifying},
 		Target:     []string{endpointAccessStatusActive},
 		Refresh:    statusEndpointAccess(ctx, conn, id),
@@ -159,7 +160,7 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshift.Client, id str
 }
 
 func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Client, id string) (*awstypes.EndpointAccess, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEndpointAccess(ctx, conn, id),
@@ -180,7 +181,7 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Client, id st
 }
 
 func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),
@@ -201,7 +202,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Client, id s
 }
 
 func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusAvailable},
 		Target:     []string{},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),
@@ -214,6 +215,63 @@ func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id s
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusCreating, awstypes.ZeroETLIntegrationStatusModifying),
+		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusModifying),
+		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusDeleting, awstypes.ZeroETLIntegrationStatusActive),
+		Target:  []string{},
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}

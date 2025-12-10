@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -17,6 +17,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_service_principal", name="Service Principal")
+// @Region(validateOverrideInPartition=false)
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -24,11 +25,7 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type servicePrincipalDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*servicePrincipalDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service_principal"
+	framework.DataSourceWithModel[servicePrincipalDataSourceModel]
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -38,10 +35,6 @@ func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasou
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrServiceName: schema.StringAttribute{
@@ -61,34 +54,13 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	var region *endpoints.Region
+	name := d.Meta().Region(ctx)
+	region, err := findRegionByName(ctx, name)
 
-	// find the region given by the user
-	if !data.Region.IsNull() {
-		name := data.Region.ValueString()
-		matchingRegion, err := findRegionByName(ctx, name)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
-	}
-
-	// Default to provider current Region if no other filters matched.
-	if region == nil {
-		name := d.Meta().Region(ctx)
-		matchingRegion, err := findRegionByName(ctx, name)
-
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
+		return
 	}
 
 	regionID := region.ID()
@@ -104,9 +76,9 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 }
 
 type servicePrincipalDataSourceModel struct {
+	framework.WithRegionModel
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
-	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
 }

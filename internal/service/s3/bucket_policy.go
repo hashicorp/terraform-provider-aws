@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -11,18 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
@@ -30,32 +33,18 @@ func resourceBucketPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketPolicyPut,
 		DeleteWithoutTimeout: resourceBucketPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -73,7 +62,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -84,7 +73,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findBucketPolicy(ctx, conn, bucket)
 		})
 
@@ -96,7 +85,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -107,7 +96,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	policy, err := findBucketPolicy(ctx, conn, bucket)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +117,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -150,7 +139,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketPolicy(ctx, conn, bucket)
 	})
 
@@ -169,7 +158,7 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	output, err := conn.GetBucketPolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy) {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

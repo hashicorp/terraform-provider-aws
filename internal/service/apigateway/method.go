@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +34,7 @@ func resourceMethod() *schema.Resource {
 		DeleteWithoutTimeout: resourceMethodDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
@@ -106,7 +107,7 @@ func resourceMethod() *schema.Resource {
 	}
 }
 
-func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -130,12 +131,12 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.OperationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("request_models"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_models"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = flex.ExpandBoolValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestParameters = flex.ExpandBoolValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
@@ -153,13 +154,13 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	method, err := findMethodByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -181,7 +182,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -303,7 +304,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMethodRead(ctx, d, meta)...)
 }
 
-func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -393,7 +394,7 @@ func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, http
 	output, err := conn.GetMethod(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

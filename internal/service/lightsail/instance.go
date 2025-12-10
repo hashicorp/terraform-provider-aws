@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -15,15 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -166,12 +166,11 @@ func ResourceInstance() *schema.Resource {
 				}
 				return nil
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -212,10 +211,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(iName)
 
 	// Cannot enable add ons with creation request
-	if expandAddOnEnabled(d.Get("add_on").([]interface{})) {
+	if expandAddOnEnabled(d.Get("add_on").([]any)) {
 		in := lightsail.EnableAddOnInput{
 			ResourceName: aws.String(iName),
-			AddOnRequest: expandAddOnRequest(d.Get("add_on").([]interface{})),
+			AddOnRequest: expandAddOnRequest(d.Get("add_on").([]any)),
 		}
 
 		out, err := conn.EnableAddOn(ctx, &in)
@@ -234,14 +233,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindInstanceById(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResInstance, d.Id())
 		d.SetId("")
 		return diags
@@ -276,7 +275,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -302,7 +301,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -336,7 +335,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
+func expandAddOnRequest(addOnListRaw []any) *types.AddOnRequest {
 	if len(addOnListRaw) == 0 {
 		return &types.AddOnRequest{}
 	}
@@ -344,7 +343,7 @@ func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
 	addOnRequest := &types.AddOnRequest{}
 
 	for _, addOnRaw := range addOnListRaw {
-		addOnMap := addOnRaw.(map[string]interface{})
+		addOnMap := addOnRaw.(map[string]any)
 		addOnRequest.AddOnType = types.AddOnType(addOnMap[names.AttrType].(string))
 		addOnRequest.AutoSnapshotAddOnRequest = &types.AutoSnapshotAddOnRequest{
 			SnapshotTimeOfDay: aws.String(addOnMap["snapshot_time"].(string)),
@@ -354,25 +353,25 @@ func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
 	return addOnRequest
 }
 
-func expandAddOnEnabled(addOnListRaw []interface{}) bool {
+func expandAddOnEnabled(addOnListRaw []any) bool {
 	if len(addOnListRaw) == 0 {
 		return false
 	}
 
 	var enabled bool
 	for _, addOnRaw := range addOnListRaw {
-		addOnMap := addOnRaw.(map[string]interface{})
+		addOnMap := addOnRaw.(map[string]any)
 		enabled = addOnMap[names.AttrStatus].(string) == "Enabled"
 	}
 
 	return enabled
 }
 
-func flattenAddOns(addOns []types.AddOn) []interface{} {
-	var rawAddOns []interface{}
+func flattenAddOns(addOns []types.AddOn) []any {
+	var rawAddOns []any
 
 	for _, addOn := range addOns {
-		rawAddOn := map[string]interface{}{
+		rawAddOn := map[string]any{
 			names.AttrType:   aws.ToString(addOn.Name),
 			"snapshot_time":  aws.ToString(addOn.SnapshotTimeOfDay),
 			names.AttrStatus: aws.ToString(addOn.Status),
@@ -383,13 +382,13 @@ func flattenAddOns(addOns []types.AddOn) []interface{} {
 	return rawAddOns
 }
 
-func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAddOnsRaw interface{}, newAddOnsRaw interface{}) diag.Diagnostics {
+func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAddOnsRaw any, newAddOnsRaw any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	oldAddOns := expandAddOnRequest(oldAddOnsRaw.([]interface{}))
-	newAddOns := expandAddOnRequest(newAddOnsRaw.([]interface{}))
-	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.([]interface{}))
-	newAddonStatus := expandAddOnEnabled(newAddOnsRaw.([]interface{}))
+	oldAddOns := expandAddOnRequest(oldAddOnsRaw.([]any))
+	newAddOns := expandAddOnRequest(newAddOnsRaw.([]any))
+	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.([]any))
+	newAddonStatus := expandAddOnEnabled(newAddOnsRaw.([]any))
 
 	if (oldAddOnStatus && newAddonStatus) || !newAddonStatus {
 		in := lightsail.DisableAddOnInput{
@@ -447,7 +446,7 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Client, id string) (*
 	out, err := conn.GetInstance(ctx, in)
 
 	if IsANotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

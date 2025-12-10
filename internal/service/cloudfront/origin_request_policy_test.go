@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,8 +31,9 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-request-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
@@ -155,7 +156,7 @@ func testAccCheckOriginRequestPolicyDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfcloudfront.FindOriginRequestPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

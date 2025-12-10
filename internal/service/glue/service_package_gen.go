@@ -4,190 +4,239 @@ package glue
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceRegistry,
+			Factory:  newRegistryDataSource,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceCatalogTableOptimizer,
+			Factory:  newCatalogTableOptimizerResource,
 			TypeName: "aws_glue_catalog_table_optimizer",
 			Name:     "Catalog Table Optimizer",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCatalogTable,
+			Factory:  dataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceConnection,
+			Factory:  dataSourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceDataCatalogEncryptionSettings,
+			Factory:  dataSourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceScript,
+			Factory:  dataSourceScript,
 			TypeName: "aws_glue_script",
 			Name:     "Script",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCatalogDatabase,
+			Factory:  resourceCatalogDatabase,
 			TypeName: "aws_glue_catalog_database",
 			Name:     "Database",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceCatalogTable,
+			Factory:  resourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 			Name:     "Catalog Table",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceClassifier,
+			Factory:  resourceClassifier,
 			TypeName: "aws_glue_classifier",
 			Name:     "Classifier",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_glue_connection",
 			Name:     "Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceCrawler,
+			Factory:  resourceCrawler,
 			TypeName: "aws_glue_crawler",
 			Name:     "Crawler",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceDataCatalogEncryptionSettings,
+			Factory:  resourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
 			Name:     "Data Catalog Encryption Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceDataQualityRuleset,
+			Factory:  resourceDataQualityRuleset,
 			TypeName: "aws_glue_data_quality_ruleset",
 			Name:     "Data Quality Ruleset",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceDevEndpoint,
+			Factory:  resourceDevEndpoint,
 			TypeName: "aws_glue_dev_endpoint",
 			Name:     "Dev Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceJob,
+			Factory:  resourceJob,
 			TypeName: "aws_glue_job",
 			Name:     "Job",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceMLTransform,
+			Factory:  resourceMLTransform,
 			TypeName: "aws_glue_ml_transform",
 			Name:     "ML Transform",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourcePartition,
+			Factory:  resourcePartition,
 			TypeName: "aws_glue_partition",
 			Name:     "Partition",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourcePartitionIndex,
+			Factory:  resourcePartitionIndex,
 			TypeName: "aws_glue_partition_index",
 			Name:     "Partition Index",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceRegistry,
+			Factory:  resourceRegistry,
 			TypeName: "aws_glue_registry",
 			Name:     "Registry",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_glue_resource_policy",
 			Name:     "Resource Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
+				inttypes.WithV6_0SDKv2Fix(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
-			Factory:  ResourceSchema,
+			Factory:  resourceSchema,
 			TypeName: "aws_glue_schema",
 			Name:     "Schema",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
 			},
 		},
 		{
-			Factory:  ResourceSecurityConfiguration,
+			Factory:  resourceSecurityConfiguration,
 			TypeName: "aws_glue_security_configuration",
 			Name:     "Security Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceTrigger,
+			Factory:  resourceTrigger,
 			TypeName: "aws_glue_trigger",
 			Name:     "Trigger",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceUserDefinedFunction,
+			Factory:  resourceUserDefinedFunction,
 			TypeName: "aws_glue_user_defined_function",
 			Name:     "User Defined Function",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceWorkflow,
+			Factory:  resourceWorkflow,
 			TypeName: "aws_glue_workflow",
 			Name:     "Workflow",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -199,11 +248,47 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*glue.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return glue.NewFromConfig(cfg,
+	optFns := []func(*glue.Options){
 		glue.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		func(o *glue.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *glue.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
+			}
+		},
+		withExtraOptions(ctx, p, config),
+	}
+
+	return glue.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*glue.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*glue.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *glue.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*glue.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

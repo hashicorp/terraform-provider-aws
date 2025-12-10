@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,17 +22,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
@@ -39,9 +39,13 @@ import (
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
 // @Tags(identifierAttribute="arn", resourceType="BucketObject")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("key")
+// @IdAttrFormat("{bucket}/{key}")
+// @ImportIDHandler("bucketObjectImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
-// @Testing(importStateIdFunc=testAccBucketObjectImportStateIdFunc)
 // @Testing(importIgnore="acl;force_destroy")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -49,14 +53,7 @@ func resourceBucketObject() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketObjectUpdate,
 		DeleteWithoutTimeout: resourceBucketObjectDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceBucketObjectImport,
-		},
-
-		CustomizeDiff: customdiff.Sequence(
-			resourceBucketObjectCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceBucketObjectCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -70,7 +67,7 @@ func resourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "bucket is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -127,7 +124,7 @@ func resourceBucketObject() *schema.Resource {
 				Default:  false,
 			},
 			names.AttrKey: {
-				Deprecated:   "Use the aws_s3_object resource instead",
+				Deprecated:   "key is deprecated. Use the aws_s3_object resource instead.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -197,12 +194,12 @@ func resourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
 }
 
-func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -210,7 +207,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", "")
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -254,7 +251,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if hasBucketObjectContentChanges(d) {
 		return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
@@ -325,7 +322,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -346,26 +343,7 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	id := d.Id()
-	id = strings.TrimPrefix(id, "s3://")
-	parts := strings.Split(id, "/")
-
-	if len(parts) < 2 {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
-	}
-
-	bucket := parts[0]
-	key := strings.Join(parts[1:], "/")
-
-	d.SetId(key)
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrKey, key)
-
-	return []*schema.ResourceData{d}, nil
-}
-
-func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
@@ -397,7 +375,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := itypes.Base64Decode(content)
+		contentRaw, err := inttypes.Base64Decode(content)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
 		}
@@ -446,7 +424,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		input.Metadata = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Metadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
@@ -492,13 +470,13 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() {
-		d.SetId(d.Get(names.AttrKey).(string))
+		d.SetId(createBucketObjectImportID(d))
 	}
 
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if hasBucketObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
@@ -512,7 +490,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 }
 
 func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
-	for _, key := range []string{
+	return slices.ContainsFunc([]string{
 		"bucket_key_enabled",
 		"cache_control",
 		"content_base64",
@@ -529,10 +507,30 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"source_hash",
 		names.AttrStorageClass,
 		"website_redirect",
-	} {
-		if d.HasChange(key) {
-			return true
-		}
+	}, d.HasChange)
+}
+
+func createBucketObjectImportID(d *schema.ResourceData) string {
+	return createObjectImportID(d)
+}
+
+type bucketObjectImportID struct{}
+
+func (bucketObjectImportID) Create(d *schema.ResourceData) string {
+	return createBucketObjectImportID(d)
+}
+
+func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+	id = strings.TrimPrefix(id, "s3://")
+
+	bucket, key, found := strings.Cut(id, "/")
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
-	return false
+
+	result := map[string]string{
+		names.AttrBucket: bucket,
+		names.AttrKey:    key,
+	}
+	return id, result, nil
 }

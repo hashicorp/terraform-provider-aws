@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition
@@ -19,11 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,15 +32,16 @@ import (
 
 // @FrameworkResource("aws_rekognition_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
-func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCollection{}
+func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &collectionResource{}
+
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 
 	return r, nil
 }
 
-type resourceCollection struct {
-	framework.ResourceWithConfigure
+type collectionResource struct {
+	framework.ResourceWithModel[collectionResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -48,11 +50,7 @@ const (
 	ResNameCollection = "Collection"
 )
 
-func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_collection"
-}
-
-func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
 
 	s := schema.Schema{
@@ -91,10 +89,10 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = s
 }
 
-func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan resourceCollectionData
+	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -117,7 +115,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
-	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*rekognition.DescribeCollectionOutput, error) {
 		return findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
 	})
 
@@ -129,8 +127,6 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	output := out.(*rekognition.DescribeCollectionOutput)
-
 	state := plan
 	state.ID = plan.CollectionID
 	state.ARN = flex.StringToFramework(ctx, output.CollectionARN)
@@ -139,10 +135,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -151,7 +147,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 
 	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -171,8 +167,8 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceCollectionData
+func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan collectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -182,10 +178,10 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceCollectionData
+	var state collectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -210,10 +206,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
 	in := &rekognition.DescribeCollectionInput{
 		CollectionId: aws.String(id),
@@ -222,7 +214,7 @@ func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 	out, err := conn.DescribeCollection(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -239,7 +231,8 @@ func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 	return out, nil
 }
 
-type resourceCollectionData struct {
+type collectionResourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String   `tfsdk:"arn"`
 	CollectionID     types.String   `tfsdk:"collection_id"`
 	FaceModelVersion types.String   `tfsdk:"face_model_version"`

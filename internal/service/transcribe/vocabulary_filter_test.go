@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,8 +45,9 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary-filter/{vocabulary_filter_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "vocabulary_filter_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
 			},
@@ -84,7 +85,7 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary-filter/{vocabulary_filter_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
@@ -117,7 +118,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary-filter/{vocabulary_filter_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_filter_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
@@ -126,7 +127,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary-filter/{vocabulary_filter_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "words.#", "3"),
 				),
@@ -227,7 +228,7 @@ func testAccCheckVocabularyFilterDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

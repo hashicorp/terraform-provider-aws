@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,6 +37,41 @@ func dataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"auto_provision_zones": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_scaling_ips": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone_address": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allocation_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"connectivity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,6 +91,46 @@ func dataSourceNATGateway() *schema.Resource {
 				Computed: true,
 			},
 			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"regional_nat_gateway_address": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allocation_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrAssociationID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"public_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +168,7 @@ func dataSourceNATGateway() *schema.Resource {
 	}
 }
 
-func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	var diags diag.Diagnostics
 
@@ -114,7 +190,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if tags, ok := d.GetOk(names.AttrTags); ok {
 		input.Filter = append(input.Filter, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
@@ -133,34 +209,51 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(ngw.NatGatewayId))
+
+	d.Set("availability_mode", ngw.AvailabilityMode)
 	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set(names.AttrState, ngw.State)
-	d.Set(names.AttrSubnetID, ngw.SubnetId)
 	d.Set(names.AttrVPCID, ngw.VpcId)
 
-	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
+	switch ngw.AvailabilityMode {
+	case awstypes.AvailabilityModeZonal:
+		var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
 
-	for _, address := range ngw.NatGatewayAddresses {
-		// Length check guarantees the attributes are always set (#30865).
-		if isPrimary := aws.ToBool(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
-			d.Set("allocation_id", address.AllocationId)
-			d.Set(names.AttrAssociationID, address.AssociationId)
-			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
-			d.Set("private_ip", address.PrivateIp)
-			d.Set("public_ip", address.PublicIp)
-		} else if !isPrimary {
-			if allocationID := aws.ToString(address.AllocationId); allocationID != "" {
-				secondaryAllocationIDs = append(secondaryAllocationIDs, allocationID)
-			}
-			if privateIP := aws.ToString(address.PrivateIp); privateIP != "" {
-				secondaryPrivateIPAddresses = append(secondaryPrivateIPAddresses, privateIP)
+		for _, address := range ngw.NatGatewayAddresses {
+			// Length check guarantees the attributes are always set (#30865).
+			if isPrimary := aws.ToBool(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
+				d.Set("allocation_id", address.AllocationId)
+				d.Set(names.AttrAssociationID, address.AssociationId)
+				d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
+				d.Set("private_ip", address.PrivateIp)
+				d.Set("public_ip", address.PublicIp)
+			} else if !isPrimary {
+				if allocationID := aws.ToString(address.AllocationId); allocationID != "" {
+					secondaryAllocationIDs = append(secondaryAllocationIDs, allocationID)
+				}
+				if privateIP := aws.ToString(address.PrivateIp); privateIP != "" {
+					secondaryPrivateIPAddresses = append(secondaryPrivateIPAddresses, privateIP)
+				}
 			}
 		}
-	}
+		d.Set("secondary_allocation_ids", secondaryAllocationIDs)
+		d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
+		d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
+		d.Set(names.AttrSubnetID, ngw.SubnetId)
 
-	d.Set("secondary_allocation_ids", secondaryAllocationIDs)
-	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
-	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
+	case awstypes.AvailabilityModeRegional:
+		d.Set("auto_provision_zones", ngw.AutoProvisionZones)
+		d.Set("auto_scaling_ips", ngw.AutoScalingIps)
+		if ngw.AutoProvisionZones == awstypes.AutoProvisionZonesStateEnabled {
+			d.Set("availability_zone_address", nil)
+		} else if err := d.Set("availability_zone_address", flattenNATGatewayAvailabilityZoneAddresses(ngw.NatGatewayAddresses)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting availability_zone_address: %s", err)
+		}
+		if err := d.Set("regional_nat_gateway_address", flattenRegionalNATGatewayAddress(ngw.NatGatewayAddresses)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting regional_nat_gateway_address: %s", err)
+		}
+		d.Set("route_table_id", ngw.RouteTableId)
+	}
 
 	if err := d.Set(names.AttrTags, keyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

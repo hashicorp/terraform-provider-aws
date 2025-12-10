@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -111,7 +111,9 @@ const (
 	instanceStatusStarting                                     = "starting"
 	instanceStatusStopped                                      = "stopped"
 	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageConfigUpgrade                         = "storage-config-upgrade"
 	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageInitialization                        = "storage-initialization"
 	instanceStatusStorageOptimization                          = "storage-optimization"
 	instanceStatusUpgrading                                    = "upgrading"
 )
@@ -218,6 +220,7 @@ const (
 	exportableLogTypeError          = "error"
 	exportableLogTypeGeneral        = "general"
 	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
+	exportableLogTypeInstance       = "instance"
 	exportableLogTypeListener       = "listener"
 	exportableLogTypeNotifyLog      = "notify.log"
 	exportableLogTypeOEMAgent       = "oemagent"
@@ -233,6 +236,7 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
 		exportableLogTypeIAMDBAuthError,
+		exportableLogTypeInstance,
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
@@ -247,6 +251,7 @@ func instanceExportableLogType_Values() []string {
 		exportableLogTypeDiagLog,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypeListener,
 		exportableLogTypeNotifyLog,
 		exportableLogTypeOEMAgent,

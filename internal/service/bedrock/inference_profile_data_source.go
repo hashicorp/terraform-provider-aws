@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -29,11 +29,7 @@ func newInferenceProfileDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type inferenceProfileDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*inferenceProfileDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_inference_profile"
+	framework.DataSourceWithModel[inferenceProfileDataSourceModel]
 }
 
 func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -109,7 +105,7 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 	output, err := conn.GetInferenceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -127,6 +123,7 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 }
 
 type inferenceProfileDataSourceModel struct {
+	framework.WithRegionModel
 	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
 	Description          types.String                                                `tfsdk:"description"`
 	InferenceProfileARN  fwtypes.ARN                                                 `tfsdk:"inference_profile_arn"`

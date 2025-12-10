@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -13,19 +13,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,14 +71,10 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(23, 23),
 			},
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -105,13 +100,13 @@ func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -132,7 +127,7 @@ func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -160,7 +155,7 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -210,7 +205,7 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SnapshotNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -230,11 +225,11 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -247,7 +242,7 @@ func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) retry.Stat
 }
 
 func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecycleCreating, awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
 		Refresh: statusSnapshot(ctx, conn, id),
@@ -269,7 +264,7 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 }
 
 func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
 		Refresh: statusSnapshot(ctx, conn, id),
@@ -291,7 +286,7 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending, awstypes.SnapshotLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusSnapshot(ctx, conn, id),

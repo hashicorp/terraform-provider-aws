@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -10,27 +10,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lightsail.Client, error) {
+func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string]any) []func(*lightsail.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return lightsail.NewFromConfig(cfg,
-		lightsail.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	return []func(*lightsail.Options){
 		func(o *lightsail.Options) {
-			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-				if errs.IsAErrorMessageContains[*types.InvalidInputException](err, "Please try again in a few minutes") ||
-					strings.Contains(err.Error(), "Please wait for it to complete before trying again") {
-					return aws.TrueTernary
-				}
-				return aws.UnknownTernary
-			}))
+			retryables := []retry.IsErrorRetryable{
+				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Please try again in a few minutes") ||
+						strings.Contains(err.Error(), "Please wait for it to complete before trying again") {
+						return aws.TrueTernary
+					}
+					return aws.UnknownTernary
+				}),
+			}
+			// Include go-vcr retryable to prevent generated client retryer from being overridden
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				retryables = append(retryables, vcr.InteractionNotFoundRetryableFunc)
+			}
+
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retryables...)
 		},
-	), nil
+	}
 }

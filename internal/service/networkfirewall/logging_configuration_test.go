@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +36,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
@@ -49,6 +50,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Config: testAccLoggingConfigurationConfig_cloudWatch(updatedLogGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
@@ -62,6 +64,7 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 				Config: testAccLoggingConfigurationConfig_cloudWatch(updatedLogGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeTls)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
@@ -742,6 +745,115 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleTLSTypeLogDestinat
 	})
 }
 
+func TestAccNetworkFirewallLoggingConfiguration_enableMonitoringDashboard(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_logging_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatchEnableMonitoringDashboard(bucketName, logGroupName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow), true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        "1",
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":          "1",
+						"log_destination.bucketName": bucketName,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Disable Monitoring Dashboard
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatchEnableMonitoringDashboard(bucketName, logGroupName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow), false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        "1",
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":          "1",
+						"log_destination.bucketName": bucketName,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
+					}),
+				),
+			},
+			{
+				// Re-Enable Monitoring Dashboard and change log types at the same time
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatchEnableMonitoringDashboard(bucketName, logGroupName, rName, string(awstypes.LogTypeTls), string(awstypes.LogTypeFlow), true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        "1",
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":          "1",
+						"log_destination.bucketName": bucketName,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeTls),
+					}),
+				),
+			},
+			{
+				// Omit enable_monitoring_dashboard (inherit previous value)
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, string(awstypes.LogTypeTls), string(awstypes.LogTypeFlow)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoggingConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring_dashboard", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":        "1",
+						"log_destination.logGroup": logGroupName,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":          "1",
+						"log_destination.bucketName": bucketName,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeTls),
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -777,7 +889,7 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfnetworkfirewall.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1150,4 +1262,36 @@ resource "aws_networkfirewall_logging_configuration" "test" {
   }
 }
 `, logTypeS3, logTypeCloudWatch))
+}
+
+func testAccLoggingConfigurationConfig_s3AndCloudWatchEnableMonitoringDashboard(bucketName, logGroupName, rName, logTypeS3, logTypeCloudWatch string, enableMonitoringDashboard bool) string {
+	return acctest.ConfigCompose(
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
+		testAccLoggingConfigurationConfig_baseCloudWatch(logGroupName),
+		fmt.Sprintf(`
+resource "aws_networkfirewall_logging_configuration" "test" {
+  firewall_arn = aws_networkfirewall_firewall.test.arn
+
+  enable_monitoring_dashboard = %[3]t
+
+  logging_configuration {
+    log_destination_config {
+      log_destination = {
+        bucketName = aws_s3_bucket.test.bucket
+      }
+      log_destination_type = "S3"
+      log_type             = %[1]q
+    }
+
+    log_destination_config {
+      log_destination = {
+        logGroup = aws_cloudwatch_log_group.test.name
+      }
+      log_destination_type = "CloudWatchLogs"
+      log_type             = %[2]q
+    }
+  }
+}
+`, logTypeS3, logTypeCloudWatch, enableMonitoringDashboard))
 }

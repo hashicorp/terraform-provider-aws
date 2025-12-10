@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -48,6 +48,10 @@ func dataSourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"database_insights_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -203,6 +207,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
@@ -217,7 +225,7 @@ func dataSourceInstance() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -226,7 +234,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		filter = func(v *types.DBInstance) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 
@@ -260,6 +268,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
 	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
+	d.Set("database_insights_mode", instance.DatabaseInsightsMode)
 	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
 	d.Set("db_instance_arn", instance.DBInstanceArn)
 	d.Set("db_instance_class", instance.DBInstanceClass)
@@ -281,7 +290,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
 	if instance.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(instance.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}
@@ -302,6 +311,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("storage_throughput", instance.StorageThroughput)
 	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
+	d.Set("upgrade_rollout_order", instance.UpgradeRolloutOrder)
 	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))

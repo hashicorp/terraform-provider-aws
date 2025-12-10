@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -15,13 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -253,7 +254,7 @@ func resourceTaskSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
 					value := v.(string)
 					duration, err := time.ParseDuration(value)
 					if err != nil {
@@ -268,12 +269,10 @@ func resourceTaskSet() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -304,20 +303,20 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LoadBalancers = expandTaskSetLoadBalancers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("scale"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Scale = expandScale(v.([]interface{}))
+	if v, ok := d.GetOk("scale"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Scale = expandScale(v.([]any))
 	}
 
-	if v, ok := d.GetOk("service_registries"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ServiceRegistries = expandServiceRegistries(v.([]interface{}))
+	if v, ok := d.GetOk("service_registries"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ServiceRegistries = expandServiceRegistries(v.([]any))
 	}
 
 	output, err := retryTaskSetCreate(ctx, conn, input)
@@ -348,7 +347,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, aws.ToString(output.TaskSet.TaskSetArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 		}
 
@@ -360,7 +359,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 }
 
-func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -371,7 +370,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	taskSet, err := findTaskSetByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -412,7 +411,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -424,7 +423,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		input := &ecs.UpdateTaskSetInput{
 			Cluster: aws.String(cluster),
-			Scale:   expandScale(d.Get("scale").([]interface{})),
+			Scale:   expandScale(d.Get("scale").([]any)),
 			Service: aws.String(service),
 			TaskSet: aws.String(taskSetID),
 		}
@@ -446,7 +445,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 }
 
-func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -503,7 +502,7 @@ func retryTaskSetCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + taskSetCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTaskSet(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -536,7 +535,7 @@ func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTask
 	output, err := conn.DescribeTaskSets(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -587,11 +586,11 @@ func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, task
 	return findTaskSet(ctx, conn, input)
 }
 
-func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -603,11 +602,11 @@ func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, se
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -627,7 +626,7 @@ const (
 
 // Does not return tags.
 func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
 		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
 		Refresh: statusTaskSetStability(ctx, conn, taskSetID, service, cluster),
@@ -648,7 +647,7 @@ func waitTaskSetDeleted(ctx context.Context, conn *ecs.Client, taskSetID, servic
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
 		Target:  []string{},
 		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,6 +43,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
@@ -62,7 +63,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 	})
 }
 
-func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) { //nolint:unparam
 	acctest.Skip(t, "IncorrectState: You cannot create a dynamic peering attachment")
 
 	ctx := acctest.Context(t)
@@ -265,7 +266,7 @@ func testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx context.Context) res
 
 			_, err := tfec2.FindTransitGatewayPeeringAttachmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

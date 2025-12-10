@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -16,12 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,17 +34,14 @@ func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWi
 }
 
 type continuousDeploymentPolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[continuousDeploymentPolicyResourceModel]
 	framework.WithImportByID
-}
-
-func (*continuousDeploymentPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfront_continuous_deployment_policy"
 }
 
 func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
@@ -171,6 +170,7 @@ func (r *continuousDeploymentPolicyResource) Create(ctx context.Context, request
 	// Set values for unknowns.
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	data.ID = fwflex.StringToFramework(ctx, output.ContinuousDeploymentPolicy.Id)
+	data.ARN = fwflex.StringValueToFramework(ctx, continuousDeploymentPolicyARN(ctx, r.Meta(), data.ID.ValueString()))
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ContinuousDeploymentPolicy.LastModifiedTime)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -187,7 +187,7 @@ func (r *continuousDeploymentPolicyResource) Read(ctx context.Context, request r
 
 	output, err := findContinuousDeploymentPolicyByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -205,6 +205,7 @@ func (r *continuousDeploymentPolicyResource) Read(ctx context.Context, request r
 		return
 	}
 
+	data.ARN = fwflex.StringValueToFramework(ctx, continuousDeploymentPolicyARN(ctx, r.Meta(), data.ID.ValueString()))
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ContinuousDeploymentPolicy.LastModifiedTime)
 
@@ -266,7 +267,7 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 	id := data.ID.ValueString()
 	etag, err := cdpETag(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -290,7 +291,7 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		etag, err = cdpETag(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 
@@ -362,7 +363,7 @@ func findContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.Cl
 	output, err := conn.GetContinuousDeploymentPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchContinuousDeploymentPolicy](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -379,7 +380,13 @@ func findContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.Cl
 	return output, nil
 }
 
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func continuousDeploymentPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "continuous-deployment-policy/"+id)
+}
+
 type continuousDeploymentPolicyResourceModel struct {
+	ARN                         types.String                                                      `tfsdk:"arn"`
 	Enabled                     types.Bool                                                        `tfsdk:"enabled"`
 	ETag                        types.String                                                      `tfsdk:"etag"`
 	ID                          types.String                                                      `tfsdk:"id"`

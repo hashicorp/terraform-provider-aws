@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,8 +42,8 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove all",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
@@ -59,14 +59,14 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "No change",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
@@ -76,18 +76,18 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove partial",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
@@ -102,18 +102,18 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Add to existing",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:  "appendfsync",
 					names.AttrValue: "always",
 				},
@@ -402,7 +402,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfmemorydb.FindParameterGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

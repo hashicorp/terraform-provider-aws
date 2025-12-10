@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +41,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 				Config: testAccOriginAccessControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-access-control/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
@@ -324,7 +325,7 @@ func testAccCheckOriginAccessControlDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfcloudfront.FindOriginAccessControlByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +35,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "field-level-encryption-profile/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
@@ -110,7 +111,7 @@ func testAccCheckFieldLevelEncryptionProfileDestroy(ctx context.Context) resourc
 
 			_, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

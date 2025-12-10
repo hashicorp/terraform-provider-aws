@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,9 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,8 +49,6 @@ func resourcePipe() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -74,7 +73,11 @@ func resourcePipe() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 				"enrichment_parameters": enrichmentParametersSchema(),
-				"log_configuration":     logConfigurationSchema(),
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"log_configuration": logConfigurationSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -108,7 +111,7 @@ func resourcePipe() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.Any(
 						verify.ValidARN,
-						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2})?:(\d{12})?:(.+)$`), ""),
 					),
 				},
 				"source_parameters": sourceParametersSchema(),
@@ -129,7 +132,7 @@ const (
 	ResNamePipe = "Pipe"
 )
 
-func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
@@ -151,20 +154,24 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Enrichment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceParameters = expandPipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("kms_key_identifier"); ok && v != "" {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("source_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceParameters = expandPipeSourceParameters(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TargetParameters = expandPipeTargetParameters(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -182,13 +189,13 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePipeRead(ctx, d, meta)...)
 }
 
-func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	output, err := findPipeByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Pipes Pipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,15 +209,16 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
-	if v := output.EnrichmentParameters; !types.IsZero(v) {
-		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(v)}); err != nil {
+	if v := output.EnrichmentParameters; !inttypes.IsZero(v) {
+		if err := d.Set("enrichment_parameters", []any{flattenPipeEnrichmentParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting enrichment_parameters: %s", err)
 		}
 	} else {
 		d.Set("enrichment_parameters", nil)
 	}
-	if v := output.LogConfiguration; !types.IsZero(v) {
-		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	if v := output.LogConfiguration; !inttypes.IsZero(v) {
+		if err := d.Set("log_configuration", []any{flattenPipeLogConfiguration(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 		}
 	} else {
@@ -220,16 +228,16 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrSource, output.Source)
-	if v := output.SourceParameters; !types.IsZero(v) {
-		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
+	if v := output.SourceParameters; !inttypes.IsZero(v) {
+		if err := d.Set("source_parameters", []any{flattenPipeSourceParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source_parameters: %s", err)
 		}
 	} else {
 		d.Set("source_parameters", nil)
 	}
 	d.Set(names.AttrTarget, output.Target)
-	if v := output.TargetParameters; !types.IsZero(v) {
-		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
+	if v := output.TargetParameters; !inttypes.IsZero(v) {
+		if err := d.Set("target_parameters", []any{flattenPipeTargetParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_parameters: %s", err)
 		}
 	} else {
@@ -239,7 +247,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
@@ -257,20 +265,24 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("enrichment_parameters") {
-			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]any)[0].(map[string]any))
 			}
 		}
 
+		if d.HasChange("kms_key_identifier") {
+			input.KmsKeyIdentifier = aws.String(d.Get("kms_key_identifier").(string))
+		}
+
 		if d.HasChange("log_configuration") {
-			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("source_parameters") {
-			if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.SourceParameters = expandUpdatePipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("source_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.SourceParameters = expandUpdatePipeSourceParameters(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -279,8 +291,8 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.TargetParameters = &awstypes.PipeTargetParameters{
 				InputTemplate: aws.String(""),
 			}
-			if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("target_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TargetParameters = expandPipeTargetParameters(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -298,7 +310,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePipeRead(ctx, d, meta)...)
 }
 
-func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
@@ -330,7 +342,7 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	output, err := conn.DescribePipe(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -347,11 +359,11 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	return output, nil
 }
 
-func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusPipe(ctx context.Context, conn *pipes.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findPipeByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -364,7 +376,7 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.Stat
 }
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateCreating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
@@ -384,7 +396,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateUpdating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
@@ -404,7 +416,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PipeStateDeleting),
 		Target:  []string{},
 		Refresh: statusPipe(ctx, conn, id),
@@ -428,8 +440,8 @@ func suppressEmptyConfigurationBlock(key string) schema.SchemaDiffSuppressFunc {
 		}
 
 		if o == "0" && n == "1" {
-			v := d.Get(key).([]interface{})
-			return len(v) == 0 || v[0] == nil || len(v[0].(map[string]interface{})) == 0
+			v := d.Get(key).([]any)
+			return len(v) == 0 || v[0] == nil || len(v[0].(map[string]any)) == 0
 		}
 
 		return false

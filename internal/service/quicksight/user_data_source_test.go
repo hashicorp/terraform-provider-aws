@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -29,12 +29,13 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccUserDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "custom_permissions_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEmail, acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultUserNamespace),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_type", string(awstypes.IdentityTypeQuicksight)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_role", string(awstypes.UserRoleReader)),
@@ -44,7 +45,7 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserDataSourceConfig(rName string) string {
+func testAccUserDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_user" "test" {
   user_name     = %[1]q

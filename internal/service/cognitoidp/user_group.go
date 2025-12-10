@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -68,7 +69,7 @@ func resourceUserGroup() *schema.Resource {
 	}
 }
 
-func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -101,7 +102,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -112,7 +113,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	group, err := findGroupByTwoPartKey(ctx, conn, userPoolID, groupName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,7 +132,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -166,7 +167,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -176,10 +177,11 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting Cognito User Group: %s", d.Id())
-	_, err = conn.DeleteGroup(ctx, &cognitoidentityprovider.DeleteGroupInput{
+	input := cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(groupName),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.DeleteGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -220,7 +222,7 @@ func findGroupByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Cl
 	output, err := conn.GetGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

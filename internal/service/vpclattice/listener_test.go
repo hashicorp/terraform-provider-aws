@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,15 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -77,7 +74,6 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 
 func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -116,7 +112,6 @@ func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 
 func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -155,7 +150,6 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -196,7 +190,6 @@ func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -237,7 +230,6 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -278,7 +270,6 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -320,7 +311,6 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -362,10 +352,9 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 
 func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
@@ -407,10 +396,6 @@ func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 
 func TestAccVPCLatticeListener_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -439,7 +424,6 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 
 func TestAccVPCLatticeListener_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
@@ -498,9 +482,9 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["service_identifier"])
+			_, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -515,31 +499,28 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckListenerExists(ctx context.Context, name string, listener *vpclattice.GetListenerOutput) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, n string, v *vpclattice.GetListenerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListener, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListener, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["service_identifier"])
+
+		output, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_id"])
 
 		if err != nil {
 			return err
 		}
 
-		*listener = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccListenerConfig_basic(rName string) string {
+func testAccListenerConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
@@ -559,7 +540,7 @@ resource "aws_vpclattice_target_group" "test" {
 }
 
 func testAccListenerConfig_fixedResponseHTTP(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -574,7 +555,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_fixedResponseHTTPS(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTPS"
@@ -625,7 +606,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"
@@ -658,7 +639,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -676,7 +657,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceIDCustomPort(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   port               = 8080
@@ -695,7 +676,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPServiceARN(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name        = %[1]q
   protocol    = "HTTPS"
@@ -712,7 +693,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPSServiceID(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTPS"
@@ -729,7 +710,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_forwardTargetGroupHTTPSServiceIDCustomPort(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   port               = 8443
@@ -747,7 +728,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
@@ -768,7 +749,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"

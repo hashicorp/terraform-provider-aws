@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +78,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 			{
@@ -202,7 +202,8 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorTargets(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
+	input := ec2.DescribeTrafficMirrorTargetsInput{}
+	_, err := conn.DescribeTrafficMirrorTargets(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror target acceptance test: ", err)
@@ -224,7 +225,7 @@ func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfec2.FindTrafficMirrorTargetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

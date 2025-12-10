@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -16,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,7 +125,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
 				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
@@ -144,7 +145,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -182,14 +183,14 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceLoadBalancerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerCertificateById(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id())
 		d.SetId("")
 		return diags
@@ -211,7 +212,7 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -242,11 +243,11 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]interface{} {
-	var domainValidationResult []map[string]interface{}
+func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]any {
+	var domainValidationResult []map[string]any
 
 	for _, o := range domainValidationRecords {
-		validationOption := map[string]interface{}{
+		validationOption := map[string]any{
 			names.AttrDomainName:    aws.ToString(o.DomainName),
 			"resource_record_name":  aws.ToString(o.Name),
 			"resource_record_type":  aws.ToString(o.Type),
@@ -271,7 +272,7 @@ func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Client
 	out, err := conn.GetLoadBalancerTlsCertificates(ctx, in)
 
 	if IsANotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

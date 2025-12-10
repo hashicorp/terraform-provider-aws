@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ses
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -96,7 +97,7 @@ func resourceConfigurationSet() *schema.Resource {
 	}
 }
 
-func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -115,10 +116,10 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(configurationSetName)
 
-	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			DeliveryOptions:      expandDeliveryOptions(v.([]interface{})),
+			DeliveryOptions:      expandDeliveryOptions(v.([]any)),
 		}
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, input)
@@ -154,10 +155,10 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &ses.CreateConfigurationSetTrackingOptionsInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			TrackingOptions:      expandTrackingOptions(v.([]interface{})),
+			TrackingOptions:      expandTrackingOptions(v.([]any)),
 		}
 
 		_, err := conn.CreateConfigurationSetTrackingOptions(ctx, input)
@@ -170,7 +171,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -185,7 +186,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findConfigurationSet(ctx, conn, input)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -220,14 +221,14 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			DeliveryOptions:      expandDeliveryOptions(d.Get("delivery_options").([]interface{})),
+			DeliveryOptions:      expandDeliveryOptions(d.Get("delivery_options").([]any)),
 		}
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, input)
@@ -266,7 +267,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tracking_options") {
 		input := &ses.UpdateConfigurationSetTrackingOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			TrackingOptions:      expandTrackingOptions(d.Get("tracking_options").([]interface{})),
+			TrackingOptions:      expandTrackingOptions(d.Get("tracking_options").([]any)),
 		}
 
 		_, err := conn.UpdateConfigurationSetTrackingOptions(ctx, input)
@@ -279,7 +280,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -311,7 +312,7 @@ func findConfigurationSet(ctx context.Context, conn *ses.Client, input *ses.Desc
 	output, err := conn.DescribeConfigurationSet(ctx, input)
 
 	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -328,12 +329,12 @@ func findConfigurationSet(ctx context.Context, conn *ses.Client, input *ses.Desc
 	return output, nil
 }
 
-func expandDeliveryOptions(tfList []interface{}) *awstypes.DeliveryOptions {
+func expandDeliveryOptions(tfList []any) *awstypes.DeliveryOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -347,24 +348,24 @@ func expandDeliveryOptions(tfList []interface{}) *awstypes.DeliveryOptions {
 	return apiObject
 }
 
-func flattenDeliveryOptions(apiObject *awstypes.DeliveryOptions) []interface{} {
+func flattenDeliveryOptions(apiObject *awstypes.DeliveryOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"tls_policy": string(apiObject.TlsPolicy),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTrackingOptions(tfList []interface{}) *awstypes.TrackingOptions {
+func expandTrackingOptions(tfList []any) *awstypes.TrackingOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -378,14 +379,14 @@ func expandTrackingOptions(tfList []interface{}) *awstypes.TrackingOptions {
 	return apiObject
 }
 
-func flattenTrackingOptions(apiObject *awstypes.TrackingOptions) []interface{} {
+func flattenTrackingOptions(apiObject *awstypes.TrackingOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"custom_redirect_domain": aws.ToString(apiObject.CustomRedirectDomain),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

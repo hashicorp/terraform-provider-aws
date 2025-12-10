@@ -1,6 +1,6 @@
 plugin "aws" {
   enabled = true
-  version = "0.33.0"
+  version = "0.41.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
@@ -26,8 +26,27 @@ rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }
 
-# The provider supports a number of undocumented connection types
-# https://github.com/hashicorp/terraform-provider-aws/pull/37731
-rule "aws_glue_connection_invalid_connection_type" {
+# Rule needs to be disabled due to enum value case inconsistencies
+rule "aws_dms_s3_endpoint_invalid_compression_type" {
+  enabled = false
+}
+
+# Rule needs to be disabled due to enum value case inconsistencies
+rule "aws_dms_s3_endpoint_invalid_date_partition_sequence" {
+  enabled = false
+}
+
+# Rule needs to be disabled due to enum value case inconsistencies
+rule "aws_dms_s3_endpoint_invalid_encryption_mode" {
+  enabled = false
+}
+
+# Avoids errant findings related to directory paths in generated configuration files
+rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
+  enabled = false
+}
+
+# Rule needs to be disabled due to bad email regex in the linter rule
+rule "aws_guardduty_member_invalid_email" {
   enabled = false
 }

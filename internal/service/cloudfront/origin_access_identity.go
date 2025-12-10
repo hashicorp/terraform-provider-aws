@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -8,16 +8,16 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,6 +35,10 @@ func resourceOriginAccessIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,7 +68,7 @@ func resourceOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -83,13 +87,13 @@ func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	output, err := findOriginAccessIdentityByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -99,18 +103,19 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Identity (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityIAMUserARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags
 }
 
-func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -129,14 +134,15 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
+	input := cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
 		return diags
@@ -157,7 +163,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 	output, err := conn.GetCloudFrontOriginAccessIdentity(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -189,11 +195,12 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 	return apiObject
 }
 
-func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "iam",
-		AccountID: "cloudfront",
-		Resource:  "user/CloudFront Origin Access Identity " + originAccessControlID,
-	}.String()
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-access-identity/"+id)
+}
+
+// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
+func originAccessIdentityIAMUserARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
+	return c.GlobalARNWithAccount(ctx, "iam", "cloudfront", "user/CloudFront Origin Access Identity "+originAccessControlID)
 }

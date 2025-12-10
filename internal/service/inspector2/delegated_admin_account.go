@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -15,12 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,7 +57,7 @@ func resourceDelegatedAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -81,13 +82,13 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceDelegatedAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	output, err := findDelegatedAdminAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Delegated Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -103,7 +104,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -186,11 +187,11 @@ func findDelegatedAdminAccounts(ctx context.Context, conn *inspector2.Client, in
 	return output, nil
 }
 
-func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDelegatedAdminAccountByID(ctx, conn, accountID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -213,7 +214,7 @@ const (
 )
 
 func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusEnableInProgress, delegatedAdminStatusEnabling),
 		Target:  enum.Slice(delegatedAdminStatusEnabled),
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
@@ -230,7 +231,7 @@ func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Clie
 }
 
 func waitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusCreated, delegatedAdminStatusEnabled),
 		Target:  []string{},
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),

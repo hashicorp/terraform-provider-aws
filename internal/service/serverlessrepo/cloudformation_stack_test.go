@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package serverlessrepo_test
@@ -348,7 +348,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 }
 `, stackName, appARN)
@@ -371,7 +371,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = %[3]q
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 
   tags = {
@@ -398,7 +398,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = %[3]q
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 
   tags = {
@@ -426,7 +426,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 }
 `, stackName, appARN, version)
@@ -451,7 +451,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 }
 `, stackName, appARN, version)
@@ -471,7 +471,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 }
 
@@ -499,7 +499,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 
   tags = {
@@ -526,7 +526,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 
   tags = {

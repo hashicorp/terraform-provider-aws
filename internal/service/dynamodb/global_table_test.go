@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -124,7 +124,7 @@ func testAccCheckGlobalTableDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfdynamodb.FindGlobalTableByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -210,7 +210,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = %[1]q
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `, rName)
@@ -262,7 +262,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `)
@@ -276,11 +276,11 @@ resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `)
@@ -294,7 +294,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = %[1]q
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `, tableName))

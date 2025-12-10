@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -16,14 +16,16 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,7 +42,7 @@ func resourceRuleGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -99,9 +101,21 @@ func resourceRuleGroup() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
+				"rules_json": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ConflictsWith:    []string{names.AttrRule},
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
 				names.AttrRule: {
-					Type:     schema.TypeSet,
-					Optional: true,
+					Type:          schema.TypeSet,
+					Optional:      true,
+					ConflictsWith: []string{"rules_json"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrAction: {
@@ -145,12 +159,10 @@ func resourceRuleGroup() *schema.Resource {
 				"visibility_config": visibilityConfigSchema(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -158,10 +170,21 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
-		Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:             getTagsIn(ctx),
-		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]any)),
+	}
+
+	if v, ok := d.GetOk(names.AttrRule); ok {
+		input.Rules = expandRules(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("rules_json"); ok {
+		rules, err := expandRuleGroupRulesJSON(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		}
+		input.Rules = rules
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -175,7 +198,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateRuleGroup(ctx, input)
 	})
 
@@ -189,13 +212,13 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	output, err := findRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -215,8 +238,13 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
-	if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	if _, ok := d.GetOk("rules_json"); !ok {
+		if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		}
+	} else {
+		d.Set("rules_json", d.Get("rules_json"))
+		d.Set(names.AttrRule, nil)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting visibility_config: %s", err)
@@ -225,7 +253,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -234,9 +262,20 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			Name:             aws.String(d.Get(names.AttrName).(string)),
-			Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
 			Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
-			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]any)),
+		}
+
+		if v, ok := d.GetOk(names.AttrRule); ok {
+			input.Rules = expandRules(v.(*schema.Set).List())
+		}
+
+		if v, ok := d.GetOk("rules_json"); ok {
+			rules, err := expandRuleGroupRulesJSON(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 RuleGroup JSON rule (%s): %s", d.Id(), err)
+			}
+			input.Rules = rules
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -250,7 +289,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateRuleGroup(ctx, input)
 		})
 
@@ -262,7 +301,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -277,7 +316,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRuleGroup(ctx, input)
 	})
 
@@ -302,7 +341,7 @@ func findRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, na
 	output, err := conn.GetRuleGroup(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

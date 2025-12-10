@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,12 +66,10 @@ func resourceIPGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -94,13 +92,13 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceIPGroupRead(ctx, d, meta)...)
 }
 
-func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	ipGroup, err := findIPGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces IP Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -119,7 +117,7 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
@@ -139,12 +137,12 @@ func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceIPGroupRead(ctx, d, meta)...)
 }
 
-func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	directories, err := findDirectories(ctx, conn, input)
+	describeInput := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	directories, err := findDirectories(ctx, conn, describeInput)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directories: %s", err)
@@ -169,9 +167,10 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting WorkSpaces IP Group (%s)", d.Id())
-	_, err = conn.DeleteIpGroup(ctx, &workspaces.DeleteIpGroupInput{
+	deleteInput := workspaces.DeleteIpGroupInput{
 		GroupId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteIpGroup(ctx, &deleteInput)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -222,11 +221,11 @@ func findIPGroups(ctx context.Context, conn *workspaces.Client, input *workspace
 	return output, nil
 }
 
-func expandIPRuleItems(tfList []interface{}) []types.IpRuleItem {
+func expandIPRuleItems(tfList []any) []types.IpRuleItem {
 	var apiObjects []types.IpRuleItem
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObjects = append(apiObjects, types.IpRuleItem{
 			IpRule:   aws.String(tfMap[names.AttrSource].(string)),
@@ -237,11 +236,11 @@ func expandIPRuleItems(tfList []interface{}) []types.IpRuleItem {
 	return apiObjects
 }
 
-func flattenIPRuleItems(apiObjects []types.IpRuleItem) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenIPRuleItems(apiObjects []types.IpRuleItem) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.IpRule; v != nil {
 			tfMap[names.AttrSource] = aws.ToString(v)

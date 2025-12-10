@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,15 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeServiceNetworkServiceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetworkasc vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_service_association.test"
@@ -57,7 +54,6 @@ func TestAccVPCLatticeServiceNetworkServiceAssociation_basic(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetworkServiceAssociation_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetworkasc vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_service_association.test"
@@ -90,7 +86,6 @@ func TestAccVPCLatticeServiceNetworkServiceAssociation_arn(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetworkServiceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetworkasc vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_service_association.test"
@@ -178,7 +173,7 @@ func testAccCheckServiceNetworkServiceAssociationDestroy(ctx context.Context) re
 
 			_, err := tfvpclattice.FindServiceNetworkServiceAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -193,25 +188,22 @@ func testAccCheckServiceNetworkServiceAssociationDestroy(ctx context.Context) re
 	}
 }
 
-func testAccCheckServiceNetworkServiceAssociationExists(ctx context.Context, name string, service *vpclattice.GetServiceNetworkServiceAssociationOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkServiceAssociationExists(ctx context.Context, n string, v *vpclattice.GetServiceNetworkServiceAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := tfvpclattice.FindServiceNetworkServiceAssociationByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfvpclattice.FindServiceNetworkServiceAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*service = *resp
+		*v = *output
 
 		return nil
 	}

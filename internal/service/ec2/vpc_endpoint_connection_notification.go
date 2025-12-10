@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +69,7 @@ func resourceVPCEndpointConnectionNotification() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -98,13 +98,13 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 	return append(diags, resourceVPCEndpointConnectionNotificationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	cn, err := findVPCEndpointConnectionNotificationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Connection Notification %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -124,7 +124,7 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -149,14 +149,15 @@ func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *sch
 	return append(diags, resourceVPCEndpointConnectionNotificationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint Connection Notification: %s", d.Id())
-	_, err := conn.DeleteVpcEndpointConnectionNotifications(ctx, &ec2.DeleteVpcEndpointConnectionNotificationsInput{
+	input := ec2.DeleteVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteVpcEndpointConnectionNotifications(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
 		return diags

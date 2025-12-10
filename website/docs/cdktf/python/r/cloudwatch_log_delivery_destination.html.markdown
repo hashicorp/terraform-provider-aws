@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delivery_destination_configuration` - (Required) The AWS resource that will receive the logs.
     * `destination_resource_arn` - (Required) The ARN of the AWS destination that this delivery destination represents.
 * `name` - (Required) The name for this delivery destination.
@@ -80,4 +81,4 @@ Using `terraform import`, import CloudWatch Logs Delivery Destination using the 
 % terraform import aws_cloudwatch_log_delivery_destination.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-56de156b90cc249064b0e8d1082ac667c0ce72fb3110e4432de4bc29e2acbdfe -->
+<!-- cache-key: cdktf-0.20.8 input-312b666402a5edf292561367eaa36a54b89bfa70bad0a7e06c9648b85630a40b -->

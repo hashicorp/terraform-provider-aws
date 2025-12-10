@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -22,15 +22,15 @@ import (
 )
 
 // @SDKResource("aws_inspector_assessment_target", name="Assessment Target")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTarget")
+// @Testing(preIdentityVersion="v6.4.0")
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTargetCreate,
 		ReadWithoutTimeout:   resourceAssessmentTargetRead,
 		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -54,7 +54,7 @@ const (
 	ResNameAssessmentTarget = "Assessment Target"
 )
 
-func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -76,12 +76,12 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	assessmentTarget, err := FindAssessmentTargetByID(ctx, conn, d.Id())
-	if errs.IsA[*retry.NotFoundError](err) {
+	if errs.IsA[*sdkretry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -98,7 +98,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -119,28 +119,25 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
-	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 60*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(ctx, input)
 
 		if errs.IsA[*awstypes.AssessmentRunInProgressException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteAssessmentTarget(ctx, input)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Inspector Classic Assessment Target: %s", err)
 	}
@@ -168,7 +165,7 @@ func FindAssessmentTargetByID(ctx context.Context, conn *inspector.Client, arn s
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastRequest: input,
 	}
 }

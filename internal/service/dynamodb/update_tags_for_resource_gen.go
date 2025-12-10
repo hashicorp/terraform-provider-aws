@@ -3,13 +3,14 @@ package dynamodb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,7 +36,7 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -44,19 +45,19 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 	if len(updatedTags) > 0 {
 		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
 		if err := waitTagsPropagedForResource(ctx, conn, identifier, newTags, optFns...); err != nil {
-			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -71,15 +72,15 @@ func waitTagsPropagedForResource(ctx context.Context, conn *dynamodb.Client, id 
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
 		if err != nil {
-			return false, err
+			return false, smarterr.NewError(err)
 		}
 
 		if inContext, ok := tftags.FromContext(ctx); ok {

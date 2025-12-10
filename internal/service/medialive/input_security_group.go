@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +30,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
 // @Testing(generator=false)
-func ResourceInputSecurityGroup() *schema.Resource {
+func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceInputSecurityGroupRead,
@@ -73,8 +74,6 @@ func ResourceInputSecurityGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -82,7 +81,7 @@ const (
 	ResNameInputSecurityGroup = "Input Security Group"
 )
 
-func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -110,14 +109,14 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
+	out, err := findInputSecurityGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive InputSecurityGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -134,7 +133,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -162,7 +161,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
@@ -190,7 +189,7 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -208,7 +207,7 @@ func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputSecurityGroupStateUpdating),
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -226,7 +225,7 @@ func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.InputSecurityGroupStateDeleted),
 		Refresh: statusInputSecurityGroup(ctx, conn, id),
@@ -241,10 +240,10 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	return nil, err
 }
 
-func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindInputSecurityGroupByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findInputSecurityGroupByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -256,7 +255,7 @@ func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id st
 	}
 }
 
-func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
+func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
 	in := &medialive.DescribeInputSecurityGroupInput{
 		InputSecurityGroupId: aws.String(id),
 	}
@@ -264,7 +263,7 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -280,12 +279,12 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	return out, nil
 }
 
-func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]interface{} {
+func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]any {
 	if apiObject == (types.InputWhitelistRule{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		m["cidr"] = aws.ToString(v)
@@ -294,12 +293,12 @@ func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]in
 	return m
 }
 
-func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interface{} {
+func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputWhitelistRule{}) {
@@ -312,7 +311,7 @@ func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interfa
 	return l
 }
 
-func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
+func expandWhitelistRules(tfList []any) []types.InputWhitelistRuleCidr {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -320,7 +319,7 @@ func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
 	var s []types.InputWhitelistRuleCidr
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue

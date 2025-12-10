@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -68,7 +69,7 @@ func resourceIntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -83,7 +84,7 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("response_templates"); ok {
-		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("template_selection_expression"); ok {
@@ -101,13 +102,13 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findIntegrationResponseByThreePartKey(ctx, conn, d.Get("api_id").(string), d.Get("integration_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Integration Response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +129,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -147,7 +148,7 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("response_templates") {
-		input.ResponseTemplates = flex.ExpandStringValueMap(d.Get("response_templates").(map[string]interface{}))
+		input.ResponseTemplates = flex.ExpandStringValueMap(d.Get("response_templates").(map[string]any))
 	}
 
 	if d.HasChange("template_selection_expression") {
@@ -163,16 +164,17 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Integration Response: %s", d.Id())
-	_, err := conn.DeleteIntegrationResponse(ctx, &apigatewayv2.DeleteIntegrationResponseInput{
+	input := apigatewayv2.DeleteIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteIntegrationResponse(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -185,7 +187,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceIntegrationResponseImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceIntegrationResponseImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id/integration-response-id'", d.Id())
@@ -212,7 +214,7 @@ func findIntegrationResponse(ctx context.Context, conn *apigatewayv2.Client, inp
 	output, err := conn.GetIntegrationResponse(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -10,11 +10,12 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -120,10 +121,22 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccIdentityPolicyConfig_equivalent2(rName, domain),
-				PlanOnly: true,
+				Config: testAccIdentityPolicyConfig_equivalent2(rName, domain),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -140,7 +153,7 @@ func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

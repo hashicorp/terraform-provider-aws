@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package enum
@@ -13,15 +13,18 @@ type Valueser[T ~string] interface {
 }
 
 func EnumValues[T Valueser[T]]() []T {
-	return T("").Values()
+	var zero T
+	return zero.Values()
 }
 
 func Values[T Valueser[T]]() []string {
-	return Slice(EnumValues[T]()...)
+	return tfslices.Strings(EnumValues[T]())
+}
+
+func EnumSlice[T ~string](l ...T) []T {
+	return l
 }
 
 func Slice[T ~string](l ...T) []string {
-	return tfslices.ApplyToAll(l, func(v T) string {
-		return string(v)
-	})
+	return tfslices.Strings(l)
 }

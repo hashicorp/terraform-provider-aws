@@ -60,8 +60,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidrIpv4` - (Optional) The source IPv4 CIDR range.
 * `cidrIpv6` - (Optional) The source IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
@@ -73,6 +72,8 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
+~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -82,6 +83,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_security_group_ingress_rule.example
+  identity = {
+    id = "sgr-02108b27edd666983"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the security group rule.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group ingress rules using the `securityGroupRuleId`. For example:
 
@@ -113,4 +140,4 @@ Using `terraform import`, import security group ingress rules using the `securit
 % terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-368b6061d5c57b1ac267c61ed32f50072bc715ca7dc711b8daffe4d0ee4cdb34 -->
+<!-- cache-key: cdktf-0.20.8 input-8fdb20a6da8b38f3c128d51f7801600d9dc9cad37534e3335cd7d21f2e21b404 -->

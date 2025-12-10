@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh
@@ -56,7 +56,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 				"virtual_gateway_name": {
 					Type:     schema.TypeString,
@@ -67,7 +67,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 

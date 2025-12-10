@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,9 +44,11 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "language-model/{model_name}"),
 					resource.TestCheckResourceAttr(resourceName, "base_model_name", "NarrowBand"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "model_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "model_name", rName),
 				),
 			},
 			{
@@ -150,7 +152,7 @@ func testAccCheckLanguageModelDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

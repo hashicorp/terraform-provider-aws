@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,8 +36,6 @@ func resourceDefaultSubnet() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -165,7 +163,7 @@ func resourceDefaultSubnet() *schema.Resource {
 	}
 }
 
-func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -186,7 +184,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[INFO] Found existing EC2 Default Subnet (%s)", availabilityZone)
 		d.SetId(aws.ToString(subnet.SubnetId))
 		d.Set("existing_default_subnet", true)
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		input := &ec2.CreateDefaultSubnetInput{
 			AvailabilityZone: aws.String(availabilityZone),
 		}
@@ -255,7 +253,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceSubnetDelete(ctx, d, meta)...)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -12,13 +12,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,22 +47,12 @@ func resourceVaultPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -77,7 +68,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutBackupVaultAccessPolicy(ctx, input)
 		},
 		errCodeInvalidParameterValueException, "Provided principal is not valid",
@@ -92,13 +83,13 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceVaultPolicyRead(ctx, d, meta)...)
 }
 
-func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	output, err := findVaultAccessPolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,14 +117,15 @@ func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
-	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &backup.DeleteBackupVaultAccessPolicyInput{
+	input := backup.DeleteBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags
@@ -154,7 +146,7 @@ func findVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name 
 	output, err := conn.GetBackupVaultAccessPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

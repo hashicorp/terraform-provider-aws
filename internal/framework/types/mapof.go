@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -20,7 +20,10 @@ var (
 )
 
 var (
-	// MapOfStringType is a custom type used for defining a Map of strings.
+	// MapOfMapOfStringType is a custom type used for defining a map[string]map[string]string.
+	MapOfMapOfStringType = mapTypeOf[MapOfString]{basetypes.MapType{ElemType: MapOfStringType}}
+
+	// MapOfStringType is a custom type used for defining a map[string]string.
 	MapOfStringType = mapTypeOf[basetypes.StringValue]{basetypes.MapType{ElemType: basetypes.StringType{}}}
 )
 
@@ -101,7 +104,8 @@ type MapValueOf[T attr.Value] struct {
 }
 
 type (
-	MapOfString = MapValueOf[basetypes.StringValue]
+	MapOfMapOfString = MapValueOf[MapOfString]
+	MapOfString      = MapValueOf[basetypes.StringValue]
 )
 
 func (v MapValueOf[T]) Equal(o attr.Value) bool {

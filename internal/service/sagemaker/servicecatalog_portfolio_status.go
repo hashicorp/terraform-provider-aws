@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -18,15 +18,17 @@ import (
 )
 
 // @SDKResource("aws_sagemaker_servicecatalog_portfolio_status", name="Servicecatalog Portfolio Status")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
 func resourceServicecatalogPortfolioStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
 		ReadWithoutTimeout:   resourceServicecatalogPortfolioStatusRead,
 		UpdateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrStatus: {
@@ -38,7 +40,7 @@ func resourceServicecatalogPortfolioStatus() *schema.Resource {
 	}
 }
 
-func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -51,7 +53,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting SageMaker Servicecatalog Portfolio Status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting SageMaker AI Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
@@ -59,13 +61,13 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 	return append(diags, resourceServicecatalogPortfolioStatusRead(ctx, d, meta)...)
 }
 
-func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	resp, err := findServicecatalogPortfolioStatus(ctx, conn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting SageMaker Servicecatalog Portfolio Status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting SageMaker AI Servicecatalog Portfolio Status: %s", err)
 	}
 
 	d.Set(names.AttrStatus, resp.Status)

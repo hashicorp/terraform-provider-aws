@@ -4,68 +4,83 @@ package meta
 
 import (
 	"context"
+	"unique"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newARNDataSource,
 			TypeName: "aws_arn",
 			Name:     "ARN",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newDefaultTagsDataSource,
 			TypeName: "aws_default_tags",
 			Name:     "Default Tags",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newIPRangesDataSource,
 			TypeName: "aws_ip_ranges",
 			Name:     "IP Ranges",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newPartitionDataSource,
 			TypeName: "aws_partition",
 			Name:     "Partition",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newRegionDataSource,
 			TypeName: "aws_region",
 			Name:     "Region",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: false,
+			}),
 		},
 		{
 			Factory:  newRegionsDataSource,
 			TypeName: "aws_regions",
 			Name:     "Regions",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newServiceDataSource,
 			TypeName: "aws_service",
 			Name:     "Service",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newServicePrincipalDataSource,
 			TypeName: "aws_service_principal",
 			Name:     "Service Principal",
+			Region: unique.Make(inttypes.ServicePackageResourceRegion{
+				IsOverrideEnabled:             true,
+				IsValidateOverrideInPartition: false,
+			}),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {

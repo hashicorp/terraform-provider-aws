@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -121,9 +120,10 @@ func dataSourceVPC() *schema.Resource {
 	}
 }
 
-func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	// We specify "default" as boolean, but EC2 filters want
 	// it to be serialized as a string. Note that setting it to
@@ -164,36 +164,28 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(aws.ToString(vpc.VpcId))
-
 	ownerID := aws.String(aws.ToString(vpc.OwnerId))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: aws.ToString(ownerID),
-		Resource:  "vpc/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpcARN(ctx, c, aws.ToString(ownerID), d.Id()))
 	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("default", vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
 	}
@@ -205,9 +197,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	cidrAssociations := []interface{}{}
+	cidrAssociations := []any{}
 	for _, v := range vpc.CidrBlockAssociationSet {
-		association := map[string]interface{}{
+		association := map[string]any{
 			names.AttrAssociationID: aws.ToString(v.AssociationId),
 			names.AttrCIDRBlock:     aws.ToString(v.CidrBlock),
 			names.AttrState:         aws.ToString(aws.String(string(v.CidrBlockState.State))),

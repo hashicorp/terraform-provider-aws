@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -30,7 +30,11 @@ import (
 
 // @SDKResource("aws_guardduty_filter", name="Filter")
 // @Tags(identifierAttribute="arn")
-func ResourceFilter() *schema.Resource {
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/guardduty;guardduty.GetFilterOutput")
+func resourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,
 		ReadWithoutTimeout:   resourceFilterRead,
@@ -132,12 +136,10 @@ func ResourceFilter() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -151,7 +153,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	var err error
-	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
@@ -167,7 +169,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -229,7 +231,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -243,7 +245,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		var err error
-		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
 		}
@@ -257,7 +259,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -295,18 +297,18 @@ func FilterParseID(importedId string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandFindingCriteria(raw []interface{}) (*awstypes.FindingCriteria, error) {
-	findingCriteria := raw[0].(map[string]interface{})
+func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
+	findingCriteria := raw[0].(map[string]any)
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
 	criteria := map[string]awstypes.Condition{}
 	for _, criterion := range inputFindingCriteria {
-		typedCriterion := criterion.(map[string]interface{})
+		typedCriterion := criterion.(map[string]any)
 		field := typedCriterion[names.AttrField].(string)
 
 		condition := awstypes.Condition{}
 		if x, ok := typedCriterion["equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+			if v, ok := x.([]any); ok && len(v) > 0 {
 				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
@@ -316,7 +318,7 @@ func expandFindingCriteria(raw []interface{}) (*awstypes.FindingCriteria, error)
 			}
 		}
 		if x, ok := typedCriterion["not_equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+			if v, ok := x.([]any); ok && len(v) > 0 {
 				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
@@ -379,11 +381,11 @@ func expandConditionIntField(field, v string) (int64, error) {
 	return strconv.ParseInt(v, 10, 64)
 }
 
-func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []interface{} {
-	var flatCriteria []interface{}
+func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []any {
+	var flatCriteria []any
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
-		criterion := map[string]interface{}{
+		criterion := map[string]any{
 			names.AttrField: field,
 		}
 		if len(conditions.Equals) > 0 {
@@ -407,8 +409,8 @@ func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []i
 		flatCriteria = append(flatCriteria, criterion)
 	}
 
-	return []interface{}{
-		map[string][]interface{}{
+	return []any{
+		map[string][]any{
 			"criterion": flatCriteria,
 		},
 	}

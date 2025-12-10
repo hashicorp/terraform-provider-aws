@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -12,21 +12,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkmanager_global_network", name="Global Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,
@@ -37,8 +39,6 @@ func resourceGlobalNetwork() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -62,7 +62,7 @@ func resourceGlobalNetwork() *schema.Resource {
 	}
 }
 
-func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -91,14 +91,14 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGlobalNetworkRead(ctx, d, meta)...)
 }
 
-func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetwork, err := findGlobalNetworkByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Global Network %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -116,7 +116,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -142,7 +142,7 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGlobalNetworkRead(ctx, d, meta)...)
 }
 
-func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -161,7 +161,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteGlobalNetwork(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),
 			})
@@ -197,7 +197,7 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Client,
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -227,7 +227,7 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Clie
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -257,7 +257,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -332,7 +332,7 @@ func findGlobalNetworkByID(ctx context.Context, conn *networkmanager.Client, id 
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -340,11 +340,11 @@ func findGlobalNetworkByID(ctx context.Context, conn *networkmanager.Client, id 
 	return output, nil
 }
 
-func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findGlobalNetworkByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -357,7 +357,7 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GlobalNetworkStatePending),
 		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,
@@ -374,7 +374,7 @@ func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.GlobalNetworkStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
@@ -392,7 +392,7 @@ func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GlobalNetworkStateUpdating),
 		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,

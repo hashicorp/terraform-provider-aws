@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -176,7 +176,7 @@ func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfsagemaker.FindMonitoringScheduleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -184,7 +184,7 @@ func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Monitoring Schedule (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Monitoring Schedule (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -198,7 +198,7 @@ func testAccCheckMonitoringScheduleExists(ctx context.Context, n string) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Monitoring Schedule ID is set")
+			return fmt.Errorf("no SageMaker AI Monitoring Schedule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

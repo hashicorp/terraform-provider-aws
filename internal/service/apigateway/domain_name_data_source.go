@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -64,6 +64,10 @@ func dataSourceDomainName() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -101,7 +105,7 @@ func dataSourceDomainName() *schema.Resource {
 	}
 }
 
-func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

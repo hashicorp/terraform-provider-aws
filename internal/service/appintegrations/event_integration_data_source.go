@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appintegrations
@@ -57,15 +57,16 @@ func dataSourceEventIntegration() *schema.Resource {
 	}
 }
 
-func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
+	input := appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	output, err := conn.GetEventIntegration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Event Integration (%s): %s", name, err)

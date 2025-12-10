@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -169,7 +169,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -220,7 +220,6 @@ resource "aws_redshift_subnet_group" "test" {
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                   = %[1]q
-  availability_zone                    = data.aws_availability_zones.available.names[0]
   database_name                        = "mydb"
   master_username                      = "foo_test"
   master_password                      = "Mustbe8characters"

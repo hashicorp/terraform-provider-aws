@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,13 +39,9 @@ func newAWSLogSourceResource(context.Context) (resource.ResourceWithConfigure, e
 }
 
 type awsLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[awsLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (r *awsLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_aws_log_source"
 }
 
 func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -162,7 +159,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -239,7 +236,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -276,6 +273,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 }
 
 type awsLogSourceResourceModel struct {
+	framework.WithRegionModel
 	ID     types.String                                             `tfsdk:"id"`
 	Source fwtypes.ListNestedObjectValueOf[awsLogSourceSourceModel] `tfsdk:"source"`
 }

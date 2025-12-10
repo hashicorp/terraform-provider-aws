@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -66,7 +67,7 @@ func resourceCustomerGatewayAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -86,7 +87,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Creating Network Manager Customer Gateway Association: %#v", input)
 	_, err := tfresource.RetryWhen(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AssociateCustomerGateway(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -123,7 +124,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceCustomerGatewayAssociationRead(ctx, d, meta)...)
 }
 
-func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -136,7 +137,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 
 	output, err := findCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Customer Gateway Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,7 +155,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -224,7 +225,7 @@ func findCustomerGatewayAssociations(ctx context.Context, conn *networkmanager.C
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -253,7 +254,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 	}
 
 	if state := output.State; state == awstypes.CustomerGatewayAssociationStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -261,7 +262,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.CustomerGatewayArn) != customerGatewayARN {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -269,11 +270,11 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 	return output, nil
 }
 
-func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -286,7 +287,7 @@ func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkman
 }
 
 func waitCustomerGatewayAssociationCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string, timeout time.Duration) (*awstypes.CustomerGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomerGatewayAssociationStatePending),
 		Target:  enum.Slice(awstypes.CustomerGatewayAssociationStateAvailable),
 		Timeout: timeout,
@@ -303,7 +304,7 @@ func waitCustomerGatewayAssociationCreated(ctx context.Context, conn *networkman
 }
 
 func waitCustomerGatewayAssociationDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string, timeout time.Duration) (*awstypes.CustomerGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomerGatewayAssociationStateAvailable, awstypes.CustomerGatewayAssociationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,

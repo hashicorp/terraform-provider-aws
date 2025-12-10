@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package docdbelastic
@@ -32,7 +32,7 @@ func sweepClusters(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBElasticClient(ctx)
 	input := &docdbelastic.ListClustersInput{}
@@ -54,7 +54,7 @@ func sweepClusters(region string) error {
 			arn := aws.ToString(cluster.ClusterArn)
 
 			log.Printf("[INFO] Deleting DocDB Elastic Cluster: %s", aws.ToString(cluster.ClusterName))
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCluster, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newClusterResource, client,
 				framework.NewAttribute(names.AttrID, arn),
 			))
 		}

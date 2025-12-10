@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -13,11 +13,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,9 +46,10 @@ func testAccAccountSubscription_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  false,
-				RefreshState: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authentication_method"}, // Not returned from the DescribeAccountSubscription API
 			},
 		},
 	})
@@ -76,6 +78,11 @@ func testAccAccountSubscription_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAccountSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -92,7 +99,7 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -118,10 +125,9 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		defaultNs := "default"
 		input := &quicksight.UpdateAccountSettingsInput{
 			AwsAccountId:                 aws.String(rs.Primary.ID),
-			DefaultNamespace:             aws.String(defaultNs),
+			DefaultNamespace:             aws.String(tfquicksight.DefaultNamespace),
 			TerminationProtectionEnabled: false,
 		}
 

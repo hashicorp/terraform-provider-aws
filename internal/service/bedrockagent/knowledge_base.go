@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -9,12 +9,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -23,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,13 +53,9 @@ func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, 
 }
 
 type knowledgeBaseResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[knowledgeBaseResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
 func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -130,6 +130,78 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"embedding_model_configuration": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(0),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(0),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"dimensions": schema.Int64Attribute{
+																Optional: true,
+															},
+															"embedding_data_type": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
+																Optional:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"supplemental_data_storage_configuration": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(0),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"storage_location": schema.ListNestedBlock{
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.SupplementalDataStorageLocationType](),
+																Required:   true,
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"s3_location": schema.ListNestedBlock{
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrURI: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.RegexMatches(
+																					regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
+																					"must be a valid S3 URI",
+																				),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -265,6 +337,12 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"custom_metadata_field": schema.StringAttribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
 												"metadata_field": schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
@@ -450,17 +528,37 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateKnowledgeBase(ctx, input)
-	}, errCodeValidationException, "cannot assume role")
+	var output *bedrockagent.CreateKnowledgeBaseOutput
+	var err error
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		output, err = conn.CreateKnowledgeBase(ctx, input)
+
+		// IAM propagation
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "cannot assume role") {
+			return tfresource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "unable to assume the given role") {
+			return tfresource.RetryableError(err)
+		}
+
+		// OpenSearch data access propagation
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "storage configuration provided is invalid") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base", err.Error())
-
 		return
 	}
 
-	kb := outputRaw.(*bedrockagent.CreateKnowledgeBaseOutput).KnowledgeBase
+	kb := output.KnowledgeBase
 	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, kb.KnowledgeBaseArn)
 	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, kb.KnowledgeBaseId)
 
@@ -468,7 +566,6 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) create", data.KnowledgeBaseID.ValueString()), err.Error())
-
 		return
 	}
 
@@ -491,7 +588,7 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 
 	kb, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -534,7 +631,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 
@@ -571,9 +668,10 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
+	input := bedrockagent.DeleteKnowledgeBaseInput{
 		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteKnowledgeBase(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -594,12 +692,8 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -618,7 +712,7 @@ func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -637,7 +731,7 @@ func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusDeleting),
 		Target:  []string{},
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -655,11 +749,11 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 	return nil, err
 }
 
-func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -679,7 +773,7 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 	output, err := conn.GetKnowledgeBase(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -697,6 +791,7 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 }
 
 type knowledgeBaseResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
 	Description                types.String                                                     `tfsdk:"description"`
 	FailureReasons             fwtypes.ListValueOf[types.String]                                `tfsdk:"failure_reasons"`
@@ -718,7 +813,27 @@ type knowledgeBaseConfigurationModel struct {
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
-	EmbeddingModelARN fwtypes.ARN `tfsdk:"embedding_model_arn"`
+	EmbeddingModelARN                    fwtypes.ARN                                                                `tfsdk:"embedding_model_arn"`
+	EmbeddingModelConfiguration          fwtypes.ListNestedObjectValueOf[embeddingModelConfigurationModel]          `tfsdk:"embedding_model_configuration"`
+	SupplementalDataStorageConfiguration fwtypes.ListNestedObjectValueOf[supplementalDataStorageConfigurationModel] `tfsdk:"supplemental_data_storage_configuration"`
+}
+
+type embeddingModelConfigurationModel struct {
+	BedrockEmbeddingModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockEmbeddingModelConfigurationModel] `tfsdk:"bedrock_embedding_model_configuration"`
+}
+
+type bedrockEmbeddingModelConfigurationModel struct {
+	Dimensions        types.Int64                                    `tfsdk:"dimensions"`
+	EmbeddingDataType fwtypes.StringEnum[awstypes.EmbeddingDataType] `tfsdk:"embedding_data_type"`
+}
+
+type supplementalDataStorageConfigurationModel struct {
+	StorageLocation fwtypes.ListNestedObjectValueOf[storageLocationModel] `tfsdk:"storage_location"`
+}
+
+type storageLocationModel struct {
+	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
+	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_location"`
 }
 
 type storageConfigurationModel struct {
@@ -762,10 +877,11 @@ type rdsConfigurationModel struct {
 }
 
 type rdsFieldMappingModel struct {
-	MetadataField   types.String `tfsdk:"metadata_field"`
-	PrimaryKeyField types.String `tfsdk:"primary_key_field"`
-	TextField       types.String `tfsdk:"text_field"`
-	VectorField     types.String `tfsdk:"vector_field"`
+	CustomMetadataField types.String `tfsdk:"custom_metadata_field"`
+	MetadataField       types.String `tfsdk:"metadata_field"`
+	PrimaryKeyField     types.String `tfsdk:"primary_key_field"`
+	TextField           types.String `tfsdk:"text_field"`
+	VectorField         types.String `tfsdk:"vector_field"`
 }
 
 type redisEnterpriseCloudConfigurationModel struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -415,7 +415,7 @@ func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfecs.FindTaskSetNoTagsByThreePartKey(ctx, conn, rs.Primary.Attributes["task_set_id"], rs.Primary.Attributes["service"], rs.Primary.Attributes["cluster"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -56,12 +56,14 @@ const (
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
+	// NOTE: the State values returned from the service may be in varied case e.g. `Pending` and `pending`
+	// State is normalised to lower case for comparison against these constants
 	vpcEndpointStateAvailable         = "available"
 	vpcEndpointStateDeleted           = "deleted"
 	vpcEndpointStateDeleting          = "deleting"
 	vpcEndpointStateFailed            = "failed"
 	vpcEndpointStatePending           = "pending"
-	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
+	vpcEndpointStatePendingAcceptance = "pendingacceptance"
 )
 
 const (
@@ -115,6 +117,14 @@ func managedPrefixListAddressFamily_Values() []string {
 	}
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnConcentrator.html.
+const (
+	vpnConcentratorStateAvailable = "available"
+	vpnConcentratorStateDeleted   = "deleted"
+	vpnConcentratorStateDeleting  = "deleting"
+	vpnConcentratorStatePending   = "pending"
+)
+
 const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
@@ -150,6 +160,18 @@ func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
 		names.AttrJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogBGPLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogBGPLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogBGPLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogBGPLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatText,
 	}
 }
 
@@ -304,39 +326,17 @@ const (
 )
 
 const (
-	verifiedAccessAttachmentTypeVPC = "vpc"
-)
-
-func verifiedAccessAttachmentType_Values() []string {
-	return []string{
-		verifiedAccessAttachmentTypeVPC,
-	}
-}
-
-const (
-	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
-	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
-)
-
-func verifiedAccessEndpointType_Values() []string {
-	return []string{
-		verifiedAccessEndpointTypeLoadBalancer,
-		verifiedAccessEndpointTypeNetworkInterface,
-	}
-}
-
-const (
-	verifiedAccessEndpointProtocolHTTP  = "http"
-	verifiedAccessEndpointProtocolHTTPS = "https"
-)
-
-func verifiedAccessEndpointProtocol_Values() []string {
-	return []string{
-		verifiedAccessEndpointProtocolHTTP,
-		verifiedAccessEndpointProtocolHTTPS,
-	}
-}
-
-const (
 	supportedRegionServiceStateAvailable = "Available"
 )
+
+const (
+	preSharedKeyStorageTypeSecretsManager = "SecretsManager"
+	preSharedKeyStorageTypeStandard       = "Standard"
+)
+
+func preSharedKeyStorageType_Values() []string {
+	return []string{
+		preSharedKeyStorageTypeSecretsManager,
+		preSharedKeyStorageTypeStandard,
+	}
+}

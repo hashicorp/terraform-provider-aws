@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -501,7 +501,7 @@ func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resour
 
 			_, err = tfs3.FindAnalyticsConfiguration(ctx, conn, bucket, name)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -745,7 +745,7 @@ resource "aws_s3_bucket" "destination" {
 }
 
 func testAccBucketAnalyticsConfigurationConfig_directoryBucket(bucket, name string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucket), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

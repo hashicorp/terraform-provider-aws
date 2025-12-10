@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,13 +24,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+/*
+  NOTE: aws_route53_record has a mutable identity ONLY because we shortcut the replace resource flow
+	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
+*/
+
 // @SDKResource("aws_route53_record", name="Record")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @IdentityAttribute("set_identifier", optional="true")
+// @MutableIdentity
+// @ImportIDHandler("recordImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
+// @Testing(subdomainTfVar="zoneName;recordName")
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="6.4.0")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,28 +54,6 @@ func resourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				parts := recordParseResourceID(d.Id())
-				// We check that we have parsed the id into the correct number of segments.
-				// We need at least 3 segments!
-				// However, parts[1] can be the empty string if it is the root domain of the zone,
-				// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
-				if parts[0] == "" || parts[2] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
-				}
-
-				d.Set("zone_id", parts[0])
-				d.Set(names.AttrName, parts[1])
-				d.Set(names.AttrType, parts[2])
-				if parts[3] != "" {
-					d.Set("set_identifier", parts[3])
-				}
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
@@ -271,7 +265,7 @@ func resourceRecord() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
 					// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
 					// to trim the string to prevent Route53 API error.
@@ -298,6 +292,7 @@ func resourceRecord() *schema.Resource {
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.RRType](),
 			},
 			"weighted_routing_policy": {
@@ -329,10 +324,16 @@ func resourceRecord() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
-func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -365,7 +366,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 
@@ -377,18 +378,10 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Record: %s", err)
 	}
 
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	if output := outputRaw.(*route53.ChangeResourceRecordSetsOutput); output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -396,13 +389,13 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
 
-func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -413,7 +406,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if alias := record.AliasTarget; alias != nil {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			"evaluate_target_health": alias.EvaluateTargetHealth,
 			names.AttrName:           normalizeAliasDomainName(aws.ToString(alias.DNSName)),
 			"zone_id":                aws.ToString(alias.HostedZoneId),
@@ -424,7 +417,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 	if cidrRoutingConfig := record.CidrRoutingConfig; cidrRoutingConfig != nil {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			"collection_id": aws.ToString(cidrRoutingConfig.CollectionId),
 			"location_name": aws.ToString(cidrRoutingConfig.LocationName),
 		}}
@@ -434,7 +427,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 	if failover := record.Failover; failover != "" {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			names.AttrType: failover,
 		}}
 
@@ -450,7 +443,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("fqdn", fqdn)
 	if geoLocation := record.GeoLocation; geoLocation != nil {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			"continent":   aws.ToString(geoLocation.ContinentCode),
 			"country":     aws.ToString(geoLocation.CountryCode),
 			"subdivision": aws.ToString(geoLocation.SubdivisionCode),
@@ -461,7 +454,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 	if geoProximityLocation := record.GeoProximityLocation; geoProximityLocation != nil {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			"aws_region":       aws.ToString(record.GeoProximityLocation.AWSRegion),
 			"bias":             aws.ToInt32((record.GeoProximityLocation.Bias)),
 			"coordinates":      flattenCoordinate(record.GeoProximityLocation.Coordinates),
@@ -474,7 +467,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("health_check_id", record.HealthCheckId)
 	if region := record.Region; region != "" {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			names.AttrRegion: region,
 		}}
 
@@ -490,7 +483,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("set_identifier", record.SetIdentifier)
 	d.Set("ttl", record.TTL)
 	if weight := record.Weight; weight != nil {
-		tfList := []interface{}{map[string]interface{}{
+		tfList := []any{map[string]any{
 			names.AttrWeight: aws.ToInt64((record.Weight)),
 		}}
 
@@ -502,7 +495,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -547,9 +540,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// - weighted_routing_policy
 
 	if v, _ := d.GetChange("cidr_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.CidrRoutingConfig = &awstypes.CidrRoutingConfig{
 						CollectionId: nilString(v["collection_id"].(string)),
 						LocationName: nilString(v["location_name"].(string)),
@@ -560,9 +553,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, _ := d.GetChange("failover_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.Failover = awstypes.ResourceRecordSetFailover(v[names.AttrType].(string))
 				}
 			}
@@ -570,9 +563,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, _ := d.GetChange("geolocation_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.GeoLocation = &awstypes.GeoLocation{
 						ContinentCode:   nilString(v["continent"].(string)),
 						CountryCode:     nilString(v["country"].(string)),
@@ -584,9 +577,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, _ := d.GetChange("geoproximity_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.GeoProximityLocation = &awstypes.GeoProximityLocation{
 						AWSRegion:      nilString(v["aws_region"].(string)),
 						Bias:           aws.Int32(int32(v["bias"].(int))),
@@ -599,9 +592,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, _ := d.GetChange("latency_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.Region = awstypes.ResourceRecordSetRegion(v[names.AttrRegion].(string))
 				}
 			}
@@ -613,9 +606,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
-		if o, ok := v.([]interface{}); ok {
+		if o, ok := v.([]any); ok {
 			if len(o) == 1 {
-				if v, ok := o[0].(map[string]interface{}); ok {
+				if v, ok := o[0].(map[string]any); ok {
 					oldRec.Weight = aws.Int64(int64(v[names.AttrWeight].(int)))
 				}
 			}
@@ -637,9 +630,9 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Alias record
 	if v, _ := d.GetChange(names.AttrAlias); v != nil {
-		aliases := v.([]interface{})
+		aliases := v.([]any)
 		if len(aliases) == 1 {
-			alias := aliases[0].(map[string]interface{})
+			alias := aliases[0].(map[string]any)
 			oldRec.AliasTarget = &awstypes.AliasTarget{
 				DNSName:              aws.String(alias[names.AttrName].(string)),
 				EvaluateTargetHealth: alias["evaluate_target_health"].(bool),
@@ -686,26 +679,17 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}
 
-	// Generate a new ID.
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
 
-func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -721,7 +705,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -755,7 +739,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Record (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -848,7 +832,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -924,8 +908,8 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 	}
 
 	// Alias record
-	if v, ok := d.GetOk(names.AttrAlias); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrAlias); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.AliasTarget = &awstypes.AliasTarget{
 			DNSName:              aws.String(tfMap[names.AttrName].(string)),
 			EvaluateTargetHealth: tfMap["evaluate_target_health"].(bool),
@@ -933,21 +917,21 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		}
 	}
 
-	if v, ok := d.GetOk("cidr_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("cidr_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.CidrRoutingConfig = &awstypes.CidrRoutingConfig{
 			CollectionId: aws.String(tfMap["collection_id"].(string)),
 			LocationName: aws.String(tfMap["location_name"].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("failover_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("failover_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.Failover = awstypes.ResourceRecordSetFailover(tfMap[names.AttrType].(string))
 	}
 
-	if v, ok := d.GetOk("geolocation_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("geolocation_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.GeoLocation = &awstypes.GeoLocation{
 			ContinentCode:   nilString(tfMap["continent"].(string)),
 			CountryCode:     nilString(tfMap["country"].(string)),
@@ -955,8 +939,8 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		}
 	}
 
-	if v, ok := d.GetOk("geoproximity_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("geoproximity_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.GeoProximityLocation = &awstypes.GeoProximityLocation{
 			AWSRegion:      nilString(tfMap["aws_region"].(string)),
 			Bias:           aws.Int32(int32(tfMap["bias"].(int))),
@@ -969,8 +953,8 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		apiObject.HealthCheckId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("latency_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("latency_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.Region = awstypes.ResourceRecordSetRegion(tfMap[names.AttrRegion].(string))
 	}
 
@@ -982,8 +966,8 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		apiObject.SetIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("weighted_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("weighted_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.Weight = aws.Int64(int64(tfMap[names.AttrWeight].(int)))
 	}
 
@@ -1006,7 +990,7 @@ func expandRecordName(name, zone string) string {
 	return rn
 }
 
-func expandCoordinates(tfList []interface{}) *awstypes.Coordinates {
+func expandCoordinates(tfList []any) *awstypes.Coordinates {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1014,7 +998,7 @@ func expandCoordinates(tfList []interface{}) *awstypes.Coordinates {
 	apiObject := &awstypes.Coordinates{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1026,13 +1010,13 @@ func expandCoordinates(tfList []interface{}) *awstypes.Coordinates {
 	return apiObject
 }
 
-func flattenCoordinate(apiObject *awstypes.Coordinates) []interface{} {
+func flattenCoordinate(apiObject *awstypes.Coordinates) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
-	tfMap := map[string]interface{}{}
+	var tfList []any
+	tfMap := map[string]any{}
 
 	if v := apiObject.Latitude; v != nil {
 		tfMap["latitude"] = aws.ToString(v)
@@ -1141,4 +1125,43 @@ func expandTxtEntry(s string) string {
 
 func flattenTxtEntry(s string) string {
 	return fmt.Sprintf(`"%s"`, s)
+}
+
+type recordImportID struct{}
+
+func (recordImportID) Create(d *schema.ResourceData) string {
+	return createRecordImportID(d)
+}
+
+func (recordImportID) Parse(id string) (string, map[string]string, error) {
+	parts := recordParseResourceID(id)
+	// We check that we have parsed the id into the correct number of segments.
+	// We need at least 3 segments!
+	// However, parts[1] can be the empty string if it is the root domain of the zone,
+	// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+	if parts[0] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
+	}
+
+	result := map[string]string{
+		"zone_id":      parts[0],
+		names.AttrName: parts[1],
+		names.AttrType: parts[2],
+	}
+	if parts[3] != "" {
+		result["set_identifier"] = parts[3]
+	}
+	return id, result, nil
+}
+
+func createRecordImportID(d *schema.ResourceData) string {
+	parts := []string{
+		d.Get("zone_id").(string),
+		strings.ToLower(d.Get(names.AttrName).(string)),
+		d.Get(names.AttrType).(string),
+	}
+	if v, ok := d.GetOk("set_identifier"); ok {
+		parts = append(parts, v.(string))
+	}
+	return strings.Join(parts, "_")
 }

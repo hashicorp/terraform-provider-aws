@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor
@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,12 +43,8 @@ func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type probeResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[probeResourceModel]
 	framework.WithImportByID
-}
-
-func (*probeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmonitor_probe"
 }
 
 func (r *probeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -171,7 +168,7 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	// Set values for unknowns.
 	data.AddressFamily = fwtypes.StringEnumValue(outputGP.AddressFamily)
 	if data.PacketSize.IsUnknown() {
-		data.PacketSize = fwflex.Int32ToFramework(ctx, outputGP.PacketSize)
+		data.PacketSize = fwflex.Int32ToFrameworkInt64(ctx, outputGP.PacketSize)
 	}
 	data.VpcID = fwflex.StringToFramework(ctx, outputGP.VpcId)
 
@@ -195,7 +192,7 @@ func (r *probeResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	output, err := findProbeByTwoPartKey(ctx, conn, data.MonitorName.ValueString(), data.ProbeID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -245,10 +242,10 @@ func (r *probeResource) Update(ctx context.Context, request resource.UpdateReque
 			input.Destination = fwflex.StringFromFramework(ctx, new.Destination)
 		}
 		if !new.DestinationPort.Equal(old.DestinationPort) {
-			input.DestinationPort = fwflex.Int32FromFramework(ctx, new.DestinationPort)
+			input.DestinationPort = fwflex.Int32FromFrameworkInt64(ctx, new.DestinationPort)
 		}
 		if !new.PacketSize.Equal(old.PacketSize) {
-			input.PacketSize = fwflex.Int32FromFramework(ctx, new.PacketSize)
+			input.PacketSize = fwflex.Int32FromFrameworkInt64(ctx, new.PacketSize)
 		}
 		if !new.Protocol.Equal(old.Protocol) {
 			input.Protocol = new.Protocol.ValueEnum()
@@ -310,10 +307,6 @@ func (r *probeResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *probeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) (*networkmonitor.GetProbeOutput, error) {
 	input := &networkmonitor.GetProbeInput{
 		MonitorName: aws.String(monitorName),
@@ -323,7 +316,7 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	output, err := conn.GetProbe(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -340,11 +333,11 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	return output, nil
 }
 
-func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findProbeByTwoPartKey(ctx, conn, monitorName, probeID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -360,7 +353,7 @@ func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, monitorNam
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStatePending),
 		Target:     enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive),
 		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
@@ -381,7 +374,7 @@ func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, monitorN
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateDeleting),
 		Target:     []string{},
 		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
@@ -399,6 +392,7 @@ func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, monitorN
 }
 
 type probeResourceModel struct {
+	framework.WithRegionModel
 	AddressFamily   fwtypes.StringEnum[awstypes.AddressFamily] `tfsdk:"address_family"`
 	Destination     types.String                               `tfsdk:"destination"`
 	DestinationPort types.Int64                                `tfsdk:"destination_port"`

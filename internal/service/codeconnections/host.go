@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codeconnections
@@ -21,12 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +35,9 @@ import (
 
 // @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
+// @Testing(preIdentityVersion="v5.100.0")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -49,20 +53,16 @@ const (
 )
 
 type hostResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *hostResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_host"
+	framework.WithImportByIdentity
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -197,7 +197,7 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	out, err := findHostByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -309,15 +309,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
 const (
 	hostStatusAvailable         = "AVAILABLE"
 	hostStatusPending           = "PENDING"
@@ -327,7 +318,7 @@ const (
 )
 
 func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{hostStatusVPCConfigInitializing},
 		Target:                    []string{hostStatusPending, hostStatusAvailable},
 		Refresh:                   statusHost(ctx, conn, id),
@@ -345,7 +336,7 @@ func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Clien
 }
 
 func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigDeleting},
 		Target:  []string{},
 		Refresh: statusHost(ctx, conn, id),
@@ -360,10 +351,10 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 	return nil, err
 }
 
-func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusHost(ctx context.Context, conn *codeconnections.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := findHostByARN(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -383,7 +374,7 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 	output, err := conn.GetHost(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -410,6 +401,7 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 }
 
 type hostResourceModel struct {
+	framework.WithRegionModel
 	HostArn          types.String                                                      `tfsdk:"arn"`
 	ID               types.String                                                      `tfsdk:"id"`
 	Name             types.String                                                      `tfsdk:"name"`

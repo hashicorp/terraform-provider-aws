@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -32,7 +32,7 @@ func dataSourceResourceTags() *schema.Resource {
 	}
 }
 
-func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -46,7 +46,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(resourceID)
 
 	if tags != nil {
-		if err := d.Set(names.AttrTags, KeyValueTags(ctx, tags).Map()); err != nil {
+		if err := d.Set(names.AttrTags, keyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {

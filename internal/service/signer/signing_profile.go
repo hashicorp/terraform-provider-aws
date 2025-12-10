@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package signer
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,15 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_signer_signing_profile", name="Signing Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceSigningProfile() *schema.Resource {
+func resourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
 		ReadWithoutTimeout:   resourceSigningProfileRead,
@@ -129,6 +130,14 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
+			"signing_parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -144,12 +153,10 @@ func ResourceSigningProfile() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -165,15 +172,19 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
-		signatureValidityPeriod := v.([]interface{})[0].(map[string]interface{})
+		signatureValidityPeriod := v.([]any)[0].(map[string]any)
 		input.SignatureValidityPeriod = &types.SignatureValidityPeriod{
 			Value: int32(signatureValidityPeriod[names.AttrValue].(int)),
 			Type:  types.ValidityType(signatureValidityPeriod[names.AttrType].(string)),
 		}
 	}
 
-	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
+	if v, ok := d.Get("signing_material").([]any); ok && len(v) > 0 {
 		input.SigningMaterial = expandSigningMaterial(v)
+	}
+
+	if v, ok := d.Get("signing_parameters").(map[string]any); ok && len(v) > 0 {
+		input.SigningParameters = flex.ExpandStringValueMap(v)
 	}
 
 	_, err := conn.PutSigningProfile(ctx, input)
@@ -187,13 +198,13 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
 	output, err := findSigningProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -212,8 +223,8 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting revocation_record: %s", err)
 	}
 	if v := output.SignatureValidityPeriod; v != nil {
-		if err := d.Set("signature_validity_period", []interface{}{
-			map[string]interface{}{
+		if err := d.Set("signature_validity_period", []any{
+			map[string]any{
 				names.AttrValue: v.Value,
 				names.AttrType:  v.Type,
 			},
@@ -226,6 +237,11 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
 		}
 	}
+	if output.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(output.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
+		}
+	}
 	d.Set(names.AttrStatus, output.Status)
 	d.Set(names.AttrVersion, output.ProfileVersion)
 	d.Set("version_arn", output.ProfileVersionArn)
@@ -235,7 +251,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -243,7 +259,7 @@ func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
@@ -263,12 +279,12 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
+func expandSigningMaterial(in []any) *types.SigningMaterial {
 	if len(in) == 0 {
 		return nil
 	}
 
-	m := in[0].(map[string]interface{})
+	m := in[0].(map[string]any)
 	var out types.SigningMaterial
 
 	if v, ok := m[names.AttrCertificateARN].(string); ok && v != "" {
@@ -278,24 +294,24 @@ func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
 	return &out
 }
 
-func flattenSigningMaterial(apiObject *types.SigningMaterial) []interface{} {
+func flattenSigningMaterial(apiObject *types.SigningMaterial) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevocationRecord) interface{} {
+func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevocationRecord) any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RevocationEffectiveFrom; v != nil {
 		tfMap["revocation_effective_from"] = aws.ToTime(v).Format(time.RFC3339)
@@ -309,7 +325,7 @@ func flattenSigningProfileRevocationRecord(apiObject *types.SigningProfileRevoca
 		tfMap["revoked_by"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func PlatformID_Values() []string {
@@ -329,7 +345,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	output, err := conn.GetSigningProfile(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			LastError:   err,
 		}
@@ -344,7 +360,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}

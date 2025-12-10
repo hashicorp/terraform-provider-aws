@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codecatalyst_test
@@ -126,11 +126,12 @@ func testAccCheckSourceRepositoryExists(ctx context.Context, name string, source
 		projectName := rs.Primary.Attributes["project_name"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
-		resp, err := conn.GetSourceRepository(ctx, &codecatalyst.GetSourceRepositoryInput{
+		input := codecatalyst.GetSourceRepositoryInput{
 			Name:        aws.String(rs.Primary.ID),
 			SpaceName:   aws.String(spaceName),
 			ProjectName: aws.String(projectName),
-		})
+		}
+		resp, err := conn.GetSourceRepository(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameSourceRepository, rs.Primary.ID, err)

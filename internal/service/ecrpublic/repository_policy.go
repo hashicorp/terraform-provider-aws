@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecrpublic
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,7 +43,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -64,7 +65,7 @@ const (
 	policyPutTimeout = 2 * time.Minute
 )
 
-func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -81,7 +82,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.SetRepositoryPolicy(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -104,13 +105,13 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRepositoryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
 	output, err := FindRepositoryPolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Public Repository Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +140,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -167,7 +168,7 @@ func FindRepositoryPolicyByName(ctx context.Context, conn *ecrpublic.Client, nam
 	output, err := conn.GetRepositoryPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.RepositoryNotFoundException](err) || errs.IsA[*awstypes.RepositoryPolicyNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

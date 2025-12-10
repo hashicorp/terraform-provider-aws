@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -248,7 +249,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -260,24 +261,24 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName:        aws.String(username),
 	}
 
-	if v, ok := d.GetOk("addresses"); ok && len(v.([]interface{})) > 0 {
-		input.Addresses = expandAddresses(v.([]interface{}))
+	if v, ok := d.GetOk("addresses"); ok && len(v.([]any)) > 0 {
+		input.Addresses = expandAddresses(v.([]any))
 	}
 
-	if v, ok := d.GetOk("emails"); ok && len(v.([]interface{})) > 0 {
-		input.Emails = expandEmails(v.([]interface{}))
+	if v, ok := d.GetOk("emails"); ok && len(v.([]any)) > 0 {
+		input.Emails = expandEmails(v.([]any))
 	}
 
 	if v, ok := d.GetOk("locale"); ok {
 		input.Locale = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Name = expandName(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("phone_numbers"); ok && len(v.([]interface{})) > 0 {
-		input.PhoneNumbers = expandPhoneNumbers(v.([]interface{}))
+	if v, ok := d.GetOk("phone_numbers"); ok && len(v.([]any)) > 0 {
+		input.PhoneNumbers = expandPhoneNumbers(v.([]any))
 	}
 
 	if v, ok := d.GetOk("nickname"); ok {
@@ -315,7 +316,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -326,7 +327,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	out, err := findUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IdentityStore User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -348,7 +349,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
-	if err := d.Set(names.AttrName, []interface{}{flattenName(out.Name)}); err != nil {
+	if err := d.Set(names.AttrName, []any{flattenName(out.Name)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
 	}
 	d.Set("nickname", out.NickName)
@@ -366,7 +367,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -405,7 +406,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		// Expand, when not nil, is used to transform the value of the field
 		// given in Attribute before it's passed to the UpdateOperation.
-		Expand func(interface{}) interface{}
+		Expand func(any) any
 	}{
 		{
 			Attribute: names.AttrDisplayName,
@@ -466,15 +467,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "addresses",
 			Field:     "addresses",
-			Expand: func(value interface{}) interface{} {
-				addresses := expandAddresses(value.([]interface{}))
+			Expand: func(value any) any {
+				addresses := expandAddresses(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no addresses, a nil result is preferable.
 				for _, address := range addresses {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					if v := address.Country; v != nil {
 						m["country"] = v
@@ -515,15 +516,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "emails",
 			Field:     "emails",
-			Expand: func(value interface{}) interface{} {
-				emails := expandEmails(value.([]interface{}))
+			Expand: func(value any) any {
+				emails := expandEmails(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no emails, a nil result is preferable.
 				for _, email := range emails {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					m["primary"] = email.Primary
 
@@ -544,15 +545,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "phone_numbers",
 			Field:     "phoneNumbers",
-			Expand: func(value interface{}) interface{} {
-				emails := expandPhoneNumbers(value.([]interface{}))
+			Expand: func(value any) any {
+				emails := expandPhoneNumbers(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no emails, a nil result is preferable.
 				for _, email := range emails {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					m["primary"] = email.Primary
 
@@ -604,7 +605,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -650,19 +651,19 @@ func userParseResourceID(id string) (string, string, error) {
 }
 
 func findUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {
-	input := &identitystore.DescribeUserInput{
+	input := identitystore.DescribeUserInput{
 		IdentityStoreId: aws.String(identityStoreID),
 		UserId:          aws.String(userID),
 	}
 
-	return findUser(ctx, conn, input)
+	return findUser(ctx, conn, &input)
 }
 
 func findUser(ctx context.Context, conn *identitystore.Client, input *identitystore.DescribeUserInput) (*identitystore.DescribeUserOutput, error) {
 	output, err := conn.DescribeUser(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

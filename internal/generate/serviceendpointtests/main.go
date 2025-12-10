@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -11,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -34,16 +34,17 @@ func main() {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
-		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
-			"codecatalyst",        // Bearer auth token needs special handling
-			"location",            // Resolver modifies URL
-			"mwaa",                // Resolver modifies URL
-			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
-			"paymentcryptography", // Resolver modifies URL
-			"route53profiles",     // Resolver modifies URL
-			"s3control",           // Resolver modifies URL
-			"simpledb",            // AWS SDK for Go v1
-			"timestreamwrite":     // Uses endpoint discovery
+		case "arcregionswitch", // Resolver modifies URL
+			"cloudfrontkeyvaluestore", // Endpoint includes account ID
+			"codecatalyst",            // Bearer auth token needs special handling
+			"location",                // Resolver modifies URL
+			"mwaa",                    // Resolver modifies URL
+			"neptunegraph",            // EndpointParameters has an additional parameter, ApiType
+			"paymentcryptography",     // Resolver modifies URL
+			"route53profiles",         // Resolver modifies URL
+			"s3control",               // Resolver modifies URL
+			"simpledb",                // AWS SDK for Go v1
+			"timestreamwrite":         // Uses endpoint discovery
 			continue
 		}
 
@@ -70,7 +71,7 @@ func main() {
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
-			OverrideRegion:    l.EndpointOverrideRegion(),
+			OverrideRegion:    l.EndpointRegionOverrides()[endpoints.AwsPartitionID],
 		}
 		if strings.Contains(td.APICallParams, "awstypes") {
 			td.ImportAwsTypes = true
@@ -82,7 +83,7 @@ func main() {
 
 		switch packageName {
 		// TODO: This case should be handled in service data
-		case "costoptimizationhub", "cur", "globalaccelerator", "route53domains":
+		case "costoptimizationhub", "cur", "globalaccelerator", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness":
 			td.OverrideRegionRegionalEndpoint = true
 
 		case "chatbot":

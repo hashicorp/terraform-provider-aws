@@ -73,6 +73,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `manageAccessRoleArn` - (Optional) ARN of the manage access role with which this blueprint is created.
 * `provisioningRoleArn` - (Optional) ARN of the provisioning role with which this blueprint is created.
 * `regionalParameters` - (Optional) Parameters for each region in which the blueprint is enabled
@@ -113,4 +114,4 @@ Using `terraform import`, import DataZone Environment Blueprint Configuration us
 % terraform import aws_datazone_environment_blueprint_configuration.example domain-id-12345/environment-blueprint-id-54321
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3e0ffe371fc360928d17178e6bc3d0d45c08acb1be8281d759dccf490fe1fd2f -->
+<!-- cache-key: cdktf-0.20.8 input-7615f4583459861c837d9f8635357c427d751bb4b2e6606e0c027da84236c44e -->

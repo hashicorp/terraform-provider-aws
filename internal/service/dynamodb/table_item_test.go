@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -459,11 +459,12 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 					}
 
 					newQueryKey := tfdynamodb.ExpandTableItemQueryKey(attributes, hashKey, "")
-					_, err = conn.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					input := dynamodb.UpdateItemInput{
 						AttributeUpdates: updates,
 						TableName:        aws.String(tableName),
 						Key:              newQueryKey,
-					})
+					}
+					_, err = conn.UpdateItem(ctx, &input)
 
 					if err != nil {
 						t.Fatalf("making out-of-band change: %s", err)
@@ -494,7 +495,7 @@ func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfdynamodb.FindTableItemByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrTableName], key)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -541,11 +542,12 @@ func testAccCheckTableItemCount(ctx context.Context, tableName string, count int
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		output, err := conn.Scan(ctx, &dynamodb.ScanInput{
+		input := dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			Select:         awstypes.SelectCount,
 			TableName:      aws.String(tableName),
-		})
+		}
+		output, err := conn.Scan(ctx, &input)
 
 		if err != nil {
 			return err

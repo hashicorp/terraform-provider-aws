@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -107,18 +107,16 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 
 func TestAccEventsConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 eventbridge.DescribeConnectionOutput
+	var v1, v2 eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "BASIC"
 	description := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	username := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	usernameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	passwordModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_connection.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,12 +133,20 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					username,
 					password,
 				),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.password", password),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", username),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 			{
@@ -157,31 +163,22 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					usernameModified,
 					passwordModified,
 				),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.password", passwordModified),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", usernameModified),
-				),
-			},
-			{
-				Config: testAccConnectionConfig_basic(
-					nameModified,
-					descriptionModified,
-					authorizationType,
-					usernameModified,
-					passwordModified,
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &v3),
-					testAccCheckConnectionNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
-					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", usernameModified),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 		},
@@ -592,6 +589,86 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEventsConnection_invocationConnectivityParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeConnectionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_invocationConnectivityParameters(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.0.resource_parameters.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auth_parameters.0.basic.0.password"},
+			},
+		},
+	})
+}
+
+func TestAccEventsConnection_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeConnectionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auth_parameters.0.basic.0.password"},
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_alias.test_1.name}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrName),
+				),
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_alias.test_1.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
@@ -603,7 +680,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfevents.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -883,4 +960,159 @@ resource "aws_cloudwatch_event_connection" "oauth" {
   }
 }
 `, name, description, authorizationType, authorizationEndpoint, httpMethod)
+}
+
+func testAccConnectionConfig_invocationConnectivityParameters(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["80"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "BASIC"
+
+  auth_parameters {
+    basic {
+      username = "tfacctest"
+      password = "avoid-plaintext-passwords"
+    }
+  }
+
+  invocation_connectivity_parameters {
+    resource_parameters {
+      resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccConnectionConfig_kmsKeyIdentifier(name, kmsKeyIdentifier string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_kms_alias" "test_1" {
+  name          = "alias/test-1"
+  target_key_id = aws_kms_key.test_1.key_id
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "BASIC"
+  auth_parameters {
+    basic {
+      username = "tfacctest"
+      password = "avoid-plaintext-passwords"
+    }
+  }
+  kms_key_identifier = %[2]q
+}
+`, name, kmsKeyIdentifier)
 }

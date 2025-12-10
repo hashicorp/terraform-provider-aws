@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,7 +141,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceRemediationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRemediationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -153,16 +154,16 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.Automatic = v.(bool)
 	}
 
-	if v, ok := d.GetOk("execution_controls"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		remediationConfiguration.ExecutionControls = expandExecutionControls(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("execution_controls"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		remediationConfiguration.ExecutionControls = expandExecutionControls(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
 		remediationConfiguration.MaximumAutomaticAttempts = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]interface{})) > 0 {
-		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]any)) > 0 {
+		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceType); ok {
@@ -185,9 +186,10 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.TargetVersion = aws.String(v.(string))
 	}
 
-	_, err := conn.PutRemediationConfigurations(ctx, &configservice.PutRemediationConfigurationsInput{
+	input := configservice.PutRemediationConfigurationsInput{
 		RemediationConfigurations: []types.RemediationConfiguration{remediationConfiguration},
-	})
+	}
+	_, err := conn.PutRemediationConfigurations(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Remediation Configuration (%s): %s", name, err)
@@ -200,13 +202,13 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRemediationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceRemediationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRemediationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	remediationConfiguration, err := findRemediationConfigurationByConfigRuleName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Remediation Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,7 +237,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -251,7 +253,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Remediation Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRemediationConfiguration(ctx, input)
 	})
 
@@ -288,7 +290,7 @@ func findRemediationConfigurations(ctx context.Context, conn *configservice.Clie
 	output, err := conn.DescribeRemediationConfigurations(ctx, input)
 
 	if errs.IsA[*types.NoSuchConfigRuleException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -305,7 +307,7 @@ func findRemediationConfigurations(ctx context.Context, conn *configservice.Clie
 	return output.RemediationConfigurations, nil
 }
 
-func expandRemediationParameterValue(tfMap map[string]interface{}) types.RemediationParameterValue {
+func expandRemediationParameterValue(tfMap map[string]any) types.RemediationParameterValue {
 	apiObject := types.RemediationParameterValue{}
 
 	if v, ok := tfMap["resource_value"].(string); ok && v != "" {
@@ -320,7 +322,7 @@ func expandRemediationParameterValue(tfMap map[string]interface{}) types.Remedia
 		}
 	}
 
-	if v, ok := tfMap["static_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["static_values"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StaticValue = &types.StaticValue{
 			Values: flex.ExpandStringValueList(v),
 		}
@@ -329,7 +331,7 @@ func expandRemediationParameterValue(tfMap map[string]interface{}) types.Remedia
 	return apiObject
 }
 
-func expandRemediationParameterValues(tfList []interface{}) map[string]types.RemediationParameterValue {
+func expandRemediationParameterValues(tfList []any) map[string]types.RemediationParameterValue {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -337,7 +339,7 @@ func expandRemediationParameterValues(tfList []interface{}) map[string]types.Rem
 	apiObjects := make(map[string]types.RemediationParameterValue)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -353,7 +355,7 @@ func expandRemediationParameterValues(tfList []interface{}) map[string]types.Rem
 	return apiObjects
 }
 
-func expandSSMControls(tfMap map[string]interface{}) *types.SsmControls {
+func expandSSMControls(tfMap map[string]any) *types.SsmControls {
 	if tfMap == nil {
 		return nil
 	}
@@ -371,25 +373,25 @@ func expandSSMControls(tfMap map[string]interface{}) *types.SsmControls {
 	return apiObject
 }
 
-func expandExecutionControls(tfMap map[string]interface{}) *types.ExecutionControls {
+func expandExecutionControls(tfMap map[string]any) *types.ExecutionControls {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ExecutionControls{}
 
-	if v, ok := tfMap["ssm_controls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SsmControls = expandSSMControls(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ssm_controls"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SsmControls = expandSSMControls(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func flattenRemediationParameterValues(apiObjects map[string]types.RemediationParameterValue) []interface{} {
-	var tfList []interface{}
+func flattenRemediationParameterValues(apiObjects map[string]types.RemediationParameterValue) []any {
+	var tfList []any
 
 	for key, value := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrName: key,
 		}
 
@@ -404,18 +406,18 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 				tfMap["static_values"] = v.Values
 			}
 		} else {
-			tfMap["static_values"] = make([]interface{}, 0)
+			tfMap["static_values"] = make([]any, 0)
 		}
 
 		tfList = append(tfList, tfMap)
 	}
 
-	slices.SortFunc(tfList, func(a, b interface{}) int {
-		if a.(map[string]interface{})[names.AttrName].(string) < b.(map[string]interface{})[names.AttrName].(string) {
+	slices.SortFunc(tfList, func(a, b any) int {
+		if a.(map[string]any)[names.AttrName].(string) < b.(map[string]any)[names.AttrName].(string) {
 			return -1
 		}
 
-		if a.(map[string]interface{})[names.AttrName].(string) > b.(map[string]interface{})[names.AttrName].(string) {
+		if a.(map[string]any)[names.AttrName].(string) > b.(map[string]any)[names.AttrName].(string) {
 			return 1
 		}
 
@@ -425,22 +427,22 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 	return tfList
 }
 
-func flattenExecutionControls(apiObject *types.ExecutionControls) []interface{} {
+func flattenExecutionControls(apiObject *types.ExecutionControls) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"ssm_controls": flattenSSMControls(apiObject.SsmControls),
 	}}
 }
 
-func flattenSSMControls(apiObject *types.SsmControls) []interface{} {
+func flattenSSMControls(apiObject *types.SsmControls) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ConcurrentExecutionRatePercentage != nil {
 		tfMap["concurrent_execution_rate_percentage"] = apiObject.ConcurrentExecutionRatePercentage
@@ -449,5 +451,5 @@ func flattenSSMControls(apiObject *types.SsmControls) []interface{} {
 	if apiObject.ErrorPercentage != nil {
 		tfMap["error_percentage"] = apiObject.ErrorPercentage
 	}
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

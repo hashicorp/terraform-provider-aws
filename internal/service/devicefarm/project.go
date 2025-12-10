@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm
@@ -11,30 +11,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_devicefarm_project", name="Project")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.Project")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
 		ReadWithoutTimeout:   resourceProjectRead,
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -53,12 +54,10 @@ func resourceProject() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -86,13 +85,13 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	project, err := findProjectByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -110,7 +109,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -137,14 +136,15 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
-	_, err := conn.DeleteProject(ctx, &devicefarm.DeleteProjectInput{
+	input := devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -164,7 +164,7 @@ func findProjectByARN(ctx context.Context, conn *devicefarm.Client, arn string) 
 	output, err := conn.GetProject(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -13,10 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_backup_global_settings", name="Global Settings")
+// @Region(global=true)
 func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -38,12 +40,12 @@ func resourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]any)),
 	}
 
 	_, err := conn.UpdateGlobalSettings(ctx, input)
@@ -59,13 +61,13 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
 
-func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	output, err := findGlobalSettings(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Global Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

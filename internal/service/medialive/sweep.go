@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive
@@ -43,7 +43,7 @@ func sweepChannels(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.MediaLiveClient(ctx)
@@ -68,7 +68,7 @@ func sweepChannels(region string) error {
 			id := aws.ToString(channel.Id)
 			log.Printf("[INFO] Deleting MediaLive Channels: %s", id)
 
-			r := ResourceChannel()
+			r := resourceChannel()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -87,7 +87,7 @@ func sweepInputs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.MediaLiveClient(ctx)
@@ -112,7 +112,7 @@ func sweepInputs(region string) error {
 			id := aws.ToString(input.Id)
 			log.Printf("[INFO] Deleting MediaLive Input: %s", id)
 
-			r := ResourceInput()
+			r := resourceInput()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -131,7 +131,7 @@ func sweepInputSecurityGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.MediaLiveClient(ctx)
@@ -156,7 +156,7 @@ func sweepInputSecurityGroups(region string) error {
 			id := aws.ToString(group.Id)
 			log.Printf("[INFO] Deleting MediaLive Input Security Group: %s", id)
 
-			r := ResourceInputSecurityGroup()
+			r := resourceInputSecurityGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -175,7 +175,7 @@ func sweepMultiplexes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.MediaLiveClient(ctx)
@@ -200,7 +200,7 @@ func sweepMultiplexes(region string) error {
 			id := aws.ToString(multiplex.Id)
 			log.Printf("[INFO] Deleting MediaLive Multiplex: %s", id)
 
-			r := ResourceMultiplex()
+			r := resourceMultiplex()
 			d := r.Data(nil)
 			d.SetId(id)
 

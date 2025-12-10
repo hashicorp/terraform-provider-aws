@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -19,7 +19,7 @@ import (
 func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rNames []string
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		rNames = append(rNames, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
 	dataSourceName := "data.aws_ecr_repositories.test"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package keyspaces_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -497,7 +497,7 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfkeyspaces.FindTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -767,7 +767,9 @@ resource "aws_keyspaces_table" "test" {
 func testAccTableConfig_allAttributes(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_keyspaces_keyspace" "test" {
@@ -820,7 +822,9 @@ resource "aws_keyspaces_table" "test" {
 func testAccTableConfig_allAttributesUpdated(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_keyspaces_keyspace" "test" {

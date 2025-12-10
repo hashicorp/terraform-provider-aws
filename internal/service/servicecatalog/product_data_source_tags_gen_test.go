@@ -5,9 +5,9 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -15,16 +15,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogProductDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,10 +50,11 @@ func TestAccServiceCatalogProductDataSource_tags(t *testing.T) {
 
 func TestAccServiceCatalogProductDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,10 +75,11 @@ func TestAccServiceCatalogProductDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccServiceCatalogProductDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,10 +100,11 @@ func TestAccServiceCatalogProductDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccServiceCatalogProductDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		Steps: []resource.TestStep{
@@ -129,10 +133,11 @@ func TestAccServiceCatalogProductDataSource_tags_DefaultTags_nonOverlapping(t *t
 
 func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		Steps: []resource.TestStep{
@@ -155,7 +160,7 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullProductDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProductDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -167,10 +172,11 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 
 func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_servicecatalog_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	dataSourceName := "data.aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		Steps: []resource.TestStep{
@@ -188,7 +194,7 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullProductDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullProductDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,9 +204,9 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(
 	})
 }
 
-func expectFullProductDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullProductDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Product",
-	}, knownValue)
+	}), knownValue)
 }

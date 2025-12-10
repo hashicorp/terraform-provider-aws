@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +49,7 @@ func (o *blueGreenOrchestrator) CleanUp(ctx context.Context) {
 func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
 	createOut, err := o.conn.CreateBlueGreenDeployment(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
+		return nil, fmt.Errorf("creating Blue/Green Deployment: %w", err)
 	}
 	dep := createOut.BlueGreenDeployment
 	return dep, nil
@@ -57,7 +58,7 @@ func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds
 func (o *blueGreenOrchestrator) waitForDeploymentAvailable(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
 	dep, err := waitBlueGreenDeploymentAvailable(ctx, o.conn, identifier, timeout)
 	if err != nil {
-		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
+		return nil, fmt.Errorf("creating Blue/Green Deployment: %w", err)
 	}
 	return dep, nil
 }
@@ -67,7 +68,7 @@ func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier strin
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
 	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -75,12 +76,12 @@ func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier strin
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("switching over Blue/Green Deployment: %s", err)
+		return nil, fmt.Errorf("switching over Blue/Green Deployment: %w", err)
 	}
 
 	dep, err := waitBlueGreenDeploymentSwitchoverCompleted(ctx, o.conn, identifier, timeout)
 	if err != nil {
-		return nil, fmt.Errorf("switching over Blue/Green Deployment: waiting for completion: %s", err)
+		return nil, fmt.Errorf("switching over Blue/Green Deployment: waiting for completion: %w", err)
 	}
 	return dep, nil
 }
@@ -121,7 +122,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	if needsPreConditions {
 		err := dbInstanceModify(ctx, h.conn, d.Id(), input, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("setting pre-conditions: %s", err)
+			return fmt.Errorf("setting pre-conditions: %w", err)
 		}
 	}
 	return nil
@@ -149,14 +150,17 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify := dbInstancePopulateModify(modifyInput, d)
+	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
+	if diags.HasError() {
+		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
 		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
-			return fmt.Errorf("updating Green environment: %s", err)
+			return fmt.Errorf("updating Green environment: %w", err)
 		}
 	}
 

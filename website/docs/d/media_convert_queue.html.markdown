@@ -6,7 +6,7 @@ description: |-
   Retrieve information about a AWS Elemental MediaConvert Queue.
 ---
 
-# Resource: aws_media_convert_queue
+# Data Source: aws_media_convert_queue
 
 Retrieve information about a AWS Elemental MediaConvert Queue.
 
@@ -20,11 +20,14 @@ data "aws_media_convert_queue" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier of the queue. The same as `name`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Arn of the queue.
 * `name` - The same as `id`.

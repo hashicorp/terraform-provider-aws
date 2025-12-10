@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -17,16 +17,16 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,18 +46,16 @@ var (
 
 // @SDKResource("aws_connect_instance", name="Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="6.14.1")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
 		UpdateWithoutTimeout: resourceInstanceUpdate,
 		DeleteWithoutTimeout: resourceInstanceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -150,7 +148,7 @@ func resourceInstance() *schema.Resource {
 	}
 }
 
-func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -189,13 +187,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -225,7 +223,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -236,14 +234,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
-	_, err := conn.DeleteInstance(ctx, &connect.DeleteInstanceInput{
+	input := connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -335,7 +334,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	output, err := conn.DescribeInstance(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -365,7 +364,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	output, err := conn.DescribeInstanceAttribute(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -382,11 +381,11 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	return output.Attribute, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstance(ctx context.Context, conn *connect.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -399,7 +398,7 @@ func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.
 }
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.InstanceStatusActive),
 		Refresh: statusInstance(ctx, conn, id),
@@ -420,7 +419,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 }
 
 func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
 		Refresh: statusInstance(ctx, conn, id),

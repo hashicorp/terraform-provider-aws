@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -25,12 +25,13 @@ import (
 )
 
 // @SDKResource("aws_glue_user_defined_function", name="User Defined Function")
-func ResourceUserDefinedFunction() *schema.Resource {
+func resourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,
 		ReadWithoutTimeout:   resourceUserDefinedFunctionRead,
 		UpdateWithoutTimeout: resourceUserDefinedFunctionUpdate,
 		DeleteWithoutTimeout: resourceUserDefinedFunctionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -98,7 +99,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 	}
 }
 
-func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
@@ -121,30 +122,7 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
-func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
-
-	input := &glue.UpdateUserDefinedFunctionInput{
-		CatalogId:     aws.String(catalogID),
-		DatabaseName:  aws.String(dbName),
-		FunctionName:  aws.String(funcName),
-		FunctionInput: expandUserDefinedFunctionInput(d),
-	}
-
-	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
-
-	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
-}
-
-func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -197,7 +175,30 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	input := &glue.UpdateUserDefinedFunctionInput{
+		CatalogId:     aws.String(catalogID),
+		DatabaseName:  aws.String(dbName),
+		FunctionName:  aws.String(funcName),
+		FunctionInput: expandUserDefinedFunctionInput(d),
+	}
+
+	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
+}
+
+func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
@@ -249,7 +250,7 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []awstypes.ResourceU
 	result := make([]awstypes.ResourceUri, 0, conf.Len())
 
 	for _, r := range conf.List() {
-		uriRaw, ok := r.(map[string]interface{})
+		uriRaw, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -266,11 +267,11 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []awstypes.ResourceU
 	return result
 }
 
-func flattenUserDefinedFunctionResourceURI(uris []awstypes.ResourceUri) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(uris))
+func flattenUserDefinedFunctionResourceURI(uris []awstypes.ResourceUri) []map[string]any {
+	result := make([]map[string]any, 0, len(uris))
 
 	for _, i := range uris {
-		l := map[string]interface{}{
+		l := map[string]any{
 			names.AttrResourceType: string(i.ResourceType),
 			names.AttrURI:          aws.ToString(i.Uri),
 		}

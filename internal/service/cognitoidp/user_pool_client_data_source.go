@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -136,6 +136,22 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"refresh_token_rotation": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"feature": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"retry_grace_period_seconds": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"refresh_token_validity": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -182,7 +198,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -212,6 +228,9 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
 	d.Set("read_attributes", userPoolClient.ReadAttributes)
+	if err := d.Set("refresh_token_rotation", flattenUserPoolClientRefreshTokenRotation(userPoolClient.RefreshTokenRotation)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting refresh_token_rotation: %s", err)
+	}
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("supported_identity_providers", userPoolClient.SupportedIdentityProviders)
 	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
@@ -224,12 +243,12 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []interface{} {
+func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigurationType) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"user_data_shared": apiObject.UserDataShared,
 	}
 
@@ -249,10 +268,10 @@ func flattenUserPoolClientAnalyticsConfig(apiObject *awstypes.AnalyticsConfigura
 		tfMap[names.AttrRoleARN] = aws.ToString(apiObject.RoleArn)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []interface{} {
+func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidityUnitsType) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -262,11 +281,28 @@ func flattenUserPoolClientTokenValidityUnitsType(apiObject *awstypes.TokenValidi
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"access_token":  apiObject.AccessToken,
 		"id_token":      apiObject.IdToken,
 		"refresh_token": apiObject.RefreshToken,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
+}
+
+func flattenUserPoolClientRefreshTokenRotation(apiObject *awstypes.RefreshTokenRotationType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	if apiObject.Feature == "" && apiObject.RetryGracePeriodSeconds == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"feature":                    apiObject.Feature,
+		"retry_grace_period_seconds": apiObject.RetryGracePeriodSeconds,
+	}
+
+	return []any{tfMap}
 }

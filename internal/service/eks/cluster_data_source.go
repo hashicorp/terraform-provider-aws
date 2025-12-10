@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_eks_cluster", name="Cluster")
+// @Tags
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -80,8 +81,24 @@ func dataSourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"control_plane_scaling_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tier": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDeletionProtection: {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"enabled_cluster_log_types": {
@@ -319,11 +336,9 @@ func dataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	cluster, err := findClusterByName(ctx, conn, name)
@@ -347,7 +362,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
+	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
+	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
@@ -382,9 +401,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }

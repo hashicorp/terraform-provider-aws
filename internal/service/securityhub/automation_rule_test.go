@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -372,7 +372,7 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -449,7 +449,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "CRITICAL"
@@ -508,7 +508,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "LOW"

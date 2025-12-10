@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -22,14 +22,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +38,11 @@ import (
 )
 
 // @SDKResource("aws_acmpca_certificate", name="Certificate")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @CustomImport
+// @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
+// @Testing(plannableImportAction="Replace")
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -47,7 +52,13 @@ func resourceCertificate() *schema.Resource {
 		// Expects ACM PCA ARN format, e.g:
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+					return nil, err
+				}
+
 				re := regexache.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
@@ -61,17 +72,7 @@ func resourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_passthrough": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"api_passthrough": sdkv2.JSONDocumentSchemaOptionalForceNew(),
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -134,13 +135,13 @@ func resourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const certificateIssueTimeout = 5 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
-	inputI := acmpca.IssueCertificateInput{
+	input := acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(id.UniqueId()),
@@ -152,21 +153,21 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		if err := json.Unmarshal([]byte(v), ap); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		inputI.ApiPassthrough = ap
+		input.ApiPassthrough = ap
 	}
 
 	if v, ok := d.Get("template_arn").(string); ok && v != "" {
-		inputI.TemplateArn = aws.String(v)
+		input.TemplateArn = aws.String(v)
 	}
 
-	if validity, err := expandValidity(d.Get("validity").([]interface{})); err != nil {
+	if validity, err := expandValidity(d.Get("validity").([]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
-		inputI.Validity = validity
+		input.Validity = validity
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (interface{}, error) {
-		return conn.IssueCertificate(ctx, &inputI)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func(ctx context.Context) (any, error) {
+		return conn.IssueCertificate(ctx, &input)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
 	if err != nil {
@@ -176,11 +177,9 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	inputG := acmpca.GetCertificateInput{
-		CertificateArn:          aws.String(d.Id()),
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-	}
-	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, &inputG, certificateIssueTimeout)
+	_, err = tfresource.RetryWhenIsA[any, *types.RequestInProgressException](ctx, certificateIssueTimeout, func(ctx context.Context) (any, error) {
+		return findCertificateByTwoPartKey(ctx, conn, d.Id(), certificateAuthorityARN)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
@@ -189,13 +188,13 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	output, err := findCertificateByTwoPartKey(ctx, conn, d.Id(), d.Get("certificate_authority_arn").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -213,7 +212,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -267,8 +266,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -317,7 +315,7 @@ func getCertificateSerial(der []byte) (*big.Int, error) {
 	return serial, nil
 }
 
-func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
+func validTemplateARN(v any, k string) (ws []string, errors []error) {
 	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
@@ -346,12 +344,12 @@ func validTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandValidity(l []interface{}) (*types.Validity, error) {
+func expandValidity(l []any) (*types.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	valueType := m[names.AttrType].(string)
 	result := &types.Validity{

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -246,7 +246,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {
@@ -275,7 +275,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {

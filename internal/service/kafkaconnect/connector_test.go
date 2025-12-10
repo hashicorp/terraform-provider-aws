@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect_test
@@ -8,14 +8,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	// The ARN format documentation (https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedstreamingforkafkaconnect.html#amazonmanagedstreamingforkafkaconnect-resources-for-iam-policies)
+	// shows ARNs having a UUID component, but in testing there is an additional component.
+	kafkaConnectUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+` // nosemgrep:ci.kafkaconnect-in-const-name,ci.kafkaconnect-in-var-name
 )
 
 func TestAccKafkaConnectConnector_basic(t *testing.T) {
@@ -33,7 +41,7 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`connector/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.max_worker_count", "2"),
@@ -49,6 +57,7 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers"),
@@ -120,7 +129,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 				Config: testAccConnectorConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`connector/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.max_worker_count", "6"),
@@ -177,10 +186,10 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_allAttributesCapacityUpdated(rName),
+				Config: testAccConnectorConfig_allAttributesCapacityAndConnectorConfigUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`connector/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.#", "1"),
@@ -189,7 +198,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"),
 					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1, t2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
@@ -301,7 +310,7 @@ func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkafkaconnect.FindConnectorByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -345,7 +354,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
   vpc_endpoint_type = "Interface"
 
   security_group_ids = [
@@ -570,7 +579,7 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorConfig_allAttributesCapacityUpdated(rName string) string {
+func testAccConnectorConfig_allAttributesCapacityAndConnectorConfigUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
 		testAccWorkerConfigurationConfig_basic(rName),
@@ -594,7 +603,7 @@ resource "aws_mskconnect_connector" "test" {
   connector_configuration = {
     "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
     "tasks.max"       = "1"
-    "topics"          = "t1"
+    "topics"          = "t1, t2"
   }
 
   kafka_cluster {

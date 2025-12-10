@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +36,7 @@ func TestAccRoute53TrafficPolicy_basic(t *testing.T) {
 				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("trafficpolicy/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
@@ -144,7 +146,7 @@ func testAccCheckTrafficPolicyDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfroute53.FindTrafficPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

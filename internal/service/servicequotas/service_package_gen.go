@@ -4,62 +4,71 @@ package servicequotas
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceTemplates,
+			Factory:  newTemplatesDataSource,
 			TypeName: "aws_servicequotas_templates",
 			Name:     "Templates",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceTemplate,
+			Factory:  newTemplateResource,
 			TypeName: "aws_servicequotas_template",
 			Name:     "Template",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceTemplateAssociation,
+			Factory:  newTemplateAssociationResource,
 			TypeName: "aws_servicequotas_template_association",
 			Name:     "Template Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceService,
+			Factory:  dataSourceService,
 			TypeName: "aws_servicequotas_service",
 			Name:     "Service",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceServiceQuota,
+			Factory:  dataSourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
 			Name:     "Service Quota",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceServiceQuota,
+			Factory:  resourceServiceQuota,
 			TypeName: "aws_servicequotas_service_quota",
 			Name:     "Service Quota",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -71,11 +80,47 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*servicequotas.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return servicequotas.NewFromConfig(cfg,
+	optFns := []func(*servicequotas.Options){
 		servicequotas.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		func(o *servicequotas.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *servicequotas.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
+			}
+		},
+		withExtraOptions(ctx, p, config),
+	}
+
+	return servicequotas.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*servicequotas.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*servicequotas.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *servicequotas.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*servicequotas.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

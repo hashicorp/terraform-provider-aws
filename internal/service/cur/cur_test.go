@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cur_test
@@ -24,6 +24,7 @@ func TestAccCUR_serial(t *testing.T) {
 			"athena":                testAccReportDefinition_athena,
 			"refresh":               testAccReportDefinition_refresh,
 			"overwrite":             testAccReportDefinition_overwrite,
+			"upgradeNoPrefixFromV5": testAccReportDefinition_upgradeNoPrefixFromV5,
 			"DataSource_basic":      testAccReportDefinitionDataSource_basic,
 			"DataSource_additional": testAccReportDefinitionDataSource_additional,
 		},

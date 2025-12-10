@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validResolverName(v interface{}, k string) (ws []string, errors []error) {
+func validResolverName(v any, k string) (ws []string, errors []error) {
 	// Type: String
 	// Length Constraints: Maximum length of 64.
 	// Pattern: (?!^[0-9]+$)([0-9A-Za-z-_' ']+)

@@ -42,7 +42,7 @@ resource "aws_dms_endpoint" "source" {
   endpoint_id   = "${var.rName}-source"
   endpoint_type = "source"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.region}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -53,7 +53,7 @@ resource "aws_dms_endpoint" "target" {
   endpoint_id   = "${var.rName}-target"
   endpoint_type = "target"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.region}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -64,6 +64,8 @@ resource "aws_dms_endpoint" "target" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2

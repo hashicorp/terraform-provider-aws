@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -112,7 +113,7 @@ func resourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -159,7 +160,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("jwt_configuration"); ok {
-		input.JwtConfiguration = expandJWTConfiguration(v.([]interface{}))
+		input.JwtConfiguration = expandJWTConfiguration(v.([]any))
 	}
 
 	outputCA, err := conn.CreateAuthorizer(ctx, input)
@@ -173,13 +174,13 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findAuthorizerByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Authorizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -204,7 +205,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -246,7 +247,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("jwt_configuration") {
-		input.JwtConfiguration = expandJWTConfiguration(d.Get("jwt_configuration").([]interface{}))
+		input.JwtConfiguration = expandJWTConfiguration(d.Get("jwt_configuration").([]any))
 	}
 
 	_, err := conn.UpdateAuthorizer(ctx, input)
@@ -258,12 +259,12 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
 			ApiId:        aws.String(d.Get("api_id").(string)),
 			AuthorizerId: aws.String(d.Id()),
@@ -281,7 +282,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAuthorizerImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAuthorizerImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/authorizer-id'", d.Id())
@@ -306,7 +307,7 @@ func findAuthorizer(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	output, err := conn.GetAuthorizer(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -323,13 +324,13 @@ func findAuthorizer(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	return output, nil
 }
 
-func expandJWTConfiguration(vConfiguration []interface{}) *awstypes.JWTConfiguration {
+func expandJWTConfiguration(vConfiguration []any) *awstypes.JWTConfiguration {
 	configuration := &awstypes.JWTConfiguration{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
 		return configuration
 	}
-	mConfiguration := vConfiguration[0].(map[string]interface{})
+	mConfiguration := vConfiguration[0].(map[string]any)
 
 	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
 		configuration.Audience = flex.ExpandStringValueSet(vAudience)
@@ -341,12 +342,12 @@ func expandJWTConfiguration(vConfiguration []interface{}) *awstypes.JWTConfigura
 	return configuration
 }
 
-func flattenJWTConfiguration(configuration *awstypes.JWTConfiguration) []interface{} {
+func flattenJWTConfiguration(configuration *awstypes.JWTConfiguration) []any {
 	if configuration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"audience":       flex.FlattenStringValueSet(configuration.Audience),
 		names.AttrIssuer: aws.ToString(configuration.Issuer),
 	}}

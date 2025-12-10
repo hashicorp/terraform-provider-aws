@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2_test
@@ -120,7 +120,7 @@ resource "aws_resourceexplorer2_view" "test" {
 data "aws_resourceexplorer2_search" "test" {
   depends_on = [aws_resourceexplorer2_view.test]
 
-  query_string = "region:${data.aws_region.current.name}"
+  query_string = "region:${data.aws_region.current.region}"
   view_arn     = aws_resourceexplorer2_view.test.arn
 }
 `, rName, indexType)

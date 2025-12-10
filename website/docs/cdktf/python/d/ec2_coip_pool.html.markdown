@@ -42,14 +42,11 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-COIP Pools in the current region. The given filters must match exactly one
-COIP Pool whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired COIP Pool
-
 * `pool_id` - (Optional) ID of the specific COIP Pool to retrieve.
-
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired COIP Pool.
 
@@ -58,7 +55,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCoipPools.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A COIP Pool will be selected if any one of the given values matches.
 
@@ -80,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-9daefdcf6a9406d85608497b3074a6f9c1cdbfdb9d671dde53dad6ac78ca710e -->
+<!-- cache-key: cdktf-0.20.8 input-6364a04172d726ebc8cd5e10ae5ca9fbd5ebbfc361dd5d5e36955f2ca2e0f0ba -->

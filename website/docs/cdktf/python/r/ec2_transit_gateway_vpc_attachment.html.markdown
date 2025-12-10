@@ -39,6 +39,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_ids` - (Required) Identifiers of EC2 Subnets.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `vpc_id` - (Required) Identifier of EC2 VPC.
@@ -54,7 +55,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
 
@@ -83,4 +85,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment` using 
 % terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3127ab64952e065bf3a2f822e3b8618c7e5d2e1aa02d7a9394312b74185b8b09 -->
+<!-- cache-key: cdktf-0.20.8 input-835a660d493e7f5af4528f903d3fc24ac32bf1ed7968a77530890b0c08f3df77 -->

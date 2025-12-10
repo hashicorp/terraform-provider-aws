@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codeartifact_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -307,7 +307,7 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes[names.AttrDomain], rs.Primary.Attributes["repository"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -327,6 +327,7 @@ func testAccRepositoryConfig_base(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {

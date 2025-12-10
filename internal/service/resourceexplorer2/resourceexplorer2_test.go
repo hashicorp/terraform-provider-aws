@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2_test
@@ -16,6 +16,7 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			acctest.CtDisappears: testAccIndex_disappears,
 			"tags":               testAccIndex_tags,
 			"type":               testAccIndex_type,
+			"Identity":           testAccResourceExplorer2Index_IdentitySerial,
 		},
 		"View": {
 			acctest.CtBasic:      testAccView_basic,
@@ -24,6 +25,7 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"filter":             testAccView_filter,
 			"scope":              testAccView_scope,
 			"tags":               testAccView_tags,
+			"Identity":           testAccResourceExplorer2View_IdentitySerial,
 		},
 		"SearchDataSource": {
 			acctest.CtBasic: testAccSearchDataSource_basic,

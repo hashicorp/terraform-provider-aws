@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -87,7 +88,7 @@ func resourceFunction() *schema.Resource {
 	}
 }
 
-func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -129,13 +130,13 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	outputDF, err := findFunctionByTwoPartKey(ctx, conn, d.Id(), awstypes.FunctionStageDevelopment)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -155,10 +156,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
 	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
+	input := cloudfront.GetFunctionInput{
 		Name:  aws.String(d.Id()),
 		Stage: awstypes.FunctionStageDevelopment,
-	})
+	}
+	outputGF, err := conn.GetFunction(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage code: %s", d.Id(), err)
@@ -168,7 +170,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	outputDF, err = findFunctionByTwoPartKey(ctx, conn, d.Id(), awstypes.FunctionStageLive)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		d.Set("live_stage_etag", "")
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) LIVE stage: %s", d.Id(), err)
@@ -179,7 +181,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	etag := d.Get("etag").(string)
@@ -224,15 +226,16 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
-	_, err := conn.DeleteFunction(ctx, &cloudfront.DeleteFunctionInput{
+	input := cloudfront.DeleteFunctionInput{
 		IfMatch: aws.String(d.Get("etag").(string)),
 		Name:    aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchFunctionExists](err) {
 		return diags
@@ -254,7 +257,7 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	output, err := conn.DescribeFunction(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchFunctionExists](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -271,12 +274,12 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	return output, nil
 }
 
-func expandKeyValueStoreAssociations(tfList []interface{}) *awstypes.KeyValueStoreAssociations {
+func expandKeyValueStoreAssociations(tfList []any) *awstypes.KeyValueStoreAssociations {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	items := tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.KeyValueStoreAssociation {
+	items := tfslices.ApplyToAll(tfList, func(v any) awstypes.KeyValueStoreAssociation {
 		return awstypes.KeyValueStoreAssociation{
 			KeyValueStoreARN: aws.String(v.(string)),
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -224,7 +224,7 @@ func testAccCheckRegexMatchSetDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfwafregional.FindRegexMatchSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -295,7 +295,7 @@ resource "aws_wafregional_regex_match_set" "test" {
 
 func computeRegexMatchSetTuple(patternSet *awstypes.RegexPatternSet, fieldToMatch *awstypes.FieldToMatch, textTransformation string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"field_to_match":       tfwafregional.FlattenFieldToMatch(fieldToMatch),
 			"regex_pattern_set_id": *patternSet.RegexPatternSetId,
 			"text_transformation":  textTransformation,

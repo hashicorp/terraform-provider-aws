@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,12 +69,10 @@ func resourceDatabase() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
@@ -98,13 +97,13 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	db, err := findDatabaseByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Timestream Database %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -122,7 +121,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
@@ -142,14 +141,15 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
-	_, err := conn.DeleteDatabase(ctx, &timestreamwrite.DeleteDatabaseInput{
+	input := timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDatabase(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -170,7 +170,7 @@ func findDatabaseByName(ctx context.Context, conn *timestreamwrite.Client, name 
 	output, err := conn.DescribeDatabase(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

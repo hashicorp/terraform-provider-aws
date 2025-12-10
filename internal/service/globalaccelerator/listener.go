@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -13,28 +13,27 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -87,7 +86,7 @@ func resourceListener() *schema.Resource {
 	}
 }
 
-func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -116,13 +115,13 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +147,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -174,7 +173,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -208,7 +207,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	output, err := conn.DescribeListener(ctx, input)
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -225,7 +224,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	return output.Listener, nil
 }
 
-func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
+func expandPortRange(tfMap map[string]any) *awstypes.PortRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -243,7 +242,7 @@ func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
 	return apiObject
 }
 
-func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
+func expandPortRanges(tfList []any) []awstypes.PortRange {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -251,7 +250,7 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	var apiObjects []awstypes.PortRange
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -269,12 +268,12 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	return apiObjects
 }
 
-func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FromPort; v != nil {
 		tfMap["from_port"] = aws.ToInt32(v)
@@ -287,12 +286,12 @@ func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPortRange(&apiObject))

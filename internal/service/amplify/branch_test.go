@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,6 +51,7 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_skew_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
@@ -213,6 +214,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_skew_protection", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
@@ -277,7 +279,7 @@ func testAccCheckBranchDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfamplify.FindBranchByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["branch_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -383,6 +385,7 @@ resource "aws_amplify_branch" "test" {
   enable_notification           = true
   enable_performance_mode       = true
   enable_pull_request_preview   = false
+  enable_skew_protection        = true
   framework                     = "React"
   pull_request_environment_name = "testpr1"
   stage                         = "DEVELOPMENT"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +36,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 				Config: testAccByteMatchSetConfig_basic(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`bytematchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
@@ -256,7 +258,7 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfwaf.FindByteMatchSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

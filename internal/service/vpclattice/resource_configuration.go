@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
@@ -29,13 +29,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,7 +46,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceConfiguration{}
+	r := &resourceConfigurationResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -54,17 +55,13 @@ func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithC
 	return r, nil
 }
 
-type resourceResourceConfiguration struct {
-	framework.ResourceWithConfigure
+type resourceConfigurationResource struct {
+	framework.ResourceWithModel[resourceConfigurationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (*resourceResourceConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_configuration"
-}
-
-func (r *resourceResourceConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *resourceConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	typeType := fwtypes.StringEnumType[awstypes.ResourceConfigurationType]()
 
 	response.Schema = schema.Schema{
@@ -77,7 +74,35 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, request reso
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			"custom_domain_name": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"domain_verification_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"domain_verification_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"domain_verification_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VerificationStatus](),
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -225,7 +250,7 @@ func (r *resourceResourceConfiguration) Schema(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceResourceConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *resourceConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -242,6 +267,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, request reso
 
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)
 	input.Tags = getTagsIn(ctx)
@@ -274,7 +300,7 @@ func (r *resourceResourceConfiguration) Create(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceResourceConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *resourceConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -285,7 +311,7 @@ func (r *resourceResourceConfiguration) Read(ctx context.Context, request resour
 
 	output, err := findResourceConfigurationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -307,7 +333,7 @@ func (r *resourceResourceConfiguration) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceResourceConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *resourceConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -363,7 +389,7 @@ func (r *resourceResourceConfiguration) Update(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceResourceConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *resourceConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -372,9 +398,15 @@ func (r *resourceResourceConfiguration) Delete(ctx context.Context, request reso
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
-		ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	// Handle EventBridge-managed resource association deletion.
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
+			ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
+		})
+	}, "has existing association with service networks")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -393,10 +425,6 @@ func (r *resourceResourceConfiguration) Delete(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceResourceConfiguration) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceConfigurationOutput, error) {
 	input := vpclattice.GetResourceConfigurationInput{
 		ResourceConfigurationIdentifier: aws.String(id),
@@ -405,7 +433,7 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	output, err := conn.GetResourceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -422,11 +450,11 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	return output, nil
 }
 
-func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findResourceConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -439,7 +467,7 @@ func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, i
 }
 
 func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
 		Refresh:                   statusResourceConfiguration(ctx, conn, id),
@@ -459,7 +487,7 @@ func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusUpdateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
 		Refresh:                   statusResourceConfiguration(ctx, conn, id),
@@ -477,7 +505,7 @@ func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceConfigurationStatusActive, awstypes.ResourceConfigurationStatusDeleteInProgress),
 		Target:  []string{},
 		Refresh: statusResourceConfiguration(ctx, conn, id),
@@ -494,8 +522,13 @@ func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Clie
 }
 
 type resourceConfigurationResourceModel struct {
+	framework.WithRegionModel
 	AllowAssociationToShareableServiceNetwork types.Bool                                                            `tfsdk:"allow_association_to_shareable_service_network"`
 	ARN                                       types.String                                                          `tfsdk:"arn"`
+	CustomDomainName                          types.String                                                          `tfsdk:"custom_domain_name"`
+	DomainVerificationARN                     fwtypes.ARN                                                           `tfsdk:"domain_verification_arn"`
+	DomainVerificationID                      types.String                                                          `tfsdk:"domain_verification_id"`
+	DomainVerificationStatus                  fwtypes.StringEnum[awstypes.VerificationStatus]                       `tfsdk:"domain_verification_status"`
 	ID                                        types.String                                                          `tfsdk:"id"`
 	Name                                      types.String                                                          `tfsdk:"name"`
 	PortRanges                                fwtypes.SetOfString                                                   `tfsdk:"port_ranges"`

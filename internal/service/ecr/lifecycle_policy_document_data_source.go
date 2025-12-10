@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -22,16 +22,13 @@ import (
 )
 
 // @FrameworkDataSource("aws_ecr_lifecycle_policy_document", name="Lifecycle Policy Document")
+// @Region(overrideEnabled=false)
 func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDocumentDataSource{}, nil
 }
 
 type lifecyclePolicyDocumentDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *lifecyclePolicyDocumentDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ecr_lifecycle_policy_document"
+	framework.DataSourceWithModel[lifecyclePolicyDocumentDataSourceModel]
 }
 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

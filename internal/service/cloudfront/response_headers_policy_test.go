@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,8 +32,9 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyConfig_cors(rName1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "response-headers-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_allow_credentials", acctest.CtFalse),
@@ -397,7 +398,7 @@ func testAccCheckResponseHeadersPolicyDestroy(ctx context.Context) resource.Test
 
 			_, err := tfcloudfront.FindResponseHeadersPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,6 +55,13 @@ func testAccFindingAggregator_basic(t *testing.T) {
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
 					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "2"),
+				),
+			},
+			{
+				Config: testAccFindingAggregatorConfig_NoRegions(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFindingAggregatorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "linking_mode", "NO_REGIONS"),
 				),
 			},
 		},
@@ -109,7 +116,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -160,4 +167,16 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
   depends_on = [aws_securityhub_account.example]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
+}
+
+func testAccFindingAggregatorConfig_NoRegions() string {
+	return `
+resource "aws_securityhub_account" "example" {}
+
+resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+  linking_mode = "NO_REGIONS"
+
+  depends_on = [aws_securityhub_account.example]
+}
+`
 }

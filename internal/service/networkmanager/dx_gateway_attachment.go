@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +35,9 @@ import (
 
 // @FrameworkResource("aws_networkmanager_dx_gateway_attachment", name="Direct Connect Gateway Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.DirectConnectGatewayAttachment")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(importIgnore="state")
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 
@@ -45,13 +49,9 @@ func newDirectConnectGatewayAttachmentResource(context.Context) (resource.Resour
 }
 
 type directConnectGatewayAttachmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[directConnectGatewayAttachmentResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmanager_dx_gateway_attachment"
 }
 
 func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -184,7 +184,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -279,7 +279,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 
 	// If attachment state is pending acceptance, reject the attachment before deleting.
-	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
+	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance {
 		input := &networkmanager.RejectAttachmentInput{
 			AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
 		}
@@ -316,10 +316,6 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 }
 
-func (r *directConnectGatewayAttachmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
 	input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
 		AttachmentId: aws.String(id),
@@ -328,7 +324,7 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 	output, err := conn.GetDirectConnectGatewayAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -345,11 +341,11 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 	return output.DirectConnectGatewayAttachment, nil
 }
 
-func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -362,7 +358,7 @@ func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmana
 }
 
 func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Refresh:                   statusDirectConnectGatewayAttachment(ctx, conn, id),
@@ -382,7 +378,7 @@ func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networ
 }
 
 func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
 		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
@@ -401,11 +397,13 @@ func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networ
 }
 
 func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Refresh:        statusDirectConnectGatewayAttachment(ctx, conn, id),
 		Timeout:        timeout,
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
@@ -421,7 +419,7 @@ func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networ
 }
 
 func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
@@ -440,7 +438,7 @@ func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *netw
 }
 
 func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateAvailable),
 		Target:  enum.Slice(awstypes.AttachmentStateRejected),
 		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),

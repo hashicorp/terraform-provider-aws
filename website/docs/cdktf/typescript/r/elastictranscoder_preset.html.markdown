@@ -12,6 +12,8 @@ description: |-
 
 Provides an Elastic Transcoder preset resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. AWS will [discontinue support for Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+
 ## Example Usage
 
 ```typescript
@@ -90,10 +92,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audioCodecOptions` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
 * `container` - (Required, Forces new resource) The container type for the output file. Valid values are `flac`, `flv`, `fmp4`, `gif`, `mp3`, `mp4`, `mpg`, `mxf`, `oga`, `ogg`, `ts`, and `webm`.
@@ -103,6 +104,8 @@ This resource supports the following arguments:
 * `video` - (Optional, Forces new resource) Video parameters object (documented below)
 * `videoWatermarks` - (Optional, Forces new resource) Watermark parameters for the video parameters (documented below)
 * `videoCodecOptions` (Optional, Forces new resource) Codec options for the video parameters
+
+See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
 The `audio` object supports the following:
 
@@ -209,4 +212,4 @@ Using `terraform import`, import Elastic Transcoder presets using the `id`. For 
 % terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da7e0345dc7ab7ed0cc5541c569211596cdd2ff4a9663cbf61083d4c7c374b38 -->
+<!-- cache-key: cdktf-0.20.8 input-324eb2c5fc4cc193cecd202ece383f267bee013a74b0a109164bbdb560b1d15b -->

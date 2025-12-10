@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,7 +24,7 @@ import (
 
 // @SDKDataSource("aws_connect_user", name="User")
 // @Tags
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -55,6 +55,10 @@ func DataSourceUser() *schema.Resource {
 							Computed: true,
 						},
 						"last_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secondary_email": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -118,7 +122,7 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -199,7 +203,7 @@ func findUserSummaries(ctx context.Context, conn *connect.Client, input *connect
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

@@ -100,6 +100,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the scheduled action.
 * `serviceNamespace` - (Required) Namespace of the AWS service. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PutScheduledAction.html) Example: ecs
 * `resourceId` - (Required) Identifier of the resource associated with the scheduled action. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PutScheduledAction.html)
@@ -121,4 +122,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the scheduled action.
 
-<!-- cache-key: cdktf-0.20.8 input-2340bae330ec995b135b58fdb2388300b4f924ab8525d2c122eed0efb9dccbdd -->
+<!-- cache-key: cdktf-0.20.8 input-17be2aec35873ffc013c7ea64303b61b9ffc0ea2317df9fc24c3f77cdc5d2187 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +38,6 @@ func resourceUser() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {
@@ -96,7 +94,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -107,8 +105,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName:     aws.String(userName),
 	}
 
-	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateUser(ctx, input)
@@ -122,13 +120,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	user, err := findUserByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -141,13 +139,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("access_string", user.AccessString)
 	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
 			"password_count": aws.ToInt32(v.PasswordCount),
 			names.AttrType:   v.Type,
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
+		if err := d.Set("authentication_mode", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
@@ -157,7 +155,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -170,8 +168,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.AccessString = aws.String(d.Get("access_string").(string))
 		}
 
-		if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.UpdateUser(ctx, input)
@@ -188,7 +186,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -238,7 +236,7 @@ func findUsers(ctx context.Context, conn *memorydb.Client, input *memorydb.Descr
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.UserNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -254,11 +252,11 @@ func findUsers(ctx context.Context, conn *memorydb.Client, input *memorydb.Descr
 	return output, nil
 }
 
-func statusUser(ctx context.Context, conn *memorydb.Client, userName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusUser(ctx context.Context, conn *memorydb.Client, userName string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		user, err := findUserByName(ctx, conn, userName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -274,7 +272,7 @@ func waitUserActive(ctx context.Context, conn *memorydb.Client, userName string)
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
 		Refresh: statusUser(ctx, conn, userName),
@@ -294,7 +292,7 @@ func waitUserDeleted(ctx context.Context, conn *memorydb.Client, userName string
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
 		Refresh: statusUser(ctx, conn, userName),
@@ -310,7 +308,7 @@ func waitUserDeleted(ctx context.Context, conn *memorydb.Client, userName string
 	return nil, err
 }
 
-func expandAuthenticationMode(tfMap map[string]interface{}) *awstypes.AuthenticationMode {
+func expandAuthenticationMode(tfMap map[string]any) *awstypes.AuthenticationMode {
 	if tfMap == nil {
 		return nil
 	}

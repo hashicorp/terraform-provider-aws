@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func resourceCertificateAuthorityMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func resourceCertificateAuthorityMigrateState(v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found ACM PCA Certificate Authority state v0; migrating to v1")

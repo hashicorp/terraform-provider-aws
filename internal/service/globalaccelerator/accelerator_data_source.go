@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -27,11 +27,7 @@ func newAcceleratorDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type acceleratorDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*acceleratorDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_globalaccelerator_accelerator"
+	framework.DataSourceWithModel[acceleratorDataSourceModel]
 }
 
 func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -62,7 +58,6 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrIPAddressType: schema.StringAttribute{

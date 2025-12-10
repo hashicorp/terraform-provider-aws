@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -19,7 +19,7 @@ func listSecretTags(ctx context.Context, conn *secretsmanager.Client, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists secretsmanager service tags and set them in Context.

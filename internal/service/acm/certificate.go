@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,17 +56,18 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key, generator=false)
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
+// @Testing(tlsKey=true)
+// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -159,6 +161,12 @@ func resourceCertificate() *schema.Resource {
 							Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
 							ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+						},
+						"export": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.CertificateExport](),
 						},
 					},
 				},
@@ -257,10 +265,10 @@ func resourceCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
 				if diff.Get("validation_method").(string) == string(types.ValidationMethodDns) && (diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names")) {
-					domainValidationOptionsList := []interface{}{map[string]interface{}{
+					domainValidationOptionsList := []any{map[string]any{
 						names.AttrDomainName: diff.Get(names.AttrDomainName).(string),
 					}}
 
@@ -272,7 +280,7 @@ func resourceCertificate() *schema.Resource {
 								continue
 							}
 
-							m := map[string]interface{}{
+							m := map[string]any{
 								names.AttrDomainName: san,
 							}
 
@@ -324,12 +332,11 @@ func resourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
@@ -357,8 +364,8 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.KeyAlgorithm = types.KeyAlgorithm(v.(string))
 		}
 
-		if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Options = expandCertificateOptions(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Options = expandCertificateOptions(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("subject_alternative_names"); ok && v.(*schema.Set).Len() > 0 {
@@ -407,14 +414,14 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -454,7 +461,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("not_before", nil)
 	}
 	if certificate.Options != nil {
-		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
+		if err := d.Set("options", []any{flattenCertificateOptions(certificate.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
@@ -463,7 +470,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
-		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
+		if err := d.Set("renewal_summary", []any{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting renewal_summary: %s", err)
 		}
 	} else {
@@ -478,7 +485,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
@@ -524,7 +531,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, n := d.GetChange("options")
 		input := acm.UpdateCertificateOptionsInput{
 			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
-			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
+			Options:        expandCertificateOptions(n.([]any)[0].(map[string]any)),
 		}
 
 		_, err := conn.UpdateCertificateOptions(ctx, &input)
@@ -537,7 +544,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
@@ -546,8 +553,8 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := acm.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
-		func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCertificate(ctx, &input)
 		})
 
@@ -572,8 +579,8 @@ func certificateValidationMethod(certificate *types.CertificateDetail) string {
 	return certificateValidationMethodNone
 }
 
-func domainValidationOptionsHash(v interface{}) int {
-	m, ok := v.(map[string]interface{})
+func domainValidationOptionsHash(v any) int {
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0
@@ -613,7 +620,7 @@ func certificateSetPendingRenewal(d resourceGetter) bool {
 	return time.Now().After(earlyExpiration)
 }
 
-func expandCertificateOptions(tfMap map[string]interface{}) *types.CertificateOptions {
+func expandCertificateOptions(tfMap map[string]any) *types.CertificateOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -624,22 +631,30 @@ func expandCertificateOptions(tfMap map[string]interface{}) *types.CertificateOp
 		apiObject.CertificateTransparencyLoggingPreference = types.CertificateTransparencyLoggingPreference(v)
 	}
 
+	if v, ok := tfMap["export"].(string); ok && v != "" {
+		apiObject.Export = types.CertificateExport(v)
+	}
+
 	return apiObject
 }
 
-func flattenCertificateOptions(apiObject *types.CertificateOptions) map[string]interface{} {
+func flattenCertificateOptions(apiObject *types.CertificateOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["certificate_transparency_logging_preference"] = apiObject.CertificateTransparencyLoggingPreference
+
+	if apiObject.Export != "" {
+		tfMap["export"] = apiObject.Export
+	}
 
 	return tfMap
 }
 
-func expandDomainValidationOption(tfMap map[string]interface{}) *types.DomainValidationOption {
+func expandDomainValidationOption(tfMap map[string]any) *types.DomainValidationOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -657,7 +672,7 @@ func expandDomainValidationOption(tfMap map[string]interface{}) *types.DomainVal
 	return apiObject
 }
 
-func expandDomainValidationOptions(tfList []interface{}) []types.DomainValidationOption {
+func expandDomainValidationOptions(tfList []any) []types.DomainValidationOption {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -665,7 +680,7 @@ func expandDomainValidationOptions(tfList []interface{}) []types.DomainValidatio
 	var apiObjects []types.DomainValidationOption
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -683,8 +698,8 @@ func expandDomainValidationOptions(tfList []interface{}) []types.DomainValidatio
 	return apiObjects
 }
 
-func flattenDomainValidation(apiObject types.DomainValidation) (map[string]interface{}, []string) {
-	tfMap := map[string]interface{}{}
+func flattenDomainValidation(apiObject types.DomainValidation) (map[string]any, []string) {
+	tfMap := map[string]any{}
 	var tfStrings []string
 
 	if v := apiObject.ResourceRecord; v != nil {
@@ -708,12 +723,12 @@ func flattenDomainValidation(apiObject types.DomainValidation) (map[string]inter
 	return tfMap, tfStrings
 }
 
-func flattenDomainValidations(apiObjects []types.DomainValidation) ([]interface{}, []string) {
+func flattenDomainValidations(apiObjects []types.DomainValidation) ([]any, []string) {
 	if len(apiObjects) == 0 {
 		return nil, nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	var tfStrings []string
 
 	for _, apiObject := range apiObjects {
@@ -730,12 +745,12 @@ func flattenDomainValidations(apiObjects []types.DomainValidation) ([]interface{
 	return tfList, tfStrings
 }
 
-func flattenRenewalSummary(apiObject *types.RenewalSummary) map[string]interface{} {
+func flattenRenewalSummary(apiObject *types.RenewalSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["renewal_status"] = apiObject.RenewalStatus
 	tfMap["renewal_status_reason"] = apiObject.RenewalStatusReason
@@ -747,7 +762,7 @@ func flattenRenewalSummary(apiObject *types.RenewalSummary) map[string]interface
 	return tfMap
 }
 
-func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
+func isChangeNormalizeCertRemoval(oldRaw, newRaw any) bool {
 	old, ok := oldRaw.(string)
 
 	if !ok {
@@ -783,8 +798,7 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -812,8 +826,7 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 
 	if status := output.Status; status == types.CertificateStatusValidationTimedOut {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -834,11 +847,11 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn stri
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		certificate, err := findCertificateByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -873,7 +886,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 }
 
 func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
 		Timeout: timeout,
@@ -888,11 +901,11 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Cl
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -905,7 +918,7 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string)
 }
 
 func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.RenewalSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.RenewalStatusPendingAutoRenewal),
 		Target:  enum.Slice(types.RenewalStatusSuccess),
 		Refresh: statusCertificateRenewal(ctx, conn, arn),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -37,11 +37,7 @@ func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfi
 }
 
 type jobDefinitionDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *jobDefinitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_batch_job_definition"
+	framework.DataSourceWithModel[jobDefinitionDataSourceModel]
 }
 
 func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -215,6 +211,7 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 }
 
 type jobDefinitionDataSourceModel struct {
+	framework.WithRegionModel
 	ARNPrefix                  types.String                                         `tfsdk:"arn_prefix"`
 	ContainerOrchestrationType types.String                                         `tfsdk:"container_orchestration_type"`
 	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]  `tfsdk:"eks_properties"`

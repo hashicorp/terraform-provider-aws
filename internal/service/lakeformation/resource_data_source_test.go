@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -20,7 +20,10 @@ func TestAccLakeFormationResourceDataSource_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -30,6 +33,9 @@ func TestAccLakeFormationResourceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(dataSourceName, "hybrid_access_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "with_federation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "with_privileged_access", acctest.CtFalse),
 				),
 			},
 		},

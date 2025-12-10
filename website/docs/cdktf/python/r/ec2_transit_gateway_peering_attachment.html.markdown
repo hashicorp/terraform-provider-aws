@@ -72,6 +72,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
@@ -89,7 +90,8 @@ The `options` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -119,4 +121,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.8 input-41020aee510c0b05bb83970e5a2476a6ad33b6555e1212019aa8de77dffc534d -->
+<!-- cache-key: cdktf-0.20.8 input-c5deb60526d8d758bef702f0e609bbc1bc899f449b792b59e6c3ac2fad85e480 -->

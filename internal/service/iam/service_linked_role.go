@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -17,31 +17,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_service_linked_role", name="Service Linked Role")
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
+// @ArnIdentity(arnAttribute="id")
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
 		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
 		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
 		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -88,16 +86,15 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	serviceName := d.Get("aws_service_name").(string)
-	input := &iam.CreateServiceLinkedRoleInput{
+	input := iam.CreateServiceLinkedRoleInput{
 		AWSServiceName: aws.String(serviceName),
 	}
 
@@ -109,8 +106,9 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateServiceLinkedRole(ctx, input)
-
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (*iam.CreateServiceLinkedRoleOutput, error) {
+		return conn.CreateServiceLinkedRole(ctx, &input)
+	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}
@@ -118,17 +116,16 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.ToString(output.Role.Arn))
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
-
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
+		err = roleUpdateTags(ctx, conn, roleName, nil, keyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
 		partition := meta.(*conns.AWSClient).Partition(ctx)
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}
 
@@ -140,21 +137,20 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
-
+	serviceName, roleName, customSuffix, err := serviceLinkedRoleParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Service Linked Role (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,8 +159,6 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)
@@ -180,22 +174,21 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTagsAll, names.AttrTags) {
-		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &iam.UpdateRoleInput{
+		input := iam.UpdateRoleInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			RoleName:    aws.String(roleName),
 		}
-
-		_, err = conn.UpdateRole(ctx, input)
+		_, err = conn.UpdateRole(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): %s", d.Id(), err)
@@ -205,12 +198,11 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
-
+	_, roleName, _, err := serviceLinkedRoleParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -224,11 +216,10 @@ func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName string) error {
-	input := &iam.DeleteServiceLinkedRoleInput{
+	input := iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	}
-
-	output, err := conn.DeleteServiceLinkedRole(ctx, input)
+	output, err := conn.DeleteServiceLinkedRole(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
@@ -239,7 +230,6 @@ func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName str
 	}
 
 	deletionTaskID := aws.ToString(output.DeletionTaskId)
-
 	if deletionTaskID == "" {
 		return nil
 	}
@@ -252,7 +242,7 @@ func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName str
 }
 
 func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeletionTaskStatusTypeInProgress, awstypes.DeletionTaskStatusTypeNotStarted),
 		Target:  enum.Slice(awstypes.DeletionTaskStatusTypeSucceeded),
 		Refresh: statusServiceLinkedRoleDeletion(ctx, conn, id),
@@ -279,11 +269,11 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id stri
 	return err
 }
 
-func statusServiceLinkedRoleDeletion(ctx context.Context, conn *iam.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusServiceLinkedRoleDeletion(ctx context.Context, conn *iam.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findServiceLinkedRoleDeletionStatusByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -303,7 +293,7 @@ func findServiceLinkedRoleDeletionStatusByID(ctx context.Context, conn *iam.Clie
 	output, err := conn.GetServiceLinkedRoleDeletionStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -320,26 +310,25 @@ func findServiceLinkedRoleDeletionStatusByID(ctx context.Context, conn *iam.Clie
 	return output, nil
 }
 
-func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
-	idArn, err := arn.Parse(id)
-
+func serviceLinkedRoleParseResourceID(id string) (string, string, string, error) {
+	arn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	resourceParts := strings.Split(idArn.Resource, "/")
-
+	resourceParts := strings.Split(arn.Resource, "/")
 	if len(resourceParts) != 4 {
-		return "", "", "", fmt.Errorf("expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME), received: %s", id)
+		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IAM Service Role ARN (arn:PARTITION:iam::ACCOUNTID:role/aws-service-role/SERVICENAME/ROLENAME)", id)
 	}
 
-	serviceName = resourceParts[2]
-	roleName = resourceParts[3]
+	serviceName := resourceParts[2]
+	roleName := resourceParts[3]
+	var customSuffix string
 
 	roleNameParts := strings.Split(roleName, "_")
 	if len(roleNameParts) == 2 {
 		customSuffix = roleNameParts[1]
 	}
 
-	return
+	return serviceName, roleName, customSuffix, nil
 }

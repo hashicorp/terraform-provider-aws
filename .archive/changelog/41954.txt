@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Retry `InvalidReplicationGroupState` exceptions during tagging operations
+```

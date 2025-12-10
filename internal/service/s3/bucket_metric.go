@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -14,11 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,7 +80,7 @@ func resourceBucketMetric() *schema.Resource {
 	}
 }
 
-func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -89,7 +90,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+		if tfMap, ok := v.([]any)[0].(map[string]any); ok {
 			metricsConfiguration.Filter = expandMetricsFilter(ctx, tfMap)
 		}
 	}
@@ -104,7 +105,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 		MetricsConfiguration: metricsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketMetricsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -119,7 +120,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findMetricsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -131,7 +132,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceBucketMetricRead(ctx, d, meta)...)
 }
 
-func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -146,7 +147,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	mc, err := findMetricsConfiguration(ctx, conn, bucket, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Metric (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,7 +159,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrBucket, bucket)
 	if mc.Filter != nil {
-		if err := d.Set(names.AttrFilter, []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
+		if err := d.Set(names.AttrFilter, []any{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter")
 		}
 	}
@@ -167,7 +168,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -194,7 +195,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findMetricsConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -205,7 +206,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.MetricsFilter {
+func expandMetricsFilter(ctx context.Context, m map[string]any) types.MetricsFilter {
 	var accessPoint string
 	if v, ok := m["access_point"]; ok {
 		accessPoint = v.(string)
@@ -218,7 +219,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 
 	var tags []types.Tag
 	if v, ok := m[names.AttrTags]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	var metricsFilter types.MetricsFilter
@@ -274,8 +275,8 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 	return metricsFilter
 }
 
-func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter) map[string]interface{} {
-	m := make(map[string]interface{})
+func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter) map[string]any {
+	m := make(map[string]any)
 
 	switch v := metricsFilter.(type) {
 	case *types.MetricsFilterMemberAnd:
@@ -322,7 +323,7 @@ func findMetricsConfiguration(ctx context.Context, conn *s3.Client, bucket, id s
 	output, err := conn.GetBucketMetricsConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

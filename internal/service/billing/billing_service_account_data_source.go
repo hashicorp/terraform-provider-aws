@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package billing
@@ -23,11 +23,7 @@ func newServiceAccountDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type billingServiceAccountDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*billingServiceAccountDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_billing_service_account"
+	framework.DataSourceWithModel[billingServiceAccountDataSourceModel]
 }
 
 func (d *billingServiceAccountDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

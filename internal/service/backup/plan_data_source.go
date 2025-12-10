@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -104,6 +104,22 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"scan_action": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"malware_scanner": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"scan_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -116,7 +132,34 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"target_logically_air_gapped_backup_vault_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"target_vault_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"scan_setting": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"malware_scanner": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"scanner_role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -132,7 +175,7 @@ func dataSourcePlan() *schema.Resource {
 	}
 }
 
-func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -148,6 +191,9 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
 	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scan_settings: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
 

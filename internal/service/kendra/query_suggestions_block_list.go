@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -17,11 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -98,12 +99,10 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -113,7 +112,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
+		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]any)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -122,7 +121,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -157,7 +156,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -169,7 +168,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 
 	out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra QuerySuggestionsBlockList (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,7 +201,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -231,13 +230,13 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		if d.HasChange("source_s3_path") {
-			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]interface{}))
+			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra QuerySuggestionsBlockList (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -263,7 +262,7 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
-func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -297,10 +296,10 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -313,7 +312,7 @@ func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, i
 }
 
 func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusCreating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
@@ -334,7 +333,7 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 }
 
 func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
@@ -355,7 +354,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 }
 
 func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
 		Refresh: statusQuerySuggestionsBlockList(ctx, conn, id, indexId),

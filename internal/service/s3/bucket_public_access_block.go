@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -12,25 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_public_access_block", name="Bucket Public Access Block")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;types.PublicAccessBlockConfiguration")
 func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
 		ReadWithoutTimeout:   resourceBucketPublicAccessBlockRead,
 		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"block_public_acls": {
@@ -58,11 +58,15 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -80,7 +84,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -94,7 +98,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
@@ -105,7 +109,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceBucketPublicAccessBlockRead(ctx, d, meta)...)
 }
 
-func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -116,7 +120,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 
 	pabc, err := findPublicAccessBlockConfiguration(ctx, conn, bucket)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +139,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -173,7 +177,7 @@ func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -182,7 +186,12 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	log.Printf("[DEBUG] Deleting S3 Bucket Ownership Controls: %s", d.Id())
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Skipping destruction of S3 Bucket Public Access Block: %s", d.Id())
+		return diags
+	}
+
+	log.Printf("[DEBUG] Deleting S3 Bucket Public Access Block: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlock(ctx, &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(bucket),
 	})
@@ -195,7 +204,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
@@ -214,7 +223,7 @@ func findPublicAccessBlockConfiguration(ctx context.Context, conn *s3.Client, bu
 	output, err := conn.GetPublicAccessBlock(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchPublicAccessBlockConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

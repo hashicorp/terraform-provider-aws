@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -172,6 +172,87 @@ func TestAccLexV2ModelsSlot_subSlotSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
 					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specification.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsSlot_subSlotSetting_promptAttemptsSpecification_defaults(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slot lexmodelsv2.DescribeSlotOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_noDefaults(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotExists(ctx, resourceName, &slot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specification.#", "1"),
+				),
+			},
+			{
+				Config: testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_withDefaults(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotExists(ctx, resourceName, &slot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specification.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsSlot_valueElicitationSetting_promptSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var slot lexmodelsv2.DescribeSlotOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_slot.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSlotConfig_valueElicitationSetting_promptSpecification(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotExists(ctx, resourceName, &slot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "value_elicitation_setting.#", "1"),
 				),
 			},
 		},
@@ -511,4 +592,210 @@ resource "aws_lexv2models_slot" "test" {
   }
 }
 `, rName, allow))
+}
+
+func testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_noDefaults(rName string, allow bool) string {
+	return acctest.ConfigCompose(
+		testAccSlotConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+  }
+}
+resource "aws_lexv2models_slot" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  intent_id   = aws_lexv2models_intent.test.intent_id
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_elicitation_setting {
+    slot_constraint = "Optional"
+    default_value_specification {
+      default_value_list {
+        default_value = "default"
+      }
+    }
+  }
+
+  multiple_values_setting {
+    allow_multiple_values = %[2]t
+  }
+
+  sub_slot_setting {
+    expression = "string"
+    slot_specification {
+      map_block_key = "Initial"
+      slot_type_id  = aws_lexv2models_slot_type.test.slot_type_id
+      value_elicitation_setting {
+        prompt_specification {
+          allow_interrupt            = true
+          max_retries                = 1
+          message_selection_strategy = "Ordered"
+          message_group {
+            message {
+              plain_text_message {
+                value = "test"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, allow))
+}
+
+func testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_withDefaults(rName string, allow bool) string {
+	return acctest.ConfigCompose(
+		testAccSlotConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+  }
+}
+resource "aws_lexv2models_slot" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  intent_id   = aws_lexv2models_intent.test.intent_id
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_elicitation_setting {
+    slot_constraint = "Optional"
+    default_value_specification {
+      default_value_list {
+        default_value = "default"
+      }
+    }
+  }
+
+  multiple_values_setting {
+    allow_multiple_values = %[2]t
+  }
+
+  sub_slot_setting {
+    expression = "string"
+    slot_specification {
+      map_block_key = "Initial"
+      slot_type_id  = aws_lexv2models_slot_type.test.slot_type_id
+      value_elicitation_setting {
+        prompt_specification {
+          allow_interrupt            = true
+          max_retries                = 1
+          message_selection_strategy = "Ordered"
+          message_group {
+            message {
+              plain_text_message {
+                value = "test"
+              }
+            }
+          }
+          prompt_attempts_specification {
+            allow_interrupt = true
+            map_block_key   = "Initial"
+
+            allowed_input_types {
+              allow_audio_input = true
+              allow_dtmf_input  = true
+            }
+
+            audio_and_dtmf_input_specification {
+              start_timeout_ms = 4000
+
+              audio_specification {
+                end_timeout_ms = 640
+                max_length_ms  = 15000
+              }
+
+              dtmf_specification {
+                deletion_character = "*"
+                end_character      = "#"
+                end_timeout_ms     = 5000
+                max_length         = 513
+              }
+            }
+
+            text_input_specification {
+              start_timeout_ms = 30000
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, allow))
+}
+
+func testAccSlotConfig_valueElicitationSetting_promptSpecification(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSlotConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  intent_id   = aws_lexv2models_intent.test.intent_id
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_elicitation_setting {
+    slot_constraint = "Optional"
+    prompt_specification {
+      allow_interrupt            = true
+      max_retries                = 1
+      message_selection_strategy = "Ordered"
+      message_group {
+        message {
+          plain_text_message {
+            value = "test"
+          }
+        }
+      }
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+    }
+  }
+}
+`, rName))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +45,8 @@ func testAccTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", ""),
 				),
 			},
 			{
@@ -59,6 +62,8 @@ func testAccTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", ""),
 				),
 			},
 			{
@@ -317,6 +322,82 @@ func testAccTrail_kmsKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTrail_snsTopicNameBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trail types.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_snsTopicNameBasic(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCloudTrailConfig_snsTopicNameBasic(rName, rName+"-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrSNSTopicARN, "sns", regexache.MustCompile(rName+"-2")),
+					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", rName+"-2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTrail_snsTopicNameAlternateRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var trail types.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_snsTopicNameAlternateRegion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_name", snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -797,9 +878,10 @@ func testAccCheckLoggingEnabled(ctx context.Context, n string, want bool) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
 
-		output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+		input := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
-		})
+		}
+		output, err := conn.GetTrailStatus(ctx, &input)
 
 		if err != nil {
 			return err
@@ -855,7 +937,7 @@ func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudtrail.FindTrailByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -873,9 +955,7 @@ func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccCloudTrailConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
 data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -884,7 +964,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -895,7 +975,7 @@ resource "aws_s3_bucket_policy" "test" {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
-        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
+        Resource = aws_s3_bucket.test.arn
         Condition = {
           StringEquals = {
             "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
@@ -909,7 +989,7 @@ resource "aws_s3_bucket_policy" "test" {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:PutObject"
-        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Resource = "${aws_s3_bucket.test.arn}/*"
         Condition = {
           StringEquals = {
             "s3:x-amz-acl"  = "bucket-owner-full-control"
@@ -930,7 +1010,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -942,7 +1022,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
@@ -956,7 +1036,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
   enable_logging                = %[2]t
@@ -971,7 +1051,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1028,7 +1108,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test2.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1089,7 +1169,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
   is_multi_region_trail = true
 }
 `, rName))
@@ -1103,7 +1183,7 @@ resource "aws_cloudtrail" "test" {
 
   is_organization_trail = true
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1115,7 +1195,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   is_multi_region_trail         = true
   include_global_service_events = true
   enable_log_file_validation    = true
@@ -1130,7 +1210,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
 }
 `, rName))
@@ -1139,7 +1219,8 @@ resource "aws_cloudtrail" "test" {
 func testAccCloudTrailConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -1163,10 +1244,95 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
   kms_key_id                    = aws_kms_key.test.arn
 }
+`, rName))
+}
+
+func testAccCloudTrailConfig_snsTopicNameBasic(rName, snsTopicName string) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_sns_topic" "test_2" {
+  name = "%[1]s-2"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.bucket
+  sns_topic_name = %[2]q
+}
+
+`, rName, snsTopicName))
+}
+
+func testAccCloudTrailConfig_snsTopicNameAlternateRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2),
+		testAccCloudTrailConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  provider = "awsalternate"
+  name     = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowPublishToTopic"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudtrail.amazonaws.com"
+      }
+      Action   = "sns:Publish"
+      Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.bucket
+  sns_topic_name = aws_sns_topic.test.arn
+}
+
 `, rName))
 }
 
@@ -1177,7 +1343,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = false
 }
 `, rName))
@@ -1190,7 +1356,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1206,7 +1372,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1223,7 +1389,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1254,7 +1420,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "WriteOnly"
@@ -1271,7 +1437,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1350,7 +1516,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1362,7 +1528,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "All"
@@ -1401,7 +1567,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = ["kms.${data.aws_partition.current.dns_suffix}"]
@@ -1419,7 +1585,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = [
@@ -1438,7 +1604,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1455,7 +1621,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1476,7 +1642,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   advanced_event_selector {
     name = "s3Custom"

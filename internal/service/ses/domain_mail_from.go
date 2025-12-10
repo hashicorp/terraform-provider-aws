@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ses
@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,7 +53,7 @@ func resourceDomainMailFrom() *schema.Resource {
 	}
 }
 
-func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -76,13 +77,13 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDomainMailFromRead(ctx, d, meta)...)
 }
 
-func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	attributes, err := findIdentityMailFromDomainAttributesByIdentity(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES MAIL FROM Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -99,7 +100,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -129,7 +130,7 @@ func findIdentityMailFromDomainAttributesByIdentity(ctx context.Context, conn *s
 		return &v, nil
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
 func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityMailFromDomainAttributesInput) (map[string]awstypes.IdentityMailFromDomainAttributes, error) {

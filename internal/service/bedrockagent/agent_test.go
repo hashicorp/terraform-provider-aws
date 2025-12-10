@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +40,7 @@ func TestAccBedrockAgentAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "prepared_at"),
 				),
 			},
 			{
@@ -444,7 +445,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -462,7 +463,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check", "prepare_agent"},
 			},
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -472,6 +473,43 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "agent_collaboration", string(awstypes.AgentCollaborationSupervisorRouter)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgent_memoryConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_memoryConfiguration(rName, "anthropic.claude-3-sonnet-20240229-v1:0", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.0", "SESSION_SUMMARY"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.storage_days", "15"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.0.max_recent_sessions", "5"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -488,7 +526,7 @@ func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbedrockagent.FindAgentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -891,4 +929,26 @@ resource "aws_bedrockagent_agent" "test" {
   prepare_agent               = false
 }
 `, rName, model, description, collaboration))
+}
+
+func testAccAgentConfig_memoryConfiguration(rName, model, description string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  skip_resource_in_use_check  = true
+
+  memory_configuration {
+    enabled_memory_types = ["SESSION_SUMMARY"]
+    storage_days         = 15
+    session_summary_configuration {
+      max_recent_sessions = 5
+    }
+  }
+}
+`, rName, model, description))
 }

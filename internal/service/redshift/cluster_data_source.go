@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_redshift_cluster", name="Cluster")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -207,7 +208,7 @@ func dataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

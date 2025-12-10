@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,7 +171,7 @@ func ResourceExperience() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta any) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -178,7 +179,7 @@ func ResourceExperience() *schema.Resource {
 	}
 }
 
-func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -194,8 +195,8 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Configuration = expandConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Configuration = expandConfiguration(v.([]any))
 	}
 
 	out, err := conn.CreateExperience(ctx, in)
@@ -219,7 +220,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -231,7 +232,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := FindExperienceByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra Experience (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -268,7 +269,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -284,7 +285,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange(names.AttrConfiguration) {
-		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
+		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]any))
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -312,7 +313,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -345,7 +346,7 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -365,7 +366,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -385,7 +386,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
@@ -402,10 +403,10 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -427,7 +428,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	if errors.As(err, &resourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -444,12 +445,12 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	return out, nil
 }
 
-func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{} {
+func flattenConfiguration(apiObject *types.ExperienceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ContentSourceConfiguration; v != nil {
 		m["content_source_configuration"] = flattenContentSourceConfiguration(v)
@@ -459,15 +460,15 @@ func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{
 		m["user_identity_configuration"] = flattenUserIdentityConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []interface{} {
+func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"direct_put_content": apiObject.DirectPutContent,
 	}
 
@@ -478,18 +479,18 @@ func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfigurati
 	if v := apiObject.FaqIds; len(v) > 0 {
 		m["faq_ids"] = v
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
+func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	l := make([]interface{}, 0, len(apiObjects))
+	l := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if v := apiObject.Endpoint; v != nil {
 			m[names.AttrEndpoint] = aws.ToString(v)
@@ -505,44 +506,44 @@ func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
 	return l
 }
 
-func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []interface{} {
+func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if v := apiObject.IdentityAttributeName; v != nil {
 		m["identity_attribute_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandConfiguration(tfList []interface{}) *types.ExperienceConfiguration {
+func expandConfiguration(tfList []any) *types.ExperienceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.ExperienceConfiguration{}
 
-	if v, ok := tfMap["content_source_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_source_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["user_identity_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["user_identity_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]any))
 	}
 
 	return result
 }
 
-func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.ContentSourceConfiguration {
+func expandContentSourceConfiguration(tfMap map[string]any) *types.ContentSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -564,7 +565,7 @@ func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.Conte
 	return result
 }
 
-func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserIdentityConfiguration {
+func expandUserIdentityConfiguration(tfMap map[string]any) *types.UserIdentityConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -578,7 +579,7 @@ func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserId
 	return result
 }
 
-func expandStringList(tfList []interface{}) []string {
+func expandStringList(tfList []any) []string {
 	var result []string
 
 	for _, rawVal := range tfList {

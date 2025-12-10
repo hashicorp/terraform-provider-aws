@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -12,10 +12,11 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +36,10 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceRoleAssociationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
@@ -69,7 +73,10 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceRoleAssociationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
@@ -115,7 +122,7 @@ func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context) resource.Te
 
 			_, err := tfrds.FindDBInstanceRoleByTwoPartKey(ctx, conn, rs.Primary.Attributes["db_instance_identifier"], rs.Primary.Attributes[names.AttrRoleARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -131,7 +138,9 @@ func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context) resource.Te
 }
 
 func testAccInstanceRoleAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_db_instance_role_association" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   feature_name           = "S3_INTEGRATION"
@@ -144,7 +153,8 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   username            = "tfacctest"
   skip_final_snapshot = true
 }
@@ -178,5 +188,5 @@ data "aws_iam_policy_document" "rds_assume_role_policy" {
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, rName))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +32,7 @@ func testAccDataCellsFilter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -69,7 +69,7 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -102,7 +102,7 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -137,7 +137,7 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -183,7 +183,7 @@ func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 

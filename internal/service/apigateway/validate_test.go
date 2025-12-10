@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -73,7 +73,7 @@ func TestValidUsagePlanQuotaSettings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["offset"] = tc.Offset
 		m["period"] = tc.Period
 

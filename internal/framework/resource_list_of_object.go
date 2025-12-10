@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -16,10 +16,11 @@ import (
 
 // NewResourceComputedListOfObjectSchema returns a new schema.ListAttribute for objects of the specified type.
 // The list is Computed-only.
-func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context) schema.ListAttribute {
+func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context, planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Computed:   true,
+		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx),
+		Computed:      true,
+		PlanModifiers: planModifiers,
 		ElementType: types.ObjectType{
 			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
 		},
@@ -28,9 +29,9 @@ func ResourceComputedListOfObjectsAttribute[T any](ctx context.Context) schema.L
 
 // ResourceOptionalComputedListOfObjectsAttribute returns a new schema.ListAttribute for objects of the specified type.
 // The list is Optional+Computed.
-func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, planModifiers ...planmodifier.List) schema.ListAttribute {
+func ResourceOptionalComputedListOfObjectsAttribute[T any](ctx context.Context, sizeAtMost int, nestedObjectOptions []fwtypes.NestedObjectOfOption[T], planModifiers ...planmodifier.List) schema.ListAttribute {
 	return schema.ListAttribute{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[T](ctx),
+		CustomType:    fwtypes.NewListNestedObjectTypeOf(ctx, nestedObjectOptions...),
 		Optional:      true,
 		Computed:      true,
 		PlanModifiers: planModifiers,

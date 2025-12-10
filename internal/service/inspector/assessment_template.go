@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector
@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,6 +30,9 @@ const (
 )
 
 // @SDKResource("aws_inspector_assessment_template", name="Assessment Template")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTemplate")
+// @Testing(preIdentityVersion="v6.4.0")
 // @Tags(identifierAttribute="id")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -37,10 +40,6 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		ReadWithoutTimeout:   resourceAssessmentTemplateRead,
 		UpdateWithoutTimeout: resourceAssessmentTemplateUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTemplateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -89,12 +88,10 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -129,12 +126,12 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAssessmentTemplateRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	template, err := FindAssessmentTemplateByID(ctx, conn, d.Id())
-	if errs.IsA[*retry.NotFoundError](err) {
+	if errs.IsA[*sdkretry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,7 +160,7 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -192,7 +189,7 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAssessmentTemplateRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -222,7 +219,7 @@ func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn
 	}
 
 	if len(out.AssessmentTemplates) == 0 {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: in,
 		}
 	}
@@ -234,7 +231,7 @@ func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn
 	return &out.AssessmentTemplates[0], nil
 }
 
-func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*inspector.SubscribeToEventInput {
+func expandEventSubscriptions(tfList []any, templateArn *string) []*inspector.SubscribeToEventInput {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -242,7 +239,7 @@ func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*insp
 	var eventSubscriptions []*inspector.SubscribeToEventInput
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -256,7 +253,7 @@ func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*insp
 	return eventSubscriptions
 }
 
-func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) *inspector.SubscribeToEventInput {
+func expandEventSubscription(tfMap map[string]any, templateArn *string) *inspector.SubscribeToEventInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -270,12 +267,12 @@ func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) 
 	return eventSubscription
 }
 
-func flattenSubscriptions(subscriptions []awstypes.Subscription) []interface{} {
+func flattenSubscriptions(subscriptions []awstypes.Subscription) []any {
 	if len(subscriptions) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, subscription := range subscriptions {
 		for _, eventSubscription := range subscription.EventSubscriptions {
@@ -286,8 +283,8 @@ func flattenSubscriptions(subscriptions []awstypes.Subscription) []interface{} {
 	return tfList
 }
 
-func flattenEventSubscription(eventSubscription awstypes.EventSubscription, topicArn *string) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEventSubscription(eventSubscription awstypes.EventSubscription, topicArn *string) map[string]any {
+	tfMap := map[string]any{}
 
 	tfMap["event"] = eventSubscription.Event
 	tfMap[names.AttrTopicARN] = topicArn

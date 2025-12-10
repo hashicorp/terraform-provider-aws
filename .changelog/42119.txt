@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_redshift_cluster: Attributes `cluster_public_key`, `cluster_revision_number`, and `endpoint` are now read only and should not be set
+```

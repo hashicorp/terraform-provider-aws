@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package billing_test
@@ -17,7 +17,7 @@ func TestAccBillingServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_billing_service_account.test"
 	billingAccountID := "386209384616"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

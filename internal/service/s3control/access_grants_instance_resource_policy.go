@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,12 +36,8 @@ func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.Re
 }
 
 type accessGrantsInstanceResourcePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsInstanceResourcePolicyResourceModel]
 	framework.WithImportByID
-}
-
-func (r *accessGrantsInstanceResourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance_resource_policy"
 }
 
 func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -117,7 +114,7 @@ func (r *accessGrantsInstanceResourcePolicyResource) Read(ctx context.Context, r
 
 	output, err := findAccessGrantsInstanceResourcePolicy(ctx, conn, data.AccountID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -206,7 +203,7 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 	output, err := conn.GetAccessGrantsInstanceResourcePolicy(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -224,6 +221,7 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 }
 
 type accessGrantsInstanceResourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	AccountID types.String      `tfsdk:"account_id"`
 	ID        types.String      `tfsdk:"id"`
 	Policy    fwtypes.IAMPolicy `tfsdk:"policy"`

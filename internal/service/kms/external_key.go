@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,9 +27,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,8 +50,6 @@ func resourceExternalKey() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -87,13 +87,23 @@ func resourceExternalKey() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"key_spec": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
+			},
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
 				Type:     schema.TypeBool,
@@ -101,21 +111,7 @@ func resourceExternalKey() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 32768),
-					validation.StringIsJSON,
-				),
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy:  sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"valid_to": {
@@ -127,19 +123,26 @@ func resourceExternalKey() *schema.Resource {
 	}
 }
 
-func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	input := &kms.CreateKeyInput{
+	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		KeyUsage:                       awstypes.KeyUsageTypeEncryptDecrypt,
 		Origin:                         awstypes.OriginTypeExternal,
 		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_spec"); ok {
+		input.KeySpec = awstypes.KeySpec(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_usage"); ok {
+		input.KeyUsage = awstypes.KeyUsageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("multi_region"); ok {
@@ -161,7 +164,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.CreateKeyOutput, error) {
-		return conn.CreateKey(ctx, input)
+		return conn.CreateKey(ctx, &input)
 	})
 
 	if err != nil {
@@ -203,7 +206,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -212,7 +215,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -220,7 +223,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -249,16 +252,13 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
-
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	d.Set(names.AttrPolicy, policyToSet)
-
-	if key.metadata.ValidTo != nil {
-		d.Set("valid_to", aws.ToTime(key.metadata.ValidTo).Format(time.RFC3339))
+	if v := key.metadata.ValidTo; v != nil {
+		d.Set("valid_to", aws.ToTime(v).Format(time.RFC3339))
 	} else {
 		d.Set("valid_to", nil)
 	}
@@ -268,7 +268,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -319,22 +319,21 @@ func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	input := &kms.ScheduleKeyDeletionInput{
+	input := kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk("deletion_window_in_days"); ok {
 		input.PendingWindowInDays = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting KMS External Key: %s", d.Id())
-	_, err := conn.ScheduleKeyDeletion(ctx, input)
+	_, err := conn.ScheduleKeyDeletion(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -356,20 +355,22 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, keyMaterialBase64, validTo string) error {
+	inputGPFI := kms.GetParametersForImportInput{
+		KeyId:             aws.String(keyID),
+		WrappingAlgorithm: awstypes.AlgorithmSpecRsaesOaepSha256,
+		WrappingKeySpec:   awstypes.WrappingKeySpecRsa2048,
+	}
+
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.GetParametersForImport(ctx, &kms.GetParametersForImportInput{
-			KeyId:             aws.String(keyID),
-			WrappingAlgorithm: awstypes.AlgorithmSpecRsaesOaepSha256,
-			WrappingKeySpec:   awstypes.WrappingKeySpecRsa2048,
-		})
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.GetParametersForImport(ctx, &inputGPFI)
 	})
 
 	if err != nil {
 		return fmt.Errorf("reading %s (%s) parameters for import: %w", resourceTypeName, keyID, err)
 	}
 
-	keyMaterial, err := itypes.Base64Decode(keyMaterialBase64)
+	keyMaterial, err := inttypes.Base64Decode(keyMaterialBase64)
 	if err != nil {
 		return err
 	}
@@ -386,7 +387,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 		return fmt.Errorf("encrypting %s (%s) key material (RSA-OAEP): %w", resourceTypeName, keyID, err)
 	}
 
-	input := &kms.ImportKeyMaterialInput{
+	inputIKM := kms.ImportKeyMaterialInput{
 		EncryptedKeyMaterial: encryptedKeyMaterial,
 		ExpirationModel:      awstypes.ExpirationModelTypeKeyMaterialDoesNotExpire,
 		ImportToken:          output.ImportToken,
@@ -399,13 +400,13 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 			return err
 		}
 
-		input.ExpirationModel = awstypes.ExpirationModelTypeKeyMaterialExpires
-		input.ValidTo = aws.Time(t)
+		inputIKM.ExpirationModel = awstypes.ExpirationModelTypeKeyMaterialExpires
+		inputIKM.ValidTo = aws.Time(t)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.ImportKeyMaterial(ctx, input)
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.ImportKeyMaterial(ctx, &inputIKM)
 	})
 
 	if err != nil {
@@ -419,7 +420,7 @@ func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStatePendingImport),
 		Target:  enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Refresh: statusKeyState(ctx, conn, id),
@@ -436,10 +437,10 @@ func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (
 }
 
 func waitKeyValidToPropagated(ctx context.Context, conn *kms.Client, id string, validTo string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

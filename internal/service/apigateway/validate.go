@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -29,7 +29,7 @@ func validIntegrationContentHandling() schema.SchemaValidateDiagFunc {
 	return enum.Validate[types.ContentHandlingStrategy]()
 }
 
-func validUsagePlanQuotaSettings(v map[string]interface{}) (errors []error) {
+func validUsagePlanQuotaSettings(v map[string]any) (errors []error) {
 	period := v["period"].(string)
 	offset := v["offset"].(int)
 

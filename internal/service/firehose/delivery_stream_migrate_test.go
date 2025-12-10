@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package firehose_test
@@ -18,7 +18,7 @@ func TestMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0.6.16 and earlier": {
 			StateVersion: 0,

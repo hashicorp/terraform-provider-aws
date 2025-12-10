@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package schemas
@@ -11,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,7 +43,7 @@ func resourceRegistryPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -56,7 +57,7 @@ func resourceRegistryPolicy() *schema.Resource {
 	}
 }
 
-func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -82,13 +83,13 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
 	output, err := findRegistryPolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Registry Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,7 +114,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -138,7 +139,7 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -166,7 +167,7 @@ func findRegistryPolicyByName(ctx context.Context, conn *schemas.Client, name st
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

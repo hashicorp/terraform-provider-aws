@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -12,7 +12,6 @@ var (
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
-	ResourceKeyValueStore               = newKeyValueStoreResource
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
@@ -24,7 +23,6 @@ var (
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
-	FindDistributionByID                       = findDistributionByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey

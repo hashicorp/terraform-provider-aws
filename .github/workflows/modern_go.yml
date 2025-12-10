@@ -1,0 +1,45 @@
+name: Modern Go Check
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - "**/*.go"
+      - .github/workflows/modern_go.yml
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+jobs:
+  modern:
+    name: Check for modern Go code
+    runs-on: custom-ubuntu-22.04-medium
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version-file: go.mod
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      # long-running test
+      - run: make TEST=./... modern-check

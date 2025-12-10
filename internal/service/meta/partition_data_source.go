@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -15,6 +15,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_partition", name="Partition")
+// @Region(overrideEnabled=false)
 func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &partitionDataSource{}
 
@@ -22,11 +23,7 @@ func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type partitionDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*partitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_partition"
+	framework.DataSourceWithModel[partitionDataSourceModel]
 }
 
 func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

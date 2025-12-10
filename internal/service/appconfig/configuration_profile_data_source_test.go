@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -32,7 +32,6 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfileDataSourceConfig_basic(appName, rName),
@@ -65,6 +64,7 @@ func testAccConfigurationProfileDataSourceConfig_basic(appName, rName string) st
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {

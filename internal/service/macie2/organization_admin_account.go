@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -43,7 +43,7 @@ func resourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -53,24 +53,19 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		ClientToken:    aws.String(id.UniqueId()),
 	}
 
-	var err error
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableOrganizationAdminAccount(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie OrganizationAdminAccount: %s", err)
@@ -81,7 +76,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -106,7 +101,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 			return diags
 		}
 
-		return sdkdiag.AppendFromErr(diags, &retry.NotFoundError{})
+		return sdkdiag.AppendFromErr(diags, &sdkretry.NotFoundError{})
 	}
 
 	d.Set("admin_account_id", res.AccountId)
@@ -114,7 +109,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)

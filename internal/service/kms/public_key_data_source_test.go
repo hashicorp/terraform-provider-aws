@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -84,6 +84,7 @@ func testAccPublicKeyDataSourceConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   description              = %[1]q
   deletion_window_in_days  = 7
+  enable_key_rotation      = true
   customer_master_key_spec = "RSA_2048"
   key_usage                = "SIGN_VERIFY"
 }
@@ -99,6 +100,7 @@ func testAccPublicKeyDataSourceConfig_encrypt(rName string) string {
 resource "aws_kms_key" "test" {
   description              = %[1]q
   deletion_window_in_days  = 7
+  enable_key_rotation      = true
   customer_master_key_spec = "RSA_2048"
   key_usage                = "ENCRYPT_DECRYPT"
 }

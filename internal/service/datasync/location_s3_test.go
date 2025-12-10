@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -175,7 +175,7 @@ func testAccCheckLocationS3Destroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdatasync.FindLocationS3ByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -209,6 +209,53 @@ func testAccCheckLocationS3Exists(ctx context.Context, n string, v *datasync.Des
 
 		return nil
 	}
+}
+
+func testAccLocationS3Config_base2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "datasync.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test2" {
+  role   = aws_iam_role.test2.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": [
+      "s3:*"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_s3_bucket.test2.arn}",
+      "${aws_s3_bucket.test2.arn}/*"
+    ]
+  }]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
 }
 
 func testAccLocationS3Config_base(rName string) string {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -18,8 +18,8 @@ func Context(t *testing.T) context.Context {
 
 	helperlogging.SetOutput(t)
 
-	ctx := context.Background()
-	ctx = tfsdklog.RegisterTestSink(ctx, t)
+	ctx := t.Context()
+	ctx = tfsdklog.ContextWithTestLogging(ctx, t.Name())
 	ctx = logger(ctx, t, "acctest")
 	ctx = awsSDKLogger(ctx)
 

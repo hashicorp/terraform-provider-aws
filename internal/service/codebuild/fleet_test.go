@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeBuildFleet_basic(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -115,7 +115,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -144,7 +144,7 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -182,7 +182,7 @@ func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_computeType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -211,7 +211,7 @@ func TestAccCodeBuildFleet_computeType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_environmentType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -240,7 +240,7 @@ func TestAccCodeBuildFleet_environmentType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_imageId(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -267,7 +267,7 @@ func TestAccCodeBuildFleet_imageId(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -318,7 +318,7 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -359,6 +359,53 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildFleet_customInstanceType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_customInstanceType(rName, "t3.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.disk", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.instance_type", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", "GENERAL"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "CUSTOM_INSTANCE_TYPE"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "QUEUE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
@@ -370,7 +417,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindFleetByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -668,4 +715,19 @@ resource "aws_codebuild_fleet" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccFleetConfig_customInstanceType(rName, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity = 1
+  compute_type  = "CUSTOM_INSTANCE_TYPE"
+  compute_configuration {
+    instance_type = %[2]q
+  }
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
+}
+`, rName, instanceType)
 }

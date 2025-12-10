@@ -4,174 +4,207 @@ package directconnect
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceConnection,
 			TypeName: "aws_dx_connection",
 			Name:     "Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceGateway,
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceLocation,
 			TypeName: "aws_dx_location",
 			Name:     "Location",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocations,
 			TypeName: "aws_dx_locations",
 			Name:     "Locations",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceRouterConfiguration,
 			TypeName: "aws_dx_router_configuration",
 			Name:     "Router Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceBGPPeer,
 			TypeName: "aws_dx_bgp_peer",
 			Name:     "BGP Peer",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConnection,
 			TypeName: "aws_dx_connection",
 			Name:     "Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConnectionAssociation,
 			TypeName: "aws_dx_connection_association",
 			Name:     "Connection LAG Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConnectionConfirmation,
 			TypeName: "aws_dx_connection_confirmation",
 			Name:     "Connection Confirmation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceGateway,
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID,
+				inttypes.WithV6_0SDKv2Fix(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceGatewayAssociation,
 			TypeName: "aws_dx_gateway_association",
 			Name:     "Gateway Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceGatewayAssociationProposal,
 			TypeName: "aws_dx_gateway_association_proposal",
 			Name:     "Gateway Association Proposal",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedConnection,
 			TypeName: "aws_dx_hosted_connection",
 			Name:     "Hosted Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceHostedPrivateVirtualInterface,
 			TypeName: "aws_dx_hosted_private_virtual_interface",
 			Name:     "Hosted Private Virtual Interface",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_private_virtual_interface_accepter",
 			Name:     "Hosted Private Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedPublicVirtualInterface,
 			TypeName: "aws_dx_hosted_public_virtual_interface",
 			Name:     "Hosted Public Virtual Interface",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedPublicVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_public_virtual_interface_accepter",
 			Name:     "Hosted Public Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedTransitVirtualInterface,
 			TypeName: "aws_dx_hosted_transit_virtual_interface",
 			Name:     "Hosted Transit Virtual Interface",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_transit_virtual_interface_accepter",
 			Name:     "Hosted Transit Virtual Interface Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceLag,
 			TypeName: "aws_dx_lag",
 			Name:     "LAG",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceMacSecKeyAssociation,
 			TypeName: "aws_dx_macsec_key_association",
 			Name:     "MACSec Key Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourcePrivateVirtualInterface,
 			TypeName: "aws_dx_private_virtual_interface",
 			Name:     "Private Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourcePublicVirtualInterface,
 			TypeName: "aws_dx_public_virtual_interface",
 			Name:     "Public Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitVirtualInterface,
 			TypeName: "aws_dx_transit_virtual_interface",
 			Name:     "Transit Virtual Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -183,11 +216,47 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*directconnect.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return directconnect.NewFromConfig(cfg,
+	optFns := []func(*directconnect.Options){
 		directconnect.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		func(o *directconnect.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *directconnect.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
+			}
+		},
+		withExtraOptions(ctx, p, config),
+	}
+
+	return directconnect.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*directconnect.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*directconnect.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *directconnect.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*directconnect.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

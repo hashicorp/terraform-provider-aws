@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts
@@ -15,21 +15,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssmcontacts_contact_channel", name="Contact Channel")
+// @ArnIdentity
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.14.1")
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,
 		ReadWithoutTimeout:   resourceContactChannelRead,
 		UpdateWithoutTimeout: resourceContactChannelUpdate,
 		DeleteWithoutTimeout: resourceContactChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"activation_status": {
@@ -75,11 +75,11 @@ const (
 	ResNameContactChannel = "Contact Channel"
 )
 
-func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	delivery_address := expandContactChannelAddress(d.Get("delivery_address").([]interface{}))
+	delivery_address := expandContactChannelAddress(d.Get("delivery_address").([]any))
 	in := &ssmcontacts.CreateContactChannelInput{
 		ContactId:       aws.String(d.Get("contact_id").(string)),
 		DeferActivation: aws.Bool(true),
@@ -102,13 +102,13 @@ func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceContactChannelRead(ctx, d, meta)...)
 }
 
-func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactChannelByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMContacts ContactChannel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -125,7 +125,7 @@ func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
@@ -136,7 +136,7 @@ func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChanges("delivery_address") {
-		in.DeliveryAddress = expandContactChannelAddress(d.Get("delivery_address").([]interface{}))
+		in.DeliveryAddress = expandContactChannelAddress(d.Get("delivery_address").([]any))
 		update = true
 	}
 
@@ -158,7 +158,7 @@ func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceContactChannelRead(ctx, d, meta)...)
 }
 
-func resourceContactChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 

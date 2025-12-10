@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -10,11 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,26 +21,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_api_gateway_account", name="Account")
-func newResourceAccount(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAccount{}
+func newAccountResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &accountResource{}
 
 	return r, nil
 }
 
-type resourceAccount struct {
-	framework.ResourceWithConfigure
+type accountResource struct {
+	framework.ResourceWithModel[accountResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceAccount) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_account"
-}
-
-func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *accountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"api_key_version": schema.StringAttribute{
@@ -61,17 +56,11 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				Default: stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
 			},
 			"features": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
-			"reset_on_delete": schema.BoolAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-				DeprecationMessage: `The "reset_on_delete" attribute will be removed in a future version of the provider`,
-			},
+			names.AttrID:        framework.IDAttributeDeprecatedNoReplacement(),
 			"throttle_settings": framework.DataSourceComputedListOfObjectAttribute[throttleSettingsModel](ctx),
 		},
 	}
@@ -79,8 +68,8 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 	response.Schema = s
 }
 
-func (r *resourceAccount) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -108,8 +97,8 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 		}
 	}
 
-	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*apigateway.UpdateAccountOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*apigateway.UpdateAccountOutput, error) {
 			return conn.UpdateAccount(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -128,13 +117,13 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.ID = types.StringValue("api-gateway-account")
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -143,7 +132,7 @@ func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest
 	conn := r.Meta().APIGatewayClient(ctx)
 
 	account, err := findAccount(ctx, conn)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -158,8 +147,8 @@ func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var state, plan resourceAccountModel
+func (r *accountResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var state, plan accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -170,7 +159,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -199,8 +188,8 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 			}
 		}
 
-		output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-			func() (*apigateway.UpdateAccountOutput, error) {
+		output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (*apigateway.UpdateAccountOutput, error) {
 				return conn.UpdateAccount(ctx, &input)
 			},
 			func(err error) (bool, error) {
@@ -224,74 +213,41 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceAccountModel
+func (r *accountResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data accountResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if data.ResetOnDelete.ValueBool() {
-		conn := r.Meta().APIGatewayClient(ctx)
+	conn := r.Meta().APIGatewayClient(ctx)
 
-		input := apigateway.UpdateAccountInput{}
+	input := apigateway.UpdateAccountInput{}
 
-		input.PatchOperations = []awstypes.PatchOperation{{
-			Op:    awstypes.OpReplace,
-			Path:  aws.String("/cloudwatchRoleArn"),
-			Value: nil,
-		}}
+	input.PatchOperations = []awstypes.PatchOperation{{
+		Op:    awstypes.OpReplace,
+		Path:  aws.String("/cloudwatchRoleArn"),
+		Value: nil,
+	}}
 
-		_, err := conn.UpdateAccount(ctx, &input)
-		if err != nil {
-			response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
-		}
-	} else {
-		response.Diagnostics.AddWarning(
-			"Resource Destruction",
-			"This resource has only been removed from Terraform state. "+
-				"Manually use the AWS Console to fully destroy this resource. "+
-				"Setting the attribute \"reset_on_delete\" will also fully destroy resources of this type.",
-		)
+	_, err := conn.UpdateAccount(ctx, &input)
+	if err != nil {
+		response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
 	}
 }
 
-func (r *resourceAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-type resourceAccountModel struct {
+type accountResourceModel struct {
+	framework.WithRegionModel
 	ApiKeyVersion     types.String                                           `tfsdk:"api_key_version"`
 	CloudwatchRoleARN types.String                                           `tfsdk:"cloudwatch_role_arn" autoflex:",legacy"`
-	Features          types.Set                                              `tfsdk:"features"`
+	Features          fwtypes.SetOfString                                    `tfsdk:"features"`
 	ID                types.String                                           `tfsdk:"id"`
-	ResetOnDelete     types.Bool                                             `tfsdk:"reset_on_delete"`
 	ThrottleSettings  fwtypes.ListNestedObjectValueOf[throttleSettingsModel] `tfsdk:"throttle_settings"`
 }
 
 type throttleSettingsModel struct {
 	BurstLimit types.Int32   `tfsdk:"burst_limit"`
 	RateLimit  types.Float64 `tfsdk:"rate_limit"`
-}
-
-func (r *resourceAccount) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// If the entire plan is null, the resource is planned for destruction.
-	if request.Plan.Raw.IsNull() {
-		var resetOnDelete types.Bool
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !resetOnDelete.ValueBool() {
-			response.Diagnostics.AddWarning(
-				"Resource Destruction",
-				"Applying this resource destruction will only remove the resource from Terraform state and will not reset account settings. "+
-					"Either manually use the AWS Console to fully destroy this resource or "+
-					"update the resource with \"reset_on_delete\" set to true.",
-			)
-		}
-	}
 }
 
 func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {

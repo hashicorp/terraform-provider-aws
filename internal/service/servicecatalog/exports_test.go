@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -18,9 +18,10 @@ var (
 	ResourceTagOption                     = resourceTagOption
 	ResourceTagOptionResourceAssociation  = resourceTagOptionResourceAssociation
 
-	FindPortfolioByID                 = findPortfolioByID
-	FindPortfolioShare                = findPortfolioShare
-	FindPrincipalPortfolioAssociation = findPrincipalPortfolioAssociation
+	FindPortfolioByID                  = findPortfolioByID
+	FindPortfolioShare                 = findPortfolioShare
+	FindPrincipalPortfolioAssociation  = findPrincipalPortfolioAssociation
+	FindProvisionedProductByTwoPartKey = findProvisionedProductByTwoPartKey
 
 	BudgetResourceAssociationParseID             = budgetResourceAssociationParseID
 	ProductPortfolioAssociationParseID           = productPortfolioAssociationParseID
@@ -36,7 +37,6 @@ var (
 	WaitOrganizationsAccessStable           = waitOrganizationsAccessStable
 	WaitProductPortfolioAssociationDeleted  = waitProductPortfolioAssociationDeleted
 	WaitProductPortfolioAssociationReady    = waitProductPortfolioAssociationReady
-	WaitProvisionedProductReady             = waitProvisionedProductReady
 	WaitTagOptionResourceAssociationDeleted = waitTagOptionResourceAssociationDeleted
 	WaitTagOptionResourceAssociationReady   = waitTagOptionResourceAssociationReady
 

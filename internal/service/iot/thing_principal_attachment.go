@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -7,16 +7,19 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,6 +32,10 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceThingPrincipalAttachmentRead,
 		DeleteWithoutTimeout: resourceThingPrincipalAttachmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrPrincipal: {
 				Type:     schema.TypeString,
@@ -40,11 +47,18 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"thing_principal_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ThingPrincipalType](),
+			},
 		},
 	}
 }
 
-func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -54,6 +68,10 @@ func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.Resou
 	input := &iot.AttachThingPrincipalInput{
 		Principal: aws.String(principal),
 		ThingName: aws.String(thing),
+	}
+
+	if v, ok := d.Get("thing_principal_type").(string); ok {
+		input.ThingPrincipalType = awstypes.ThingPrincipalType(v)
 	}
 
 	_, err := conn.AttachThingPrincipal(ctx, input)
@@ -67,16 +85,21 @@ func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceThingPrincipalAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	principal := d.Get(names.AttrPrincipal).(string)
-	thing := d.Get("thing").(string)
+	id := d.Id()
+	parts := strings.Split(id, "|")
+	if len(parts) != 2 {
+		return sdkdiag.AppendErrorf(diags, "unexpected format for ID (%s), expected thing|principal", id)
+	}
+	thing := parts[0]
+	principal := parts[1]
 
-	_, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
+	out, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Principal Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -86,10 +109,14 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Principal Attachment (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrPrincipal, out.Principal)
+	d.Set("thing", thing)
+	d.Set("thing_principal_type", out.ThingPrincipalType)
+
 	return diags
 }
 
-func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -110,8 +137,8 @@ func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Client, thing, principal string) (*string, error) {
-	input := &iot.ListThingPrincipalsInput{
+func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Client, thing, principal string) (*awstypes.ThingPrincipalObject, error) {
+	input := &iot.ListThingPrincipalsV2Input{
 		ThingName: aws.String(thing),
 	}
 
@@ -120,7 +147,7 @@ func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Cli
 	})
 }
 
-func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsInput, filter tfslices.Predicate[string]) (*string, error) {
+func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsV2Input, filter tfslices.Predicate[string]) (*awstypes.ThingPrincipalObject, error) {
 	output, err := findThingPrincipals(ctx, conn, input, filter)
 
 	if err != nil {
@@ -130,15 +157,15 @@ func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListTh
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsInput, filter tfslices.Predicate[string]) ([]string, error) {
-	var output []string
+func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsV2Input, filter tfslices.Predicate[string]) ([]awstypes.ThingPrincipalObject, error) {
+	var output []awstypes.ThingPrincipalObject
 
-	pages := iot.NewListThingPrincipalsPaginator(conn, input)
+	pages := iot.NewListThingPrincipalsV2Paginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -148,8 +175,8 @@ func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListT
 			return nil, err
 		}
 
-		for _, v := range page.Principals {
-			if filter(v) {
+		for _, v := range page.ThingPrincipalObjects {
+			if filter(aws.ToString(v.Principal)) {
 				output = append(output, v)
 			}
 		}

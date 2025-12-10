@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm
@@ -11,31 +11,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_devicefarm_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.InstanceProfile")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -69,11 +70,10 @@ func resourceInstanceProfile() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -113,13 +113,13 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	instanceProf, err := findInstanceProfileByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,7 +140,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -179,14 +179,15 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
-	_, err := conn.DeleteInstanceProfile(ctx, &devicefarm.DeleteInstanceProfileInput{
+	input := devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteInstanceProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -206,7 +207,7 @@ func findInstanceProfileByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	output, err := conn.GetInstanceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

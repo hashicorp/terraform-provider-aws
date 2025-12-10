@@ -45,60 +45,47 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC peering connection.
-The given filters must match exactly one VPC peering connection whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `id` - (Optional) ID of the specific VPC Peering Connection to retrieve.
-
 * `status` - (Optional) Status of the specific VPC Peering Connection to retrieve.
-
 * `vpc_id` - (Optional) ID of the requester VPC of the specific VPC Peering Connection to retrieve.
-
 * `owner_id` - (Optional) AWS account ID of the owner of the requester VPC of the specific VPC Peering Connection to retrieve.
-
 * `cidr_block` - (Optional) Primary CIDR block of the requester VPC of the specific VPC Peering Connection to retrieve.
-
-* `region` - (Optional) Region of the requester VPC of the specific VPC Peering Connection to retrieve.
-
 * `peer_vpc_id` - (Optional) ID of the accepter VPC of the specific VPC Peering Connection to retrieve.
-
 * `peer_owner_id` - (Optional) AWS account ID of the owner of the accepter VPC of the specific VPC Peering Connection to retrieve.
-
 * `peer_cidr_block` - (Optional) Primary CIDR block of the accepter VPC of the specific VPC Peering Connection to retrieve.
-
-* `peer_region` - (Optional) Region of the accepter VPC of the specific VPC Peering Connection to retrieve.
-
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC peering connection.
+The given filters must match exactly one VPC peering connection whose data will be exported as attributes.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `accepter` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
-
 * `cidr_block_set` - List of objects with IPv4 CIDR blocks of the requester VPC.
-
 * `ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the requester VPC.
-
 * `peer_cidr_block_set` - List of objects with IPv4 CIDR blocks of the accepter VPC.
-
 * `peer_ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the accepter VPC.
-
+* `peer_region` - Region of the accepter VPC.
+* `region` - (**Deprecated**) Region of the requester VPC. Use `requester_region` instead.
 * `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
+* `requester_region` - Region of the requester VPC.
 
 #### Accepter and Requester Attribute Reference
 
@@ -115,4 +102,4 @@ private IP addresses when queried from instances in a peer VPC.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-e811d52912227c02c785a36503dfcfbc291177dbfea96d9dda6567025643ccb7 -->
+<!-- cache-key: cdktf-0.20.8 input-d44c82329a060a83b5dc827124b77c1e23f4fa1c92d7c533cbbab8410e3985d5 -->

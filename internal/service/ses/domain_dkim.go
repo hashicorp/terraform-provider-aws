@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ses
@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,7 +46,7 @@ func resourceDomainDKIM() *schema.Resource {
 	}
 }
 
-func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -65,13 +66,13 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDomainDKIMRead(ctx, d, meta)...)
 }
 
-func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	verificationAttrs, err := findIdentityDKIMAttributesByIdentity(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Domain DKIM (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -101,7 +102,7 @@ func findIdentityDKIMAttributesByIdentity(ctx context.Context, conn *ses.Client,
 		return &v, nil
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
 func findIdentityDKIMAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityDkimAttributesInput) (map[string]awstypes.IdentityDkimAttributes, error) {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -250,7 +250,7 @@ func testAccCheckBucketObjectLockConfigurationDestroy(ctx context.Context) resou
 
 			_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -345,7 +345,7 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
 }
 
 func testAccBucketObjectLockConfigurationConfig_directoryBucket(bucketName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

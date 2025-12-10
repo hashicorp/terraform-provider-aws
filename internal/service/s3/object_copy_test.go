@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -14,11 +14,15 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +51,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
@@ -404,6 +409,7 @@ func TestAccS3ObjectCopy_checksumAlgorithm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32C"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", "7y1BJA=="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 				),
@@ -415,7 +421,20 @@ func TestAccS3ObjectCopy_checksumAlgorithm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA1"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", "7MuLDoLjuZB9Uv63Krr4E7U5x30="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_checksumAlgorithm(rName1, names.AttrSource, rName2, names.AttrTarget, "CRC64NVME"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC64NVME"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", "gZYa6kx5mTY="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 				),
 			},
@@ -498,15 +517,27 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashesMigrated(t *testing.T) {
 					},
 				},
 				Config: testAccObjectCopyConfig_basic(rName1, names.AttrSource, rName2, targetKey),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSource, fmt.Sprintf("%s/%s", rName1, names.AttrSource)),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(targetKey)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSource), knownvalue.StringExact(fmt.Sprintf("%s/%s", rName1, names.AttrSource))),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccObjectCopyConfig_basic(rName1, names.AttrSource, rName2, targetKey),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -536,6 +567,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
@@ -607,6 +639,7 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc64nvme", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
@@ -675,7 +708,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], "", optFns...)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -805,6 +838,7 @@ func testAccObjectCopyConfig_baseBucketKeyEnabled(sourceBucket, sourceKey, targe
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, targetBucket))
 }
@@ -1006,7 +1040,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_directoryBucket(sourceBucket, sourceKey, targetBucket, targetKey string) string {
-	return acctest.ConfigCompose(testAccConfigAvailableAZsDirectoryBucket(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccConfigDirectoryBucket_availableAZs(), fmt.Sprintf(`
 locals {
   location_name = data.aws_availability_zones.available.zone_ids[0]
   source_bucket = "%[1]s--${local.location_name}--x-s3"

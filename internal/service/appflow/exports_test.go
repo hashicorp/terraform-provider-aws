@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow
@@ -8,6 +8,6 @@ var (
 	ResourceConnectorProfile = resourceConnectorProfile
 	ResourceFlow             = resourceFlow
 
-	FindConnectorProfileByARN = findConnectorProfileByARN
-	FindFlowByName            = findFlowByName
+	FindConnectorProfileByName = findConnectorProfileByName
+	FindFlowByName             = findFlowByName
 )

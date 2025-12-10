@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -121,7 +121,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 data "aws_imagebuilder_image" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
 }
 `
 }
@@ -129,7 +129,7 @@ data "aws_imagebuilder_image" "test" {
 func testAccImageDataSourceConfig_arnSelf(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -218,7 +218,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -330,7 +330,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
@@ -346,7 +346,7 @@ EOF
 
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
   target_repository {
     repository_name = aws_ecr_repository.test.name

@@ -83,18 +83,25 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the firewall.
+* `availabilityZoneChangeProtection` - Indicates whether the firewall is protected against changes to its Availability Zone configuration.
+* `availabilityZoneMapping` - Set of Availability Zones where the firewall endpoints are created for a transit gateway-attached firewall.
+    * `availabilityZoneId` - The ID of the Availability Zone where the firewall endpoint is located.
 * `deleteProtection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
+* `enabledAnalysisTypes` - Set of types for which to collect analysis metrics.
 * `encryptionConfiguration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `keyId` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
@@ -104,6 +111,8 @@ This data source exports the following attributes in addition to the arguments a
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpointId` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
+            * `status` - The current status of the firewall endpoint instantiation in the subnet.
+            * `statusMessage` - It populates this with the reason for the error or failure and how to resolve it.  A FAILED status indicates a non-recoverable state, and a ERROR status indicates an issue that you can fix.
             * `subnetId` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availabilityZone` - The Availability Zone where the subnet is configured.
     * `capacity_usage_summary` - Aggregated count of all resources used by reference sets in a firewall.
@@ -113,6 +122,10 @@ This data source exports the following attributes in addition to the arguments a
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
+    * `transit_gateway_attachment_sync_states` - Set of transit gateway configured for use by the firewall.
+        * `attachmentId` - The unique identifier of the transit gateway attachment.
+        * `statusMessage` - A message providing additional information about the current status.
+        * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
 * `subnetChangeProtection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
@@ -120,6 +133,8 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetId` - The unique identifier for the subnet.
 * `tags` - Map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `updateToken` - String token used when updating a firewall.
+* `transitGatewayId` - The unique identifier of the transit gateway associated with this firewall.
+* `transitGatewayOwnerAccountId` - The AWS account ID that owns the transit gateway.
 * `vpcId` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.20.8 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->
+<!-- cache-key: cdktf-0.20.8 input-3f17e263fd6c19f991cec5c962d642788028946d1d016a579f259dc71aa71eb8 -->

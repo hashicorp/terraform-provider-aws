@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
@@ -47,7 +46,7 @@ func sweepAgents(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
 	input := &datasync.ListAgentsInput{}
@@ -67,7 +66,7 @@ func sweepAgents(region string) error {
 		}
 
 		for _, v := range page.Agents {
-			r := ResourceAgent()
+			r := resourceAgent()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.AgentArn))
 
@@ -88,7 +87,7 @@ func sweepLocations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
 	input := &datasync.ListLocationsInput{}
@@ -131,11 +130,12 @@ type sweepableLocation struct {
 	conn *datasync.Client
 }
 
-func (sweepable *sweepableLocation) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (sweepable *sweepableLocation) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	log.Printf("[DEBUG] Deleting DataSync Location: %s", sweepable.arn)
-	_, err := sweepable.conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(sweepable.arn),
-	})
+	}
+	_, err := sweepable.conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil
@@ -152,13 +152,13 @@ func sweepTasks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
-	input := &datasync.ListTasksInput{}
+	input := datasync.ListTasksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := datasync.NewListTasksPaginator(conn, input)
+	pages := datasync.NewListTasksPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

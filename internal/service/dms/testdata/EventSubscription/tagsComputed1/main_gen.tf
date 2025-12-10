@@ -28,7 +28,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = var.rName
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
 }
@@ -42,6 +42,8 @@ resource "aws_sns_topic" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2

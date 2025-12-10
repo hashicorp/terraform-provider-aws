@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +46,78 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 			},
 			{
 				Config: testAccContributorInsightsConfig_basic(rName, indexName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBContributorInsights_ModeAccessedAndThrottled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.DescribeContributorInsightsOutput
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	indexName := fmt.Sprintf("%s-index", rName)
+	resourceName := "aws_dynamodb_contributor_insights.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, indexName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBContributorInsights_ModeThrottledOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.DescribeContributorInsightsOutput
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	indexName := fmt.Sprintf("%s-index", rName)
+	resourceName := "aws_dynamodb_contributor_insights.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContributorInsightsConfig_ThrottledKeys(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccContributorInsightsConfig_ThrottledKeys(rName, indexName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
@@ -100,7 +172,7 @@ resource "aws_dynamodb_table" "test" {
     write_capacity  = 1
   }
 }
-`, rName)
+  `, rName)
 }
 
 func testAccContributorInsightsConfig_basic(rName, indexName string) string {
@@ -108,6 +180,28 @@ func testAccContributorInsightsConfig_basic(rName, indexName string) string {
 resource "aws_dynamodb_contributor_insights" "test" {
   table_name = aws_dynamodb_table.test.name
   index_name = %[2]q
+}
+`, rName, indexName))
+}
+
+func testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, indexName string) string {
+	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_dynamodb_contributor_insights" "test" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
+
+  mode = "ACCESSED_AND_THROTTLED_KEYS"
+}
+`, rName, indexName))
+}
+
+func testAccContributorInsightsConfig_ThrottledKeys(rName, indexName string) string {
+	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_dynamodb_contributor_insights" "test" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
+
+  mode = "THROTTLED_KEYS"
 }
 `, rName, indexName))
 }
@@ -154,7 +248,7 @@ func testAccCheckContributorInsightsDestroy(ctx context.Context) resource.TestCh
 
 			_, err = tfdynamodb.FindContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

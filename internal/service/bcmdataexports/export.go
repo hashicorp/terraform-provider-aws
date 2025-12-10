@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bcmdataexports
@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
@@ -20,24 +21,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bcmdataexports_export",name="Export")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-func newResourceExport(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceExport{}
+// @Testing(v60RefreshError=true)
+func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &exportResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -49,126 +53,18 @@ const (
 	ResNameExport = "Export"
 )
 
-type resourceExport struct {
-	framework.ResourceWithConfigure
+type exportResource struct {
+	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
-func (r *resourceExport) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bcmdataexports_export"
-}
-
-func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dataQueryLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"query_statement": schema.StringAttribute{
-					Required: true,
-				},
-				"table_configurations": schema.MapAttribute{
-					// map[string]map[string]string
-					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
-					Optional:   true,
-					PlanModifiers: []planmodifier.Map{
-						mapplanmodifier.UseStateForUnknown(),
-						mapplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
-	s3OutputConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"compression": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				names.AttrFormat: schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"output_type": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"overwrite": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
-				},
-			},
-		},
-	}
-
-	s3DestinationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				names.AttrS3Bucket: schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_prefix": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_region": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-			Blocks: map[string]schema.Block{
-				"s3_output_configurations": s3OutputConfigurationsLNB,
-			},
-		},
-	}
-
-	destinationConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"s3_destination": s3DestinationLNB,
-			},
-		},
-	}
-
-	refreshCadenceLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"frequency": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
+func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
-			names.AttrID:      framework.IDAttribute(),
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -200,9 +96,9 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"data_query":                 dataQueryLNB,
-						"destination_configurations": destinationConfigurationsLNB,
-						"refresh_cadence":            refreshCadenceLNB,
+						"data_query":                 exportDataQuerySchema(ctx),
+						"destination_configurations": exportDestinationConfigurationsSchema(ctx),
+						"refresh_cadence":            exportRefreshCadenceSchema(ctx),
 					},
 				},
 			},
@@ -214,24 +110,139 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"query_statement": schema.StringAttribute{
+					Required: true,
+				},
+				"table_configurations": schema.MapAttribute{
+					CustomType: fwtypes.MapOfMapOfStringType,
+					Optional:   true,
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.UseStateForUnknown(),
+						mapplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func exportS3OutputConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"compression": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrFormat: schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"output_type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"overwrite": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
+				},
+			},
+		},
+	}
+}
+
+func exportS3DestinationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrS3Bucket: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_prefix": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_region": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"s3_output_configurations": exportS3OutputConfigurationsSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportDestinationConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"s3_destination": exportS3DestinationSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportRefreshCadenceSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"frequency": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var plan resourceExportData
+	var plan exportResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &bcmdataexports.CreateExportInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	in := bcmdataexports.CreateExportInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.ResourceTags = getTagsIn(ctx)
 
-	out, err := conn.CreateExport(ctx, in)
+	out, err := conn.CreateExport(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionCreating, ResNameExport, "", err),
@@ -248,13 +259,14 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	plan.ARN = flex.StringToFramework(ctx, out.ExportArn)
 	plan.ID = flex.StringToFramework(ctx, out.ExportArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	outputRaw, err := waitExportCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForCreation, ResNameExport, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForCreation, ResNameExport, plan.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -269,23 +281,23 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var state resourceExportData
+	var state exportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findExportByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findExportByARN(ctx, conn, state.ARN.ValueString())
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionReading, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -302,10 +314,10 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var plan, state resourceExportData
+	var plan, state exportResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -313,25 +325,25 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		in := bcmdataexports.UpdateExportInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		in.ExportArn = plan.ID.ValueStringPointer()
+		in.ExportArn = plan.ARN.ValueStringPointer()
 
-		out, err := conn.UpdateExport(ctx, in)
+		out, err := conn.UpdateExport(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -341,10 +353,10 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitExportUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitExportUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForUpdate, ResNameExport, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForUpdate, ResNameExport, plan.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -353,20 +365,20 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BCMDataExportsClient(ctx)
 
-	var state resourceExportData
+	var state exportResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &bcmdataexports.DeleteExportInput{
-		ExportArn: state.ID.ValueStringPointer(),
+	in := bcmdataexports.DeleteExportInput{
+		ExportArn: state.ARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteExport(ctx, in)
+	_, err := conn.DeleteExport(ctx, &in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -374,19 +386,26 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionDeleting, ResNameExport, state.ID.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionDeleting, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceExport) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+func (r *exportResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := exportSchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeExportResourceStateFromV0,
+		},
+	}
 }
 
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
@@ -404,7 +423,7 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 }
 
 func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
@@ -421,10 +440,10 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	return nil, err
 }
 
-func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findExportByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findExportByARN(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -436,16 +455,15 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 	}
 }
 
-func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
-	in := &bcmdataexports.GetExportInput{
+func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
+	in := bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
 
-	out, err := conn.GetExport(ctx, in)
+	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -460,7 +478,8 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 	return out, nil
 }
 
-type resourceExportData struct {
+type exportResourceModel struct {
+	ARN      types.String                                `tfsdk:"arn"`
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
 	Tags     tftags.Map                                  `tfsdk:"tags"`
@@ -478,8 +497,8 @@ type exportData struct {
 }
 
 type dataQueryData struct {
-	QueryStatement      types.String                                         `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
+	QueryStatement      types.String             `tfsdk:"query_statement"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,8 +42,6 @@ func resourceBranch() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"app_id": {
@@ -125,6 +124,10 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"enable_skew_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -175,7 +178,7 @@ func resourceBranch() *schema.Resource {
 	}
 }
 
-func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -221,8 +224,12 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EnablePullRequestPreview = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("enable_skew_protection"); ok {
+		input.EnableSkewProtection = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]any)) > 0 {
+		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -252,7 +259,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -263,7 +270,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	branch, err := findBranchByTwoPartKey(ctx, conn, appID, branchName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -288,6 +295,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("enable_notification", branch.EnableNotification)
 	d.Set("enable_performance_mode", branch.EnablePerformanceMode)
 	d.Set("enable_pull_request_preview", branch.EnablePullRequestPreview)
+	d.Set("enable_skew_protection", branch.EnableSkewProtection)
 	d.Set("environment_variables", branch.EnvironmentVariables)
 	d.Set("framework", branch.Framework)
 	d.Set("pull_request_environment_name", branch.PullRequestEnvironmentName)
@@ -300,7 +308,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -351,8 +359,12 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_pull_request_preview").(bool))
 		}
 
+		if d.HasChange("enable_skew_protection") {
+			input.EnableSkewProtection = aws.Bool(d.Get("enable_skew_protection").(bool))
+		}
+
 		if d.HasChange("environment_variables") {
-			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
+			if v := d.Get("environment_variables").(map[string]any); len(v) > 0 {
 				input.EnvironmentVariables = flex.ExpandStringValueMap(v)
 			} else {
 				input.EnvironmentVariables = map[string]string{"": ""}
@@ -385,7 +397,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -421,7 +433,7 @@ func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, br
 	output, err := conn.GetBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}

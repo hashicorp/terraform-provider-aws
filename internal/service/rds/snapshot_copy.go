@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -149,12 +148,10 @@ func resourceSnapshotCopy() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -222,13 +219,13 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	snapshot, err := findDBSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -261,7 +258,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	switch {
 	case err == nil:
 		d.Set("shared_accounts", attribute.AttributeValues)
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
@@ -269,7 +266,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -294,7 +291,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 

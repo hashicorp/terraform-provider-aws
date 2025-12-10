@@ -1,0 +1,177 @@
+name: Readiness Comment
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - labeled
+      - ready_for_review
+      - synchronize
+
+env:
+  START_TEXT: "### :warning: Our automation has detected the following potential issues with your pull request"
+
+jobs:
+  comment:
+    name: Warn of Potential Issues
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Dependency or Changelog Changes
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            dependencies:
+              - '.ci/providerlint/**'
+              - 'go.mod'
+              - 'go.sum'
+            changelog:
+              - 'CHANGELOG.md'
+            new-service:
+              - added: 'internal/service/*'
+
+      - name: Determine if Changelog Entry is Needed
+        if: |
+          !github.event.pull_request.draft
+          && !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog-needed')
+        id: changelog-update-needed
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          predicate-quantifier: 'every'
+          filters: |
+            needs:
+              - 'internal/service/**'
+              - '!internal/service/**/*_test.go'
+            has:
+              - '.changelog/**'
+
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        id: checkout
+        if: |
+          steps.filter.outputs.changelog == 'true'
+          || (steps.filter.outputs.dependencies == 'true' && steps.filter.outputs.new-service == 'false')
+          || (steps.changelog-update-needed.outputs.needs == 'true' && steps.changelog-update-needed.outputs.has == 'false')
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        if: steps.checkout.outcome != 'skipped'
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Check Maintainer Editability
+        id: maintainer_editability
+        if: |
+          github.event.pull_request.head.repo.full_name != 'hashicorp/terraform-provider-aws'
+          && !github.event.pull_request.maintainer_can_modify
+        shell: bash
+        run: |
+          echo '<details><summary>:x: Maintainer Edit Permissions (Click to expand)</summary><br>
+
+          At times, our maintainers need to make direct edits to pull requests in order to prepare it to be merged. At the time of opening this pull request, your settings do not allow maintainers to make such edits. If possible, update your settings as described in the following document. If your fork is owned by an organization that limits your ability to make this change, please let us know.
+
+          Please see the GitHub documentation on [allowing changes to a pull request branch created from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork) for additional details.
+          </details>
+          ' >> note.md
+
+      - name: Dependencies Updated by Non-Maintainers
+        id: dependencies
+        if: |
+          steps.filter.outputs.dependencies == 'true'
+          && steps.filter.outputs.new-service == 'false'
+          && steps.community_check.outputs.maintainer == 'false'
+        shell: bash
+        run: |
+          echo '<details><summary>:x: Dependency Changes (Click to expand)</summary><br>
+
+          Typically Go dependency changes are handled in this repository by dependabot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. For more information, see the [Dependency Updates](https://hashicorp.github.io/terraform-provider-aws/dependency-updates/) section of the contributing guide.
+
+          Remove any changes to the `go.mod` or `go.sum` files and commit them into this pull request to prevent delays with reviewing and potentially merging it.
+
+          Additional details:
+
+          * Check [open pull requests with the `dependencies` label](https://github.com/hashicorp/terraform-provider-aws/pulls?q=is%3Aopen+is%3Apr+label%3Adependencies) to view other dependency updates.
+          * If this pull request includes an update the AWS Go SDK (or any other dependency) version, only updates submitted via dependabot will be merged. This pull request will need to remove these changes and will need to be rebased after the existing dependency update via dependabot has been merged for this pull request to be reviewed.
+          * If this pull request is for supporting a new AWS service:
+          * Ensure the new AWS service changes are following the [Adding a New AWS Service](https://hashicorp.github.io/terraform-provider-aws/add-a-new-service/) section of the contributing guide, in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
+          * If this pull request is already a separate pull request from the above item, you can ignore this message.
+          </details>
+          ' >> note.md
+
+      - name: Changelog Updated by Non-Maintainers
+        id: changelog
+        if: |
+          steps.filter.outputs.changelog == 'true'
+          && steps.community_check.outputs.maintainer == 'false'
+        shell: bash
+        run: |
+          echo '<details><summary>:x: Unnecessary Changelog Changes (Click to expand)</summary><br>
+
+          The `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for additional information.
+
+          Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging it.
+          </details>
+          ' >> note.md
+
+      - name: Needs Changelog Entry
+        id: needs-changelog-entry
+        if: |
+          steps.changelog-update-needed.outputs.needs == 'true'
+          && steps.changelog-update-needed.outputs.has == 'false'
+          && steps.community_check.outputs.maintainer == 'false'
+        shell: bash
+        run: |
+          echo '<details><summary>:x: Changelog Entry Required (Click to expand)</summary><br>
+
+          The proposed change requires a changelog entry. Please see the [Changelog Process](https://hashicorp.github.io/terraform-provider-aws/changelog-process/) section of the contributing guide for information on the changelog generation process.
+
+          **Tip:** This check is not triggered for draft pull requests, since the pull request number is not known until the pull request is opened and is required to create a changelog entry. Opening a pull request first as a draft, adding the requisite changelog entry file, and then marking the pull request as ready for review will prevent future warnings.
+           </details>
+          ' >> note.md
+
+      - name: Add Start Message
+        id: start
+        if: |
+          steps.maintainer_editability.outcome != 'skipped'
+          || steps.dependencies.outcome != 'skipped'
+          || steps.changelog.outcome != 'skipped'
+          || steps.needs-changelog-entry.outcome != 'skipped'
+        shell: bash
+        run: |
+          { echo $START_TEXT; echo "---"; cat note.md; } > tmpnote && mv tmpnote note.md
+
+      - name: Check for Existing Comment
+        id: prc
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: ${{ env.START_TEXT }}
+
+      - name: Issues Corrected
+        id: corrected
+        if: |
+          steps.prc.outputs.comment-id != ''
+          && steps.start.outcome == 'skipped'
+        shell: bash
+        run: |
+          echo ':white_check_mark: Thank you for correcting the previously detected issues! The maintainers appreciate your efforts to make the review process as smooth as possible.' > note.md
+
+      - name: Add or Update Comment
+        if: |
+          steps.start.outcome != 'skipped'
+          || steps.corrected.outcome != 'skipped'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.prc.outputs.comment-id }}
+          edit-mode: replace
+          body-path: note.md

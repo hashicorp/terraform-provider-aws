@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -20,13 +20,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -157,7 +158,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -227,7 +228,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 		return sdkdiag.AppendErrorf(diags, "authorizing Security Group (%s) Rule (%s): %s", securityGroupID, id, err)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
@@ -245,7 +246,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 		rule, _ := findRuleMatch(ipPermission, rules)
 
 		if rule == nil {
-			return nil, &retry.NotFoundError{}
+			return nil, &sdkretry.NotFoundError{}
 		}
 
 		return rule, nil
@@ -260,7 +261,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 	return diags
 }
 
-func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -269,7 +270,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
 		d.SetId("")
 		return diags
@@ -299,7 +300,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		// Shouldn't reach here as we aren't called from resourceSecurityGroupRuleCreate.
-		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &retry.NotFoundError{})
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &sdkretry.NotFoundError{})
 	}
 
 	flattenIpPermission(d, &ipPermission)
@@ -335,7 +336,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -381,7 +382,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSecurityGroupRuleRead(ctx, d, meta)...)
 }
 
-func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -428,7 +429,7 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	invalidIDError := func(msg string) error {
 		return fmt.Errorf("unexpected format for ID (%q), expected SECURITYGROUPID_TYPE_PROTOCOL_FROMPORT_TOPORT_SOURCE[_SOURCE]*: %s", d.Id(), msg)
 	}
@@ -684,15 +685,15 @@ const securityGroupRuleIDSeparator = "_"
 func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.IpPermission) (string, error) {
 	var buf bytes.Buffer
 
-	buf.WriteString(fmt.Sprintf("%s-", securityGroupID))
+	fmt.Fprintf(&buf, "%s-", securityGroupID)
 	if aws.ToInt32(ip.FromPort) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", *ip.FromPort))
+		fmt.Fprintf(&buf, "%d-", *ip.FromPort)
 	}
 	if aws.ToInt32(ip.ToPort) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", *ip.ToPort))
+		fmt.Fprintf(&buf, "%d-", *ip.ToPort)
 	}
-	buf.WriteString(fmt.Sprintf("%s-", *ip.IpProtocol))
-	buf.WriteString(fmt.Sprintf("%s-", ruleType))
+	fmt.Fprintf(&buf, "%s-", *ip.IpProtocol)
+	fmt.Fprintf(&buf, "%s-", ruleType)
 
 	// We need to make sure to sort the strings below so that we always
 	// generate the same hash code no matter what is in the set.
@@ -704,7 +705,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -716,7 +717,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -728,7 +729,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -749,12 +750,12 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		}
 		for _, pair := range ip.UserIdGroupPairs {
 			if pair.GroupId != nil {
-				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupId)))
+				fmt.Fprintf(&buf, "%s-", aws.ToString(pair.GroupId))
 			} else {
 				buf.WriteString("-")
 			}
 			if pair.GroupName != nil {
-				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupName)))
+				fmt.Fprintf(&buf, "%s-", aws.ToString(pair.GroupName))
 			} else {
 				buf.WriteString("-")
 			}
@@ -775,24 +776,24 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 		apiObject.ToPort = aws.Int32(int32(d.Get("to_port").(int)))
 	}
 
-	if v, ok := d.GetOk("cidr_blocks"); ok && len(v.([]interface{})) > 0 {
-		for _, v := range v.([]interface{}) {
+	if v, ok := d.GetOk("cidr_blocks"); ok && len(v.([]any)) > 0 {
+		for _, v := range v.([]any) {
 			apiObject.IpRanges = append(apiObject.IpRanges, awstypes.IpRange{
 				CidrIp: aws.String(v.(string)),
 			})
 		}
 	}
 
-	if v, ok := d.GetOk("ipv6_cidr_blocks"); ok && len(v.([]interface{})) > 0 {
-		for _, v := range v.([]interface{}) {
+	if v, ok := d.GetOk("ipv6_cidr_blocks"); ok && len(v.([]any)) > 0 {
+		for _, v := range v.([]any) {
 			apiObject.Ipv6Ranges = append(apiObject.Ipv6Ranges, awstypes.Ipv6Range{
 				CidrIpv6: aws.String(v.(string)),
 			})
 		}
 	}
 
-	if v, ok := d.GetOk("prefix_list_ids"); ok && len(v.([]interface{})) > 0 {
-		for _, v := range v.([]interface{}) {
+	if v, ok := d.GetOk("prefix_list_ids"); ok && len(v.([]any)) > 0 {
+		for _, v := range v.([]any) {
 			apiObject.PrefixListIds = append(apiObject.PrefixListIds, awstypes.PrefixListId{
 				PrefixListId: aws.String(v.(string)),
 			})

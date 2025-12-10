@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -39,19 +39,19 @@ func (g *Generator) UI() cli.Ui {
 	return g.ui
 }
 
-func (g *Generator) Infof(format string, a ...interface{}) {
+func (g *Generator) Infof(format string, a ...any) {
 	g.ui.Info(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Warnf(format string, a ...interface{}) {
+func (g *Generator) Warnf(format string, a ...any) {
 	g.ui.Warn(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Errorf(format string, a ...interface{}) {
+func (g *Generator) Errorf(format string, a ...any) {
 	g.ui.Error(fmt.Sprintf(format, a...))
 }
 
-func (g *Generator) Fatalf(format string, a ...interface{}) {
+func (g *Generator) Fatalf(format string, a ...any) {
 	g.Errorf(format, a...)
 	os.Exit(1)
 }
@@ -83,6 +83,15 @@ func (g *Generator) NewGoFileDestination(filename string) Destination {
 func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	return &fileDestination{
 		filename: filename,
+	}
+}
+
+func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
+	return &fileDestination{
+		filename: filename,
+		baseDestination: baseDestination{
+			formatter: formatter,
+		},
 	}
 }
 
@@ -170,6 +179,14 @@ func (d *baseDestination) BufferTemplate(templateName, templateBody string, temp
 
 func parseTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) ([]byte, error) {
 	funcMap := template.FuncMap{
+		// FirstLower returns a string with the first character as lower case.
+		"FirstLower": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			r, n := utf8.DecodeRuneInString(s)
+			return string(unicode.ToLower(r)) + s[n:]
+		},
 		// FirstUpper returns a string with the first character as upper case.
 		"FirstUpper": func(s string) string {
 			if s == "" {

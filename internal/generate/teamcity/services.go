@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -145,7 +144,7 @@ func acctestConfigurations(filename string) (map[string]acctestServiceConfig, er
 	return result, nil
 }
 
-func decodeHclFile(filename string, target interface{}) error {
+func decodeHclFile(filename string, target any) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

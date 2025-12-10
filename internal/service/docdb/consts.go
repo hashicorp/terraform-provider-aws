@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -57,6 +57,18 @@ const (
 	globalClusterStatusModifying = "modifying"
 	globalClusterStatusUpgrading = "upgrading"
 )
+
+const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
+	}
+}
 
 const (
 	storageTypeIOpt1    = "iopt1"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func resourceAttachmentAccepter() *schema.Resource {
 	}
 }
 
-func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -202,7 +202,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAttachmentAccepterRead(ctx, d, meta)...)
 }
 
-func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -211,7 +211,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeVpc:
 		vpcAttachment, err := findVPCAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -228,7 +228,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := findSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Site To Site VPN Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -245,7 +245,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeConnect:
 		connectAttachment, err := findConnectAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -262,7 +262,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeTransitGatewayRouteTable:
 		tgwAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -279,7 +279,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	case awstypes.AttachmentTypeDirectConnectGateway:
 		dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, d.Id())
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Network Manager Direct Connect Gateway Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -305,7 +305,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 

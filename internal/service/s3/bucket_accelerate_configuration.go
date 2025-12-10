@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,7 +58,7 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -76,7 +77,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketAccelerateConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -88,9 +89,9 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -101,11 +102,11 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 	return append(diags, resourceBucketAccelerateConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -116,7 +117,7 @@ func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.Re
 
 	output, err := findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Accelerate Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -133,11 +134,11 @@ func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -165,11 +166,11 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 	return append(diags, resourceBucketAccelerateConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	bucket, expectedBucketOwner, err := parseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -215,7 +216,7 @@ func findBucketAccelerateConfiguration(ctx context.Context, conn *s3.Client, buc
 	output, err := conn.GetBucketAccelerateConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

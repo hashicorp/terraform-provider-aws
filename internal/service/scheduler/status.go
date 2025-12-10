@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package scheduler
@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -16,10 +16,10 @@ const (
 	scheduleGroupStatusDeleting = "DELETING"
 )
 
-func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := findScheduleGroupByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

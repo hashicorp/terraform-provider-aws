@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
@@ -7,7 +7,7 @@ package pinpoint
 var (
 	ResourceApp           = resourceApp
 	ResourceEmailChannel  = resourceEmailChannel
-	ResourceEmailTemplate = newResourceEmailTemplate
+	ResourceEmailTemplate = newEmailTemplateResource
 	ResourceEventStream   = resourceEventStream
 	ResourceSMSChannel    = resourceSMSChannel
 

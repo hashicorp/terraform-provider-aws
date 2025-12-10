@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -8,15 +8,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	// The ARN format documentation (https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedstreamingforapachekafka.html#amazonmanagedstreamingforapachekafka-resources-for-iam-policies)
+	// shows ARNs having a UUID component, but in testing there is an additional component.
+	kafkaUUIDRegexPattern = verify.UUIDRegexPattern + `-\w+` // nosemgrep:ci.kafka-in-const-name,ci.kafka-in-var-name
 )
 
 func TestAccKafkaReplicator_basic(t *testing.T) {
@@ -45,9 +53,10 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
@@ -95,7 +104,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
@@ -119,7 +128,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				Config: testAccReplicatorConfig_update(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
@@ -253,7 +262,7 @@ func testAccCheckReplicatorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkafka.FindReplicatorByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -298,7 +307,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_msk_cluster" "source" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -462,7 +471,7 @@ func testAccReplicatorConfig_target(rName string) string {
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "target" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

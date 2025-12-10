@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -45,7 +45,7 @@ func dataSourceImageRecipes() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

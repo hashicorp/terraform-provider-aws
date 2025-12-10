@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -14,19 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssoadmin_permissions_boundary_attachment", name="Permissions Boundary Attachment")
-func ResourcePermissionsBoundaryAttachment() *schema.Resource {
+func resourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,
 		ReadWithoutTimeout:   resourcePermissionsBoundaryAttachmentRead,
@@ -98,11 +99,11 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 	}
 }
 
-func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	tfMap := d.Get("permissions_boundary").([]interface{})[0].(map[string]interface{})
+	tfMap := d.Get("permissions_boundary").([]any)[0].(map[string]any)
 	instanceARN := d.Get("instance_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := PermissionsBoundaryAttachmentCreateResourceID(permissionSetARN, instanceARN)
@@ -128,7 +129,7 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 	return append(diags, resourcePermissionsBoundaryAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -137,9 +138,9 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionsBoundaryByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permissions Boundary Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -151,14 +152,14 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 
 	d.Set("instance_arn", instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
-	if err := d.Set("permissions_boundary", []interface{}{flattenPermissionsBoundary(policy)}); err != nil {
+	if err := d.Set("permissions_boundary", []any{flattenPermissionsBoundary(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions_boundary: %s", err)
 	}
 
 	return diags
 }
 
-func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -209,7 +210,7 @@ func PermissionsBoundaryAttachmentParseResourceID(id string) (string, string, er
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected PERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, permissionsBoundaryAttachmentIDSeparator)
 }
 
-func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
+func findPermissionsBoundaryByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
 	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -218,7 +219,7 @@ func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permiss
 	output, err := conn.GetPermissionsBoundaryForPermissionSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -235,15 +236,15 @@ func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permiss
 	return output.PermissionsBoundary, nil
 }
 
-func expandPermissionsBoundary(tfMap map[string]interface{}) *awstypes.PermissionsBoundary {
+func expandPermissionsBoundary(tfMap map[string]any) *awstypes.PermissionsBoundary {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.PermissionsBoundary{}
 
-	if v, ok := tfMap["customer_managed_policy_reference"].([]interface{}); ok && len(v) > 0 {
-		if cmpr, ok := v[0].(map[string]interface{}); ok {
+	if v, ok := tfMap["customer_managed_policy_reference"].([]any); ok && len(v) > 0 {
+		if cmpr, ok := v[0].(map[string]any); ok {
 			apiObject.CustomerManagedPolicyReference = expandCustomerManagedPolicyReference(cmpr)
 		}
 	}
@@ -254,17 +255,17 @@ func expandPermissionsBoundary(tfMap map[string]interface{}) *awstypes.Permissio
 	return apiObject
 }
 
-func flattenPermissionsBoundary(apiObject *awstypes.PermissionsBoundary) map[string]interface{} {
+func flattenPermissionsBoundary(apiObject *awstypes.PermissionsBoundary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ManagedPolicyArn; v != nil {
 		tfMap["managed_policy_arn"] = aws.ToString(v)
 	} else if v := apiObject.CustomerManagedPolicyReference; v != nil {
-		tfMap["customer_managed_policy_reference"] = []map[string]interface{}{flattenCustomerManagedPolicyReference(v)}
+		tfMap["customer_managed_policy_reference"] = []map[string]any{flattenCustomerManagedPolicyReference(v)}
 	}
 
 	return tfMap

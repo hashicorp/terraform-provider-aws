@@ -1,30 +1,29 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -59,7 +58,6 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 
 func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -87,7 +85,6 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 
 func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -130,36 +127,8 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 	})
 }
 
-func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_datazone_environment_blueprint_configuration" {
-				continue
-			}
-
-			_, err := conn.GetEnvironmentBlueprintConfiguration(ctx, &datazone.GetEnvironmentBlueprintConfigurationInput{
-				DomainIdentifier:               aws.String(rs.Primary.Attributes["domain_id"]),
-				EnvironmentBlueprintIdentifier: aws.String(rs.Primary.Attributes["environment_blueprint_id"]),
-			})
-			if tfdatazone.IsResourceMissing(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironmentBlueprintConfiguration, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameEnvironmentBlueprintConfiguration, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
-	}
-}
-
 func TestAccDataZoneEnvironmentBlueprintConfiguration_manage_access_role_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -194,7 +163,6 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_manage_access_role_arn(t *
 
 func TestAccDataZoneEnvironmentBlueprintConfiguration_provisioning_role_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -229,7 +197,6 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_provisioning_role_arn(t *t
 
 func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
 	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
@@ -274,38 +241,119 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 	})
 }
 
-func testAccCheckEnvironmentBlueprintConfigurationExists(ctx context.Context, name string, environmentblueprintconfiguration *datazone.GetEnvironmentBlueprintConfigurationOutput) resource.TestCheckFunc {
+// https://github.com/hashicorp/terraform-provider-aws/issues/43316.
+func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataZoneServiceID),
+		CheckDestroy: testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config:      testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				ExpectError: regexache.MustCompile(`Incorrect attribute value type`),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentBlueprintConfiguration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentBlueprintConfiguration, name, errors.New("not set"))
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetEnvironmentBlueprintConfiguration(ctx, &datazone.GetEnvironmentBlueprintConfigurationInput{
-			DomainIdentifier:               aws.String(rs.Primary.Attributes["domain_id"]),
-			EnvironmentBlueprintIdentifier: aws.String(rs.Primary.Attributes["environment_blueprint_id"]),
-		})
 
-		if err != nil {
-			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentBlueprintConfiguration, rs.Primary.ID, err)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datazone_environment_blueprint_configuration" {
+				continue
+			}
+
+			_, err := tfdatazone.FindEnvironmentBlueprintConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataZone Environment Blueprint Configuration %s/%s still exists", rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"])
 		}
-
-		*environmentblueprintconfiguration = *resp
 
 		return nil
 	}
 }
 
-func testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+func testAccCheckEnvironmentBlueprintConfigurationExists(ctx context.Context, n string, v *datazone.GetEnvironmentBlueprintConfigurationOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+
+		output, err := tfdatazone.FindEnvironmentBlueprintConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccEnvironmentBlueprintConfigurationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
 		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"]), nil

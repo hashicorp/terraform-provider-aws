@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_controltower_control: Fix handling of `parameters` block removal
+```
+```release-note:bug
+resource/aws_controltower_control: Fix handling `ResourceNotFound` exceptions during delete
+```

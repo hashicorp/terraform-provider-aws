@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -40,12 +40,12 @@ func dataSourceDevices() *schema.Resource {
 	}
 }
 
-func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -65,7 +65,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
+			if !keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

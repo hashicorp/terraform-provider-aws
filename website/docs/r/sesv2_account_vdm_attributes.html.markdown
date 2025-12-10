@@ -36,6 +36,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dashboard_attributes` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard.
 * `guardian_attributes` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian.
 

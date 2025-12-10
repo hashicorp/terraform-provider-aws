@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -189,7 +190,7 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -243,11 +244,12 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
-		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
+		input := backup.StartBackupJobInput{
 			BackupVaultName: aws.String(rName),
 			IamRoleArn:      aws.String(iamRoleARN),
 			ResourceArn:     aws.String(resourceARN),
-		})
+		}
+		output, err := conn.StartBackupJob(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error starting Backup Job: %w", err)
@@ -289,7 +291,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	output, err := conn.DescribeBackupJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -306,11 +308,11 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	return output, nil
 }
 
-func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusJobState(ctx context.Context, conn *backup.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -323,7 +325,7 @@ func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.S
 }
 
 func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
 		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
 		Refresh: statusJobState(ctx, conn, id),
@@ -354,6 +356,7 @@ func testAccVaultConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_backup_vault" "test" {

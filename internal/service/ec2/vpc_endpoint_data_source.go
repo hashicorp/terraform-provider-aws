@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -145,7 +146,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -165,7 +166,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
@@ -189,7 +190,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
 	if vpce.DnsOptions != nil {
-		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
 		}
 	} else {
@@ -215,7 +216,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
 	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)

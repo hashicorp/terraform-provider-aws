@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -19,18 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
-func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicyTemplate{}
+func newPolicyTemplateResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &policyTemplateResource{}
 
 	return r, nil
 }
@@ -39,17 +40,13 @@ const (
 	ResNamePolicyTemplate = "Policy Template"
 )
 
-type resourcePolicyTemplate struct {
-	framework.ResourceWithConfigure
+type policyTemplateResource struct {
+	framework.ResourceWithModel[policyTemplateResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_policy_template"
-}
-
 // Schema returns the schema for this resource.
-func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *policyTemplateResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -84,9 +81,9 @@ func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *policyTemplateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourcePolicyTemplateData
+	var plan policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -125,9 +122,9 @@ func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *policyTemplateResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyTemplateData
+	var state policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -146,7 +143,7 @@ func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.Read
 
 	output, err := findPolicyTemplateByID(ctx, conn, policyStoreID, policyTemplateID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -168,9 +165,9 @@ func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *policyTemplateResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourcePolicyTemplateData
+	var state, plan policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -208,9 +205,9 @@ func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *policyTemplateResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyTemplateData
+	var state policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -218,7 +215,7 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
@@ -242,7 +239,8 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	}
 }
 
-type resourcePolicyTemplateData struct {
+type policyTemplateResourceModel struct {
+	framework.WithRegionModel
 	CreatedDate      timetypes.RFC3339 `tfsdk:"created_date"`
 	Description      types.String      `tfsdk:"description"`
 	ID               types.String      `tfsdk:"id"`
@@ -258,7 +256,7 @@ func findPolicyTemplateByID(ctx context.Context, conn *verifiedpermissions.Clien
 	}
 	out, err := conn.GetPolicyTemplate(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -19,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,11 +36,7 @@ func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type indexPolicyResource struct {
-	framework.ResourceWithConfigure
-}
-
-func (*indexPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_index_policy"
+	framework.ResourceWithModel[indexPolicyResourceModel]
 }
 
 func (r *indexPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -97,7 +93,7 @@ func (r *indexPolicyResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findIndexPolicyByLogGroupName(ctx, conn, data.LogGroupName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -212,8 +208,7 @@ func findIndexPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -225,6 +220,7 @@ func findIndexPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *
 }
 
 type indexPolicyResourceModel struct {
+	framework.WithRegionModel
 	LogGroupName   types.String         `tfsdk:"log_group_name"`
 	PolicyDocument jsontypes.Normalized `tfsdk:"policy_document"`
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -41,7 +41,6 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_stop", dataSourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_termination", dataSourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_optimized", dataSourceName, "ebs_optimized"),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_inference_accelerator.#", dataSourceName, "elastic_inference_accelerator.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "enclave_options.#", dataSourceName, "enclave_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "hibernation_options.#", dataSourceName, "hibernation_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_instance_profile.#", dataSourceName, "iam_instance_profile.#"),
@@ -165,10 +164,6 @@ resource "aws_launch_template" "test" {
     }
   }
 
-  elastic_inference_accelerator {
-    type = "eia1.medium"
-  }
-
   iam_instance_profile {
     name = "test"
   }
@@ -264,6 +259,32 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
+func TestAccEC2LaunchTemplateDataSource_placementGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateDataSourceConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.#", dataSourceName, "placement.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "placement.0.group_id", dataSourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "placement.0.group_name", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccLaunchTemplateDataSourceConfig_matchTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -278,6 +299,27 @@ data "aws_launch_template" "test" {
   tags = {
     Name = aws_launch_template.test.tags["Name"]
   }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateDataSourceConfig_placementGroupID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_id = aws_placement_group.test.placement_group_id
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
 }
 `, rName)
 }

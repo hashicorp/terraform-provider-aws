@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -96,12 +97,10 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -144,13 +143,13 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	output, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Neptune Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -173,7 +172,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -254,7 +253,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
@@ -290,7 +289,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *neptune.Client, name
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -316,7 +315,7 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -332,11 +331,11 @@ func findEventSubscriptions(ctx context.Context, conn *neptune.Client, input *ne
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *neptune.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEventSubscription(ctx context.Context, conn *neptune.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -349,7 +348,7 @@ func statusEventSubscription(ctx context.Context, conn *neptune.Client, name str
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
@@ -368,7 +367,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Client, nam
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
@@ -387,7 +386,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Client, nam
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEventSubscription(ctx, conn, name),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,20 +9,17 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,19 +76,16 @@ func resourcePlacementGroup() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourcePlacementGroupCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourcePlacementGroupCustomizeDiff,
 	}
 }
 
-func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ec2.CreatePlacementGroupInput{
+	input := ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
@@ -105,7 +99,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SpreadLevel = awstypes.SpreadLevel(v.(string))
 	}
 
-	_, err := conn.CreatePlacementGroup(ctx, input)
+	_, err := conn.CreatePlacementGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
@@ -122,13 +116,14 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	pg, err := findPlacementGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Placement Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -138,14 +133,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, placementGroupARN(ctx, c, d.Id()))
 	d.Set(names.AttrName, pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
@@ -157,7 +145,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -165,14 +153,15 @@ func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
-	_, err := conn.DeletePlacementGroup(ctx, &ec2.DeletePlacementGroupInput{
+	input := ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeletePlacementGroup(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
 		return diags
@@ -191,7 +180,7 @@ func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.Id() == "" {
 		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != string(awstypes.PlacementGroupStrategyPartition) {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
@@ -205,4 +194,7 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	}
 
 	return nil
+}
+func placementGroupARN(ctx context.Context, c *conns.AWSClient, groupName string) string {
+	return c.RegionalARN(ctx, names.EC2, "placement-group/"+groupName)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,7 +61,7 @@ func resourceRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -99,7 +100,7 @@ func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRoleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -107,7 +108,7 @@ func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	workspaceID := d.Get("workspace_id").(string)
 	roleAssociations, err := findRoleAssociationsByTwoPartKey(ctx, conn, role, workspaceID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Grafana Workspace Role Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -123,7 +124,7 @@ func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -169,7 +170,7 @@ func findRoleAssociationsByTwoPartKey(ctx context.Context, conn *grafana.Client,
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -196,7 +197,7 @@ func findRoleAssociationsByTwoPartKey(ctx context.Context, conn *grafana.Client,
 
 func populateUpdateInstructions(role awstypes.Role, list []*string, action awstypes.UpdateAction, typeSSOUser awstypes.UserType, updateInstructions []awstypes.UpdateInstruction) []awstypes.UpdateInstruction {
 	users := make([]awstypes.User, len(list))
-	for i := 0; i < len(users); i++ {
+	for i := range users {
 		users[i] = awstypes.User{
 			Id:   list[i],
 			Type: typeSSOUser,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,6 +63,10 @@ func dataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encryption_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
@@ -98,7 +103,7 @@ func dataSourceTransitGateway() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -132,6 +137,18 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+
+	if transitGateway.Options.EncryptionSupport != nil {
+		var encryptionSupport string
+		encryptionState := transitGateway.Options.EncryptionSupport.EncryptionState
+		if encryptionState == awstypes.EncryptionStateValueEnabled || encryptionState == awstypes.EncryptionStateValueEnabling {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueEnable)
+		} else {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueDisable)
+		}
+		d.Set("encryption_support", encryptionSupport)
+	}
+
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)

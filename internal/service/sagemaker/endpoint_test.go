@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -289,7 +289,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -297,7 +297,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Endpoint (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -311,7 +311,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Endpoint ID is set")
+			return fmt.Errorf("no SageMaker AI Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

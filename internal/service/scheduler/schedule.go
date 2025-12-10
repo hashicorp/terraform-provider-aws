@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package scheduler
@@ -19,13 +19,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,6 +46,12 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"action_after_completion": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ActionAfterCompletion](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -431,7 +438,7 @@ const (
 	ResNameSchedule = "Schedule"
 )
 
-func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -440,6 +447,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
+	}
+
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -451,8 +462,8 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.EndDate = aws.Time(v)
 	}
 
-	if v, ok := d.Get("flexible_time_window").([]interface{}); ok && len(v) > 0 {
-		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]interface{}))
+	if v, ok := d.Get("flexible_time_window").([]any); ok && len(v) > 0 {
+		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]any))
 	}
 
 	if v, ok := d.Get(names.AttrGroupName).(string); ok && v != "" {
@@ -476,8 +487,8 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.State = types.ScheduleState(v)
 	}
 
-	if v, ok := d.Get(names.AttrTarget).([]interface{}); ok && len(v) > 0 {
-		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
+	if v, ok := d.Get(names.AttrTarget).([]any); ok && len(v) > 0 {
+		in.Target = expandTarget(ctx, v[0].(map[string]any))
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
@@ -510,7 +521,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -522,7 +533,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -532,6 +543,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
 	}
 
+	d.Set("action_after_completion", out.ActionAfterCompletion)
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrDescription, out.Description)
 
@@ -541,7 +553,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("end_date", nil)
 	}
 
-	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
+	if err := d.Set("flexible_time_window", []any{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -560,23 +572,27 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrState, string(out.State))
 
-	if err := d.Set(names.AttrTarget, []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
+	if err := d.Set(names.AttrTarget, []any{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	in := &scheduler.UpdateScheduleInput{
-		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
+		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]any)[0].(map[string]any)),
 		GroupName:          aws.String(d.Get(names.AttrGroupName).(string)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
-		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
+	}
+
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -618,7 +634,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
@@ -656,7 +672,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	out, err := conn.GetSchedule(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -700,55 +716,55 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 	return parts[0], parts[1], nil
 }
 
-func sagemakerPipelineParameterHash(v interface{}) int {
-	m := v.(map[string]interface{})
+func sagemakerPipelineParameterHash(v any) int {
+	m := v.(map[string]any)
 	return create.StringHashcode(fmt.Sprintf("%s-%s", m[names.AttrName].(string), m[names.AttrValue].(string)))
 }
 
-func capacityProviderHash(v interface{}) int {
+func capacityProviderHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m["base"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	if v, ok := m["capacity_provider"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrWeight].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	return create.StringHashcode(buf.String())
 }
 
-func placementConstraintHash(v interface{}) int {
+func placementConstraintHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrExpression]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())
 }
 
-func placementStrategyHash(v interface{}) int {
+func placementStrategyHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrField]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())

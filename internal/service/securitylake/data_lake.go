@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -23,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -31,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,6 +43,10 @@ const dataLakeMutexKey = "aws_securitylake_data_lake"
 
 // @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securitylake/types;awstypes;awstypes.DataLakeResource")
+// @Testing(serialize=true)
 func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}
 
@@ -52,13 +58,9 @@ func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type dataLakeResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[dataLakeResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
-}
-
-func (r *dataLakeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_data_lake"
 }
 
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -70,7 +72,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"s3_bucket_arn":   framework.ARNAttributeComputedOnly(),
@@ -211,6 +213,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	dataLake, err = waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Data Lake (%s) create", data.ID.ValueString()), err.Error())
 
 		return
@@ -246,7 +249,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 
 	dataLake, err := findDataLakeByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -272,7 +275,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 	// if the data lake's AWS Region isn't the configured one.
 	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
-			setTagsOut(ctx, Tags(tags))
+			setTagsOut(ctx, svcTags(tags))
 		}
 	}
 
@@ -292,7 +295,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	if !new.Configurations.Equal(old.Configurations) {
+	if !new.Configurations.Equal(old.Configurations) || !new.MetaStoreManagerRoleARN.Equal(old.MetaStoreManagerRoleARN) {
 		input := &securitylake.UpdateDataLakeInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -362,10 +365,6 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
 	region, err := regionFromARNString(arn)
 	if err != nil {
@@ -413,11 +412,11 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	return dataLakes, nil
 }
 
-func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -429,11 +428,11 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 	}
 }
 
-func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -450,7 +449,7 @@ func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
@@ -473,7 +472,7 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeUpdate(ctx, conn, arn),
@@ -496,8 +495,8 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted),
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted, awstypes.DataLakeStatusFailed),
 		Target:  []string{},
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
 		Timeout: timeout,
@@ -530,6 +529,7 @@ func regionFromARNString(s string) (string, error) {
 }
 
 type dataLakeResourceModel struct {
+	framework.WithRegionModel
 	Configurations          fwtypes.ListNestedObjectValueOf[dataLakeConfigurationModel] `tfsdk:"configuration"`
 	DataLakeARN             types.String                                                `tfsdk:"arn"`
 	ID                      types.String                                                `tfsdk:"id"`
@@ -586,7 +586,7 @@ func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, err
 
 	const dataLakeTimeout = 2 * time.Minute
 
-	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, dataLakeTimeout, func() (any, error) {
+	raw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, dataLakeTimeout, func(ctx context.Context) (any, error) {
 		return f()
 	})
 	if err != nil {

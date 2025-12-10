@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -120,7 +121,7 @@ func resourceFunctionURL() *schema.Resource {
 	}
 }
 
-func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -138,8 +139,8 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cors"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Cors = expandCors(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateFunctionUrlConfig(ctx, input)
@@ -177,7 +178,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
-func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -188,7 +189,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	output, err := findFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Function URL %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -201,7 +202,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	functionURL := aws.ToString(output.FunctionUrl)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
-		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+		if err := d.Set("cors", []any{flattenCors(output.Cors)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
@@ -226,7 +227,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -248,8 +249,8 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("cors") {
-		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("cors"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Cors = expandCors(v.([]any)[0].(map[string]any))
 		} else {
 			input.Cors = &awstypes.Cors{}
 		}
@@ -268,7 +269,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
-func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -314,7 +315,7 @@ func findFunctionURL(ctx context.Context, conn *lambda.Client, input *lambda.Get
 	output, err := conn.GetFunctionUrlConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -357,7 +358,7 @@ func functionURLParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]sQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }
 
-func expandCors(tfMap map[string]interface{}) *awstypes.Cors {
+func expandCors(tfMap map[string]any) *awstypes.Cors {
 	if tfMap == nil {
 		return nil
 	}
@@ -391,12 +392,12 @@ func expandCors(tfMap map[string]interface{}) *awstypes.Cors {
 	return apiObject
 }
 
-func flattenCors(apiObject *awstypes.Cors) map[string]interface{} {
+func flattenCors(apiObject *awstypes.Cors) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AllowCredentials; v != nil {
 		tfMap["allow_credentials"] = aws.ToBool(v)

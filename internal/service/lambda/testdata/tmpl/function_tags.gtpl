@@ -1,4 +1,5 @@
 resource "aws_lambda_function" "test" {
+{{- template "region" }}
   filename      = "test-fixtures/lambdatest.zip"
   function_name = var.rName
   role          = aws_iam_role.test.arn

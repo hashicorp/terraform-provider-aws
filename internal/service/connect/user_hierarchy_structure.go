@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -86,13 +87,13 @@ func hierarchyStructureLevelSchema() *schema.Schema {
 	}
 }
 
-func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &connect.UpdateUserHierarchyStructureInput{
-		HierarchyStructure: expandHierarchyStructureUpdate(d.Get("hierarchy_structure").([]interface{})),
+		HierarchyStructure: expandHierarchyStructureUpdate(d.Get("hierarchy_structure").([]any)),
 		InstanceId:         aws.String(instanceID),
 	}
 
@@ -107,13 +108,13 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceUserHierarchyStructureRead(ctx, d, meta)...)
 }
 
-func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	hierarchyStructure, err := findUserHierarchyStructureByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect User Hierarchy Structure (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,13 +132,13 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	if d.HasChange("hierarchy_structure") {
 		input := &connect.UpdateUserHierarchyStructureInput{
-			HierarchyStructure: expandHierarchyStructureUpdate(d.Get("hierarchy_structure").([]interface{})),
+			HierarchyStructure: expandHierarchyStructureUpdate(d.Get("hierarchy_structure").([]any)),
 			InstanceId:         aws.String(d.Id()),
 		}
 
@@ -151,15 +152,16 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceUserHierarchyStructureRead(ctx, d, meta)...)
 }
 
-func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect User Hierarchy Structure: %s", d.Id())
-	_, err := conn.UpdateUserHierarchyStructure(ctx, &connect.UpdateUserHierarchyStructureInput{
+	input := connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: &awstypes.HierarchyStructureUpdate{},
 		InstanceId:         aws.String(d.Id()),
-	})
+	}
+	_, err := conn.UpdateUserHierarchyStructure(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -184,7 +186,7 @@ func findUserHierarchyStructure(ctx context.Context, conn *connect.Client, input
 	output, err := conn.DescribeUserHierarchyStructure(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -201,33 +203,33 @@ func findUserHierarchyStructure(ctx context.Context, conn *connect.Client, input
 	return output.HierarchyStructure, nil
 }
 
-func expandHierarchyStructureUpdate(tfList []interface{}) *awstypes.HierarchyStructureUpdate {
+func expandHierarchyStructureUpdate(tfList []any) *awstypes.HierarchyStructureUpdate {
 	if len(tfList) == 0 {
 		return &awstypes.HierarchyStructureUpdate{}
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.HierarchyStructureUpdate{
-		LevelOne:   expandHierarchyLevelUpdate(tfMap["level_one"].([]interface{})),
-		LevelTwo:   expandHierarchyLevelUpdate(tfMap["level_two"].([]interface{})),
-		LevelThree: expandHierarchyLevelUpdate(tfMap["level_three"].([]interface{})),
-		LevelFour:  expandHierarchyLevelUpdate(tfMap["level_four"].([]interface{})),
-		LevelFive:  expandHierarchyLevelUpdate(tfMap["level_five"].([]interface{})),
+		LevelOne:   expandHierarchyLevelUpdate(tfMap["level_one"].([]any)),
+		LevelTwo:   expandHierarchyLevelUpdate(tfMap["level_two"].([]any)),
+		LevelThree: expandHierarchyLevelUpdate(tfMap["level_three"].([]any)),
+		LevelFour:  expandHierarchyLevelUpdate(tfMap["level_four"].([]any)),
+		LevelFive:  expandHierarchyLevelUpdate(tfMap["level_five"].([]any)),
 	}
 
 	return apiObject
 }
 
-func expandHierarchyLevelUpdate(tfList []interface{}) *awstypes.HierarchyLevelUpdate {
+func expandHierarchyLevelUpdate(tfList []any) *awstypes.HierarchyLevelUpdate {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -239,12 +241,12 @@ func expandHierarchyLevelUpdate(tfList []interface{}) *awstypes.HierarchyLevelUp
 	return apiObject
 }
 
-func flattenHierarchyStructure(apiObject *awstypes.HierarchyStructure) []interface{} {
+func flattenHierarchyStructure(apiObject *awstypes.HierarchyStructure) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LevelOne != nil {
 		tfMap["level_one"] = flattenHierarchyLevel(apiObject.LevelOne)
@@ -266,19 +268,19 @@ func flattenHierarchyStructure(apiObject *awstypes.HierarchyStructure) []interfa
 		tfMap["level_five"] = flattenHierarchyLevel(apiObject.LevelFive)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHierarchyLevel(apiObject *awstypes.HierarchyLevel) []interface{} {
+func flattenHierarchyLevel(apiObject *awstypes.HierarchyLevel) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrARN:  aws.ToString(apiObject.Arn),
 		names.AttrID:   aws.ToString(apiObject.Id),
 		names.AttrName: aws.ToString(apiObject.Name),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

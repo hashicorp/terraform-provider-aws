@@ -50,14 +50,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Key Pairs. The given filters must match exactly one Key Pair
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_pair_id` - (Optional) Key Pair ID.
 * `key_name` - (Optional) Key Pair name.
 * `include_public_key` - (Optional) Whether to include the public key material in the response.
 * `filter` -  (Optional) Custom filter block as described below.
+
+The arguments of this data source act as filters for querying the available
+Key Pairs. The given filters must match exactly one Key Pair
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -84,4 +87,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-0d9f224b71bac4257ab9450b7b4225c2db875e803084b43d495dc85927c709ee -->
+<!-- cache-key: cdktf-0.20.8 input-50cc3969439bfed24baba154e0c03d8e9c65f35c5b9acd7c17faf74a4e586211 -->

@@ -1,11 +1,44 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
 
 // Exports for use in tests only.
 var (
-	ResourceCatalogTableOptimizer = newResourceCatalogTableOptimizer
+	ResourceCatalogDatabase               = resourceCatalogDatabase
+	ResourceCatalogTable                  = resourceCatalogTable
+	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
+	ResourceClassifier                    = resourceClassifier
+	ResourceConnection                    = resourceConnection
+	ResourceCrawler                       = resourceCrawler
+	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
+	ResourceDataQualityRuleset            = resourceDataQualityRuleset
+	ResourceDevEndpoint                   = resourceDevEndpoint
+	ResourceJob                           = resourceJob
+	ResourceMLTransform                   = resourceMLTransform
+	ResourcePartition                     = resourcePartition
+	ResourcePartitionIndex                = resourcePartitionIndex
+	ResourceRegistry                      = resourceRegistry
+	ResourceResourcePolicy                = resourceResourcePolicy
+	ResourceSchema                        = resourceSchema
+	ResourceSecurityConfiguration         = resourceSecurityConfiguration
+	ResourceTrigger                       = resourceTrigger
+	ResourceUserDefinedFunction           = resourceUserDefinedFunction
+	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer = findCatalogTableOptimizer
+	FindCatalogTableOptimizer    = findCatalogTableOptimizer
+	FindClassifierByName         = findClassifierByName
+	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
+	FindCrawlerByName            = findCrawlerByName
+	FindDatabaseByName           = findDatabaseByName
+	FindDataQualityRulesetByName = findDataQualityRulesetByName
+	FindDevEndpointByName        = findDevEndpointByName
+	FindJobByName                = findJobByName
+	FindPartitionByValues        = findPartitionByValues
+	FindPartitionIndexByName     = findPartitionIndexByName
+	FindRegistryByID             = findRegistryByID
+	FindResourcePolicy           = findResourcePolicy
+	FindSchemaByID               = findSchemaByID
+	FindTableByName              = findTableByName
+	FindTriggerByName            = findTriggerByName
 )

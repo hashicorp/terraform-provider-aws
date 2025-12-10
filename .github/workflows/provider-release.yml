@@ -1,0 +1,65 @@
+# provider-release is a convenient way to request a promotion of artifacts to
+# the staging or production release channel via Common Release Tooling (CRT).
+#
+# Access control: even though this workflow is runnable by users with Write access,
+# it dispatches only the `trigger-promotion` workflows. The `promote-production`
+# workflow is gated by a deployment approval, which is limited to an authorized
+# release approvers team.
+#
+# Inspired by prior art in hashicorp/terraform-releases and hashicorp/terraform-ls
+
+name: Release Provider
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: "The version to release"
+        required: true
+        default: "0.0.0"
+      release-branch:
+        description: "The branch to release from"
+        required: true
+        default: "main"
+      git-commit-sha:
+        description: "The git commit SHA to tag"
+        required: true
+      release-channel:
+        description: "The channel to release to"
+        required: true
+        type: choice
+        options:
+          - "staging"
+          - "production"
+        default: "staging"
+
+env:
+  slack_channel: "C09L3G3V55J" # #feed-tf-aws
+  product_name: "terraform-provider-aws"
+  repo_name: "terraform-provider-aws"
+  deployment_environment_name: "tf-provider-aws-oss"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "bob - setup"
+        uses: hashicorp/action-setup-bob@v2
+        with:
+          github-token:
+            ${{ secrets.BOB_GITHUB_TOKEN }}
+
+      - name: "promote to ${{ inputs.release-channel }}"
+        env:
+          BOB_GITHUB_TOKEN: ${{ secrets.BOB_GITHUB_TOKEN }}
+        run: |
+          bob trigger-promotion \
+            -product-name ${{ env.product_name }} \
+            -org hashicorp \
+            -repo ${{ env.repo_name }} \
+            -product-version ${{ inputs.release-version }} \
+            -sha ${{ inputs.git-commit-sha }} \
+            -branch ${{ inputs.release-branch }} \
+            -slack-channel ${{ env.slack_channel }} \
+            -environment ${{ env.deployment_environment_name }} \
+            ${{ inputs.release-channel }}

@@ -87,13 +87,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the lifecycle hook.
 * `autoscalingGroupName` - (Required) Name of the Auto Scaling group to which you want to assign the lifecycle hook
 * `defaultResult` - (Optional) Defines the action the Auto Scaling group should take when the lifecycle hook timeout elapses or if an unexpected failure occurs. The value for this parameter can be either CONTINUE or ABANDON. The default value for this parameter is ABANDON.
 * `heartbeatTimeout` - (Optional) Defines the amount of time, in seconds, that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Auto Scaling performs the action defined in the DefaultResult parameter
 * `lifecycleTransition` - (Required) Instance state to which you want to attach the lifecycle hook. For a list of lifecycle hook types, see [describe-lifecycle-hook-types](https://docs.aws.amazon.com/cli/latest/reference/autoscaling/describe-lifecycle-hook-types.html#examples)
 * `notificationMetadata` - (Optional) Contains additional information that you want to include any time Auto Scaling sends a message to the notification target.
-* `notificationTargetArn` - (Optional) ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue or an SNS topic.
+* `notificationTargetArn` - (Optional) ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue, an SNS topic, or a Lambda function.
 * `roleArn` - (Optional) ARN of the IAM role that allows the Auto Scaling group to publish to the specified notification target.
 
 ## Attribute Reference
@@ -132,4 +133,4 @@ Using `terraform import`, import AutoScaling Lifecycle Hooks using the role auto
 % terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->
+<!-- cache-key: cdktf-0.20.8 input-3e71820d7bb3d0e712a01c9b7fa3ccc3d5cc16d957d06edf5377f72fe9c92eed -->

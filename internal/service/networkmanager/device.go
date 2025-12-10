@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +31,9 @@ import (
 
 // @SDKResource("aws_networkmanager_device", name="Device")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="arn")
 func resourceDevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceCreate,
@@ -38,7 +42,7 @@ func resourceDevice() *schema.Resource {
 		DeleteWithoutTimeout: resourceDeviceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
@@ -58,8 +62,6 @@ func resourceDevice() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -156,7 +158,7 @@ func resourceDevice() *schema.Resource {
 	}
 }
 
-func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -171,12 +173,12 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("aws_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("aws_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AWSLocation = expandAWSLocation(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Location = expandLocation(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("model"); ok {
@@ -215,7 +217,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -223,7 +225,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	globalNetworkID := d.Get("global_network_id").(string)
 	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Device %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,7 +237,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, device.DeviceArn)
 	if device.AWSLocation != nil {
-		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
+		if err := d.Set("aws_location", []any{flattenAWSLocation(device.AWSLocation)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
 		}
 	} else {
@@ -244,7 +246,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, device.Description)
 	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
-		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []any{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
@@ -261,7 +263,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -279,12 +281,12 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Vendor:          aws.String(d.Get("vendor").(string)),
 		}
 
-		if v, ok := d.GetOk("aws_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("aws_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AWSLocation = expandAWSLocation(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Location = expandLocation(v.([]any)[0].(map[string]any))
 		}
 
 		log.Printf("[DEBUG] Updating Network Manager Device: %#v", input)
@@ -302,7 +304,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -357,7 +359,7 @@ func findDevices(ctx context.Context, conn *networkmanager.Client, input *networ
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -387,7 +389,7 @@ func findDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.Client, gl
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.DeviceId) != deviceID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -395,11 +397,11 @@ func findDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.Client, gl
 	return output, nil
 }
 
-func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -412,7 +414,7 @@ func statusDeviceState(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStatePending),
 		Target:  enum.Slice(awstypes.DeviceStateAvailable),
 		Timeout: timeout,
@@ -429,7 +431,7 @@ func waitDeviceCreated(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -446,7 +448,7 @@ func waitDeviceDeleted(ctx context.Context, conn *networkmanager.Client, globalN
 }
 
 func waitDeviceUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, deviceID string, timeout time.Duration) (*awstypes.Device, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeviceStateUpdating),
 		Target:  enum.Slice(awstypes.DeviceStateAvailable),
 		Timeout: timeout,
@@ -462,7 +464,7 @@ func waitDeviceUpdated(ctx context.Context, conn *networkmanager.Client, globalN
 	return nil, err
 }
 
-func expandAWSLocation(tfMap map[string]interface{}) *awstypes.AWSLocation { // nosemgrep:ci.aws-in-func-name
+func expandAWSLocation(tfMap map[string]any) *awstypes.AWSLocation { // nosemgrep:ci.aws-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -480,12 +482,12 @@ func expandAWSLocation(tfMap map[string]interface{}) *awstypes.AWSLocation { // 
 	return apiObject
 }
 
-func flattenAWSLocation(apiObject *awstypes.AWSLocation) map[string]interface{} { // nosemgrep:ci.aws-in-func-name
+func flattenAWSLocation(apiObject *awstypes.AWSLocation) map[string]any { // nosemgrep:ci.aws-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SubnetArn; v != nil {
 		tfMap["subnet_arn"] = aws.ToString(v)

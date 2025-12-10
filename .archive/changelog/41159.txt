@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Properly handle default value of `transition_default_minimum_object_size`
+```
+
+```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: When upgrading existing resources with no defined `prefix`, the Terraform plan will show the removal of `prefix` from state. This is expected, and should not occur on subsequent plans.
+```

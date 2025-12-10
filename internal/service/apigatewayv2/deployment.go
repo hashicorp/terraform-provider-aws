@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,7 +64,7 @@ func resourceDeployment() *schema.Resource {
 	}
 }
 
-func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -91,13 +92,13 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,7 +114,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -140,15 +141,16 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Deployment (%s)", d.Id())
-	_, err := conn.DeleteDeployment(ctx, &apigatewayv2.DeleteDeploymentInput{
+	input := apigatewayv2.DeleteDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeployment(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -161,7 +163,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/deployment-id'", d.Id())
@@ -186,7 +188,7 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	output, err := conn.GetDeployment(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -203,11 +205,11 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -223,7 +225,7 @@ func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.Client, apiI
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentStatusPending),
 		Target:  enum.Slice(awstypes.DeploymentStatusDeployed),
 		Refresh: statusDeployment(ctx, conn, apiID, deploymentID),

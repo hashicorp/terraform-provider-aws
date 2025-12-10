@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +45,7 @@ func resourceConnectionAssociation() *schema.Resource {
 	}
 }
 
-func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -66,14 +67,14 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceConnectionAssociationRead(ctx, d, meta)...)
 }
 
-func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	lagID := d.Get("lag_id").(string)
 	err := findConnectionLAGAssociation(ctx, conn, d.Id(), lagID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) LAG (%s) Association not found, removing from state", d.Id(), lagID)
 		d.SetId("")
 		return diags
@@ -86,7 +87,7 @@ func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -106,8 +107,8 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Cli
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DirectConnectClientException](ctx, timeout,
-		func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DirectConnectClientException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DisassociateConnectionFromLag(ctx, input)
 		}, "is in a transitioning state")
 
@@ -131,7 +132,7 @@ func findConnectionLAGAssociation(ctx context.Context, conn *directconnect.Clien
 	}
 
 	if lagID != aws.ToString(connection.LagId) {
-		return &retry.NotFoundError{}
+		return &sdkretry.NotFoundError{}
 	}
 
 	return nil

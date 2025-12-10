@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -44,6 +44,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "regional_zone_id", dataSourceName, "regional_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_policy", dataSourceName, "security_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_configuration.0.ip_address_type", dataSourceName, "endpoint_configuration.0.ip_address_type"),
 				),
 			},
 		},

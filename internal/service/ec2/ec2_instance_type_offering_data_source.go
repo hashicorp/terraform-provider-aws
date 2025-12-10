@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -32,6 +33,10 @@ func dataSourceInstanceTypeOffering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrLocation: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"location_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -46,11 +51,11 @@ func dataSourceInstanceTypeOffering() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypeOfferingsInput{}
+	input := ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
@@ -60,7 +65,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 		input.LocationType = awstypes.LocationType(v.(string))
 	}
 
-	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, input)
+	instanceTypeOfferings, err := findInstanceTypeOfferings(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)
@@ -70,47 +75,42 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
-	var foundInstanceTypes []string
-
-	for _, instanceTypeOffering := range instanceTypeOfferings {
-		foundInstanceTypes = append(foundInstanceTypes, string(instanceTypeOffering.InstanceType))
-	}
-
-	var resultInstanceType string
+	var resultInstanceTypeOffering *awstypes.InstanceTypeOffering
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
 	if v, ok := d.GetOk("preferred_instance_types"); ok {
-		for _, v := range v.([]interface{}) {
+		for _, v := range v.([]any) {
 			if v, ok := v.(string); ok {
-				for _, foundInstanceType := range foundInstanceTypes {
-					if foundInstanceType == v {
-						resultInstanceType = v
-						break
-					}
+				if i := slices.IndexFunc(instanceTypeOfferings, func(e awstypes.InstanceTypeOffering) bool {
+					return string(e.InstanceType) == v
+				}); i != -1 {
+					resultInstanceTypeOffering = &instanceTypeOfferings[i]
 				}
 
-				if resultInstanceType != "" {
+				if resultInstanceTypeOffering != nil {
 					break
 				}
 			}
 		}
 	}
 
-	if resultInstanceType == "" && len(foundInstanceTypes) > 1 {
+	if resultInstanceTypeOffering == nil && len(instanceTypeOfferings) > 1 {
 		return sdkdiag.AppendErrorf(diags, "multiple EC2 Instance Offerings found matching criteria; try different search")
 	}
 
-	if resultInstanceType == "" && len(foundInstanceTypes) == 1 {
-		resultInstanceType = foundInstanceTypes[0]
+	if resultInstanceTypeOffering == nil && len(instanceTypeOfferings) == 1 {
+		resultInstanceTypeOffering = &instanceTypeOfferings[0]
 	}
 
-	if resultInstanceType == "" {
+	if resultInstanceTypeOffering == nil {
 		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
-	d.SetId(resultInstanceType)
-	d.Set(names.AttrInstanceType, resultInstanceType)
+	d.SetId(string(resultInstanceTypeOffering.InstanceType))
+	d.Set(names.AttrInstanceType, string(resultInstanceTypeOffering.InstanceType))
+	d.Set(names.AttrLocation, resultInstanceTypeOffering.Location)
+	d.Set("location_type", string(resultInstanceTypeOffering.LocationType))
 
 	return diags
 }

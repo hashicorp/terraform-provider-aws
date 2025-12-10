@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -11,11 +11,15 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -186,11 +190,23 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBillingGroupConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -217,11 +233,23 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK_properties(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBillingGroupConfig_properties(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -231,6 +259,373 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK_properties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccIoTBillingGroup_requiredTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_billing_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// New resources missing required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+			// Creation with required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccBillingGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates which remove required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccBillingGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+		},
+	})
+}
+
+func TestAccIoTBillingGroup_requiredTags_defaultTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_billing_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// New resources missing required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+			// Creation with required tags in default_tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyComplianceAndDefaultTags1("error", tagKey, acctest.CtValue1),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates which remove required tags from default_tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyComplianceAndDefaultTags1("error", nonRequiredTagKey, acctest.CtValue1),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+		},
+	})
+}
+
+func TestAccIoTBillingGroup_requiredTags_warning(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_billing_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// New resources missing required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates adding required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccBillingGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates which remove required tags also succeed
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccBillingGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTBillingGroup_requiredTags_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_billing_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// New resources missing required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccBillingGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates adding required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccBillingGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			// Updates which remove required tags also succeed
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccBillingGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
 				),
 			},
 		},
@@ -263,7 +658,7 @@ func testAccCheckBillingGroupDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfiot.FindBillingGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

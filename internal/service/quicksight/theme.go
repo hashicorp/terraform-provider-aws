@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -15,18 +15,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,13 +57,7 @@ func resourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				"base_theme_id": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -105,12 +99,10 @@ func resourceTheme() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -128,8 +120,8 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThemeId:      aws.String(themeID),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
@@ -155,7 +147,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
-func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -166,7 +158,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	theme, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Theme (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -203,7 +195,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -220,8 +212,8 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			ThemeId:      aws.String(themeID),
 		}
 
-		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]any))
 		}
 
 		_, err := conn.UpdateTheme(ctx, input)
@@ -263,7 +255,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
-func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -321,7 +313,7 @@ func findTheme(ctx context.Context, conn *quicksight.Client, input *quicksight.D
 	output, err := conn.DescribeTheme(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -351,7 +343,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	output, err := conn.DescribeThemePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -368,11 +360,11 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	return output.Permissions, nil
 }
 
-func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -385,7 +377,7 @@ func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, the
 }
 
 func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),
@@ -406,7 +398,7 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID
 }
 
 func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string, timeout time.Duration) (*awstypes.Theme, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusTheme(ctx, conn, awsAccountID, themeID),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,11 +25,13 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 
 	testCases := map[string]func(*testing.T){
 		"containerInstanceLongARNFormat":  testAccAccountSettingDefault_containerInstanceLongARNFormat,
+		"defaultLogDriverMode":            testAccAccountSettingDefault_defaultLogDriverMode,
 		"serviceLongARNFormat":            testAccAccountSettingDefault_serviceLongARNFormat,
 		"taskLongARNFormat":               testAccAccountSettingDefault_taskLongARNFormat,
 		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
 		"containerInsights":               testAccAccountSettingDefault_containerInsights,
 		"fargateTaskRetirementWaitPeriod": testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod,
+		"dualStackIPv6":                   testAccAccountSettingDefault_dualStackIPv6,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -47,7 +49,7 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_basic(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
@@ -57,7 +59,74 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccountSettingDefault_defaultLogDriverMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecs_account_setting_default.test"
+	settingName := string(awstypes.SettingNameDefaultLogDriverMode)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, "blocking"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "blocking"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportStateId:     settingName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, "non-blocking"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "non-blocking"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+				),
+			},
+		},
+	})
+}
+
+func testAccAccountSettingDefault_dualStackIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecs_account_setting_default.test"
+	settingName := "dualStackIPv6"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -77,7 +146,7 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_basic(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
@@ -87,7 +156,6 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -107,7 +175,7 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_basic(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
@@ -117,7 +185,6 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -137,7 +204,7 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_basic(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
@@ -147,7 +214,6 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -167,7 +233,7 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_basic(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
@@ -177,7 +243,6 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     settingName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -207,7 +272,6 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     "fargateTaskRetirementWaitPeriod",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -243,7 +307,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			settingName := awstypes.SettingName(rs.Primary.Attributes[names.AttrName])
 			output, err := tfecs.FindEffectiveAccountSettingByName(ctx, conn, settingName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -256,6 +320,10 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 				return nil
 			case awstypes.SettingNameFargateTaskRetirementWaitPeriod:
 				if value == "7" {
+					return nil
+				}
+			case awstypes.SettingNameDefaultLogDriverMode:
+				if value == "non-blocking" {
 					return nil
 				}
 			default:
@@ -271,13 +339,13 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccAccountSettingDefaultConfig_basic(settingName string) string {
+func testAccAccountSettingDefaultConfig_basic(settingName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
   name  = %[1]q
-  value = "enabled"
+  value = %[2]q
 }
-`, settingName)
+`, settingName, value)
 }
 
 func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName string) string {

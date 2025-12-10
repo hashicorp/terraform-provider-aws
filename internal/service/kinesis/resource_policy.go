@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis
@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -16,17 +15,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(useAlternateAccount=true)
+// We need to ignore `policy` because the JSON body is not normalized
+// @Testing(importIgnore="policy")
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -34,12 +39,8 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (r *resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_kinesis_resource_policy"
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -99,17 +100,11 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().KinesisClient(ctx)
 
 	output, err := findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -195,7 +190,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resource
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -213,20 +208,10 @@ func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resource
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String      `tfsdk:"id"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
-}
-
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
 }
 
 func (data *resourcePolicyResourceModel) setID() {

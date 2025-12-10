@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,6 +27,10 @@ func testAccCustomLogSource_basic(t *testing.T) {
 	resourceName := "aws_securitylake_custom_log_source.test"
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,6 +78,10 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 	resourceName := "aws_securitylake_custom_log_source.test"
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -123,6 +131,10 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 	rName2 := randomCustomLogSourceName()
 	var customLogSource, customLogSource2 types.CustomLogSourceResource
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -159,6 +171,10 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 	resourceName := "aws_securitylake_custom_log_source.test"
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -223,6 +239,10 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -260,7 +280,7 @@ func testAccCheckCustomLogSourceDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfsecuritylake.FindCustomLogSourceBySourceName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

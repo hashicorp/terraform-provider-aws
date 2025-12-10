@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry
@@ -32,7 +32,7 @@ func sweepScraper(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, application := range page.Applications {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(application.Id)),
 			))
 		}

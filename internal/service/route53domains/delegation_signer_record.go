@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,14 +44,10 @@ func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithCo
 }
 
 type delegationSignerRecordResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[delegationSignerRecordResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*delegationSignerRecordResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53domains_delegation_signer_record"
 }
 
 func (r *delegationSignerRecordResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -178,7 +175,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 
 	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

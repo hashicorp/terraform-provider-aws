@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,6 +33,7 @@ func resourceMlflowTrackingServer() *schema.Resource {
 		ReadWithoutTimeout:   resourceMlflowTrackingServerRead,
 		UpdateWithoutTimeout: resourceMlflowTrackingServerUpdate,
 		DeleteWithoutTimeout: resourceMlflowTrackingServerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -45,6 +48,17 @@ func resourceMlflowTrackingServer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validModelDataURL,
 			},
+			"automatic_model_registration": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"mlflow_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -56,26 +70,15 @@ func resourceMlflowTrackingServer() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"mlflow_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"tracking_server_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automatic_model_registration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"tracking_server_size": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.TrackingServerSizeS,
 				ValidateDiagFunc: enum.Validate[awstypes.TrackingServerSize](),
+			},
+			"tracking_server_url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"weekly_maintenance_window_start": {
 				Type:     schema.TypeString,
@@ -85,23 +88,21 @@ func resourceMlflowTrackingServer() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("tracking_server_name").(string)
-	input := &sagemaker.CreateMlflowTrackingServerInput{
-		TrackingServerName:         aws.String(name),
+	input := sagemaker.CreateMlflowTrackingServerInput{
 		ArtifactStoreUri:           aws.String(d.Get("artifact_store_uri").(string)),
-		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
 		AutomaticModelRegistration: aws.Bool(d.Get("automatic_model_registration").(bool)),
-		TrackingServerSize:         awstypes.TrackingServerSize(d.Get("tracking_server_size").(string)),
+		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                       getTagsIn(ctx),
+		TrackingServerName:         aws.String(name),
+		TrackingServerSize:         awstypes.TrackingServerSize(d.Get("tracking_server_size").(string)),
 	}
 
 	if v, ok := d.GetOk("mlflow_version"); ok {
@@ -112,55 +113,56 @@ func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceD
 		input.WeeklyMaintenanceWindowStart = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateMlflowTrackingServer(ctx, input)
+	_, err := conn.CreateMlflowTrackingServer(ctx, &input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Mlflow Tracking Server %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Mlflow Tracking Server (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitMlflowTrackingServerCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	output, err := findMlflowTrackingServerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Mlflow Tracking Server (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Mlflow Tracking Server (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Mlflow Tracking Server (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tracking_server_name", output.TrackingServerName)
 	d.Set(names.AttrARN, output.TrackingServerArn)
 	d.Set("artifact_store_uri", output.ArtifactStoreUri)
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set("mlflow_version", output.MlflowVersion)
-	d.Set("tracking_server_size", output.TrackingServerSize)
-	d.Set("weekly_maintenance_window_start", output.WeeklyMaintenanceWindowStart)
-	d.Set("tracking_server_url", output.TrackingServerUrl)
 	d.Set("automatic_model_registration", output.AutomaticModelRegistration)
+	d.Set("mlflow_version", normalizeMlflowVersion(aws.ToString(output.MlflowVersion)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set("tracking_server_name", output.TrackingServerName)
+	d.Set("tracking_server_size", output.TrackingServerSize)
+	d.Set("tracking_server_url", output.TrackingServerUrl)
+	d.Set("weekly_maintenance_window_start", output.WeeklyMaintenanceWindowStart)
 
 	return diags
 }
 
-func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &sagemaker.UpdateMlflowTrackingServerInput{
+		input := sagemaker.UpdateMlflowTrackingServerInput{
 			TrackingServerName: aws.String(d.Id()),
 		}
 
@@ -188,51 +190,54 @@ func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceD
 			}
 		}
 
-		log.Printf("[DEBUG] SageMaker Mlflow Tracking Server update config: %#v", *input)
-		_, err := conn.UpdateMlflowTrackingServer(ctx, input)
+		_, err := conn.UpdateMlflowTrackingServer(ctx, &input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Mlflow Tracking Server: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitMlflowTrackingServerUpdated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
 }
 
-func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	input := &sagemaker.DeleteMlflowTrackingServerInput{
+	log.Printf("[DEBUG] Deleting SageMaker AI Mlflow Tracking Server: %s", d.Id())
+	input := sagemaker.DeleteMlflowTrackingServerInput{
 		TrackingServerName: aws.String(d.Id()),
 	}
+	_, err := conn.DeleteMlflowTrackingServer(ctx, &input)
 
-	if _, err := conn.DeleteMlflowTrackingServer(ctx, input); err != nil {
-		if errs.IsA[*awstypes.ResourceNotFound](err) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Mlflow Tracking Server (%s): %s", d.Id(), err)
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Mlflow Tracking Server (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMlflowTrackingServerDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Mlflow Tracking Server (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
 func findMlflowTrackingServerByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
-	input := &sagemaker.DescribeMlflowTrackingServerInput{
+	input := sagemaker.DescribeMlflowTrackingServerInput{
 		TrackingServerName: aws.String(name),
 	}
 
-	output, err := conn.DescribeMlflowTrackingServer(ctx, input)
+	output, err := conn.DescribeMlflowTrackingServer(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -247,4 +252,11 @@ func findMlflowTrackingServerByName(ctx context.Context, conn *sagemaker.Client,
 	}
 
 	return output, nil
+}
+
+// normalizeMlflowVersion normalizes the MLflow version to major/minor
+// format (e.g., "1.26" instead of "1.26.0").
+func normalizeMlflowVersion(version string) string {
+	s, _ := semver.MajorMinor(version)
+	return s
 }

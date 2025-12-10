@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -174,7 +174,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
 
   peer_account_id         = aws_ec2_transit_gateway.test.owner_id
-  peer_region             = data.aws_region.current.name
+  peer_region             = data.aws_region.current.region
   peer_transit_gateway_id = aws_ec2_transit_gateway.test.id
   transit_gateway_id      = aws_ec2_transit_gateway.peer.id
 

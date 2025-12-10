@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe
@@ -16,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,8 +98,6 @@ func ResourceLanguageModel() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -108,7 +107,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -119,12 +118,12 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {
-		in.InputDataConfig = expandInputDataConfig(v.([]interface{}))
+	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]any)) > 0 {
+		in.InputDataConfig = expandInputDataConfig(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -149,13 +148,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceLanguageModelRead(ctx, d, meta)...)
 }
 
-func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -185,20 +184,21 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceLanguageModelRead(ctx, d, meta)
 }
 
-func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
-	_, err := conn.DeleteLanguageModel(ctx, &transcribe.DeleteLanguageModelInput{
+	input := transcribe.DeleteLanguageModelInput{
 		ModelName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLanguageModel(ctx, &input)
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {
@@ -213,7 +213,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
@@ -230,10 +230,10 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,7 +254,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -271,12 +271,12 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	return out.LanguageModel, nil
 }
 
-func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
+func flattenInputDataConfig(apiObjects *types.InputDataConfig) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"data_access_role_arn": apiObjects.DataAccessRoleArn,
 		"s3_uri":               apiObjects.S3Uri,
 	}
@@ -285,17 +285,17 @@ func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
 		m["tuning_data_s3_uri"] = apiObjects.TuningDataS3Uri
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandInputDataConfig(tfList []interface{}) *types.InputDataConfig {
+func expandInputDataConfig(tfList []any) *types.InputDataConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	s := &types.InputDataConfig{}
 
-	i := tfList[0].(map[string]interface{})
+	i := tfList[0].(map[string]any)
 
 	if val, ok := i["data_access_role_arn"]; ok {
 		s.DataAccessRoleArn = aws.String(val.(string))

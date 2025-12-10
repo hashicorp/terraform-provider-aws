@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -31,7 +31,6 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),

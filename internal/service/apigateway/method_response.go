@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +34,7 @@ func resourceMethodResponse() *schema.Resource {
 		DeleteWithoutTimeout: resourceMethodResponseDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE", d.Id())
@@ -86,7 +87,7 @@ func resourceMethodResponse() *schema.Resource {
 	}
 }
 
-func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -97,12 +98,12 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 		StatusCode: aws.String(d.Get(names.AttrStatusCode).(string)),
 	}
 
-	if v, ok := d.GetOk("response_models"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_models"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseParameters = flex.ExpandBoolValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.ResponseParameters = flex.ExpandBoolValueMap(v.(map[string]any))
 	}
 
 	mutexKey := "api-gateway-method-response"
@@ -112,7 +113,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.PutMethodResponse(ctx, &input)
 	})
 
@@ -125,13 +126,13 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	methodResponse, err := findMethodResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string), d.Get(names.AttrStatusCode).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -151,7 +152,7 @@ func resourceMethodResponseRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -182,7 +183,7 @@ func resourceMethodResponseUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceMethodResponseRead(ctx, d, meta)...)
 }
 
-func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -217,7 +218,7 @@ func findMethodResponseByFourPartKey(ctx context.Context, conn *apigateway.Clien
 	output, err := conn.GetMethodResponse(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

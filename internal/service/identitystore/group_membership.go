@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -60,7 +61,7 @@ func resourceGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -82,7 +83,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -93,7 +94,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := findGroupMembershipByTwoPartKey(ctx, conn, identityStoreID, membershipID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IdentityStore Group Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -116,7 +117,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
@@ -183,7 +184,7 @@ func findGroupMembership(ctx context.Context, conn *identitystore.Client, input 
 	output, err := conn.DescribeGroupMembership(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -67,7 +67,7 @@ const (
 	dsNameDedicatedIPPool = "Dedicated IP Pool Data Source"
 )
 
-func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -90,14 +90,14 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
+func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var dedicatedIps []interface{}
+	var dedicatedIps []any
 	for _, apiObject := range apiObjects {
-		ip := map[string]interface{}{
+		ip := map[string]any{
 			"ip":                aws.ToString(apiObject.Ip),
 			"warmup_percentage": apiObject.WarmupPercentage,
 			"warmup_status":     string(apiObject.WarmupStatus),
@@ -125,7 +125,7 @@ func findDedicatedIPs(ctx context.Context, conn *sesv2.Client, input *sesv2.GetD
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

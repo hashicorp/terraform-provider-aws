@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +55,7 @@ func ResourceGroupAssociation() *schema.Resource {
 	}
 }
 
-func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceGroupAssociationRead(ctx, d, meta)...)
 }
 
-func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	group, err := FindAssociatedGroup(ctx, conn, canaryArn, groupName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Synthetics Group Association between canary (%s) and group (%s) not found, removing from state", canaryArn, groupName)
 		d.SetId("")
 		return diags
@@ -112,7 +112,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 

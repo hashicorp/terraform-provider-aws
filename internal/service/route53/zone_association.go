@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -8,18 +8,20 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,10 +61,15 @@ func resourceZoneAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
-func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -91,7 +98,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
@@ -102,7 +109,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceZoneAssociationRead(ctx, d, meta)...)
 }
 
-func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -121,7 +128,7 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 
 	hostedZoneSummary, err := findZoneAssociationByThreePartKey(ctx, conn, zoneID, vpcID, vpcRegion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Zone Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +146,7 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -175,7 +182,7 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// AccessDenied errors likely due to cross-account issue.
 			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
@@ -248,7 +255,7 @@ func findZoneAssociations(ctx context.Context, conn *route53.Client, input *rout
 	})
 
 	if tfawserr.ErrMessageContains(err, errCodeAccessDenied, "is not owned by you") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

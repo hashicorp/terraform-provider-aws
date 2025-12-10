@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -22,4 +22,8 @@ var (
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
+
+	ClusterUUIDFromARN    = clusterUUIDFromARN
+	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
+	SortEndpointsString   = sortEndpointsString
 )

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,7 +51,7 @@ func resourceSnapshotScheduleAssociation() *schema.Resource {
 	}
 }
 
-func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -78,7 +79,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceSnapshotScheduleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -89,7 +90,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 
 	association, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Schedule Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -105,7 +106,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -182,14 +183,14 @@ func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *reds
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
-func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -205,7 +206,7 @@ func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying),
 		Target:     enum.Slice(awstypes.ScheduleStateActive),
 		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
@@ -227,7 +228,7 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying, awstypes.ScheduleStateActive),
 		Target:     []string{},
 		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),

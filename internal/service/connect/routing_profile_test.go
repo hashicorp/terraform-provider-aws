@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -329,6 +329,80 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccRoutingProfile_crossChannelBehavior(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RoutingProfile
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_routing_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingProfileConfig_crossChannelBehaviorDefault(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                  string(awstypes.ChannelVoice),
+						"concurrency":              "1",
+						"cross_channel_behavior.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                  string(awstypes.ChannelChat),
+						"concurrency":              "2",
+						"cross_channel_behavior.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoutingProfileConfig_crossChannelBehaviorCurrentChannelOnly(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                                string(awstypes.ChannelVoice),
+						"concurrency":                            "1",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteCurrentChannelOnly),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                                string(awstypes.ChannelChat),
+						"concurrency":                            "3",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteCurrentChannelOnly),
+					}),
+				),
+			},
+			{
+				Config: testAccRoutingProfileConfig_crossChannelBehaviorMixed(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                                string(awstypes.ChannelVoice),
+						"concurrency":                            "1",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteAnyChannel),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "media_concurrencies.*", map[string]string{
+						"channel":                                string(awstypes.ChannelChat),
+						"concurrency":                            "3",
+						"cross_channel_behavior.0.behavior_type": string(awstypes.BehaviorTypeRouteCurrentChannelOnly),
+					}),
 				),
 			},
 		},
@@ -687,7 +761,7 @@ func testAccCheckRoutingProfileDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfconnect.FindRoutingProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["routing_profile_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -993,6 +1067,101 @@ resource "aws_connect_routing_profile" "test" {
       priority = queue_configs.key + 1
       queue_id = queue_configs.value
     }
+  }
+}
+`, rName3))
+}
+
+func testAccRoutingProfileConfig_crossChannelBehaviorDefault(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileConfig_base(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = aws_connect_queue.default_outbound_queue.queue_id
+  description               = "Test cross-channel behavior - default"
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+    # behaviour uses AWS server-side default
+  }
+
+  media_concurrencies {
+    channel     = "CHAT"
+    concurrency = 2
+    # behaviour uses AWS server-side default
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile Cross-Channel Behavior",
+  }
+}
+`, rName3))
+}
+
+func testAccRoutingProfileConfig_crossChannelBehaviorCurrentChannelOnly(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileConfig_base(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = aws_connect_queue.default_outbound_queue.queue_id
+  description               = "Test cross-channel behavior - current channel only"
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
+  }
+
+  media_concurrencies {
+    channel     = "CHAT"
+    concurrency = 3
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile Cross-Channel Behavior",
+  }
+}
+`, rName3))
+}
+
+func testAccRoutingProfileConfig_crossChannelBehaviorMixed(rName, rName2, rName3 string) string {
+	return acctest.ConfigCompose(
+		testAccRoutingProfileConfig_base(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_connect_routing_profile" "test" {
+  instance_id               = aws_connect_instance.test.id
+  name                      = %[1]q
+  default_outbound_queue_id = aws_connect_queue.default_outbound_queue.queue_id
+  description               = "Test cross-channel behavior - mixed"
+
+  media_concurrencies {
+    channel     = "VOICE"
+    concurrency = 1
+    cross_channel_behavior {
+      behavior_type = "ROUTE_ANY_CHANNEL"
+    }
+  }
+
+  media_concurrencies {
+    channel     = "CHAT"
+    concurrency = 3
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
+  }
+
+  tags = {
+    "Name" = "Test Routing Profile Cross-Channel Behavior",
   }
 }
 `, rName3))

@@ -37,9 +37,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent solution stack.
-
 * `nameRegex` - Regex string to apply to the solution stack list returned
 by AWS. See [Elastic Beanstalk Supported Platforms][beanstalk-platforms] from
 AWS documentation for reference solution stack names.
@@ -56,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"
 
-<!-- cache-key: cdktf-0.20.8 input-bc5855ffbad2c3da05d523f3dafaef60d18324e30f798e90fe32639ded015eeb -->
+<!-- cache-key: cdktf-0.20.8 input-a532bd9b6351829fac895efefc2506e84326427aff992135a2c84d804366f786 -->

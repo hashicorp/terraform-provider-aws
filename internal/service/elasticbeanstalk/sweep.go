@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk
@@ -31,7 +31,7 @@ func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElasticBeanstalkClient(ctx)
 	input := &elasticbeanstalk.DescribeApplicationsInput{}
@@ -69,7 +69,7 @@ func sweepEnvironments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ElasticBeanstalkClient(ctx)
 	input := &elasticbeanstalk.DescribeEnvironmentsInput{

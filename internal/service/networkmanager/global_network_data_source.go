@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -37,7 +37,7 @@ func dataSourceGlobalNetwork() *schema.Resource {
 	}
 }
 
-func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -55,7 +55,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, globalNetwork.Description)
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

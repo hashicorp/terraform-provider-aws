@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -51,7 +51,7 @@ func dataSourceOrderableCluster() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -91,7 +91,7 @@ func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	var orderableClusterOption awstypes.OrderableClusterOption
-	preferredNodeTypes := d.Get("preferred_node_types").([]interface{})
+	preferredNodeTypes := d.Get("preferred_node_types").([]any)
 	if len(preferredNodeTypes) > 0 {
 	listNodeTypes:
 		for _, preferredNodeTypeRaw := range preferredNodeTypes {

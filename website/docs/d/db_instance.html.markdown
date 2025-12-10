@@ -22,6 +22,7 @@ data "aws_db_instance" "database" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Optional) Name of the RDS instance.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
@@ -36,6 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `auto_minor_version_upgrade` - Indicates that minor version patches are applied automatically.
 * `availability_zone` - Name of the Availability Zone the DB instance is located in.
 * `backup_retention_period` - Specifies the number of days for which automatic DB snapshots are retained.
+* `database_insights_mode` - The mode of Database Insights that is enabled for the DB instance.
 * `db_cluster_identifier` - If the DB instance is a member of a DB cluster, contains the name of the DB cluster that the DB instance is a member of.
 * `db_instance_arn` - ARN for the DB instance.
 * `db_instance_class` - Contains the name of the compute and memory capacity class of the DB instance.
@@ -68,6 +70,7 @@ This data source exports the following attributes in addition to the arguments a
 * `storage_throughput` - Storage throughput value for the DB instance.
 * `storage_type` - Storage type associated with DB instance.
 * `timezone` - Time zone of the DB instance.
+* `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `vpc_security_groups` - Provides a list of VPC security group elements that the DB instance belongs to.
 * `replicate_source_db` - Identifier of the source DB that this is a replica of.
 * `ca_cert_identifier` - Identifier of the CA certificate for the DB instance.

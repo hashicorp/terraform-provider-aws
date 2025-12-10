@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,7 +51,7 @@ func resourceNotification() *schema.Resource {
 	}
 }
 
-func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -66,7 +67,7 @@ func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -76,7 +77,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 		err = tfresource.NewEmptyResultError(nil)
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Notification %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -102,7 +103,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -141,7 +142,7 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 

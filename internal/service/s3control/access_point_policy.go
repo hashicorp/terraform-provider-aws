@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,31 +47,21 @@ func resourceAccessPointPolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	resourceID, err := AccessPointCreateResourceID(d.Get("access_point_arn").(string))
+	resourceID, err := accessPointCreateResourceID(d.Get("access_point_arn").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	accountID, name, err := AccessPointParseResourceID(resourceID)
+	accountID, name, err := accessPointParseResourceID(resourceID)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -80,13 +71,13 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &s3control.PutAccessPointPolicyInput{
+	input := s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 		Policy:    aws.String(policy),
 	}
 
-	_, err = conn.PutAccessPointPolicy(ctx, input)
+	_, err = conn.PutAccessPointPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Access Point (%s) Policy: %s", resourceID, err)
@@ -97,18 +88,18 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointParseResourceID(d.Id())
+	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -119,7 +110,6 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("has_public_access_policy", status.IsPublic)
-
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 		if err != nil {
@@ -134,11 +124,11 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointParseResourceID(d.Id())
+	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -148,13 +138,13 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &s3control.PutAccessPointPolicyInput{
+	input := s3control.PutAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 		Policy:    aws.String(policy),
 	}
 
-	_, err = conn.PutAccessPointPolicy(ctx, input)
+	_, err = conn.PutAccessPointPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Access Point Policy (%s): %s", d.Id(), err)
@@ -163,20 +153,21 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, name, err := AccessPointParseResourceID(d.Id())
+	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Access Point Policy: %s", d.Id())
-	_, err = conn.DeleteAccessPointPolicy(ctx, &s3control.DeleteAccessPointPolicyInput{
+	input := s3control.DeleteAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
-	})
+	}
+	_, err = conn.DeleteAccessPointPolicy(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
 		return diags
@@ -189,9 +180,8 @@ func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	resourceID, err := AccessPointCreateResourceID(d.Id())
-
+func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	resourceID, err := accessPointCreateResourceID(d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -203,15 +193,14 @@ func resourceAccessPointPolicyImport(ctx context.Context, d *schema.ResourceData
 }
 
 func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (string, *types.PolicyStatus, error) {
-	inputGAPP := &s3control.GetAccessPointPolicyInput{
+	inputGAPP := s3control.GetAccessPointPolicyInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
-
-	outputGAPP, err := conn.GetAccessPointPolicy(ctx, inputGAPP)
+	outputGAPP, err := conn.GetAccessPointPolicy(ctx, &inputGAPP)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &retry.NotFoundError{
+		return "", nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: inputGAPP,
 		}
@@ -231,18 +220,23 @@ func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 		return "", nil, tfresource.NewEmptyResultError(inputGAPP)
 	}
 
-	inputGAPPS := &s3control.GetAccessPointPolicyStatusInput{
+	inputGAPPS := s3control.GetAccessPointPolicyStatusInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
-
-	outputGAPPS, err := conn.GetAccessPointPolicyStatus(ctx, inputGAPPS)
+	outputGAPPS, err := conn.GetAccessPointPolicyStatus(ctx, &inputGAPPS)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &retry.NotFoundError{
+		return "", nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: inputGAPPS,
 		}
+	}
+
+	// directory buckets do not support status checks
+	// these buckets can never be public so setting to false
+	if tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeUnknownError) {
+		return policy, &types.PolicyStatus{IsPublic: false}, nil
 	}
 
 	if err != nil {

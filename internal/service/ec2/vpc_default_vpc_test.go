@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -95,7 +95,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -142,7 +142,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -189,7 +189,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckDefaultVPCEmpty(ctx, &v),
@@ -217,7 +217,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -264,7 +264,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -311,7 +311,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckDefaultVPCEmpty(ctx, &v),
@@ -340,7 +340,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlockAdoptionStep1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -382,7 +382,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlockAdoptionStep3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &v),
+					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "vpc/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
@@ -447,7 +447,7 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 
 			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -458,7 +458,8 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 			return fmt.Errorf("EC2 Default VPC %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.CreateDefaultVpc(ctx, &ec2.CreateDefaultVpcInput{})
+		input := ec2.CreateDefaultVpcInput{}
+		_, err := conn.CreateDefaultVpc(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error creating new default VPC: %w", err)
@@ -500,7 +501,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		if err != nil {
 			return err
 		}
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		return err
 	}
 

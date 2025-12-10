@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -14,13 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,8 +36,13 @@ const (
 )
 
 // @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
-// @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority", generator="acctest.RandomDomainName()", importIgnore="permanent_deletion_time_in_days")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
+// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(importIgnore="permanent_deletion_time_in_days")
 func resourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -45,7 +52,13 @@ func resourceCertificateAuthority() *schema.Resource {
 		DeleteWithoutTimeout: resourceCertificateAuthorityDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+					return nil, err
+				}
+
 				d.Set("permanent_deletion_time_in_days", certificateAuthorityPermanentDeletionTimeInDaysDefault)
 
 				return []*schema.ResourceData{d}, nil
@@ -331,20 +344,18 @@ func resourceCertificateAuthority() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.CertificateAuthorityUsageMode](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	input := acmpca.CreateCertificateAuthorityInput{
-		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
+		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]any)),
 		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get(names.AttrType).(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
-		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
 
@@ -357,7 +368,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateCertificateAuthority(ctx, &input)
 	}, "ValidationException", "Check your S3 bucket permissions and try again")
 
@@ -374,13 +385,13 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthority, err := findCertificateAuthorityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -454,11 +465,11 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}
@@ -471,7 +482,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("revocation_configuration") {
-			input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
+			input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]any))
 		}
 
 		_, err := conn.UpdateCertificateAuthority(ctx, &input)
@@ -484,7 +495,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -539,16 +550,13 @@ func findCertificateAuthorityByARN(ctx context.Context, conn *acmpca.Client, arn
 
 	if status := output.Status; status == types.CertificateAuthorityStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.Arn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -559,8 +567,7 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -575,11 +582,11 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 	return output.CertificateAuthority, nil
 }
 
-func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCertificateAuthorityByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -592,7 +599,7 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 }
 
 func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, arn string, timeout time.Duration) (*types.CertificateAuthority, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateAuthorityStatusCreating),
 		Target:  enum.Slice(types.CertificateAuthorityStatusActive, types.CertificateAuthorityStatusPendingCertificate),
 		Refresh: statusCertificateAuthority(ctx, conn, arn),
@@ -616,12 +623,12 @@ const (
 	certificateAuthorityActiveTimeout = 1 * time.Minute
 )
 
-func expandASN1Subject(l []interface{}) *types.ASN1Subject {
+func expandASN1Subject(l []any) *types.ASN1Subject {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	subject := &types.ASN1Subject{}
 	if v, ok := m["common_name"]; ok && v.(string) != "" {
@@ -667,28 +674,28 @@ func expandASN1Subject(l []interface{}) *types.ASN1Subject {
 	return subject
 }
 
-func expandCertificateAuthorityConfiguration(l []interface{}) *types.CertificateAuthorityConfiguration {
+func expandCertificateAuthorityConfiguration(l []any) *types.CertificateAuthorityConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &types.CertificateAuthorityConfiguration{
 		KeyAlgorithm:     types.KeyAlgorithm(m["key_algorithm"].(string)),
 		SigningAlgorithm: types.SigningAlgorithm(m["signing_algorithm"].(string)),
-		Subject:          expandASN1Subject(m["subject"].([]interface{})),
+		Subject:          expandASN1Subject(m["subject"].([]any)),
 	}
 
 	return config
 }
 
-func expandCrlConfiguration(l []interface{}) *types.CrlConfiguration {
+func expandCrlConfiguration(l []any) *types.CrlConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	crlEnabled := m[names.AttrEnabled].(bool)
 
@@ -714,12 +721,12 @@ func expandCrlConfiguration(l []interface{}) *types.CrlConfiguration {
 	return config
 }
 
-func expandOcspConfiguration(l []interface{}) *types.OcspConfiguration {
+func expandOcspConfiguration(l []any) *types.OcspConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &types.OcspConfiguration{
 		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
@@ -732,27 +739,27 @@ func expandOcspConfiguration(l []interface{}) *types.OcspConfiguration {
 	return config
 }
 
-func expandRevocationConfiguration(l []interface{}) *types.RevocationConfiguration {
+func expandRevocationConfiguration(l []any) *types.RevocationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &types.RevocationConfiguration{
-		CrlConfiguration:  expandCrlConfiguration(m["crl_configuration"].([]interface{})),
-		OcspConfiguration: expandOcspConfiguration(m["ocsp_configuration"].([]interface{})),
+		CrlConfiguration:  expandCrlConfiguration(m["crl_configuration"].([]any)),
+		OcspConfiguration: expandOcspConfiguration(m["ocsp_configuration"].([]any)),
 	}
 
 	return config
 }
 
-func flattenASN1Subject(subject *types.ASN1Subject) []interface{} {
+func flattenASN1Subject(subject *types.ASN1Subject) []any {
 	if subject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"common_name":                  aws.ToString(subject.CommonName),
 		"country":                      aws.ToString(subject.Country),
 		"distinguished_name_qualifier": aws.ToString(subject.DistinguishedNameQualifier),
@@ -768,29 +775,29 @@ func flattenASN1Subject(subject *types.ASN1Subject) []interface{} {
 		"title":                        aws.ToString(subject.Title),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCertificateAuthorityConfiguration(config *types.CertificateAuthorityConfiguration) []interface{} {
+func flattenCertificateAuthorityConfiguration(config *types.CertificateAuthorityConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"key_algorithm":     string(config.KeyAlgorithm),
 		"signing_algorithm": string(config.SigningAlgorithm),
 		"subject":           flattenASN1Subject(config.Subject),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCrlConfiguration(config *types.CrlConfiguration) []interface{} {
+func flattenCrlConfiguration(config *types.CrlConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"custom_cname":         aws.ToString(config.CustomCname),
 		names.AttrEnabled:      aws.ToBool(config.Enabled),
 		"expiration_in_days":   int(aws.ToInt32(config.ExpirationInDays)),
@@ -798,31 +805,31 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []interface{} {
 		"s3_object_acl":        string(config.S3ObjectAcl),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOcspConfiguration(config *types.OcspConfiguration) []interface{} {
+func flattenOcspConfiguration(config *types.OcspConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled:   aws.ToBool(config.Enabled),
 		"ocsp_custom_cname": aws.ToString(config.OcspCustomCname),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenRevocationConfiguration(config *types.RevocationConfiguration) []interface{} {
+func flattenRevocationConfiguration(config *types.RevocationConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"crl_configuration":  flattenCrlConfiguration(config.CrlConfiguration),
 		"ocsp_configuration": flattenOcspConfiguration(config.OcspConfiguration),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

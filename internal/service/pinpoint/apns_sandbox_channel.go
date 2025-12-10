@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,7 +81,7 @@ func resourceAPNSSandboxChannel() *schema.Resource {
 	}
 }
 
-func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	certificate, certificateOk := d.GetOk(names.AttrCertificate)
 	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
@@ -126,7 +127,7 @@ func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceAPNSSandboxChannelRead(ctx, d, meta)...)
 }
 
-func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -134,7 +135,7 @@ func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData,
 
 	output, err := findAPNSSandboxChannelByApplicationId(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Pinpoint APNS Sandbox Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -152,7 +153,7 @@ func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceAPNSSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -178,7 +179,7 @@ func findAPNSSandboxChannelByApplicationId(ctx context.Context, conn *pinpoint.C
 
 	output, err := conn.GetApnsSandboxChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

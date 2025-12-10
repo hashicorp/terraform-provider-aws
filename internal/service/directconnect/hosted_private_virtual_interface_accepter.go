@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -18,9 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,12 +66,10 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -116,13 +113,13 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Hosted Private Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -145,7 +142,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 	return diags
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
@@ -156,7 +153,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d 
 	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterRead(ctx, d, meta)...)
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())

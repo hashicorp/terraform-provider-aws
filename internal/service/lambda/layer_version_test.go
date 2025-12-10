@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -365,7 +365,7 @@ func testAccCheckLayerVersionDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err = tflambda.FindLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -422,8 +422,8 @@ resource "aws_s3_object" "lambda_code" {
 }
 
 resource "aws_lambda_layer_version" "test" {
-  s3_bucket  = aws_s3_bucket.lambda_bucket.id
-  s3_key     = aws_s3_object.lambda_code.id
+  s3_bucket  = aws_s3_object.lambda_code.bucket
+  s3_key     = aws_s3_object.lambda_code.key
   layer_name = %[1]q
 }
 `, rName)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -16,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -63,7 +64,7 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 	}
 }
 
-func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -93,13 +94,13 @@ func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d
 	return append(diags, resourceConfigurationPolicyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := findConfigurationPolicyAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -115,7 +116,7 @@ func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -148,7 +149,7 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	output, err := conn.GetConfigurationPolicyAssociation(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -165,11 +166,11 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	return output, nil
 }
 
-func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findConfigurationPolicyAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -182,7 +183,7 @@ func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub
 }
 
 func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *securityhub.Client, id string, timeout time.Duration) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationPolicyAssociationStatusPending),
 		Target:  enum.Slice(types.ConfigurationPolicyAssociationStatusSuccess),
 		Refresh: statusConfigurationPolicyAssociation(ctx, conn, id),

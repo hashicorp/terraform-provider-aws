@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -12,15 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -128,12 +128,10 @@ func resourceReservedInstance() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -165,13 +163,13 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceReservedInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	reservation, err := findReservedDBInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Reserved Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -201,7 +199,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceReservedInstanceRead(ctx, d, meta)
 }
@@ -218,7 +216,7 @@ func findReservedDBInstanceByID(ctx context.Context, conn *rds.Client, id string
 
 	// Eventual consistency check.
 	if aws.ToString(output.ReservedDBInstanceId) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -244,7 +242,7 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ReservedDBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -264,11 +262,11 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -281,7 +279,7 @@ func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) re
 }
 
 func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.ReservedDBInstance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        []string{reservedInstanceStatePaymentPending},
 		Target:         []string{reservedInstanceStateActive},
 		Refresh:        statusReservedInstance(ctx, conn, id),
@@ -300,14 +298,14 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id strin
 	return nil, err
 }
 
-func flattenRecurringCharges(apiObjects []types.RecurringCharge) []interface{} {
+func flattenRecurringCharges(apiObjects []types.RecurringCharge) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"recurring_charge_amount":    aws.ToFloat64(apiObject.RecurringChargeAmount),
 			"recurring_charge_frequency": aws.ToString(apiObject.RecurringChargeFrequency),
 		}

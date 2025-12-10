@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "example" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceArn"
-      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/example"]
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/example"]
     }
   }
 
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "example" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceArn"
-      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/example"]
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/example"]
     }
   }
 }
@@ -321,11 +321,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
 * `enable_log_file_validation` - (Optional) Whether log file integrity validation is enabled. Defaults to `false`.
-* `enable_logging` - (Optional) Enables logging for the trail. Defaults to `true`. Setting this to `false` will pause logging.
+* `enable_logging` - (Optional) Enables logging for the trail. When set to `true`, logging is started by calling the [`StartLogging`](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StartLogging.html) API. When set to `false`, logging is stopped by calling the [`StopLogging`](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopLogging.html) API. Defaults to `true`.
 * `event_selector` - (Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the [CloudTrail limits](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these. Conflicts with `advanced_event_selector`.
 * `include_global_service_events` - (Optional) Whether the trail is publishing events from global services such as IAM to the log files. Defaults to `true`.
 * `insight_selector` - (Optional) Configuration block for identifying unusual operational activity. See details below.
@@ -333,7 +334,7 @@ The following arguments are optional:
 * `is_organization_trail` - (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
-* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
+* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery. Specify the SNS topic ARN if it resides in another region.
 * `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
@@ -374,6 +375,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

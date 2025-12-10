@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite_test
@@ -126,7 +126,9 @@ data "aws_timestreamwrite_database" "test" {
 func testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

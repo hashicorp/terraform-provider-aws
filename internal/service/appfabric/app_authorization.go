@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric
@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,13 +56,9 @@ func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type appAuthorizationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appAuthorizationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*appAuthorizationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_authorization"
 }
 
 func (r *appAuthorizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -283,7 +280,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 
 	output, err := findAppAuthorizationByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -383,10 +380,11 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteAppAuthorization(ctx, &appfabric.DeleteAppAuthorizationInput{
+	input := appfabric.DeleteAppAuthorizationInput{
 		AppAuthorizationIdentifier: fwflex.StringFromFramework(ctx, data.AppAuthorizationARN),
 		AppBundleIdentifier:        fwflex.StringFromFramework(ctx, data.AppBundleARN),
-	})
+	}
+	_, err := conn.DeleteAppAuthorization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -405,10 +403,6 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
 	in := &appfabric.GetAppAuthorizationInput{
 		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
@@ -418,7 +412,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 	output, err := conn.GetAppAuthorization(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -435,11 +429,11 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 	return output.AppAuthorization, nil
 }
 
-func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -452,7 +446,7 @@ func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuth
 }
 
 func waitAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusPendingConnect, awstypes.AppAuthorizationStatusConnected),
 		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
@@ -469,7 +463,7 @@ func waitAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, ap
 }
 
 func waitAppAuthorizationUpdated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusConnected, awstypes.AppAuthorizationStatusPendingConnect),
 		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
@@ -486,7 +480,7 @@ func waitAppAuthorizationUpdated(ctx context.Context, conn *appfabric.Client, ap
 }
 
 func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppAuthorizationStatusConnected, awstypes.AppAuthorizationStatusPendingConnect),
 		Target:  []string{},
 		Refresh: statusAppAuthorization(ctx, conn, appAuthorizationARN, appBundleIdentifier),
@@ -503,6 +497,7 @@ func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, ap
 }
 
 type appAuthorizationResourceModel struct {
+	framework.WithRegionModel
 	App                 types.String                                     `tfsdk:"app"`
 	AppAuthorizationARN types.String                                     `tfsdk:"arn"`
 	AppBundleARN        fwtypes.ARN                                      `tfsdk:"app_bundle_arn"`

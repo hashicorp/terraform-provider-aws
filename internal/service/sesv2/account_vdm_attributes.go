@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -75,7 +76,7 @@ const (
 	resNameAccountVDMAttributes = "Account VDM Attributes"
 )
 
-func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -85,12 +86,12 @@ func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceD
 		},
 	}
 
-	if v, ok := d.GetOk("dashboard_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VdmAttributes.DashboardAttributes = expandDashboardAttributes(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("dashboard_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.VdmAttributes.DashboardAttributes = expandDashboardAttributes(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("guardian_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VdmAttributes.GuardianAttributes = expandGuardianAttributes(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("guardian_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.VdmAttributes.GuardianAttributes = expandGuardianAttributes(v.([]any)[0].(map[string]any))
 	}
 
 	out, err := conn.PutAccountVdmAttributes(ctx, in)
@@ -109,13 +110,13 @@ func resourceAccountVDMAttributesUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceAccountVDMAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := findAccountVDMAttributes(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SESV2 AccountVDMAttributes (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,12 +127,12 @@ func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if out.DashboardAttributes != nil {
-		if err := d.Set("dashboard_attributes", []interface{}{flattenDashboardAttributes(out.DashboardAttributes)}); err != nil {
+		if err := d.Set("dashboard_attributes", []any{flattenDashboardAttributes(out.DashboardAttributes)}); err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameAccountVDMAttributes, d.Id(), err)
 		}
 	}
 	if out.GuardianAttributes != nil {
-		if err := d.Set("guardian_attributes", []interface{}{flattenGuardianAttributes(out.GuardianAttributes)}); err != nil {
+		if err := d.Set("guardian_attributes", []any{flattenGuardianAttributes(out.GuardianAttributes)}); err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameAccountVDMAttributes, d.Id(), err)
 		}
 	}
@@ -140,7 +141,7 @@ func resourceAccountVDMAttributesRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceAccountVDMAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountVDMAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -187,7 +188,7 @@ func findAccount(ctx context.Context, conn *sesv2.Client) (*sesv2.GetAccountOutp
 	return output, nil
 }
 
-func expandDashboardAttributes(tfMap map[string]interface{}) *types.DashboardAttributes {
+func expandDashboardAttributes(tfMap map[string]any) *types.DashboardAttributes {
 	if tfMap == nil {
 		return nil
 	}
@@ -201,7 +202,7 @@ func expandDashboardAttributes(tfMap map[string]interface{}) *types.DashboardAtt
 	return a
 }
 
-func expandGuardianAttributes(tfMap map[string]interface{}) *types.GuardianAttributes {
+func expandGuardianAttributes(tfMap map[string]any) *types.GuardianAttributes {
 	if tfMap == nil {
 		return nil
 	}
@@ -215,24 +216,24 @@ func expandGuardianAttributes(tfMap map[string]interface{}) *types.GuardianAttri
 	return a
 }
 
-func flattenDashboardAttributes(apiObject *types.DashboardAttributes) map[string]interface{} {
+func flattenDashboardAttributes(apiObject *types.DashboardAttributes) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"engagement_metrics": string(apiObject.EngagementMetrics),
 	}
 
 	return m
 }
 
-func flattenGuardianAttributes(apiObject *types.GuardianAttributes) map[string]interface{} {
+func flattenGuardianAttributes(apiObject *types.GuardianAttributes) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"optimized_shared_delivery": string(apiObject.OptimizedSharedDelivery),
 	}
 

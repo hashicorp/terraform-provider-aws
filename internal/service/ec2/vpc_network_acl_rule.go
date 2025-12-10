@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -89,7 +90,7 @@ func resourceNetworkACLRule() *schema.Resource {
 
 					return old == new
 				},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
 					_, err := networkACLProtocolNumber(v.(string))
 
 					if err != nil {
@@ -122,7 +123,7 @@ func resourceNetworkACLRule() *schema.Resource {
 	}
 }
 
-func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -140,7 +141,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	switch {
 	case err == nil:
 		return sdkdiag.AppendFromErr(diags, networkACLEntryAlreadyExistsError(naclID, egress, ruleNumber))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
@@ -187,7 +188,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceNetworkACLRuleRead(ctx, d, meta)...)
 }
 
-func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -195,11 +196,11 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 	naclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	naclEntry, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.NetworkAclEntry, error) {
 		return findNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network ACL Rule %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,8 +209,6 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 	}
-
-	naclEntry := outputRaw.(*awstypes.NetworkAclEntry)
 
 	d.Set(names.AttrCIDRBlock, naclEntry.CidrBlock)
 	d.Set("egress", naclEntry.Egress)
@@ -242,16 +241,17 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Network ACL Rule: %s", d.Id())
-	_, err := conn.DeleteNetworkAclEntry(ctx, &ec2.DeleteNetworkAclEntryInput{
+	input := ec2.DeleteNetworkAclEntryInput{
 		Egress:       aws.Bool(d.Get("egress").(bool)),
 		NetworkAclId: aws.String(d.Get("network_acl_id").(string)),
 		RuleNumber:   aws.Int32(int32(d.Get("rule_number").(int))),
-	})
+	}
+	_, err := conn.DeleteNetworkAclEntry(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags
@@ -264,7 +264,7 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), networkACLRuleImportIDSeparator)
 
 	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
@@ -297,9 +297,9 @@ const networkACLRuleImportIDSeparator = ":"
 
 func networkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", naclID))
-	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))
-	buf.WriteString(fmt.Sprintf("%t-", egress))
-	buf.WriteString(fmt.Sprintf("%s-", protocol))
+	fmt.Fprintf(&buf, "%s-", naclID)
+	fmt.Fprintf(&buf, "%d-", ruleNumber)
+	fmt.Fprintf(&buf, "%t-", egress)
+	fmt.Fprintf(&buf, "%s-", protocol)
 	return fmt.Sprintf("nacl-%d", create.StringHashcode(buf.String()))
 }

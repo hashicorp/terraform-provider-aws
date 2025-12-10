@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,6 +37,10 @@ func dataSourceZone() *schema.Resource {
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"enable_accelerated_recovery": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"linked_service_description": {
 				Type:     schema.TypeString,
@@ -74,7 +77,6 @@ func dataSourceZone() *schema.Resource {
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"zone_id": {
 				Type:     schema.TypeString,
@@ -85,42 +87,87 @@ func dataSourceZone() *schema.Resource {
 	}
 }
 
-func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var (
+		diags                        diag.Diagnostics
+		zoneID, name, vpcID          string
+		privateZone                  bool
+		zoneIDSet, nameSet, vpcIDSet bool
+	)
+
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	zoneID, zoneIDExists := d.GetOk("zone_id")
-	vpcID, vpcIDExists := d.GetOk(names.AttrVPCID)
-	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS()
+	if v, ok := d.GetOk("zone_id"); ok {
+		zoneID, zoneIDSet = v.(string), ok
+	}
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name, nameSet = v.(string), ok
+	}
+	if zoneIDSet && nameSet {
+		// Warning for backwards compatibility.
+		return sdkdiag.AppendWarningf(diags, "only one of `zone_id` or `name` may be set")
+	}
 
-	input := &route53.ListHostedZonesInput{}
-	var hostedZones []awstypes.HostedZone
-	pages := route53.NewListHostedZonesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		vpcID, vpcIDSet = v.(string), ok
+		privateZone = true
+	}
+	if v, ok := d.GetOk("private_zone"); ok {
+		privateZone = v.(bool)
+	}
+	if vpcIDSet && !privateZone {
+		// Warning for backwards compatibility.
+		return sdkdiag.AppendWarningf(diags, "`vpc_id` can only be set for private zones")
+	}
 
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS()
+
+	var (
+		hostedZone *awstypes.HostedZone
+		zoneTags   tftags.KeyValueTags
+	)
+
+	if zoneIDSet {
+		// Perform direct lookup on unique zoneID
+		foundZone, err := findHostedZoneByID(ctx, conn, zoneID)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zones: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
+		hostedZone = foundZone.HostedZone
+	} else {
+		// As name is not unique, we need to list all zones and filter
+		var hostedZones []awstypes.HostedZone
+		input := &route53.ListHostedZonesInput{}
+		pages := route53.NewListHostedZonesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zones: %s", err)
+			}
 
-		for _, hostedZone := range page.HostedZones {
-			hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
-			if zoneIDExists && hostedZoneID == zoneID.(string) {
-				hostedZones = append(hostedZones, hostedZone)
-				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (normalizeDomainName(aws.ToString(hostedZone.Name)) == normalizeDomainName(name)) && (hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (hostedZone.Config.PrivateZone && vpcIDExists)) {
+			for _, zone := range page.HostedZones {
+				// skip zone on explicit name mismatch
+				if nameSet && (normalizeDomainName(aws.ToString(zone.Name)) != normalizeDomainName(name)) {
+					continue
+				}
+
+				// skip zone on type mismatch
+				if zone.Config.PrivateZone != privateZone {
+					continue
+				}
+
+				zoneID := cleanZoneID(aws.ToString(zone.Id))
+
 				matchingVPC := false
-				if vpcIDExists {
-					hostedZone, err := findHostedZoneByID(ctx, conn, hostedZoneID)
-
+				if vpcIDSet {
+					zoneDetails, err := findHostedZoneByID(ctx, conn, zoneID)
 					if err != nil {
-						return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone (%s): %s", hostedZoneID, err)
+						return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone (%s): %s", zoneID, err)
 					}
 
-					for _, v := range hostedZone.VPCs {
-						if aws.ToString(v.VPCId) == vpcID.(string) {
+					for _, v := range zoneDetails.VPCs {
+						if aws.ToString(v.VPCId) == vpcID {
 							matchingVPC = true
 							break
 						}
@@ -131,38 +178,38 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 				matchingTags := true
 				if len(tags) > 0 {
-					output, err := listTags(ctx, conn, hostedZoneID, string(awstypes.TagResourceTypeHostedzone))
-
+					var err error
+					zoneTags, err = listTags(ctx, conn, zoneID, string(awstypes.TagResourceTypeHostedzone))
 					if err != nil {
-						return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", hostedZoneID, err)
+						return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", zoneID, err)
 					}
 
-					matchingTags = output.ContainsAll(tags)
+					matchingTags = zoneTags.ContainsAll(tags)
 				}
 
 				if matchingTags && matchingVPC {
-					hostedZones = append(hostedZones, hostedZone)
+					hostedZones = append(hostedZones, zone)
 				}
 			}
 		}
-	}
 
-	hostedZone, err := tfresource.AssertSingleValueResult(hostedZones)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Route 53 Hosted Zone", err))
+		var err error
+		hostedZone, err = tfresource.AssertSingleValueResult(hostedZones)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Route 53 Hosted Zone", err))
+		}
 	}
 
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "hostedzone/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", hostedZone.CallerReference)
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
+	if v := hostedZone.Features; v != nil {
+		d.Set("enable_accelerated_recovery", v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled)
+	} else {
+		d.Set("enable_accelerated_recovery", false)
+	}
 	if hostedZone.LinkedService != nil {
 		d.Set("linked_service_description", hostedZone.LinkedService.Description)
 		d.Set("linked_service_principal", hostedZone.LinkedService.ServicePrincipal)
@@ -175,7 +222,6 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("zone_id", hostedZoneID)
 
 	nameServers, err := findHostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -183,13 +229,15 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name_servers", nameServers)
 	d.Set("primary_name_server", nameServers[0])
 
-	tags, err = listTags(ctx, conn, hostedZoneID, string(awstypes.TagResourceTypeHostedzone))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", hostedZoneID, err)
+	if zoneTags == nil {
+		tags, err := listTags(ctx, conn, hostedZoneID, string(awstypes.TagResourceTypeHostedzone))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", hostedZoneID, err)
+		}
+		zoneTags = tags
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, zoneTags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

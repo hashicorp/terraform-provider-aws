@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -12,28 +12,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dynamodb_table_export", name="Table Export")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
+// @Testing(checkDestroyNoop=true)
 func resourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
 		ReadWithoutTimeout:   resourceTableExportRead,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -70,6 +71,44 @@ func resourceTableExport() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
+			},
+			"export_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
+			},
+			"incremental_export_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"export_from_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+						},
+						"export_to_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+						},
+						"export_view_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+						},
+					},
+				},
 			},
 			"item_count": {
 				Type:     schema.TypeInt,
@@ -125,7 +164,7 @@ func resourceTableExport() *schema.Resource {
 	}
 }
 
-func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -143,6 +182,14 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("export_time"); ok {
 		v, _ := time.Parse(time.RFC3339, v.(string))
 		input.ExportTime = aws.Time(v)
+	}
+
+	if v, ok := d.GetOk("export_type"); ok {
+		input.ExportType = awstypes.ExportType(v.(string))
+	}
+
+	if v, ok := d.GetOk("incremental_export_specification"); ok {
+		input.IncrementalExportSpecification = expandIncrementalExportSpecification(v.([]any))
 	}
 
 	if v, ok := d.GetOk("s3_bucket_owner"); ok {
@@ -176,13 +223,13 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceTableExportRead(ctx, d, meta)...)
 }
 
-func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	desc, err := findTableExportByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Table Export (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,6 +249,8 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	if desc.ExportTime != nil {
 		d.Set("export_time", aws.ToTime(desc.ExportTime).Format(time.RFC3339))
 	}
+	d.Set("export_type", desc.ExportType)
+	d.Set("incremental_export_specification", flattenIncrementalExportSpecification(desc.IncrementalExportSpecification))
 	d.Set("item_count", desc.ItemCount)
 	d.Set("manifest_files_s3_key", desc.ExportManifest)
 	d.Set(names.AttrS3Bucket, desc.S3Bucket)
@@ -217,6 +266,54 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
+func expandIncrementalExportSpecification(d any) *awstypes.IncrementalExportSpecification {
+	if d.([]any) == nil || len(d.([]any)) == 0 {
+		return nil
+	}
+
+	dMap := d.([]any)[0].(map[string]any)
+
+	spec := &awstypes.IncrementalExportSpecification{}
+
+	if s, ok := dMap["export_from_time"].(string); ok && s != "" {
+		v, _ := time.Parse(time.RFC3339, s)
+		spec.ExportFromTime = aws.Time(v)
+	}
+
+	if s, ok := dMap["export_to_time"].(string); ok && s != "" {
+		v, _ := time.Parse(time.RFC3339, s)
+		spec.ExportToTime = aws.Time(v)
+	}
+
+	if v, ok := dMap["export_view_type"].(string); ok && v != "" {
+		spec.ExportViewType = awstypes.ExportViewType(v)
+	}
+
+	return spec
+}
+
+func flattenIncrementalExportSpecification(apiObject *awstypes.IncrementalExportSpecification) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ExportFromTime; v != nil {
+		m["export_from_time"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	if v := apiObject.ExportToTime; v != nil {
+		m["export_to_time"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	if v := string(apiObject.ExportViewType); v != "" {
+		m["export_view_type"] = v
+	}
+
+	return []any{m}
+}
+
 func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*awstypes.ExportDescription, error) {
 	input := &dynamodb.DescribeExportInput{
 		ExportArn: aws.String(arn),
@@ -225,7 +322,7 @@ func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string
 	output, err := conn.DescribeExport(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -238,11 +335,11 @@ func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string
 	return output.ExportDescription, nil
 }
 
-func statusTableExport(ctx context.Context, conn *dynamodb.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTableExport(ctx context.Context, conn *dynamodb.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTableExportByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -258,7 +355,7 @@ func waitTableExportCreated(ctx context.Context, conn *dynamodb.Client, id strin
 	const (
 		maxTimeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExportStatusInProgress),
 		Target:  enum.Slice(awstypes.ExportStatusCompleted, awstypes.ExportStatusFailed),
 		Refresh: statusTableExport(ctx, conn, id),

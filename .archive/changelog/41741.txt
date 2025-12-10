@@ -1,0 +1,18 @@
+```release-note:new-resource
+aws_route53_records_exclusive
+```
+```release-note:enhancement
+resource/aws_route53_hosted_zone_dnssec: Add configurable operation timeouts
+```
+```release-note:enhancement
+resource/aws_route53_key_signing_key: Add configurable operation timeouts
+```
+```release-note:enhancement
+resource/aws_route53_record: Add configurable operation timeouts
+```
+```release-note:enhancement
+resource/aws_route53_zone: Add configurable operation timeouts
+```
+```release-note:enhancement
+resource/aws_route53_zone_association: Add configurable operation timeouts
+```

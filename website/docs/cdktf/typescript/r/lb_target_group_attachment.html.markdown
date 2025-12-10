@@ -175,6 +175,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availabilityZone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private IP address is outside of the VPC scope, this value must be set to `all`.
 * `port` - (Optional) The port on which targets receive traffic.
 
@@ -188,4 +189,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import Target Group Attachments.
 
-<!-- cache-key: cdktf-0.20.8 input-ab9658101e55ff2b7e9dcb8c1729d7e87f2de8dff7d0559549746cf241510328 -->
+<!-- cache-key: cdktf-0.20.8 input-b386664b61540ab5fe182a2c7692fb7aa154ae3edf0723292900737b4adc411a -->

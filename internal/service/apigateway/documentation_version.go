@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,7 +54,7 @@ func resourceDocumentationVersion() *schema.Resource {
 	}
 }
 
-func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -78,7 +79,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -89,7 +90,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 
 	version, err := findDocumentationVersionByTwoPartKey(ctx, conn, apiID, documentationVersion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Documentation Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,7 +107,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -135,7 +136,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -171,7 +172,7 @@ func findDocumentationVersionByTwoPartKey(ctx context.Context, conn *apigateway.
 	output, err := conn.GetDocumentationVersion(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

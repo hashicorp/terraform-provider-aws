@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -73,24 +73,24 @@ func dataSourceAMIIDs() *schema.Resource {
 	}
 }
 
-func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeImagesInput{
+	input := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
-		Owners:            flex.ExpandStringValueList(d.Get("owners").([]interface{})),
+		Owners:            flex.ExpandStringValueList(d.Get("owners").([]any)),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
+		input.ExecutableUsers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	images, err := findImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
@@ -124,9 +124,9 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
 		compare := atime.Compare(btime)
 		if d.Get("sort_ascending").(bool) {
-			return -compare
+			return compare
 		}
-		return compare
+		return -compare
 	})
 	for _, image := range filteredImages {
 		imageIDs = append(imageIDs, aws.ToString(image.ImageId))

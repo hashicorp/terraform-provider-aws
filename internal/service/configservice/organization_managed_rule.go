@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -118,7 +119,7 @@ func resourceOrganizationManagedRule() *schema.Resource {
 	}
 }
 
-func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -162,7 +163,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 		input.OrganizationManagedRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutOrganizationConfigRule(ctx, input)
 	})
 
@@ -179,13 +180,13 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceOrganizationManagedRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	configRule, err := findOrganizationManagedRuleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -211,7 +212,7 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -267,7 +268,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceOrganizationManagedRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -275,7 +276,7 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
 			OrganizationConfigRuleName: aws.String(d.Id()),
 		})
@@ -336,14 +337,14 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -371,7 +372,7 @@ func findOrganizationConfigRuleStatusByName(ctx context.Context, conn *configser
 	}
 
 	if status := output.OrganizationRuleStatus; status == types.OrganizationRuleStatusDeleteSuccessful {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -398,12 +399,12 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return pages.NextPage(ctx)
 		})
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -438,7 +439,7 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -454,11 +455,11 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 	return output, nil
 }
 
-func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findOrganizationConfigRuleStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -471,7 +472,7 @@ func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Clien
 }
 
 func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationRuleStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
 		Refresh:        statusOrganizationConfigRule(ctx, conn, name),
@@ -492,7 +493,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationRuleStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationRuleStatusUpdateSuccessful),
 		Refresh: statusOrganizationConfigRule(ctx, conn, name),
@@ -512,7 +513,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
 		Target:                    []string{},
 		Refresh:                   statusOrganizationConfigRule(ctx, conn, name),

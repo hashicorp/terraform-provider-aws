@@ -176,6 +176,9 @@ resource "aws_autoscaling_policy" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
 * `autoscaling_group_name` - (Required) Name of the autoscaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
@@ -271,6 +274,7 @@ This configuration block supports the following arguments:
 * `metric_dimension` - (Optional) Dimensions of the metric.
 * `metric_name` - (Optional) Name of the metric.
 * `namespace` - (Optional) Namespace of the metric.
+* `period` - (Optional) The period of the metric in seconds.
 * `statistic` - (Optional) Statistic of the metric.
 * `unit` - (Optional) Unit of the metric.
 * `metrics` - (Optional) Metrics to include, as a metric data query.

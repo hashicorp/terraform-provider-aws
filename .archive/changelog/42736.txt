@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_verifiedaccess_endpoint: Fix `InvalidParameterValue: The value of loadBalancerOptions.port you provided is not valid` errors when creating TCP load balancer endpoints
+```

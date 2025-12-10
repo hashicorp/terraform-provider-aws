@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -546,12 +546,12 @@ func testAccCheckStackInstancesExists(ctx context.Context, resourceName string, 
 		callAs := rs.Primary.Attributes["call_as"]
 
 		var accounts []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 			accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 		}
 
 		var regions []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 			regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 		}
 
@@ -594,12 +594,12 @@ func testAccCheckStackInstancesForOrganizationalUnitExists(ctx context.Context, 
 		stackSetName := parts[0]
 		callAs := rs.Primary.Attributes["call_as"]
 		var accounts []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 			accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 		}
 
 		var regions []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 			regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 		}
 
@@ -638,12 +638,12 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 			stackSetName := parts[0]
 			callAs := rs.Primary.Attributes["call_as"]
 			var accounts []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 				accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 			}
 
 			var regions []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 				regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 			}
 
@@ -654,7 +654,7 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 
 			output, err := tfcloudformation.FindStackInstancesByNameCallAs(ctx, acctest.Provider.Meta(), stackSetName, callAs, deployedByOU, accounts, regions)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if output.StackSetID == "" {
@@ -687,12 +687,12 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 			stackSetName := parts[0]
 			callAs := rs.Primary.Attributes["call_as"]
 			var accounts []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 				accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 			}
 
 			var regions []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 				regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 			}
 
@@ -703,7 +703,7 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err = tfcloudformation.FindStackInstancesByNameCallAs(ctx, acctest.Provider.Meta(), stackSetName, callAs, deployedByOU, accounts, regions)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

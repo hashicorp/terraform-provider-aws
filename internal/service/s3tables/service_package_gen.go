@@ -4,56 +4,98 @@ package s3tables
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceNamespace,
+			Factory:  newNamespaceResource,
 			TypeName: "aws_s3tables_namespace",
 			Name:     "Namespace",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceTable,
+			Factory:  newTableResource,
 			TypeName: "aws_s3tables_table",
 			Name:     "Table",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceTableBucket,
+			Factory:  newTableBucketResource,
 			TypeName: "aws_s3tables_table_bucket",
 			Name:     "Table Bucket",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
-			Factory:  newResourceTableBucketPolicy,
+			Factory:  newTableBucketPolicyResource,
 			TypeName: "aws_s3tables_table_bucket_policy",
 			Name:     "Table Bucket Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed("table_bucket_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
-			Factory:  newResourceTablePolicy,
+			Factory:  newTableBucketReplicationResource,
+			TypeName: "aws_s3tables_table_bucket_replication",
+			Name:     "Table Bucket Replication",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed("table_bucket_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTablePolicyResource,
 			TypeName: "aws_s3tables_table_policy",
 			Name:     "Table Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newTableReplicationResource,
+			TypeName: "aws_s3tables_table_replication",
+			Name:     "Table Replication",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed("table_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {
@@ -63,11 +105,47 @@ func (p *servicePackage) ServicePackageName() string {
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3tables.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return s3tables.NewFromConfig(cfg,
+	optFns := []func(*s3tables.Options){
 		s3tables.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
-	), nil
+		func(o *s3tables.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *s3tables.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
+			}
+		},
+		withExtraOptions(ctx, p, config),
+	}
+
+	return s3tables.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*s3tables.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*s3tables.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *s3tables.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*s3tables.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -14,11 +14,12 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"KnowledgeBase": {
-			"basicRDS":           testAccKnowledgeBase_basicRDS,
-			acctest.CtDisappears: testAccKnowledgeBase_disappears,
-			"tags":               testAccKnowledgeBase_tags,
-			"basicOpenSearch":    testAccKnowledgeBase_basicOpenSearch,
-			"updateOpenSearch":   testAccKnowledgeBase_updateOpenSearch,
+			acctest.CtBasic:                     testAccKnowledgeBase_basic,
+			acctest.CtDisappears:                testAccKnowledgeBase_disappears,
+			"tags":                              testAccKnowledgeBase_tags,
+			"OpenSearchBasic":                   testAccKnowledgeBase_OpenSearch_basic,
+			"OpenSearchUpdate":                  testAccKnowledgeBase_OpenSearch_update,
+			"OpenSearchSupplementalDataStorage": testAccKnowledgeBase_OpenSearch_supplementalDataStorage,
 		},
 		"DataSource": {
 			acctest.CtBasic:        testAccDataSource_basic,
@@ -29,6 +30,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"hierarchical":         testAccDataSource_fullHierarchical,
 			"parsing":              testAccDataSource_parsing,
 			"customtransformation": testAccDataSource_fullCustomTranformation,
+			"webconfiguration":     testAccDataSource_webConfiguration,
 		},
 	}
 

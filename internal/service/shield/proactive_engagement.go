@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,12 +34,8 @@ func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfi
 }
 
 type proactiveEngagementResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[proactiveEngagementResourceModel]
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -145,7 +142,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		emergencyContacts, err = findEmergencyContactSettings(ctx, conn)
 	}
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -158,7 +155,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust[emergencyContactModel](ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
+	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
 		return emergencyContactModel{
 			ContactNotes: fwflex.StringToFramework(ctx, apiObject.ContactNotes),
 			EmailAddress: fwflex.StringToFramework(ctx, apiObject.EmailAddress),
@@ -302,7 +299,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 	output, err := conn.DescribeEmergencyContactSettings(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -325,7 +322,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 	output, err := conn.DescribeSubscription(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

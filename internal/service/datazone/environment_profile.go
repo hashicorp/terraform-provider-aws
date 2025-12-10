@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -21,20 +21,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_environment_profile", name="Environment Profile")
-func newResourceEnvironmentProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceEnvironmentProfile{}, nil
+func newEnvironmentProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &environmentProfileResource{}, nil
 }
 
 const (
@@ -43,15 +44,11 @@ const (
 	environmentProfileIDParts = 2
 )
 
-type resourceEnvironmentProfile struct {
-	framework.ResourceWithConfigure
+type environmentProfileResource struct {
+	framework.ResourceWithModel[environmentProfileResourceModel]
 }
 
-func (r *resourceEnvironmentProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment_profile"
-}
-
-func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *environmentProfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAWSAccountID: schema.StringAttribute{
@@ -130,10 +127,10 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan environmentProfileData
+	var plan environmentProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -171,17 +168,17 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *environmentProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state environmentProfileData
+	var state environmentProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEnvironmentProfileByID(ctx, conn, state.Id.ValueString(), state.DomainIdentifier.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -204,10 +201,10 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *environmentProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state environmentProfileData
+	var plan, state environmentProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -246,19 +243,20 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *environmentProfileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state environmentProfileData
+	var state environmentProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.DeleteEnvironmentProfile(ctx, &datazone.DeleteEnvironmentProfileInput{
+	input := datazone.DeleteEnvironmentProfileInput{
 		Identifier:       state.Id.ValueStringPointer(),
 		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteEnvironmentProfile(ctx, &input)
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		resp.Diagnostics.AddError(
@@ -269,7 +267,7 @@ func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.De
 	}
 }
 
-func (r *resourceEnvironmentProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *environmentProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts, err := intflex.ExpandResourceId(req.ID, environmentProfileIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -292,7 +290,7 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 	out, err := conn.GetEnvironmentProfile(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -307,7 +305,8 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 	return out, nil
 }
 
-type environmentProfileData struct {
+type environmentProfileResourceModel struct {
+	framework.WithRegionModel
 	AwsAccountId           types.String                                        `tfsdk:"aws_account_id"`
 	AwsAccountRegion       types.String                                        `tfsdk:"aws_account_region"`
 	CreatedAt              timetypes.RFC3339                                   `tfsdk:"created_at"`

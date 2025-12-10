@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +35,11 @@ func TestAccSQSQueueRedriveAllowPolicy_basic(t *testing.T) {
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -41,11 +47,15 @@ func TestAccSQSQueueRedriveAllowPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccQueueRedriveAllowPolicyConfig_basic(rName),
-				PlanOnly: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "redrive_allow_policy", queueResourceName, "redrive_allow_policy"),
-				),
+				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -151,6 +161,17 @@ func TestAccSQSQueueRedriveAllowPolicy_byQueue(t *testing.T) {
 		},
 	})
 }
+
+// Satisfy generated identity test function names by aliasing to queue checks
+//
+// This mimics the standard policy acceptance test behavior, but in the
+// future we may consider replacing this approach with custom checks
+// to validate the presence/content of the redrive allow policy rather than just
+// the parent queue.
+var (
+	testAccCheckQueueRedriveAllowPolicyExists  = testAccCheckQueueExists
+	testAccCheckQueueRedriveAllowPolicyDestroy = testAccCheckQueueDestroy
+)
 
 func testAccQueueRedriveAllowPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`

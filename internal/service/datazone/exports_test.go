@@ -1,28 +1,28 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
 
 // Exports for use in tests only.
 var (
-	ResourceAssetType                         = newResourceAssetType
-	ResourceDomain                            = newResourceDomain
-	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
-	ResourceEnvironment                       = newResourceEnvironment
-	ResourceEnvironmentProfile                = newResourceEnvironmentProfile
-	ResourceFormType                          = newResourceFormType
-	ResourceGlossary                          = newResourceGlossary
-	ResourceGlossaryTerm                      = newResourceGlossaryTerm
-	ResourceProject                           = newResourceProject
-	ResourceUserProfile                       = newResourceUserProfile
+	ResourceAssetType                         = newAssetTypeResource
+	ResourceDomain                            = newDomainResource
+	ResourceEnvironmentBlueprintConfiguration = newEnvironmentBlueprintConfigurationResource
+	ResourceEnvironment                       = newEnvironmentResource
+	ResourceEnvironmentProfile                = newEnvironmentProfileResource
+	ResourceFormType                          = newFormTypeResource
+	ResourceGlossary                          = newGlossaryResource
+	ResourceGlossaryTerm                      = newGlossaryTermResource
+	ResourceProject                           = newProjectResource
+	ResourceUserProfile                       = newUserProfileResource
 
-	FindAssetTypeByID          = findAssetTypeByID
-	FindEnvironmentByID        = findEnvironmentByID
-	FindEnvironmentProfileByID = findEnvironmentProfileByID
-	FindFormTypeByID           = findFormTypeByID
-	FindGlossaryByID           = findGlossaryByID
-	FindGlossaryTermByID       = findGlossaryTermByID
-	FindUserProfileByID        = findUserProfileByID
-
-	IsResourceMissing = isResourceMissing
+	FindAssetTypeByID                                 = findAssetTypeByID
+	FindDomainByID                                    = findDomainByID
+	FindEnvironmentBlueprintConfigurationByTwoPartKey = findEnvironmentBlueprintConfigurationByTwoPartKey
+	FindEnvironmentByID                               = findEnvironmentByID
+	FindEnvironmentProfileByID                        = findEnvironmentProfileByID
+	FindFormTypeByID                                  = findFormTypeByID
+	FindGlossaryByID                                  = findGlossaryByID
+	FindGlossaryTermByID                              = findGlossaryTermByID
+	FindUserProfileByID                               = findUserProfileByID
 )

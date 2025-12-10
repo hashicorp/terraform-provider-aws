@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,7 +34,7 @@ func resourceThingType() *schema.Resource {
 		DeleteWithoutTimeout: resourceThingTypeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set(names.AttrName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -85,12 +86,10 @@ func resourceThingType() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -101,8 +100,8 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrProperties); ok {
-		configs := v.([]interface{})
-		if config, ok := configs[0].(map[string]interface{}); ok && config != nil {
+		configs := v.([]any)
+		if config, ok := configs[0].(map[string]any); ok && config != nil {
 			input.ThingTypeProperties = expandThingTypeProperties(config)
 		}
 	}
@@ -131,13 +130,13 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThingTypeRead(ctx, d, meta)...)
 }
 
-func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	output, err := findThingTypeByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,7 +157,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -178,7 +177,7 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThingTypeRead(ctx, d, meta)...)
 }
 
-func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -196,8 +195,8 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
-		func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
 				ThingTypeName: aws.String(d.Id()),
 			})
@@ -222,7 +221,7 @@ func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*i
 	output, err := conn.DescribeThingType(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -239,7 +238,7 @@ func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*i
 	return output, nil
 }
 
-func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTypeProperties {
+func expandThingTypeProperties(config map[string]any) *awstypes.ThingTypeProperties {
 	properties := &awstypes.ThingTypeProperties{
 		SearchableAttributes: flex.ExpandStringValueSet(config["searchable_attributes"].(*schema.Set)),
 	}
@@ -251,18 +250,18 @@ func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTyp
 	return properties
 }
 
-func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]interface{} {
-	m := map[string]interface{}{
+func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]any {
+	m := map[string]any{
 		names.AttrDescription:   "",
 		"searchable_attributes": flex.FlattenStringSet(nil),
 	}
 
 	if s == nil {
-		return []map[string]interface{}{m}
+		return []map[string]any{m}
 	}
 
 	m[names.AttrDescription] = aws.ToString(s.ThingTypeDescription)
 	m["searchable_attributes"] = s.SearchableAttributes
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

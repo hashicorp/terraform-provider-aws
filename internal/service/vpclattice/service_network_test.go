@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -242,7 +240,7 @@ func testAccCheckServiceNetworkDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -257,39 +255,26 @@ func testAccCheckServiceNetworkDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckServiceNetworkExists(ctx context.Context, name string, servicenetwork *vpclattice.GetServiceNetworkOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkExists(ctx context.Context, n string, v *vpclattice.GetServiceNetworkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*servicenetwork = *resp
+		*v = *output
 
 		return nil
 	}
 }
-
-// func testAccCheckServiceNetworkNotRecreated(before, after *vpclattice.DescribeServiceNetworkResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.StringValue(before.ServiceNetworkId), aws.StringValue(after.ServiceNetworkId); before != after {
-// 			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameServiceNetwork, aws.StringValue(before.ServiceNetworkId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccServiceNetworkConfig_basic(rName string) string {
 	return fmt.Sprintf(`

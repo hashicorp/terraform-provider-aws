@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -22,49 +22,52 @@ import (
 )
 
 // @FrameworkDataSource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
-func newDataSourceLifecyclePolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceLifecyclePolicy{}, nil
+func newLifecyclePolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &lifecyclePolicyDataSource{}, nil
 }
 
 const (
 	DSNameLifecyclePolicy = "Lifecycle Policy Data Source"
 )
 
-type dataSourceLifecyclePolicy struct {
-	framework.DataSourceWithConfigure
+type lifecyclePolicyDataSource struct {
+	framework.DataSourceWithModel[lifecyclePolicyDataSourceModel]
 }
 
-func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
-}
-
-func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *lifecyclePolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "The date the lifecycle policy was created.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "The date the lifecycle policy was last modified.",
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				Computed: true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				Computed:    true,
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
+				Description: "Type of lifecycle policy. Must be `retention`.",
+				Required:    true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.LifecyclePolicyType](),
 				},
@@ -73,10 +76,10 @@ func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.Schem
 	}
 }
 
-func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *lifecyclePolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceLifecyclePolicyData
+	var data lifecyclePolicyDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,7 +109,8 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceLifecyclePolicyData struct {
+type lifecyclePolicyDataSourceModel struct {
+	framework.WithRegionModel
 	CreatedDate      types.String `tfsdk:"created_date"`
 	Description      types.String `tfsdk:"description"`
 	ID               types.String `tfsdk:"id"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,7 +61,7 @@ func resourceClientVPNNetworkAssociation() *schema.Resource {
 	}
 }
 
-func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -87,14 +87,14 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	network, err := findClientVPNNetworkAssociationByTwoPartKey(ctx, conn, d.Id(), endpointID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -112,17 +112,18 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Network Association: %s", d.Id())
-	_, err := conn.DisassociateClientVpnTargetNetwork(ctx, &ec2.DisassociateClientVpnTargetNetworkInput{
+	input := ec2.DisassociateClientVpnTargetNetworkInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 		AssociationId:       aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateClientVpnTargetNetwork(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNAssociationIdNotFound, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return diags
@@ -139,7 +140,7 @@ func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceClientVPNNetworkAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNNetworkAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ",")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

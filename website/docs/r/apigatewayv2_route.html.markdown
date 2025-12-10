@@ -56,6 +56,7 @@ resource "aws_apigatewayv2_route" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.

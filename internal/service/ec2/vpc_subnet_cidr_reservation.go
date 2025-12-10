@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,7 +30,7 @@ func resourceSubnetCIDRReservation() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetCIDRReservationRead,
 		DeleteWithoutTimeout: resourceSubnetCIDRReservationDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), ":")
 				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%q), expected SUBNET_ID:RESERVATION_ID", d.Id())
@@ -76,7 +76,7 @@ func resourceSubnetCIDRReservation() *schema.Resource {
 	}
 }
 
-func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -102,13 +102,13 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceSubnetCIDRReservationRead(ctx, d, meta)...)
 }
 
-func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	output, err := findSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, d.Get(names.AttrSubnetID).(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet CIDR Reservation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -127,14 +127,15 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceSubnetCIDRReservationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetCIDRReservationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Subnet CIDR Reservation: %s", d.Id())
-	_, err := conn.DeleteSubnetCidrReservation(ctx, &ec2.DeleteSubnetCidrReservationInput{
+	input := ec2.DeleteSubnetCidrReservationInput{
 		SubnetCidrReservationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSubnetCidrReservation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetCIDRReservationIDNotFound) {
 		return diags

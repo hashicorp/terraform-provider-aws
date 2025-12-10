@@ -63,6 +63,7 @@ resource "aws_route53_resolver_rule" "fwd" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
 * `rule_type` - (Required) Rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `name` - (Optional) Friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
@@ -74,7 +75,7 @@ This argument should only be specified for `FORWARD` type rules.
 
 The `target_ip` object supports the following:
 
-* `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
+* `ip` - (Optional) One IPv4 address that you want to forward DNS queries to.
 * `ipv6` - (Optional) One IPv6 address that you want to forward DNS queries to.
 * `port` - (Optional) Port at `ip` that you want to forward DNS queries to. Default value is `53`.
 * `protocol` - (Optional) Protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
@@ -92,11 +93,37 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_resolver_rule.example
+  identity = {
+    id = "rslvr-rr-0123456789abcdef0"
+  }
+}
+
+resource "aws_route53_resolver_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Route53 Resolver rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_route53_resolver_rule.sys
+  to = aws_route53_resolver_rule.example
   id = "rslvr-rr-0123456789abcdef0"
 }
 ```
@@ -104,5 +131,5 @@ import {
 Using `terraform import`, import Route53 Resolver rules using the `id`. For example:
 
 ```console
-% terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+% terraform import aws_route53_resolver_rule.example rslvr-rr-0123456789abcdef0
 ```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -407,15 +407,15 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceWebACL().SchemaMap()[names.AttrRule].Elem.(*schema.Resource)
-		actionMap := map[string]interface{}{
+		actionMap := map[string]any{
 			names.AttrType: actionType,
 		}
-		m := map[string]interface{}{
+		m := map[string]any{
 			"rule_id":          **ruleId,
 			names.AttrType:     ruleType,
 			names.AttrPriority: priority,
-			names.AttrAction:   []interface{}{actionMap},
-			"override_action":  []interface{}{},
+			names.AttrAction:   []any{actionMap},
+			"override_action":  []any{},
 		}
 
 		f := schema.HashResource(ruleResource)
@@ -436,7 +436,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfwafregional.FindWebACLByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

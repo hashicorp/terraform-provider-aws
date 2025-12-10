@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkmonitor", fmt.Sprintf("monitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "monitor/{monitor_name}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "monitor_name"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 				),
@@ -130,7 +130,7 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

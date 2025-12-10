@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -18,9 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,8 +35,6 @@ func resourceTrafficMirrorSession() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -88,7 +84,7 @@ func resourceTrafficMirrorSession() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -127,13 +123,14 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTrafficMirrorSessionRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	session, err := findTrafficMirrorSessionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Traffic Mirror Session %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -144,14 +141,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	ownerID := aws.ToString(session.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  "traffic-mirror-session/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorSessionARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, session.Description)
 	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, ownerID)
@@ -166,7 +156,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -227,14 +217,15 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTrafficMirrorSessionRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Session: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorSession(ctx, &ec2.DeleteTrafficMirrorSessionInput{
+	input := ec2.DeleteTrafficMirrorSessionInput{
 		TrafficMirrorSessionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorSession(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
 		return diags
@@ -245,4 +236,8 @@ func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
+}
+
+func trafficMirrorSessionARN(ctx context.Context, c *conns.AWSClient, accountID, trafficMirrorSessionID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "traffic-mirror-session/"+trafficMirrorSessionID)
 }

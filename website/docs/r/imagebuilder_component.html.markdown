@@ -55,8 +55,9 @@ The following arguments are required:
 * `platform` - (Required) Platform of the component.
 * `version` - (Required) Version of the component.
 
-The following attributes are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `change_description` - (Optional) Change description of the component.
 * `data` - (Optional) Inline YAML string with data of the component. Exactly one of `data` and `uri` can be specified. Terraform will only perform drift detection of its value when present in a configuration.
 * `description` - (Optional) Description of the component.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -44,12 +44,12 @@ func expandOperation(ctx context.Context, conn *lightsail.Client, operation type
 	return diags
 }
 
-func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]interface{} {
+func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		m[names.AttrAvailabilityZone] = aws.ToString(v)

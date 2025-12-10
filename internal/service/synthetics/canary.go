@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -133,6 +134,12 @@ func ResourceCanary() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ephemeral_storage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1024, 5120),
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -189,6 +196,21 @@ func ResourceCanary() *schema.Resource {
 								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
 							},
 						},
+						"retry_config": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_retries": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(0, 2),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -243,6 +265,10 @@ func ResourceCanary() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -266,12 +292,10 @@ func ResourceCanary() *schema.Resource {
 				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -294,19 +318,19 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("run_config"); ok {
-		input.RunConfig = expandCanaryRunConfig(v.([]interface{}))
+		input.RunConfig = expandCanaryRunConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("artifact_config"); ok {
-		input.ArtifactConfig = expandCanaryArtifactConfig(v.([]interface{}))
+		input.ArtifactConfig = expandCanaryArtifactConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrSchedule); ok {
-		input.Schedule = expandCanarySchedule(v.([]interface{}))
+		input.Schedule = expandCanarySchedule(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
-		input.VpcConfig = expandCanaryVPCConfig(v.([]interface{}))
+		input.VpcConfig = expandCanaryVPCConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("failure_retention_period"); ok {
@@ -334,7 +358,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout+canaryCreatedTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return retryCreateCanary(ctx, conn, d, input)
 		},
 		func(err error) (bool, error) {
@@ -361,13 +385,13 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceCanaryRead(ctx, d, meta)...)
 }
 
-func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canary, err := FindCanaryByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -386,7 +410,11 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
-	d.Set("engine_arn", canary.EngineArn)
+	if len(canary.EngineConfigs) > 0 {
+		d.Set("engine_arn", canary.EngineConfigs[0].EngineArn)
+	} else {
+		d.Set("engine_arn", canary.EngineArn)
+	}
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
@@ -402,7 +430,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	runConfig := &awstypes.CanaryRunConfigInput{}
 	if v, ok := d.GetOk("run_config"); ok {
-		runConfig = expandCanaryRunConfig(v.([]interface{}))
+		runConfig = expandCanaryRunConfig(v.([]any))
 	}
 
 	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, runConfig.EnvironmentVariables)); err != nil {
@@ -426,7 +454,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -436,11 +464,11 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange(names.AttrVPCConfig) {
-			input.VpcConfig = expandCanaryVPCConfig(d.Get(names.AttrVPCConfig).([]interface{}))
+			input.VpcConfig = expandCanaryVPCConfig(d.Get(names.AttrVPCConfig).([]any))
 		}
 
 		if d.HasChange("artifact_config") {
-			input.ArtifactConfig = expandCanaryArtifactConfig(d.Get("artifact_config").([]interface{}))
+			input.ArtifactConfig = expandCanaryArtifactConfig(d.Get("artifact_config").([]any))
 		}
 
 		if d.HasChange("runtime_version") {
@@ -459,7 +487,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("run_config") {
-			input.RunConfig = expandCanaryRunConfig(d.Get("run_config").([]interface{}))
+			input.RunConfig = expandCanaryRunConfig(d.Get("run_config").([]any))
 		}
 
 		if d.HasChange("artifact_s3_location") {
@@ -467,7 +495,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange(names.AttrSchedule) {
-			input.Schedule = expandCanarySchedule(d.Get(names.AttrSchedule).([]interface{}))
+			input.Schedule = expandCanarySchedule(d.Get(names.AttrSchedule).([]any))
 		}
 
 		if d.HasChange("success_retention_period") {
@@ -535,7 +563,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceCanaryRead(ctx, d, meta)...)
 }
 
-func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -592,42 +620,42 @@ func expandCanaryCodeInput(d *schema.ResourceData) (*awstypes.CanaryCodeInput, e
 	return codeConfig, nil
 }
 
-func expandCanaryArtifactConfig(l []interface{}) *awstypes.ArtifactConfigInput {
+func expandCanaryArtifactConfig(l []any) *awstypes.ArtifactConfigInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ArtifactConfigInput{}
 
-	if v, ok := m["s3_encryption"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["s3_encryption"].([]any); ok && len(v) > 0 {
 		config.S3Encryption = expandCanaryS3EncryptionConfig(v)
 	}
 
 	return config
 }
 
-func flattenCanaryArtifactConfig(config *awstypes.ArtifactConfigOutput) []interface{} {
+func flattenCanaryArtifactConfig(config *awstypes.ArtifactConfigOutput) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.S3Encryption != nil {
 		m["s3_encryption"] = flattenCanaryS3EncryptionConfig(config.S3Encryption)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandCanaryS3EncryptionConfig(l []interface{}) *awstypes.S3EncryptionConfig {
+func expandCanaryS3EncryptionConfig(l []any) *awstypes.S3EncryptionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.S3EncryptionConfig{}
 
@@ -642,12 +670,12 @@ func expandCanaryS3EncryptionConfig(l []interface{}) *awstypes.S3EncryptionConfi
 	return config
 }
 
-func flattenCanaryS3EncryptionConfig(config *awstypes.S3EncryptionConfig) []interface{} {
+func flattenCanaryS3EncryptionConfig(config *awstypes.S3EncryptionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EncryptionMode != "" {
 		m["encryption_mode"] = string(config.EncryptionMode)
@@ -657,15 +685,15 @@ func flattenCanaryS3EncryptionConfig(config *awstypes.S3EncryptionConfig) []inte
 		m[names.AttrKMSKeyARN] = aws.ToString(config.KmsKeyArn)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandCanarySchedule(l []interface{}) *awstypes.CanaryScheduleInput {
+func expandCanarySchedule(l []any) *awstypes.CanaryScheduleInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	codeConfig := &awstypes.CanaryScheduleInput{
 		Expression: aws.String(m[names.AttrExpression].(string)),
@@ -675,28 +703,60 @@ func expandCanarySchedule(l []interface{}) *awstypes.CanaryScheduleInput {
 		codeConfig.DurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["retry_config"]; ok {
+		codeConfig.RetryConfig = expandCanaryScheduleRetryConfig(v.([]any))
+	}
+
 	return codeConfig
 }
 
-func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []interface{} {
-	if canarySchedule == nil {
-		return []interface{}{}
+func expandCanaryScheduleRetryConfig(l []any) *awstypes.RetryConfigInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]any)
+
+	config := &awstypes.RetryConfigInput{
+		MaxRetries: aws.Int32(int32(m["max_retries"].(int))),
 	}
 
-	m := map[string]interface{}{
+	return config
+}
+
+func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []any {
+	if canarySchedule == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
 		names.AttrExpression:  aws.ToString(canarySchedule.Expression),
 		"duration_in_seconds": aws.ToInt64(canarySchedule.DurationInSeconds),
 	}
 
-	return []interface{}{m}
+	if canarySchedule.RetryConfig != nil {
+		m["retry_config"] = flattenCanaryScheduleRetryConfig(canarySchedule.RetryConfig)
+	}
+
+	return []any{m}
 }
 
-func expandCanaryRunConfig(l []interface{}) *awstypes.CanaryRunConfigInput {
+func flattenCanaryScheduleRetryConfig(retryConfig *awstypes.RetryConfigOutput) []any {
+	if retryConfig == nil {
+		return []any{}
+	}
+	m := map[string]any{
+		"max_retries": aws.ToInt32(retryConfig.MaxRetries),
+	}
+
+	return []any{m}
+}
+
+func expandCanaryRunConfig(l []any) *awstypes.CanaryRunConfigInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	codeConfig := &awstypes.CanaryRunConfigInput{}
 
@@ -712,19 +772,23 @@ func expandCanaryRunConfig(l []interface{}) *awstypes.CanaryRunConfigInput {
 		codeConfig.ActiveTracing = aws.Bool(v)
 	}
 
-	if vars, ok := m["environment_variables"].(map[string]interface{}); ok && len(vars) > 0 {
+	if vars, ok := m["environment_variables"].(map[string]any); ok && len(vars) > 0 {
 		codeConfig.EnvironmentVariables = flex.ExpandStringValueMap(vars)
+	}
+
+	if v, ok := m["ephemeral_storage"].(int); ok && v > 0 {
+		codeConfig.EphemeralStorage = aws.Int32(int32(v))
 	}
 
 	return codeConfig
 }
 
-func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVars map[string]string) []interface{} {
+func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVars map[string]string) []any {
 	if canaryCodeOut == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"timeout_in_seconds": aws.ToInt32(canaryCodeOut.TimeoutInSeconds),
 		"memory_in_mb":       aws.ToInt32(canaryCodeOut.MemoryInMB),
 		"active_tracing":     aws.ToBool(canaryCodeOut.ActiveTracing),
@@ -734,44 +798,56 @@ func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVa
 		m["environment_variables"] = envVars
 	}
 
-	return []interface{}{m}
-}
-
-func flattenCanaryVPCConfig(canaryVpcOutput *awstypes.VpcConfigOutput) []interface{} {
-	if canaryVpcOutput == nil {
-		return []interface{}{}
+	if canaryCodeOut.EphemeralStorage != nil {
+		m["ephemeral_storage"] = aws.ToInt32(canaryCodeOut.EphemeralStorage)
 	}
 
-	m := map[string]interface{}{
+	return []any{m}
+}
+
+func flattenCanaryVPCConfig(canaryVpcOutput *awstypes.VpcConfigOutput) []any {
+	if canaryVpcOutput == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
 		names.AttrSubnetIDs:        flex.FlattenStringValueSet(canaryVpcOutput.SubnetIds),
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(canaryVpcOutput.SecurityGroupIds),
 		names.AttrVPCID:            aws.ToString(canaryVpcOutput.VpcId),
 	}
 
-	return []interface{}{m}
+	if canaryVpcOutput.Ipv6AllowedForDualStack != nil {
+		m["ipv6_allowed_for_dual_stack"] = aws.ToBool(canaryVpcOutput.Ipv6AllowedForDualStack)
+	}
+
+	return []any{m}
 }
 
-func expandCanaryVPCConfig(l []interface{}) *awstypes.VpcConfigInput {
+func expandCanaryVPCConfig(l []any) *awstypes.VpcConfigInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	codeConfig := &awstypes.VpcConfigInput{
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 
+	if v, ok := m["ipv6_allowed_for_dual_stack"]; ok {
+		codeConfig.Ipv6AllowedForDualStack = aws.Bool(v.(bool))
+	}
+
 	return codeConfig
 }
 
-func flattenCanaryTimeline(timeline *awstypes.CanaryTimeline) []interface{} {
+func flattenCanaryTimeline(timeline *awstypes.CanaryTimeline) []any {
 	if timeline == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"created": aws.ToTime(timeline.Created).Format(time.RFC3339),
 	}
 
@@ -787,7 +863,7 @@ func flattenCanaryTimeline(timeline *awstypes.CanaryTimeline) []interface{} {
 		m["last_stopped"] = aws.ToTime(timeline.LastStopped).Format(time.RFC3339)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func startCanary(ctx context.Context, name string, conn *synthetics.Client) error {

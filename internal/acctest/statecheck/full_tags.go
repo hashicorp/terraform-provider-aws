@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package statecheck
@@ -6,16 +6,16 @@ package statecheck
 import (
 	"context"
 	"fmt"
+	"unique"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 )
 
 var _ statecheck.StateCheck = expectFullTagsCheck{}
@@ -45,12 +45,12 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 
 	tagsSpec := e.tagSpecFinder(ctx, sp, res.Type)
 
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		resp.Error = fmt.Errorf("no tagging specification found for %s type %s", e.entity, res.Type)
 		return
 	}
 
-	identifierAttr := tagsSpec.IdentifierAttribute
+	identifierAttr := tagsSpec.Value().IdentifierAttribute
 	if identifierAttr == "" {
 		resp.Error = fmt.Errorf("no tag identifier attribute defined for %s type %s", e.entity, res.Type)
 		return
@@ -62,22 +62,22 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 		return
 	}
 
-	ctx = tftags.NewContext(ctx, nil, nil)
+	ctx = tftags.NewContext(ctx, nil, nil, nil)
 
 	var err error
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string)) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
-		if tagsSpec.ResourceType == "" {
+		if tagsSpec.Value().ResourceType == "" {
 			err = fmt.Errorf("ListTags method for service %s requires ResourceType, but none was set", sp.ServicePackageName())
 		} else {
-			err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.ResourceType) // Sets tags in Context
+			err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.Value().ResourceType) // Sets tags in Context
 		}
 	} else {
 		err = fmt.Errorf("no ListTags method found for service %s", sp.ServicePackageName())
 	}
 	if err != nil {
-		resp.Error = fmt.Errorf("listing tags for %s: %s", e.base.ResourceAddress(), err)
+		resp.Error = fmt.Errorf("listing tags for %s: %w", e.base.ResourceAddress(), err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 	})
 
 	if err := e.knownValue.CheckValue(tagsMap); err != nil {
-		resp.Error = fmt.Errorf("error checking remote tags for %s: %s", e.base.ResourceAddress(), err) // nosemgrep:ci.semgrep.errors.no-fmt.Errorf-leading-error
+		resp.Error = fmt.Errorf("error checking remote tags for %s: %w", e.base.ResourceAddress(), err) // nosemgrep:ci.semgrep.errors.no-fmt.Errorf-leading-error
 		return
 	}
 }
@@ -117,7 +117,7 @@ func ExpectFullResourceTags(servicePackage conns.ServicePackage, resourceAddress
 	}
 }
 
-func ExpectFullResourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec *types.ServicePackageResourceTags, knownValue knownvalue.Check) expectFullTagsCheck {
+func ExpectFullResourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], knownValue knownvalue.Check) expectFullTagsCheck {
 	return expectFullTagsCheck{
 		base:           NewBase(resourceAddress),
 		knownValue:     knownValue,
@@ -137,7 +137,7 @@ func ExpectFullDataSourceTags(servicePackage conns.ServicePackage, resourceAddre
 	}
 }
 
-func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec *types.ServicePackageResourceTags, knownValue knownvalue.Check) expectFullTagsCheck {
+func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], knownValue knownvalue.Check) expectFullTagsCheck {
 	return expectFullTagsCheck{
 		base:           NewBase(resourceAddress),
 		knownValue:     knownValue,
@@ -147,19 +147,16 @@ func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resou
 	}
 }
 
-type tagSpecFinder func(context.Context, conns.ServicePackage, string) *types.ServicePackageResourceTags
+type tagSpecFinder func(context.Context, conns.ServicePackage, string) unique.Handle[inttypes.ServicePackageResourceTags]
 
-func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
+func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec unique.Handle[inttypes.ServicePackageResourceTags]) {
 	for _, r := range sp.FrameworkResources(ctx) {
-		factory, _ := r.Factory(ctx)
-		var metadata resource.MetadataResponse
-		factory.Metadata(ctx, resource.MetadataRequest{}, &metadata)
-		if metadata.TypeName == typeName {
+		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}
 	}
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		for _, r := range sp.SDKResources(ctx) {
 			if r.TypeName == typeName {
 				tagsSpec = r.Tags
@@ -170,17 +167,14 @@ func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName 
 	return tagsSpec
 }
 
-func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
+func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec unique.Handle[inttypes.ServicePackageResourceTags]) {
 	for _, r := range sp.FrameworkDataSources(ctx) {
-		factory, _ := r.Factory(ctx)
-		var metadata datasource.MetadataResponse
-		factory.Metadata(ctx, datasource.MetadataRequest{}, &metadata)
-		if metadata.TypeName == typeName {
+		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}
 	}
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		for _, r := range sp.SDKDataSources(ctx) {
 			if r.TypeName == typeName {
 				tagsSpec = r.Tags
@@ -191,8 +185,8 @@ func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeNam
 	return tagsSpec
 }
 
-func identityTagSpec(tagsSpec *types.ServicePackageResourceTags) tagSpecFinder {
-	return func(ctx context.Context, sp conns.ServicePackage, typeName string) *types.ServicePackageResourceTags {
+func identityTagSpec(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags]) tagSpecFinder {
+	return func(ctx context.Context, sp conns.ServicePackage, typeName string) unique.Handle[inttypes.ServicePackageResourceTags] {
 		return tagsSpec
 	}
 }

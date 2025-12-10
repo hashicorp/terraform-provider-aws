@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -54,11 +54,15 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":    testAccHoursOfOperationDataSource_name,
 		},
 		"Instance": {
-			acctest.CtBasic:    testAccInstance_basic,
-			"directory":        testAccInstance_directory,
-			"saml":             testAccInstance_saml,
-			"dataSource_basic": testAccInstanceDataSource_basic,
-			"tags":             testAccInstance_tags,
+			acctest.CtBasic:                     testAccInstance_basic,
+			"directory":                         testAccInstance_directory,
+			"saml":                              testAccInstance_saml,
+			"dataSource_basic":                  testAccInstanceDataSource_basic,
+			"tags":                              testAccInstance_tags,
+			"identityBasic":                     testAccConnectInstance_Identity_Basic,
+			"identityExistingResource":          testAccConnectInstance_Identity_ExistingResource,
+			"identityExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_NoRefresh_NoChange,
+			"identityRegionOverride":            testAccConnectInstance_Identity_RegionOverride,
 		},
 		"InstanceStorageConfig": {
 			acctest.CtBasic:                             testAccInstanceStorageConfig_basic,
@@ -82,12 +86,20 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_basic":   testAccLambdaFunctionAssociationDataSource_basic,
 		},
 		"PhoneNumber": {
-			acctest.CtBasic:      testAccPhoneNumber_basic,
-			acctest.CtDisappears: testAccPhoneNumber_disappears,
-			"tags":               testAccPhoneNumber_tags,
-			"description":        testAccPhoneNumber_description,
-			"prefix":             testAccPhoneNumber_prefix,
-			"targetARN":          testAccPhoneNumber_targetARN,
+			acctest.CtBasic:                     testAccPhoneNumber_basic,
+			acctest.CtDisappears:                testAccPhoneNumber_disappears,
+			"tags":                              testAccPhoneNumber_tags,
+			"description":                       testAccPhoneNumber_description,
+			"prefix":                            testAccPhoneNumber_prefix,
+			"targetARN":                         testAccPhoneNumber_targetARN,
+			"identityBasic":                     testAccConnectPhoneNumber_Identity_Basic,
+			"identityExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource,
+			"identityExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_NoRefresh_NoChange,
+			"identityRegionOverride":            testAccConnectPhoneNumber_Identity_RegionOverride,
+		},
+		"PhoneNumberContactFlowAssociation": {
+			acctest.CtBasic:      testAccPhoneNumberContactFlowAssociation_basic,
+			acctest.CtDisappears: testAccPhoneNumberContactFlowAssociation_disappears,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
@@ -116,6 +128,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtDisappears:           testAccRoutingProfile_disappears,
 			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
+			"crossChannelBehavior":         testAccRoutingProfile_crossChannelBehavior,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
 			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,

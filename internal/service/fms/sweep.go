@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.fms/sweep
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fms
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
@@ -38,7 +37,7 @@ func sweepAdminAccount(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.FMSClient(ctx)
 
@@ -94,8 +93,8 @@ func newAdminAccountSweeper(resource *schema.Resource, d *schema.ResourceData, c
 	}
 }
 
-func (aas adminAccountSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := aas.sweepable.Delete(ctx, timeout, optFns...)
+func (aas adminAccountSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	err := aas.sweepable.Delete(ctx, optFns...)
 	if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
 		tflog.Warn(ctx, "Skipping resource", map[string]any{
 			"attr.account_id": aas.d.Get(names.AttrAccountID),

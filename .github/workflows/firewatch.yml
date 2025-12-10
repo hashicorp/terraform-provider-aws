@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Firewatch
-        uses: breathingdust/firewatch@7d8033475a379d86f7affd1f6a228f3a6e3f7ffb # v2.0.6
+        uses: breathingdust/firewatch@57f8dc8ee08fa407de395e64452f3d005b3a9c28 # v2.0.9
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           alert_threshold: 10
@@ -17,7 +17,7 @@ jobs:
           slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
           slack_channel: ${{ secrets.SLACK_CHANNEL }}
       - name: UploadArtifact
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: firewatch
           path: firewatch.data

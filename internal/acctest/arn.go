@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -20,6 +20,17 @@ func CheckResourceAttrGlobalARNFormat(ctx context.Context, resourceName, attribu
 		}
 
 		return CheckResourceAttrGlobalARN(ctx, resourceName, attributeName, arnService, resource)(s)
+	}
+}
+
+func CheckResourceAttrGlobalARNNoAccountFormat(resourceName, attributeName, arnService, arnFormat string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		resource, err := populateARNFormat(s, resourceName, arnFormat)
+		if err != nil {
+			return err
+		}
+
+		return CheckResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService, resource)(s)
 	}
 }
 

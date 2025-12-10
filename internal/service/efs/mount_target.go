@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package efs
@@ -15,7 +15,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,6 +76,20 @@ func resourceMountTarget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPv4Address,
 			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			},
+			"ipv6_address": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv6Address,
+			},
 			"mount_target_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -102,7 +117,7 @@ func resourceMountTarget() *schema.Resource {
 	}
 }
 
-func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -131,6 +146,14 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddress = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_address"); ok {
+		input.Ipv6Address = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -150,13 +173,13 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	mt, err := findMountTargetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Mount Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -180,6 +203,16 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("file_system_arn", fsARN)
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
+	if mt.IpAddress != nil && mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
+	} else if mt.IpAddress != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
+	} else if mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
+	} else {
+		d.Set(names.AttrIPAddressType, nil)
+	}
+	d.Set("ipv6_address", mt.Ipv6Address)
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)
@@ -198,7 +231,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -218,7 +251,7 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -270,7 +303,7 @@ func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.MountTargetNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -302,7 +335,7 @@ func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -311,11 +344,11 @@ func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	return output, nil
 }
 
-func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findMountTargetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -328,7 +361,7 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id s
 }
 
 func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
@@ -347,7 +380,7 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, ti
 }
 
 func waitMountTargetDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:     []string{},
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),

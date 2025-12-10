@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -22,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,12 +51,8 @@ const (
 )
 
 type multiRegionClusterResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[multiRegionClusterResourceModel]
 	framework.WithTimeouts
-}
-
-func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_memorydb_multi_region_cluster"
 }
 
 func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -204,7 +201,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 	}
 	// Account for field name mismatches between the Create
 	// and Describe data structures
-	plan.NumShards = flex.Int32ToFramework(ctx, statusOut.NumberOfShards)
+	plan.NumShards = flex.Int32ToFrameworkInt64(ctx, statusOut.NumberOfShards)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -219,7 +216,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 	}
 
 	out, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -240,7 +237,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	state.MultiRegionClusterNameSuffix = flex.StringToFramework(ctx, &suffix)
-	state.NumShards = flex.Int32ToFramework(ctx, out.NumberOfShards)
+	state.NumShards = flex.Int32ToFrameworkInt64(ctx, out.NumberOfShards)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -370,7 +367,7 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 	// Before deleting the multi-region cluster, ensure it is ready for deletion.
 	// Removing an `aws_memorydb_cluster` from a multi-region cluster may temporarily block deletion.
 	output, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
@@ -423,11 +420,8 @@ func (r *multiRegionClusterResource) ImportState(ctx context.Context, request re
 	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
 }
 
-func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
 type multiRegionClusterResourceModel struct {
+	framework.WithRegionModel
 	ARN                           types.String   `tfsdk:"arn"`
 	Description                   types.String   `tfsdk:"description"`
 	Engine                        types.String   `tfsdk:"engine"`
@@ -472,7 +466,7 @@ func findMultiRegionClusters(ctx context.Context, conn *memorydb.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.MultiRegionClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -497,11 +491,11 @@ func updateMultiRegionClusterAndWaitAvailable(ctx context.Context, conn *memoryd
 	return err
 }
 
-func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findMultiRegionClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -514,7 +508,7 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 }
 
 func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Delay:                     20 * time.Second,
 		Pending:                   []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:                    []string{clusterStatusAvailable},
@@ -533,7 +527,7 @@ func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client,
 }
 
 func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Delay:                     20 * time.Second,
 		Pending:                   []string{clusterStatusDeleting},
 		Target:                    []string{},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery_test
@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "servicediscovery", "namespace/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "http_name", rName),
@@ -173,7 +171,7 @@ func testAccCheckHTTPNamespaceDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfservicediscovery.FindNamespaceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

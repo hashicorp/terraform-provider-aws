@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,10 +42,12 @@ func resourceServerlessCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +129,7 @@ func resourceServerlessCluster() *schema.Resource {
 	}
 }
 
-func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -134,8 +137,8 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 	input := &kafka.CreateClusterV2Input{
 		ClusterName: aws.String(name),
 		Serverless: &types.ServerlessRequest{
-			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]interface{})[0].(map[string]interface{})),
-			VpcConfigs:           expandVpcConfigs(d.Get(names.AttrVPCConfig).([]interface{})),
+			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]any)[0].(map[string]any)),
+			VpcConfigs:           expandVpcConfigs(d.Get(names.AttrVPCConfig).([]any)),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -155,13 +158,13 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServerlessClusterRead(ctx, d, meta)...)
 }
 
-func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	cluster, err := findServerlessClusterByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MSK Serverless Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,7 +177,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	clusterARN := aws.ToString(cluster.ClusterArn)
 	d.Set(names.AttrARN, clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
-		if err := d.Set("client_authentication", []interface{}{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
+		if err := d.Set("client_authentication", []any{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
 		}
 	} else {
@@ -187,12 +190,23 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
+	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
+
+	switch {
+	case errs.IsA[*types.ForbiddenException](err):
+		d.Set("bootstrap_brokers_sasl_iam", nil)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
+	default:
+		d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
+	}
+
 	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
 
-func resourceServerlessClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -214,35 +228,35 @@ func findServerlessClusterByARN(ctx context.Context, conn *kafka.Client, arn str
 	return output, nil
 }
 
-func expandServerlessClientAuthentication(tfMap map[string]interface{}) *types.ServerlessClientAuthentication {
+func expandServerlessClientAuthentication(tfMap map[string]any) *types.ServerlessClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ServerlessClientAuthentication{}
 
-	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Sasl = expandServerlessSasl(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sasl"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Sasl = expandServerlessSasl(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandServerlessSasl(tfMap map[string]interface{}) *types.ServerlessSasl { // nosemgrep:ci.caps2-in-func-name
+func expandServerlessSasl(tfMap map[string]any) *types.ServerlessSasl { // nosemgrep:ci.caps2-in-func-name
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ServerlessSasl{}
 
-	if v, ok := tfMap["iam"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Iam = expandIam(v[0].(map[string]interface{}))
+	if v, ok := tfMap["iam"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Iam = expandIam(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandIam(tfMap map[string]interface{}) *types.Iam { // nosemgrep:ci.caps4-in-func-name
+func expandIam(tfMap map[string]any) *types.Iam { // nosemgrep:ci.caps4-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -256,40 +270,40 @@ func expandIam(tfMap map[string]interface{}) *types.Iam { // nosemgrep:ci.caps4-
 	return apiObject
 }
 
-func flattenServerlessClientAuthentication(apiObject *types.ServerlessClientAuthentication) map[string]interface{} {
+func flattenServerlessClientAuthentication(apiObject *types.ServerlessClientAuthentication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []interface{}{flattenServerlessSasl(v)}
+		tfMap["sasl"] = []any{flattenServerlessSasl(v)}
 	}
 
 	return tfMap
 }
 
-func flattenServerlessSasl(apiObject *types.ServerlessSasl) map[string]interface{} { // nosemgrep:ci.caps2-in-func-name
+func flattenServerlessSasl(apiObject *types.ServerlessSasl) map[string]any { // nosemgrep:ci.caps2-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Iam; v != nil {
-		tfMap["iam"] = []interface{}{flattenIam(v)}
+		tfMap["iam"] = []any{flattenIam(v)}
 	}
 
 	return tfMap
 }
 
-func flattenIam(apiObject *types.Iam) map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
+func flattenIam(apiObject *types.Iam) map[string]any { // nosemgrep:ci.caps4-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
@@ -298,7 +312,7 @@ func flattenIam(apiObject *types.Iam) map[string]interface{} { // nosemgrep:ci.c
 	return tfMap
 }
 
-func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig { // nosemgrep:ci.caps5-in-func-name
+func expandVpcConfig(tfMap map[string]any) *types.VpcConfig { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -316,7 +330,7 @@ func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig { // nosemgr
 	return apiObject
 }
 
-func expandVpcConfigs(tfList []interface{}) []types.VpcConfig { // nosemgrep:ci.caps5-in-func-name
+func expandVpcConfigs(tfList []any) []types.VpcConfig { // nosemgrep:ci.caps5-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -324,7 +338,7 @@ func expandVpcConfigs(tfList []interface{}) []types.VpcConfig { // nosemgrep:ci.
 	var apiObjects []types.VpcConfig
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -342,8 +356,8 @@ func expandVpcConfigs(tfList []interface{}) []types.VpcConfig { // nosemgrep:ci.
 	return apiObjects
 }
 
-func flattenVpcConfig(apiObject types.VpcConfig) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
-	tfMap := map[string]interface{}{}
+func flattenVpcConfig(apiObject types.VpcConfig) map[string]any { // nosemgrep:ci.caps5-in-func-name
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
 		tfMap[names.AttrSecurityGroupIDs] = v
@@ -356,12 +370,12 @@ func flattenVpcConfig(apiObject types.VpcConfig) map[string]interface{} { // nos
 	return tfMap
 }
 
-func flattenVpcConfigs(apiObjects []types.VpcConfig) []interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenVpcConfigs(apiObjects []types.VpcConfig) []any { // nosemgrep:ci.caps5-in-func-name
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVpcConfig(apiObject))

@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -14,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,17 +28,18 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_efs", name="Location EFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationEfsOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
 		ReadWithoutTimeout:   resourceLocationEFSRead,
 		UpdateWithoutTimeout: resourceLocationEFSUpdate,
 		DeleteWithoutTimeout: resourceLocationEFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_point_arn": {
@@ -117,17 +118,15 @@ func resourceLocationEFS() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationEfsInput{
-		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]interface{})),
+		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]any)),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
 		Tags:             getTagsIn(ctx),
@@ -156,13 +155,13 @@ func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	output, err := findLocationEFSByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Location EFS (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -192,7 +191,13 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
-	efsFileSystemARN := fmt.Sprintf("arn:%s:elasticfilesystem:%s:%s:file-system/%s", locationARN.Partition, globalIDParts[0], locationARN.AccountID, globalIDParts[1])
+	efsFileSystemARN := arn.ARN{
+		Partition: locationARN.Partition,
+		Service:   "elasticfilesystem",
+		Region:    globalIDParts[0],
+		AccountID: locationARN.AccountID,
+		Resource:  "file-system/" + globalIDParts[1],
+	}.String()
 	d.Set("efs_file_system_arn", efsFileSystemARN)
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)
@@ -202,7 +207,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -210,14 +215,15 @@ func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location EFS: %s", d.Id())
-	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
@@ -238,7 +244,7 @@ func findLocationEFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	output, err := conn.DescribeLocationEfs(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -255,25 +261,25 @@ func findLocationEFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	return output, nil
 }
 
-func flattenEC2Config(ec2Config *awstypes.Ec2Config) []interface{} {
+func flattenEC2Config(ec2Config *awstypes.Ec2Config) []any {
 	if ec2Config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"security_group_arns": flex.FlattenStringValueSet(ec2Config.SecurityGroupArns),
 		"subnet_arn":          aws.ToString(ec2Config.SubnetArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandEC2Config(l []interface{}) *awstypes.Ec2Config {
+func expandEC2Config(l []any) *awstypes.Ec2Config {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	ec2Config := &awstypes.Ec2Config{
 		SecurityGroupArns: flex.ExpandStringValueSet(m["security_group_arns"].(*schema.Set)),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography_test
@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,7 +49,17 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}$`)),
 				),
 			},
 			{
@@ -194,6 +205,79 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpaymentcryptography.ResourceKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccPaymentCryptographyKey_upgradeV6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var key paymentcryptography.GetKeyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

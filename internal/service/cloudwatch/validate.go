@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validDashboardName(v interface{}, k string) (ws []string, errors []error) {
+func validDashboardName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
@@ -27,7 +27,7 @@ func validDashboardName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
+func validEC2AutomateARN(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html

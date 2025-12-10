@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudhsmv2
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -81,7 +82,7 @@ func resourceHSM() *schema.Resource {
 	}
 }
 
-func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -126,13 +127,13 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceHSMRead(ctx, d, meta)...)
 }
 
-func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	hsm, err := findHSMByTwoPartKey(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudHSMv2 HSM (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,15 +159,16 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
-	_, err := conn.DeleteHsm(ctx, &cloudhsmv2.DeleteHsmInput{
+	input := cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 		HsmId:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHsm(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags
@@ -203,14 +205,14 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
-func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findHSMByTwoPartKey(ctx, conn, id, "")
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -223,7 +225,7 @@ func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.St
 }
 
 func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateCreateInProgress),
 		Target:     enum.Slice(types.HsmStateActive),
 		Refresh:    statusHSM(ctx, conn, id),
@@ -244,7 +246,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 }
 
 func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateDeleteInProgress),
 		Target:     []string{},
 		Refresh:    statusHSM(ctx, conn, id),

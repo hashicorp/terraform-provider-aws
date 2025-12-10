@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -43,7 +43,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_username     = "foo"
   master_password     = "Password1"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }

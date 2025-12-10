@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -42,9 +42,9 @@ func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
 	}
 }
 
-func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// Convert id separator from ":" to ","

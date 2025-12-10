@@ -1,0 +1,247 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+rules:
+  - id: use-acctest-test
+    languages: [go]
+    message: "Use acctest.Test instead of resource.Test for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.Test($T, $TC)
+    fix: |
+      acctest.Test(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-paralleltest
+    languages: [go]
+    message: "Use acctest.ParallelTest instead of resource.ParallelTest for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.ParallelTest($T, $TC)
+    fix: |
+      acctest.ParallelTest(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randomwithprefix
+    languages: [go]
+    message: "Use acctest.RandomWithPrefix instead of sdkacctest.RandomWithPrefix for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandomWithPrefix($P)
+    fix: |
+      acctest.RandomWithPrefix(t, $P)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randint
+    languages: [go]
+    message: "Use acctest.RandInt instead of sdkacctest.RandInt for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandInt()
+    fix: |
+      acctest.RandInt(t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-providermeta
+    languages: [go]
+    message: "Use acctest.ProviderMeta instead of acctest.Provider.Meta for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      acctest.Provider.Meta().(*conns.AWSClient).$C(ctx)
+    fix: |
+      acctest.ProviderMeta(ctx, t).$C(ctx)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: add-testing-t-to-destroy-testcheckfunc
+    languages: [go]
+    message: "Add a testing.T argument into destroy TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern: |
+          func $F(ctx context.Context) resource.TestCheckFunc
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Destroy.*)
+    fix: |
+      func $F(ctx context.Context, t *testing.T) resource.TestCheckFunc
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: add-testing-t-to-exists-testcheckfunc
+    languages: [go]
+    message: "Add a testing.T argument into exists TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern: |
+          func $F(ctx context.Context, $...ARGS) resource.TestCheckFunc
+      - pattern-not: |
+          func $F(ctx context.Context) resource.TestCheckFunc
+      - pattern-not: |
+          func $F(..., t *testing.T, ...) resource.TestCheckFunc
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Exists$)
+    fix: |
+      func $F(ctx context.Context, t *testing.T, $...ARGS) resource.TestCheckFunc
+    paths:
+      include:
+        - "**/*_test.go"
+
+  # NOTE: because this matched pattern is inside another section which is replaced by a previous rule,
+  # autofix may need to be run twice in order to apply this change.
+  - id: pass-testing-t-to-destroy-testcheckfunc
+    languages: [go]
+    message: "Pass testing.T argument into destroy TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern-inside: "resource.TestCase{ ... }"
+      - pattern: |
+          $F(ctx)
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Destroy.*)
+    fix: |
+      $F(ctx, t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  # NOTE: because this matched pattern is inside another section which is replaced by a previous rule,
+  # autofix may need to be run twice in order to apply this change.
+  - id: pass-testing-t-to-exists-testcheckfunc
+    languages: [go]
+    message: "Pass testing.T argument into exists TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern-inside: "Check: resource.ComposeTestCheckFunc( ... )"
+          - pattern-inside: "Check: resource.ComposeAggregateTestCheckFunc( ... )"
+      - pattern: |
+          $F(ctx, $...ARGS)
+      - pattern-not: |
+          $F(ctx)
+      - pattern-not: |
+          $F(..., t, ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Exists$)
+    fix: |
+      $F(ctx, t, $...ARGS)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  # Use the internal/retry package in place of the Plugin SDK V2 helper library.
+  # The internal variants of the state refresh functions are VCR-compatible.
+  - id: use-internal-retry
+    message: "Use internal/retry for helpers which are compatible with VCR acceptance testing"
+    languages: [go]
+    severity: WARNING
+    pattern-either:
+      - pattern: |
+          import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+      - pattern: |
+          import $ALIAS "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+    fix-regex:
+      regex: 'github\.com/hashicorp/terraform-plugin-sdk/v2/helper/retry'
+      replacement: 'github.com/hashicorp/terraform-provider-aws/internal/retry'
+
+  - id: internal-retry-staterefreshfunc-pass-context
+    languages: [go]
+    message: "The internal retry.StateRefreshFunc accepts a context argument"
+    severity: WARNING
+    patterns:
+      - pattern-inside: "func $F(...) retry.StateRefreshFunc{ ... }"
+      - pattern: |
+          return func() (any, string, error) {
+            $...BODY
+          }
+    fix: |
+      return func(ctx context.Context) (any, string, error) {
+        $...BODY
+      }
+    paths:
+      include:
+        - "**/*.go"
+
+  - id: internal-retry-staterefreshfunc-remove-parent-context
+    languages: [go]
+    message: "The parent function returning an internal retry.StateRefreshFunc no longer needs a context argument"
+    severity: WARNING
+    pattern: |
+      func $F(ctx context.Context, $...ARGS) retry.StateRefreshFunc {
+        $...BODY
+      }
+    fix: |
+      func $F($...ARGS) retry.StateRefreshFunc {
+        $...BODY
+      }
+    paths:
+      include:
+        - "**/*.go"
+
+  - id: internal-retry-statechangeconf-refresh-remove-context
+    languages: [go]
+    message: "The internal retry.StateRefreshConf.Refresh function no longer needs a context argument"
+    severity: WARNING
+    patterns:
+      - pattern-inside: "retry.StateChangeConf{ ... }"
+      - pattern: |
+          Refresh: $F(ctx, $...ARGS)
+    fix: |
+      Refresh: $F($...ARGS)
+    paths:
+      include:
+        - "**/*.go"
+
+  - id: internal-retry-notfounderror-drop-lastrequest
+    languages: [go]
+    message: "The internal retry.NotFoundError struct drops the LastRequest argument"
+    severity: WARNING
+    pattern: |
+        retry.NotFoundError {
+          $...ARGS,
+          LastRequest: ...,
+        }
+    fix: |
+      retry.NotFoundError {
+        $...ARGS,
+      }
+    paths:
+      include:
+        - "**/*.go"
+
+  - id: internal-retry-timedout
+    languages: [go]
+    message: "Use retry.TimedOut to replace the deprecated tfresource alias"
+    severity: WARNING
+    pattern: |
+      tfresource.TimedOut($ERR)
+    fix: |
+      retry.TimedOut($ERR)
+    paths:
+      include:
+        - "**/*.go"
+
+  - id: internal-retry-setlasterror
+    languages: [go]
+    message: "Use retry.SetLastError to replace the deprecated tfresource alias"
+    severity: WARNING
+    pattern: |
+      tfresource.SetLastError($ERR, $LASTERR)
+    fix: |
+      retry.SetLastError($ERR, $LASTERR)
+    paths:
+      include:
+        - "**/*.go"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,7 +50,7 @@ func resourceImage() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-.]?[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, - (hyphen), and . (dot)."),
 				),
 			},
 			names.AttrRoleARN: {
@@ -71,12 +72,10 @@ func resourceImage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -99,32 +98,32 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	time.Sleep(1 * time.Minute)
 	_, err := conn.CreateImage(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Image %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	image, err := findImageByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Image (%s); removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image (%s): %s", d.Id(), err)
 	}
 
 	d.Set("image_name", image.ImageName)
@@ -136,7 +135,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 	needsUpdate := false
@@ -171,18 +170,18 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] sagemaker Image update config: %#v", *input)
 		_, err := conn.UpdateImage(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Image: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image: %s", err)
 		}
 
 		if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -194,11 +193,11 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Image (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image (%s): %s", d.Id(), err)
 	}
 
 	if err := waitImageDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -212,7 +211,7 @@ func findImageByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	output, err := conn.DescribeImage(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -26,8 +26,9 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),

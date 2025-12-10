@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -9,11 +9,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,22 +41,12 @@ func resourceKeyPolicy() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -71,13 +61,13 @@ func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -88,18 +78,16 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set(names.AttrKeyID, key.metadata.KeyId)
-
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }
 
-func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -112,7 +100,7 @@ func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -44,7 +44,7 @@ func testAccResourceLFTag_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func testAccResourceLFTag_table(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,7 +107,7 @@ func testAccResourceLFTag_tableWithColumns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,7 +138,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -157,7 +157,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 }
 
 func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	var lfdata tflakeformation.ResourceResourceLFTagData
+	var lfdata tflakeformation.ResourceLFTagResourceModel
 	var lt tflakeformation.LFTag
 
 	if v, ok := is.Attributes[names.AttrCatalogID]; ok {
@@ -256,7 +256,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnNames = cols
@@ -268,7 +268,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
@@ -365,7 +365,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnNames = cols
@@ -377,7 +377,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{

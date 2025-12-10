@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
@@ -35,7 +35,7 @@ func sweepProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ProfilesClient(ctx)
 	input := &route53profiles.ListProfilesInput{}
@@ -55,7 +55,7 @@ func sweepProfiles(region string) error {
 		}
 
 		for _, profile := range page.ProfileSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceProfile, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newProfileResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(profile.Id))))
 		}
 	}
@@ -71,7 +71,7 @@ func sweepProfileAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ProfilesClient(ctx)
 	input := &route53profiles.ListProfileAssociationsInput{}
@@ -91,7 +91,7 @@ func sweepProfileAssociations(region string) error {
 		}
 
 		for _, associations := range page.ProfileAssociations {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceProfile, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newProfileResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(associations.Id))))
 		}
 	}

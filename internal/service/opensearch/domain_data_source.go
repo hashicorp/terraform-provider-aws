@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -150,6 +150,38 @@ func dataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"node_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"node_config": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"warm_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -289,14 +321,33 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity_center_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled_api_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"identity_center_instance_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"roles_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subject_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"kibana_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use 'dashboard_endpoint' attribute instead",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -332,8 +383,7 @@ func dataSourceDomain() *schema.Resource {
 			},
 			"off_peak_window_options": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrEnabled: {
@@ -427,7 +477,7 @@ func dataSourceDomain() *schema.Resource {
 	}
 }
 
-func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -471,14 +521,13 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrEndpoint, ds.Endpoint)
 	d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-	d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 	}
 
 	if dc.AutoTuneOptions != nil {
-		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
+		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
@@ -508,7 +557,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
@@ -517,7 +566,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		if endpoints["vpcv2"] != nil {
 			d.Set("endpoint_v2", endpoints["vpcv2"])
 			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
@@ -532,7 +580,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		}
 		if ds.EndpointV2 != nil {
 			d.Set("endpoint_v2", ds.EndpointV2)
@@ -548,6 +595,11 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	if ds.IdentityCenterOptions != nil {
+		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
+		}
+	}
 	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
@@ -555,7 +607,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if ds.OffPeakWindowOptions != nil {
-		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+		if err := d.Set("off_peak_window_options", []any{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
 		}
 	} else {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -164,6 +166,30 @@ func TestAccKMSKey_hmacKey(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "HMAC_256"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "GENERATE_VERIFY_MAC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_postQuantum(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_postQuantum(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ML_DSA_65"),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
 			},
 		},
@@ -343,27 +369,6 @@ func TestAccKMSKey_Policy_iamRoleOrder(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 				),
-			},
-			{
-				Config: testAccKeyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-				),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -555,7 +560,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -612,7 +617,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -661,7 +666,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -716,7 +721,7 @@ func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyTe
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
@@ -738,7 +743,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -762,7 +767,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func(ctx context.Context) (*awstypes.KeyMetadata, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 
@@ -770,7 +775,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 			return err
 		}
 
-		*key = *(outputRaw.(*awstypes.KeyMetadata))
+		*key = *output
 
 		return nil
 	}
@@ -798,7 +803,9 @@ func testAccKeyAddTag(ctx context.Context, t *testing.T, identifier, key, value 
 
 func testAccKeyConfig_basic() string {
 	return `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  enable_key_rotation = true
+}
 `
 }
 
@@ -806,6 +813,7 @@ func testAccKeyConfig_basicDeletionWindow() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }
@@ -815,6 +823,7 @@ func testAccKeyConfig_name(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }
@@ -836,6 +845,7 @@ func testAccKeyConfig_asymmetric(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "ECC_NIST_P384"
@@ -848,9 +858,22 @@ func testAccKeyConfig_hmac(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "GENERATE_VERIFY_MAC"
   customer_master_key_spec = "HMAC_256"
+}
+`, rName)
+}
+
+func testAccKeyConfig_postQuantum(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  key_usage                = "SIGN_VERIFY"
+  customer_master_key_spec = "ML_DSA_65"
 }
 `, rName)
 }
@@ -861,6 +884,7 @@ func testAccKeyConfig_policy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -941,6 +965,7 @@ resource "aws_iam_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1097,6 +1122,7 @@ data "aws_iam_policy_document" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = data.aws_iam_policy_document.test.json
 }
@@ -1117,6 +1143,7 @@ resource "aws_iam_service_linked_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1163,6 +1190,7 @@ data "aws_partition" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1211,6 +1239,7 @@ func testAccKeyConfig_removedPolicy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }

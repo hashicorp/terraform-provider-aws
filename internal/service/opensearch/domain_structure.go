@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandAdvancedSecurityOptions(m []interface{}) *awstypes.AdvancedSecurityOptionsInput {
+func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInput {
 	config := awstypes.AdvancedSecurityOptionsInput{}
-	group := m[0].(map[string]interface{})
+	group := m[0].(map[string]any)
 
 	if advancedSecurityEnabled, ok := group[names.AttrEnabled]; ok {
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
@@ -28,10 +28,10 @@ func expandAdvancedSecurityOptions(m []interface{}) *awstypes.AdvancedSecurityOp
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
 
-			if v, ok := group["master_user_options"].([]interface{}); ok {
+			if v, ok := group["master_user_options"].([]any); ok {
 				if len(v) > 0 && v[0] != nil {
 					muo := awstypes.MasterUserOptions{}
-					masterUserOptions := v[0].(map[string]interface{})
+					masterUserOptions := v[0].(map[string]any)
 
 					if v, ok := masterUserOptions["master_user_arn"].(string); ok && v != "" {
 						muo.MasterUserARN = aws.String(v)
@@ -54,7 +54,53 @@ func expandAdvancedSecurityOptions(m []interface{}) *awstypes.AdvancedSecurityOp
 	return &config
 }
 
-func expandAutoTuneOptions(tfMap map[string]interface{}) *awstypes.AutoTuneOptions {
+func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AIMLOptionsInput{}
+
+	if v, ok := tfMap["natural_language_query_generation_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NaturalLanguageQueryGenerationOptions = expandNaturalLanguageQueryGenerationOptionsInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_vectors_engine"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3VectorsEngine = expandS3VectorsEngine(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandNaturalLanguageQueryGenerationOptionsInput(tfMap map[string]any) *awstypes.NaturalLanguageQueryGenerationOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NaturalLanguageQueryGenerationOptionsInput{}
+
+	if v, ok := tfMap["desired_state"].(string); ok && v != "" {
+		apiObject.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredState(v)
+	}
+
+	return apiObject
+}
+
+func expandS3VectorsEngine(tfMap map[string]any) *awstypes.S3VectorsEngine {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3VectorsEngine{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -74,7 +120,7 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *awstypes.AutoTuneOptio
 	return options
 }
 
-func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *awstypes.AutoTuneOptionsInput {
+func expandAutoTuneOptionsInput(tfMap map[string]any) *awstypes.AutoTuneOptionsInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -92,19 +138,19 @@ func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *awstypes.AutoTune
 	return options
 }
 
-func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []awstypes.AutoTuneMaintenanceSchedule {
+func expandAutoTuneMaintenanceSchedules(tfList []any) []awstypes.AutoTuneMaintenanceSchedule {
 	var autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, _ := tfMapRaw.(map[string]any)
 
 		autoTuneMaintenanceSchedule := awstypes.AutoTuneMaintenanceSchedule{}
 
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
-			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
+		if v, ok := tfMap[names.AttrDuration].([]any); ok {
+			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]any))
 		}
 
 		autoTuneMaintenanceSchedule.CronExpressionForRecurrence = aws.String(tfMap["cron_expression_for_recurrence"].(string))
@@ -115,7 +161,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []awstypes.AutoTun
 	return autoTuneMaintenanceSchedules
 }
 
-func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *awstypes.Duration {
+func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]any) *awstypes.Duration {
 	autoTuneMaintenanceScheduleDuration := &awstypes.Duration{
 		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
 		Unit:  awstypes.TimeUnit(tfMap[names.AttrUnit].(string)),
@@ -124,7 +170,7 @@ func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *aw
 	return autoTuneMaintenanceScheduleDuration
 }
 
-func expandESSAMLOptions(data []interface{}) *awstypes.SAMLOptionsInput {
+func expandESSAMLOptions(data []any) *awstypes.SAMLOptionsInput {
 	if len(data) == 0 {
 		return nil
 	}
@@ -134,13 +180,13 @@ func expandESSAMLOptions(data []interface{}) *awstypes.SAMLOptionsInput {
 	}
 
 	options := awstypes.SAMLOptionsInput{}
-	group := data[0].(map[string]interface{})
+	group := data[0].(map[string]any)
 
 	if SAMLEnabled, ok := group[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(SAMLEnabled.(bool))
 
 		if SAMLEnabled.(bool) {
-			options.Idp = expandSAMLOptionsIdp(group["idp"].([]interface{}))
+			options.Idp = expandSAMLOptionsIdp(group["idp"].([]any))
 			if v, ok := group["master_backend_role"].(string); ok && v != "" {
 				options.MasterBackendRole = aws.String(v)
 			}
@@ -162,7 +208,7 @@ func expandESSAMLOptions(data []interface{}) *awstypes.SAMLOptionsInput {
 	return &options
 }
 
-func expandSAMLOptionsIdp(l []interface{}) *awstypes.SAMLIdp {
+func expandSAMLOptionsIdp(l []any) *awstypes.SAMLIdp {
 	if len(l) == 0 {
 		return nil
 	}
@@ -171,7 +217,7 @@ func expandSAMLOptionsIdp(l []interface{}) *awstypes.SAMLIdp {
 		return &awstypes.SAMLIdp{}
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &awstypes.SAMLIdp{
 		EntityId:        aws.String(m["entity_id"].(string)),
@@ -179,7 +225,7 @@ func expandSAMLOptionsIdp(l []interface{}) *awstypes.SAMLIdp {
 	}
 }
 
-func expandOffPeakWindowOptions(tfMap map[string]interface{}) *awstypes.OffPeakWindowOptions {
+func expandOffPeakWindowOptions(tfMap map[string]any) *awstypes.OffPeakWindowOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -190,28 +236,28 @@ func expandOffPeakWindowOptions(tfMap map[string]interface{}) *awstypes.OffPeakW
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["off_peak_window"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.OffPeakWindow = expandOffPeakWindow(v[0].(map[string]interface{}))
+	if v, ok := tfMap["off_peak_window"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.OffPeakWindow = expandOffPeakWindow(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandOffPeakWindow(tfMap map[string]interface{}) *awstypes.OffPeakWindow {
+func expandOffPeakWindow(tfMap map[string]any) *awstypes.OffPeakWindow {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.OffPeakWindow{}
 
-	if v, ok := tfMap["window_start_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.WindowStartTime = expandWindowStartTime(v[0].(map[string]interface{}))
+	if v, ok := tfMap["window_start_time"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WindowStartTime = expandWindowStartTime(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandWindowStartTime(tfMap map[string]interface{}) *awstypes.WindowStartTime {
+func expandWindowStartTime(tfMap map[string]any) *awstypes.WindowStartTime {
 	if tfMap == nil {
 		return nil
 	}
@@ -229,12 +275,12 @@ func expandWindowStartTime(tfMap map[string]interface{}) *awstypes.WindowStartTi
 	return apiObject
 }
 
-func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSecurityOptions) []map[string]interface{} {
+func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSecurityOptions) []map[string]any {
 	if advancedSecurityOptions == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	m[names.AttrEnabled] = aws.ToBool(advancedSecurityOptions.Enabled)
 
 	if aws.ToBool(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
@@ -245,15 +291,57 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]interface{} {
+func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.NaturalLanguageQueryGenerationOptions; v != nil {
+		tfMap["natural_language_query_generation_options"] = []any{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
+	}
+
+	if v := apiObject.S3VectorsEngine; v != nil {
+		tfMap["s3_vectors_engine"] = []any{flattenS3VectorsEngine(v)}
+	}
+
+	return tfMap
+}
+
+func flattenNaturalLanguageQueryGenerationOptionsOutput(apiObject *awstypes.NaturalLanguageQueryGenerationOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"desired_state": apiObject.DesiredState,
+	}
+
+	return tfMap
+}
+
+func flattenS3VectorsEngine(apiObject *awstypes.S3VectorsEngine) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
+}
+
+func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]any {
 	if autoTuneOptions == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["desired_state"] = autoTuneOptions.DesiredState
 
@@ -268,19 +356,19 @@ func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[strin
 	return m
 }
 
-func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule) []interface{} {
+func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []awstypes.AutoTuneMaintenanceSchedule) []any {
 	if len(autoTuneMaintenanceSchedules) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, autoTuneMaintenanceSchedule := range autoTuneMaintenanceSchedules {
-		m := map[string]interface{}{}
+		m := map[string]any{}
 
 		m["start_at"] = aws.ToTime(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []any{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
 		m["cron_expression_for_recurrence"] = aws.ToString(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
@@ -290,8 +378,8 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []awstypes
 	return tfList
 }
 
-func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *awstypes.Duration) map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *awstypes.Duration) map[string]any {
+	m := map[string]any{}
 
 	m[names.AttrValue] = aws.ToInt64(autoTuneMaintenanceScheduleDuration.Value)
 	m[names.AttrUnit] = autoTuneMaintenanceScheduleDuration.Unit
@@ -299,12 +387,12 @@ func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDurat
 	return m
 }
 
-func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *awstypes.SAMLOptionsOutput) []interface{} {
+func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *awstypes.SAMLOptionsOutput) []any {
 	if samlOptions == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEnabled: aws.ToBool(samlOptions.Enabled),
 		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
@@ -320,104 +408,178 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *awstypes.SAMLOpti
 	m["master_backend_role"] = d.Get("saml_options.0.master_backend_role").(string)
 	m["master_user_name"] = d.Get("saml_options.0.master_user_name").(string)
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenESSAMLIdpOptions(SAMLIdp *awstypes.SAMLIdp) []interface{} {
+func flattenESSAMLIdpOptions(SAMLIdp *awstypes.SAMLIdp) []any {
 	if SAMLIdp == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"entity_id":        aws.ToString(SAMLIdp.EntityId),
 		"metadata_content": aws.ToString(SAMLIdp.MetadataContent),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func getMasterUserOptions(d *schema.ResourceData) []interface{} {
+func getMasterUserOptions(d *schema.ResourceData) []any {
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		options := v.([]interface{})
+		options := v.([]any)
 		if len(options) > 0 && options[0] != nil {
-			m := options[0].(map[string]interface{})
+			m := options[0].(map[string]any)
 			if opts, ok := m["master_user_options"]; ok {
-				return opts.([]interface{})
+				return opts.([]any)
 			}
 		}
 	}
-	return []interface{}{}
+	return []any{}
 }
 
-func expandLogPublishingOptions(m *schema.Set) map[string]awstypes.LogPublishingOption {
-	options := make(map[string]awstypes.LogPublishingOption)
+func expandIdentityCenterOptions(tfList []any) *awstypes.IdentityCenterOptionsInput {
+	if len(tfList) == 0 {
+		return nil
+	}
 
-	for _, vv := range m.List() {
-		lo := vv.(map[string]interface{})
-		options[lo["log_type"].(string)] = awstypes.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
-			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
+	if tfList[0] == nil {
+		return &awstypes.IdentityCenterOptionsInput{}
+	}
+
+	apiObject := &awstypes.IdentityCenterOptionsInput{}
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["enabled_api_access"].(bool); ok {
+		apiObject.EnabledAPIAccess = aws.Bool(v)
+	}
+
+	if apiObject.EnabledAPIAccess != nil && aws.ToBool(apiObject.EnabledAPIAccess) {
+		if v, ok := tfMap["identity_center_instance_arn"].(string); ok && v != "" {
+			apiObject.IdentityCenterInstanceARN = aws.String(v)
+		}
+
+		if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+			apiObject.RolesKey = awstypes.RolesKeyIdCOption(v)
+		}
+
+		if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+			apiObject.SubjectKey = awstypes.SubjectKeyIdCOption(v)
 		}
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenLogPublishingOptions(o map[string]awstypes.LogPublishingOption) []map[string]interface{} {
-	m := make([]map[string]interface{}, 0)
-	for logType, val := range o {
-		mm := map[string]interface{}{
-			"log_type":        logType,
-			names.AttrEnabled: aws.ToBool(val.Enabled),
-		}
-
-		if val.CloudWatchLogsLogGroupArn != nil {
-			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
-		}
-
-		m = append(m, mm)
-	}
-	return m
-}
-
-func flattenOffPeakWindowOptions(apiObject *awstypes.OffPeakWindowOptions) map[string]interface{} {
+func flattenIdentityCenterOptions(apiObject *awstypes.IdentityCenterOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnabledAPIAccess; v != nil {
+		tfMap["enabled_api_access"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IdentityCenterInstanceARN; v != nil {
+		tfMap["identity_center_instance_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RolesKey; v != "" {
+		tfMap["roles_key"] = v
+	}
+
+	if v := apiObject.SubjectKey; v != "" {
+		tfMap["subject_key"] = v
+	}
+
+	return []any{tfMap}
+}
+
+func expandLogPublishingOptions(tfList []any) map[string]awstypes.LogPublishingOption {
+	apiObjects := make(map[string]awstypes.LogPublishingOption)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.LogPublishingOption{
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		}
+
+		if v, ok := tfMap[names.AttrCloudWatchLogGroupARN].(string); ok && v != "" {
+			apiObject.CloudWatchLogsLogGroupArn = aws.String(v)
+		}
+
+		apiObjects[tfMap["log_type"].(string)] = apiObject
+	}
+
+	return apiObjects
+}
+
+func flattenLogPublishingOptions(apiObjects map[string]awstypes.LogPublishingOption) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0)
+
+	for k, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+			"log_type":        k,
+		}
+
+		if v := apiObject.CloudWatchLogsLogGroupArn; v != nil {
+			tfMap[names.AttrCloudWatchLogGroupARN] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenOffPeakWindowOptions(apiObject *awstypes.OffPeakWindowOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.OffPeakWindow; v != nil {
-		tfMap["off_peak_window"] = []interface{}{flattenOffPeakWindow(v)}
+		tfMap["off_peak_window"] = []any{flattenOffPeakWindow(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOffPeakWindow(apiObject *awstypes.OffPeakWindow) map[string]interface{} {
+func flattenOffPeakWindow(apiObject *awstypes.OffPeakWindow) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.WindowStartTime; v != nil {
-		tfMap["window_start_time"] = []interface{}{flattenWindowStartTime(v)}
+		tfMap["window_start_time"] = []any{flattenWindowStartTime(v)}
 	}
 
 	return tfMap
 }
 
-func flattenWindowStartTime(apiObject *awstypes.WindowStartTime) map[string]interface{} {
+func flattenWindowStartTime(apiObject *awstypes.WindowStartTime) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"hours":   apiObject.Hours,
 		"minutes": apiObject.Minutes,
 	}

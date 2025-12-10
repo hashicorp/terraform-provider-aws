@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sweep
@@ -19,8 +19,6 @@ import (
 )
 
 const (
-	ThrottlingRetryTimeout = 10 * time.Minute
-
 	ResourcePrefix = "tf-acc-test"
 )
 
@@ -103,7 +101,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
+	Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
@@ -115,7 +113,7 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 
 	for _, sweepable := range sweepables {
 		g.Go(func() error {
-			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
+			return sweepable.Delete(ctx, optFns...)
 		})
 	}
 

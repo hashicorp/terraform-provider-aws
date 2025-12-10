@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -24,12 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,8 +45,8 @@ const (
 )
 
 // @FrameworkResource("aws_verifiedpermissions_identity_source", name="Identity Source")
-func newResourceIdentitySource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIdentitySource{}
+func newIdentitySourceResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &identitySourceResource{}
 
 	return r, nil
 }
@@ -54,15 +55,11 @@ const (
 	ResNameIdentitySource = "Identity Source"
 )
 
-type resourceIdentitySource struct {
-	framework.ResourceWithConfigure
+type identitySourceResource struct {
+	framework.ResourceWithModel[identitySourceResourceModel]
 }
 
-func (r *resourceIdentitySource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_verifiedpermissions_identity_source"
-}
-
-func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *identitySourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -211,9 +208,9 @@ func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourceIdentitySource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *identitySourceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourceIdentitySourceData
+	var plan identitySourceResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
@@ -269,9 +266,9 @@ func (r *resourceIdentitySource) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceIdentitySource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *identitySourceResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceIdentitySourceData
+	var state identitySourceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -280,7 +277,7 @@ func (r *resourceIdentitySource) Read(ctx context.Context, request resource.Read
 
 	output, err := findIdentitySourceByIDAndPolicyStoreID(ctx, conn, state.ID.ValueString(), state.PolicyStoreID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -305,9 +302,9 @@ func (r *resourceIdentitySource) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceIdentitySource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *identitySourceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourceIdentitySourceUpdateData
+	var state, plan identitySourceResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -319,7 +316,7 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	if !plan.UpdateConfiguration.Equal(state.UpdateConfiguration) || !plan.PolicyStoreID.Equal(state.PolicyStoreID) || !plan.PrincipalEntityType.Equal(state.PrincipalEntityType) {
+	if !plan.Configuration.Equal(state.Configuration) || !plan.PolicyStoreID.Equal(state.PolicyStoreID) || !plan.PrincipalEntityType.Equal(state.PrincipalEntityType) {
 		input := &verifiedpermissions.UpdateIdentitySourceInput{
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
@@ -355,21 +352,21 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 		if response.Diagnostics.HasError() {
 			return
 		}
-		plan.UpdateConfiguration = configuration
+		plan.Configuration = configuration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceIdentitySource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *identitySourceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceIdentitySourceData
+	var state identitySourceResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Identity Source", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
@@ -393,7 +390,7 @@ func (r *resourceIdentitySource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourceIdentitySource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *identitySourceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, ":")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("unexpected format of import ID (%s), expected: 'POLICY_STORE_ID:IDENTITY-SOURCE-ID'", request.ID))
@@ -472,15 +469,9 @@ func flattenTokenSelection(ctx context.Context, apiObject awstypes.OpenIdConnect
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obj), diags
 }
 
-type resourceIdentitySourceData struct {
+type identitySourceResourceModel struct {
+	framework.WithRegionModel
 	Configuration       fwtypes.ListNestedObjectValueOf[configuration] `tfsdk:"configuration"`
-	ID                  types.String                                   `tfsdk:"id"`
-	PolicyStoreID       types.String                                   `tfsdk:"policy_store_id"`
-	PrincipalEntityType types.String                                   `tfsdk:"principal_entity_type"`
-}
-
-type resourceIdentitySourceUpdateData struct {
-	UpdateConfiguration fwtypes.ListNestedObjectValueOf[configuration] `tfsdk:"configuration"`
 	ID                  types.String                                   `tfsdk:"id"`
 	PolicyStoreID       types.String                                   `tfsdk:"policy_store_id"`
 	PrincipalEntityType types.String                                   `tfsdk:"principal_entity_type"`
@@ -536,7 +527,7 @@ func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedp
 
 	out, err := conn.GetIdentitySource(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

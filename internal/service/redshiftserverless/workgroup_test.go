@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,6 +119,46 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 	})
 }
 
+// Tests the logic involved in validating/updating 'base_capacity' and 'price_performance_target'.
+func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
+				ExpectError: regexache.MustCompile("base_capacity cannot be set when price_performance_target.enabled is true"),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "1"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTarget(rName, 25),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "25"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -165,7 +205,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "require_ssl",
-						"parameter_value": acctest.CtFalse,
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "use_fips_ssl",
@@ -213,7 +253,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "require_ssl",
-						"parameter_value": acctest.CtFalse,
+						"parameter_value": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "use_fips_ssl",
@@ -319,6 +359,33 @@ func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessWorkgroup_trackName(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_trackName(rName, "current"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "track_name", "current"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
@@ -329,7 +396,7 @@ func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 			_, err := tfredshiftserverless.FindWorkgroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -407,6 +474,41 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName, baseCapacity)
 }
 
+func testAccWorkgroupConfig_pricePerformanceTarget(rName string, targetLevel int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  price_performance_target {
+    enabled = true
+    level   = %[2]d
+  }
+}
+
+`, rName, targetLevel)
+}
+
+func testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName string, pricePerformanceEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = 128
+  price_performance_target {
+    enabled = %[2]t
+  }
+}
+`, rName, pricePerformanceEnabled)
+}
+
 func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
@@ -447,7 +549,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
   config_parameter {
     parameter_key   = "require_ssl"
-    parameter_value = "false"
+    parameter_value = "true"
   }
   config_parameter {
     parameter_key   = "use_fips_ssl"
@@ -504,4 +606,18 @@ resource "aws_redshiftserverless_workgroup" "test" {
   port           = %[2]d
 }
 `, rName, port)
+}
+
+func testAccWorkgroupConfig_trackName(rName, trackName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  track_name     = %[2]q
+}
+`, rName, trackName)
 }

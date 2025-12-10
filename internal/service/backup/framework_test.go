@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -397,7 +397,8 @@ func testAccFramework_disappears(t *testing.T) {
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListFrameworks(ctx, &backup.ListFrameworksInput{})
+	input := backup.ListFrameworksInput{}
+	_, err := conn.ListFrameworks(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -419,7 +420,7 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbackup.FindFrameworkByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

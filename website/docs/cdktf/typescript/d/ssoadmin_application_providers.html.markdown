@@ -36,7 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -48,13 +50,13 @@ This data source exports the following attributes in addition to the arguments a
 ### `applicationProviders` Attribute Reference
 
 * `applicationProviderArn` - ARN of the application provider.
-* `displayData` - An object describing how IAM Identity Center represents the application provider in the portal. See [`displayData`](#display_data-attribute-reference) below.
-* `federationProtocol` - Protocol that the application provider uses to perform federation. Valid values are `SAML` and `OAUTH`.
+* `display_data` - An object describing how IAM Identity Center represents the application provider in the portal. See [`display_data`](#display_data-attribute-reference) below.
+* `federation_protocol` - Protocol that the application provider uses to perform federation. Valid values are `SAML` and `OAUTH`.
 
-### `displayData` Attribute Reference
+### `display_data` Attribute Reference
 
 * `description` - Description of the application provider.
 * `displayName` - Name of the application provider.
-* `iconUrl` - URL that points to an icon that represents the application provider.
+* `icon_url` - URL that points to an icon that represents the application provider.
 
-<!-- cache-key: cdktf-0.20.8 input-5b7f53830f2afb882f413121c04003a0266ebeabfe915b61f6df8b5b62338a3e -->
+<!-- cache-key: cdktf-0.20.8 input-a45aef2dc2fdc30ead19aab394d3ae5888b4a5e913575dcc95cb03e9c3d59e80 -->

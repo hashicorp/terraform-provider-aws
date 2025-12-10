@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,9 +33,9 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "memorydb", "multiregioncluster/{multi_region_cluster_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name_suffix"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_cluster_name_suffix", rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
@@ -431,7 +431,7 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 			name := rs.Primary.Attributes["multi_region_cluster_name"]
 
 			_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, name)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

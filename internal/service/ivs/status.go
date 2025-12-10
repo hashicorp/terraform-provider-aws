@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs
@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -18,10 +18,10 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindPlaybackKeyPairByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -33,10 +33,10 @@ func statusPlaybackKeyPair(ctx context.Context, conn *ivs.Client, id string) ret
 	}
 }
 
-func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindRecordingConfigurationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -48,10 +48,10 @@ func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id stri
 	}
 }
 
-func statusChannel(ctx context.Context, conn *ivs.Client, arn string, updateDetails *ivs.UpdateChannelInput) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusChannel(ctx context.Context, conn *ivs.Client, arn string, updateDetails *ivs.UpdateChannelInput) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindChannelByID(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

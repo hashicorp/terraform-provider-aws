@@ -5,15 +5,16 @@ package dynamodb
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-func listBackupsPages(ctx context.Context, conn *dynamodb.Client, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool) error {
+func listBackupsPages(ctx context.Context, conn *dynamodb.Client, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool, optFns ...func(*dynamodb.Options)) error {
 	for {
-		output, err := conn.ListBackups(ctx, input)
+		output, err := conn.ListBackups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.LastEvaluatedBackupArn) == ""

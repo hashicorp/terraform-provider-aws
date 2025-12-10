@@ -275,10 +275,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the pipe. At most 512 characters.
 * `desiredState` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichmentParameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `kmsKeyIdentifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt pipe data. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN. If not set, EventBridge uses an AWS owned key to encrypt pipe data.
 * `logConfiguration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -455,7 +457,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `kinesisStreamParameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambdaFunctionParameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshiftDataParameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
-* `sagemakerPipelineParameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
+* `sagemakerPipelineParameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqsQueueParameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `stepFunctionStateMachineParameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
@@ -626,12 +628,12 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.sagemaker_pipeline_parameters Configuration Block
 
-* `pipelineParameter` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution. Detailed below.
+* `pipelineParameter` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution. Detailed below.
 
 ##### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
 
-* `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
-* `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
+* `name` - (Optional) Name of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 256.
+* `value` - (Optional) Value of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 1024.
 
 #### target_parameters.sqs_queue_parameters Configuration Block
 
@@ -686,4 +688,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc037f0f5d2d7b250197accf6c0f7783efa70c8165657f2fd106a1f7d1b38c4 -->
+<!-- cache-key: cdktf-0.20.8 input-ea42928be23308e16f08dc8e3449738e22fee8ad9ba0b9c8fc75ab6bcb3eda90 -->

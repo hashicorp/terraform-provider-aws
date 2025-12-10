@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,15 +21,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_config_rule", name="Config Rule")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,
@@ -195,12 +197,10 @@ func resourceConfigRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -226,12 +226,12 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			configRule.Scope = expandScope(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			configRule.Source = expandSource(v.([]any)[0].(map[string]any))
 		}
 
 		input := &configservice.PutConfigRuleInput{
@@ -239,7 +239,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:       getTagsIn(ctx),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*types.InsufficientPermissionsException](ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[any, *types.InsufficientPermissionsException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutConfigRule(ctx, input)
 		})
 
@@ -255,13 +255,13 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceConfigRuleRead(ctx, d, meta)...)
 }
 
-func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	rule, err := findConfigRuleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -298,7 +298,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -306,7 +306,7 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteConfigRule(ctx, &configservice.DeleteConfigRuleInput{
 			ConfigRuleName: aws.String(d.Id()),
 		})
@@ -353,7 +353,7 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -369,11 +369,11 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 	return output, nil
 }
 
-func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findConfigRuleByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -389,7 +389,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.ConfigRuleStateActive,
 			types.ConfigRuleStateDeleting,
@@ -410,7 +410,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 	return nil, err
 }
 
-func expandEvaluationModeConfigurations(tfList []interface{}) []types.EvaluationModeConfiguration {
+func expandEvaluationModeConfigurations(tfList []any) []types.EvaluationModeConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -418,7 +418,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 	var apiObjects []types.EvaluationModeConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -435,7 +435,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 	return apiObjects
 }
 
-func expandScope(tfMap map[string]interface{}) *types.Scope {
+func expandScope(tfMap map[string]any) *types.Scope {
 	if tfMap == nil {
 		return nil
 	}
@@ -461,7 +461,7 @@ func expandScope(tfMap map[string]interface{}) *types.Scope {
 	return apiObject
 }
 
-func expandSource(tfMap map[string]interface{}) *types.Source {
+func expandSource(tfMap map[string]any) *types.Source {
 	if tfMap == nil {
 		return nil
 	}
@@ -470,8 +470,8 @@ func expandSource(tfMap map[string]interface{}) *types.Source {
 		Owner: types.Owner(tfMap[names.AttrOwner].(string)),
 	}
 
-	if v, ok := tfMap["custom_policy_details"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CustomPolicyDetails = expandCustomPolicyDetails(v[0].(map[string]interface{}))
+	if v, ok := tfMap["custom_policy_details"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomPolicyDetails = expandCustomPolicyDetails(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["source_detail"].(*schema.Set); ok && v.Len() > 0 {
@@ -485,7 +485,7 @@ func expandSource(tfMap map[string]interface{}) *types.Source {
 	return apiObject
 }
 
-func expandCustomPolicyDetails(tfMap map[string]interface{}) *types.CustomPolicyDetails {
+func expandCustomPolicyDetails(tfMap map[string]any) *types.CustomPolicyDetails {
 	if tfMap == nil {
 		return nil
 	}
@@ -499,7 +499,7 @@ func expandCustomPolicyDetails(tfMap map[string]interface{}) *types.CustomPolicy
 	return apiObject
 }
 
-func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
+func expandSourceDetails(tfList []any) []types.SourceDetail {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -507,7 +507,7 @@ func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
 	var apiObjects []types.SourceDetail
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -532,15 +532,15 @@ func expandSourceDetails(tfList []interface{}) []types.SourceDetail {
 	return apiObjects
 }
 
-func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfiguration) []interface{} {
+func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrMode: apiObject.Mode,
 		}
 
@@ -550,12 +550,12 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 	return tfList
 }
 
-func flattenScope(apiObject *types.Scope) []interface{} {
+func flattenScope(apiObject *types.Scope) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComplianceResourceId != nil {
 		tfMap["compliance_resource_id"] = aws.ToString(apiObject.ComplianceResourceId)
@@ -573,15 +573,15 @@ func flattenScope(apiObject *types.Scope) []interface{} {
 		tfMap["tag_value"] = aws.ToString(apiObject.TagValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSource(apiObject *types.Source) []interface{} {
+func flattenSource(apiObject *types.Source) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrOwner:     apiObject.Owner,
 		"source_identifier": aws.ToString(apiObject.SourceIdentifier),
 	}
@@ -594,32 +594,32 @@ func flattenSource(apiObject *types.Source) []interface{} {
 		tfMap["source_detail"] = flattenSourceDetails(apiObject.SourceDetails)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomPolicyDetails(apiObject *types.CustomPolicyDetails) []interface{} {
+func flattenCustomPolicyDetails(apiObject *types.CustomPolicyDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enable_debug_log_delivery": apiObject.EnableDebugLogDelivery,
 		"policy_runtime":            aws.ToString(apiObject.PolicyRuntime),
 		"policy_text":               aws.ToString(apiObject.PolicyText),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSourceDetails(apiObjects []types.SourceDetail) []interface{} {
+func flattenSourceDetails(apiObjects []types.SourceDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"event_source":                apiObject.EventSource,
 			"maximum_execution_frequency": apiObject.MaximumExecutionFrequency,
 			"message_type":                apiObject.MessageType,

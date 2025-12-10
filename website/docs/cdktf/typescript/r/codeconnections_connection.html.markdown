@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the connection to be created. The name must be unique in the calling AWS account. Changing `name` will create a new resource.
 * `providerType` - (Optional) The name of the external provider where your third-party code repository is configured. Changing `providerType` will create a new resource. Conflicts with `hostArn`.
 * `hostArn` - (Optional) The Amazon Resource Name (ARN) of the host associated with the connection. Conflicts with `providerType`
@@ -52,12 +53,33 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The codeconnections connection ARN.
 * `arn` - The codeconnections connection ARN.
 * `connectionStatus` - The codeconnections connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
+* `id` - (**Deprecated**) The codeconnections connection ARN.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeconnections_connection.example
+  identity = {
+    "arn" = "arn:aws:codeconnections:us-west-2:123456789012:connection/example-connection-id"
+  }
+}
+
+resource "aws_codeconnections_connection" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeConnections connection.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeConnections connection using the ARN. For example:
 
@@ -89,4 +111,4 @@ Using `terraform import`, import CodeConnections connection using the ARN. For e
 % terraform import aws_codeconnections_connection.test-connection arn:aws:codeconnections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-703ee3263b2855af9509c6048e4b35767cf2234d794822fe00864affd9cf14f6 -->
+<!-- cache-key: cdktf-0.20.8 input-c7386d2e09ecfa49ab8b75a929165bb6c995da87ef645cb8cbe73a70c78a12dc -->

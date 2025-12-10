@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -53,9 +52,10 @@ func dataSourcePolicy() *schema.Resource {
 				Computed: true,
 			},
 			"path_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrARN},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ConflictsWith:    []string{names.AttrARN},
+				ValidateDiagFunc: validPolicyPath,
 			},
 			names.AttrPolicy: {
 				Type:     schema.TypeString,
@@ -70,7 +70,7 @@ func dataSourcePolicy() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -79,8 +79,8 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-			func() (interface{}, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+			func(ctx context.Context) (*awstypes.Policy, error) {
 				return findPolicyByTwoPartKey(ctx, conn, name, pathPrefix)
 			},
 		)
@@ -89,7 +89,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IAM Policy", err))
 		}
 
-		arn = aws.ToString((outputRaw.(*awstypes.Policy)).Arn)
+		arn = aws.ToString(output.Arn)
 	}
 
 	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
@@ -102,31 +102,20 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn = aws.ToString(policy.Arn)
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrPath, policy.Path)
-	d.Set("policy_id", policy.PolicyId)
+	resourcePolicyFlatten(ctx, policy, d)
 
-	setTagsOut(ctx, policy.Tags)
-
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
+	policyVersion, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
+			return findPolicyVersionByTwoPartKey(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(outputRaw.(*awstypes.PolicyVersion).Document))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
+	if err := resourcePolicyFlattenPolicyDocument(aws.ToString(policyVersion.Document), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	d.Set(names.AttrPolicy, policyDocument)
 
 	return diags
 }

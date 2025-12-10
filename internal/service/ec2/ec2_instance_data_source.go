@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -123,11 +122,11 @@ func dataSourceInstance() *schema.Resource {
 					},
 				},
 				// This should not be necessary, but currently is (see #7198)
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -276,6 +275,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -406,16 +409,17 @@ func dataSourceInstance() *schema.Resource {
 }
 
 // dataSourceInstanceRead performs the instanceID lookup
-func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	// Build up search parameters
-	input := &ec2.DescribeInstancesInput{}
+	input := ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
@@ -431,7 +435,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.InstanceIds = []string{v.(string)}
 	}
 
-	instance, err := findInstance(ctx, conn, input)
+	instance, err := findInstance(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance", err))
@@ -451,20 +455,13 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// ARN
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	return diags
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance) error {
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance) error {
 	d.SetId(aws.ToString(instance.InstanceId))
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -477,13 +474,15 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
-	d.Set("placement_group", instance.Placement.GroupName)
-	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	d.Set("tenancy", instance.Placement.Tenancy)
-	d.Set("host_id", instance.Placement.HostId)
-	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-
+	if v := instance.Placement; v != nil {
+		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
+		d.Set("host_id", v.HostId)
+		d.Set("host_resource_group_arn", v.HostResourceGroupArn)
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
+		d.Set("placement_partition_number", v.PartitionNumber)
+		d.Set("tenancy", v.Tenancy)
+	}
 	d.Set("ami", instance.ImageId)
 	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
@@ -556,39 +555,42 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, true); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
-		d.Set("ephemeral_block_device", []interface{}{})
+		d.Set("ephemeral_block_device", []any{})
 	}
 
 	// Lookup and Set Instance Attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		input := ec2.DescribeInstanceAttributeInput{
 			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
-		})
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameUserData, err)
 		}
@@ -616,7 +618,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if instanceCreditSpecification != nil {
-			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+			if err := d.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
 				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
@@ -631,7 +633,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+		if err := d.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
 			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
@@ -643,7 +645,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
 			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package comprehend
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -62,7 +62,7 @@ func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups
 }
 
 func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2types.NetworkInterface, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{},
 		Target:     enum.Slice(ec2types.NetworkInterfaceStatusInUse),
 		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
@@ -80,8 +80,8 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 	return nil, err
 }
 
-func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := findNetworkInterfaces(ctx, conn, securityGroups, subnets)
 		if err != nil {
 			return nil, "", err
@@ -107,25 +107,25 @@ type resourceGetter interface {
 	Get(key string) any
 }
 
-func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
+func flattenVPCConfig(apiObject *types.VpcConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
 		names.AttrSubnets:          flex.FlattenStringValueSet(apiObject.Subnets),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
+func expandVPCConfig(tfList []any) *types.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -135,12 +135,12 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	return a
 }
 
-func flattenAugmentedManifests(apiObjects []types.AugmentedManifestsListItem) []interface{} {
+func flattenAugmentedManifests(apiObjects []types.AugmentedManifestsListItem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenAugmentedManifestsListItem(&apiObject))
@@ -149,12 +149,12 @@ func flattenAugmentedManifests(apiObjects []types.AugmentedManifestsListItem) []
 	return l
 }
 
-func flattenAugmentedManifestsListItem(apiObject *types.AugmentedManifestsListItem) map[string]interface{} {
+func flattenAugmentedManifestsListItem(apiObject *types.AugmentedManifestsListItem) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"attribute_names": flex.FlattenStringValueList(apiObject.AttributeNames),
 		"s3_uri":          aws.ToString(apiObject.S3Uri),
 		"document_type":   apiObject.DocumentType,
@@ -180,7 +180,7 @@ func expandAugmentedManifests(tfSet *schema.Set) []types.AugmentedManifestsListI
 	var s []types.AugmentedManifestsListItem
 
 	for _, r := range tfSet.List() {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -198,13 +198,13 @@ func expandAugmentedManifests(tfSet *schema.Set) []types.AugmentedManifestsListI
 	return s
 }
 
-func expandAugmentedManifestsListItem(tfMap map[string]interface{}) *types.AugmentedManifestsListItem {
+func expandAugmentedManifestsListItem(tfMap map[string]any) *types.AugmentedManifestsListItem {
 	if tfMap == nil {
 		return nil
 	}
 
 	a := &types.AugmentedManifestsListItem{
-		AttributeNames: flex.ExpandStringValueList(tfMap["attribute_names"].([]interface{})),
+		AttributeNames: flex.ExpandStringValueList(tfMap["attribute_names"].([]any)),
 		S3Uri:          aws.String(tfMap["s3_uri"].(string)),
 		DocumentType:   types.AugmentedManifestsDocumentTypeFormat(tfMap["document_type"].(string)),
 		Split:          types.Split(tfMap["split"].(string)),

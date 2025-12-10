@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -63,54 +63,6 @@ func testAccIPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
-				),
-			},
-		},
-	})
-}
-
-func testAccIPSet_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_guardduty_ipset.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckDetectorNotExists(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIPSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccIPSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccIPSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -235,63 +187,4 @@ resource "aws_guardduty_ipset" "test" {
   activate    = %[3]t
 }
 `, keyName, ipsetName, activate))
-}
-
-func testAccIPSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccIPSetConfig_base(rName), fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
-resource "aws_s3_object" "test" {
-  acl     = "public-read"
-  content = "10.0.0.0/8\n"
-  bucket  = aws_s3_bucket.test.id
-  key     = %[1]q
-
-  depends_on = [
-    aws_s3_bucket_acl.test,
-  ]
-}
-
-resource "aws_guardduty_ipset" "test" {
-  activate    = true
-  detector_id = aws_guardduty_detector.test.id
-  format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
-  name        = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccIPSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccIPSetConfig_base(rName), fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {}
-
-resource "aws_s3_object" "test" {
-  acl     = "public-read"
-  content = "10.0.0.0/8\n"
-  bucket  = aws_s3_bucket.test.id
-  key     = %[1]q
-
-  depends_on = [
-    aws_s3_bucket_acl.test,
-  ]
-}
-
-resource "aws_guardduty_ipset" "test" {
-  activate    = true
-  detector_id = aws_guardduty_detector.test.id
-  format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
-  name        = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

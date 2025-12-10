@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -14,11 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -55,7 +56,7 @@ func resourceOrganizationConfiguration() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Computed:    true,
-				DefaultFunc: func() (interface{}, error) { return defaultOrganizationConfiguration, nil },
+				DefaultFunc: func() (any, error) { return defaultOrganizationConfiguration, nil },
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -71,7 +72,7 @@ func resourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -83,8 +84,8 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		input.AutoEnableStandards = types.AutoEnableStandards(v.(string))
 	}
 
-	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OrganizationConfiguration = expandOrganizationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OrganizationConfiguration = expandOrganizationConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
@@ -93,7 +94,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	// e.g. "DataUnavailableException: Central configuration couldn't be enabled because data from organization o-ira6i4k380 is still syncing. Retry later."
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateOrganizationConfiguration(ctx, input)
 	}, errCodeDataUnavailableException, "Retry later")
 
@@ -119,13 +120,13 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := findOrganizationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -137,7 +138,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_standards", output.AutoEnableStandards)
-	if err := d.Set("organization_configuration", []interface{}{flattenOrganizationConfiguration(output.OrganizationConfiguration)}); err != nil {
+	if err := d.Set("organization_configuration", []any{flattenOrganizationConfiguration(output.OrganizationConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting organization_configuration: %s", err)
 	}
 
@@ -147,7 +148,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 // resourceOrganizationConfigurationDelete destroys the organizations configuration resource by updating it to a disabled configuration.
 // If orgnanization configuration is of type central, then dependent resources (i.e finding_aggregator, delegated_admin) cannot be removed from AWS.
 // Updating the organization configuration on destroy is necessary to allow dependent resources to be able to be cleaned up.
-func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -166,8 +167,8 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	configurationType := types.OrganizationConfigurationConfigurationTypeLocal
-	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if organizationConfiguration := expandOrganizationConfiguration(v.([]interface{})[0].(map[string]interface{})); organizationConfiguration != nil {
+	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if organizationConfiguration := expandOrganizationConfiguration(v.([]any)[0].(map[string]any)); organizationConfiguration != nil {
 			configurationType = organizationConfiguration.ConfigurationType
 		}
 	}
@@ -187,7 +188,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -204,11 +205,11 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	return output, nil
 }
 
-func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findOrganizationConfiguration(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -221,7 +222,7 @@ func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Clie
 }
 
 func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
 		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
 		Refresh:                   statusOrganizationConfiguration(ctx, conn),
@@ -240,7 +241,7 @@ func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub
 	return nil, err
 }
 
-func expandOrganizationConfiguration(tfMap map[string]interface{}) *types.OrganizationConfiguration {
+func expandOrganizationConfiguration(tfMap map[string]any) *types.OrganizationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -254,20 +255,20 @@ func expandOrganizationConfiguration(tfMap map[string]interface{}) *types.Organi
 	return apiObject
 }
 
-func flattenOrganizationConfiguration(apiObject *types.OrganizationConfiguration) map[string]interface{} {
+func flattenOrganizationConfiguration(apiObject *types.OrganizationConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"configuration_type": apiObject.ConfigurationType,
 	}
 
 	return tfMap
 }
 
-var defaultOrganizationConfiguration = []interface{}{
-	map[string]interface{}{
+var defaultOrganizationConfiguration = []any{
+	map[string]any{
 		"configuration_type": types.OrganizationConfigurationConfigurationTypeLocal,
 	},
 }

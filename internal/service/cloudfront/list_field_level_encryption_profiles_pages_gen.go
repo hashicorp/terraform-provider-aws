@@ -5,15 +5,16 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listFieldLevelEncryptionProfilesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool) error {
+func listFieldLevelEncryptionProfilesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListFieldLevelEncryptionProfiles(ctx, input)
+		output, err := conn.ListFieldLevelEncryptionProfiles(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.FieldLevelEncryptionProfileList.NextMarker) == ""

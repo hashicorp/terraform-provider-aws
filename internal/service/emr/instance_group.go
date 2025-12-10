@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,7 +40,7 @@ func resourceInstanceGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceInstanceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected cluster-id/ig-id", d.Id())
@@ -76,7 +77,7 @@ func resourceInstanceGroup() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -146,7 +147,7 @@ func resourceInstanceGroup() *schema.Resource {
 	}
 }
 
-func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -215,13 +216,13 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceGroupRead(ctx, d, meta)...)
 }
 
-func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	ig, err := findInstanceGroupByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Instance Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -260,7 +261,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -329,7 +330,7 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceGroupRead(ctx, d, meta)...)
 }
 
-func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -368,7 +369,7 @@ func findInstanceGroupByTwoPartKey(ctx context.Context, conn *emr.Client, cluste
 	}
 
 	if state := output.Status.State; state == awstypes.InstanceGroupStateTerminating || state == awstypes.InstanceGroupStateTerminated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -395,7 +396,7 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -415,11 +416,11 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceGroupByTwoPartKey(ctx, conn, clusterID, groupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -432,7 +433,7 @@ func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, group
 }
 
 func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
 		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
 		Refresh:    statusInstanceGroup(ctx, conn, clusterID, groupID),
@@ -461,7 +462,7 @@ func readEBSConfig(d *schema.ResourceData) *awstypes.EbsConfiguration {
 	if rawConfig, ok := d.GetOk("ebs_config"); ok {
 		configList := rawConfig.(*schema.Set).List()
 		for _, config := range configList {
-			conf := config.(map[string]interface{})
+			conf := config.(map[string]any)
 			ebs := awstypes.EbsBlockDeviceConfig{}
 			volumeSpec := &awstypes.VolumeSpecification{
 				SizeInGB:   aws.Int32(int32(conf[names.AttrSize].(int))),

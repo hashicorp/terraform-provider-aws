@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +42,47 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var podidentityassociation types.PodIdentityAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrSet(resourceName, "disable_session_tags"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -177,6 +216,47 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 	})
 }
 
+func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var podidentityassociation types.PodIdentityAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttrPair(resourceName, "target_role_arn", "aws_iam_role.target_role", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_updateTargetRoleARN(rName, targetRoleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttrPair(resourceName, "target_role_arn", "aws_iam_role.target_role2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
@@ -188,7 +268,7 @@ func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes[names.AttrClusterName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -207,7 +287,7 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, n string, v *
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EKS, create.ErrActionCheckingExistence, tfeks.ResNamePodIdentityAssociation, n, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
@@ -426,4 +506,147 @@ resource "aws_eks_pod_identity_association" "test" {
   role_arn        = aws_iam_role.test2.arn
 }
 `, rName))
+}
+
+func testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName, targetRoleName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "target_account" {
+  provider = "awsalternate"
+}
+data "aws_caller_identity" "target_account" {
+  provider = "awsalternate"
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "pods.eks.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+        Resource = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.target_account.account_id}:role/%[2]s"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "target_role" {
+  provider = "awsalternate"
+  name     = %[2]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.target_account.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[1]s"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "target" {
+  provider   = "awsalternate"
+  policy_arn = "arn:${data.aws_partition.target_account.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  role       = aws_iam_role.target_role.name
+}
+`, rName, targetRoleName))
+}
+
+func testAccPodIdentityAssociationConfig_crossaccount(rName, targetRoleName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName, targetRoleName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name         = aws_eks_cluster.test.name
+  namespace            = %[1]q
+  service_account      = "%[1]s-sa"
+  disable_session_tags = true
+  role_arn             = aws_iam_role.test.arn
+  target_role_arn      = aws_iam_role.target_role.arn
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_updateTargetRoleARN(rName, targetRoleName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_crossAccountPodIdentityRolesBase(rName, targetRoleName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "target_role2" {
+  provider           = "awsalternate"
+  name               = "%[2]s-2"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.target_account.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[1]s"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "target2" {
+  provider   = "awsalternate"
+  policy_arn = "arn:${data.aws_partition.target_account.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  role       = aws_iam_role.target_role2.name
+}
+
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name         = aws_eks_cluster.test.name
+  namespace            = %[1]q
+  service_account      = "%[1]s-sa"
+  disable_session_tags = false
+  role_arn             = aws_iam_role.test.arn
+  target_role_arn      = aws_iam_role.target_role2.arn
+}
+`, rName, targetRoleName))
 }

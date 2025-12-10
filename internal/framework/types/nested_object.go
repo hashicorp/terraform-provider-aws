@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -63,4 +63,14 @@ type valueWithElements interface {
 	attr.Value
 
 	Elements() []attr.Value
+}
+
+type NestedCollectionValue[T any] interface {
+	NestedObjectCollectionValue
+
+	// ToSlice returns the value as a slice of pointers to the nested objects.
+	ToSlice(context.Context) ([]*T, diag.Diagnostics)
+
+	// ToPtr returns a pointer to the single element of the nested object.
+	ToPtr(ctx context.Context) (*T, diag.Diagnostics)
 }

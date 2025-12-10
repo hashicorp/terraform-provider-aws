@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Fix perpetual `logging_config` diffs when `log_format` is set to `JSON` and `publish = true`
+```

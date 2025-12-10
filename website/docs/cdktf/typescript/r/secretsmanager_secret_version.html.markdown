@@ -14,6 +14,8 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 ~> **NOTE:** If the `AWSCURRENT` staging label is present on this version during resource deletion, that label cannot be removed and will be skipped to prevent errors when fully deleting the secret. That label will leave this secret version active even after the resource is deleted from Terraform unless the secret itself is deleted. Move the `AWSCURRENT` staging label before or after deleting this resource from Terraform to fully trigger version deprecation if necessary.
 
+-> **Note:** Write-Only argument `secretStringWo` is available to use in place of `secretString`. Write-Only argumentss are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Simple String Value
@@ -107,9 +109,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secretId` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `secretString` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secretBinary` is not set.
-* `secretBinary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if `secretString` is not set. Needs to be encoded to base64.
+* `secretString` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secretBinary` or `secretStringWo` is not set.
+* `secretStringWo` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if `secretBinary` or `secretString` is not set.
+* `secretStringWoVersion`  - (Optional) Used together with `secretStringWo` to trigger an update. Increment this value when an update to `secretStringWo` is required.
+* `secretBinary` - (Optional) Specifies binary data that you want to encrypt and store in this version of the secret. This is required if `secretString` or `secretStringWo` is not set. Needs to be encoded to base64.
 * `versionStages` - (Optional) Specifies a list of staging labels that are attached to this version of the secret. A staging label must be unique to a single version of the secret. If you specify a staging label that's already associated with a different version of the same secret then that staging label is automatically removed from the other version and attached to this version. If you do not specify a value, then AWS Secrets Manager automatically moves the staging label `AWSCURRENT` to this new version on creation.
 
 ~> **NOTE:** If `versionStages` is configured, you must include the `AWSCURRENT` staging label if this secret version is the only version or if the label is currently present on this secret version, otherwise Terraform will show a perpetual difference.
@@ -123,6 +128,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `versionId` - The unique identifier of the version of the secret.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_secretsmanager_secret_version.example
+  identity = {
+    secret_id  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+    version_id = "xxxxx-xxxxxxx-xxxxxxx-xxxxx"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `secretId` - (String) ID of the secret.
+* `versionId` - (String) ID of the secret version.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
@@ -154,4 +187,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5c6bef052ca1ac5532b5d2f27ef3e3ecee610c7ccc1c059c28a37372c9855304 -->
+<!-- cache-key: cdktf-0.20.8 input-fc8a23275ada9475c3bc2e4d14a782882cf9cbdf4a6bf4bbb9f29faf6be79826 -->

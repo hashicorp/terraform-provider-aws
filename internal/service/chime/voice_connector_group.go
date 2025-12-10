@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chime
@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -85,17 +85,13 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVoiceConnectorGroupRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.VoiceConnectorGroup, error) {
 		return findVoiceConnectorGroupByID(ctx, conn, d.Id())
 	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorGroupByID(ctx, conn, d.Id())
-	}
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
@@ -116,7 +112,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -141,7 +137,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceVoiceConnectorGroupRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -173,11 +169,11 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem {
+func expandVoiceConnectorItems(data []any) []awstypes.VoiceConnectorItem {
 	var connectorsItems []awstypes.VoiceConnectorItem
 
 	for _, rItem := range data {
-		item := rItem.(map[string]interface{})
+		item := rItem.(map[string]any)
 		connectorsItems = append(connectorsItems, awstypes.VoiceConnectorItem{
 			VoiceConnectorId: aws.String(item["voice_connector_id"].(string)),
 			Priority:         aws.Int32(int32(item[names.AttrPriority].(int))),
@@ -187,11 +183,11 @@ func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem
 	return connectorsItems
 }
 
-func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []interface{} {
-	var rawConnectors []interface{}
+func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []any {
+	var rawConnectors []any
 
 	for _, c := range connectors {
-		rawC := map[string]interface{}{
+		rawC := map[string]any{
 			names.AttrPriority:   c.Priority,
 			"voice_connector_id": aws.ToString(c.VoiceConnectorId),
 		}
@@ -208,7 +204,7 @@ func findVoiceConnectorGroupByID(ctx context.Context, conn *chimesdkvoice.Client
 	resp, err := conn.GetVoiceConnectorGroup(ctx, in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

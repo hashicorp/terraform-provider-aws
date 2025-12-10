@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -25,13 +25,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,12 +49,8 @@ func newAgentCollaboratorResource(context.Context) (resource.ResourceWithConfigu
 }
 
 type agentCollaboratorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentCollaboratorResourceModel]
 	framework.WithTimeouts
-}
-
-func (*agentCollaboratorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_collaborator"
 }
 
 func (r *agentCollaboratorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -150,7 +147,12 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	output, err := conn.AssociateAgentCollaborator(ctx, &input)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+	output, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
+			return conn.AssociateAgentCollaborator(ctx, &input)
+		},
+	)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Collaborator", err.Error())
@@ -174,7 +176,7 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
 
 			return
@@ -200,7 +202,7 @@ func (r *agentCollaboratorResource) Read(ctx context.Context, request resource.R
 
 	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.AgentID.ValueString(), data.AgentVersion.ValueString(), data.CollaboratorID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -244,8 +246,12 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 			return
 		}
 
-		_, err := conn.UpdateAgentCollaborator(ctx, &input)
-
+		timeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err := retryOpIfPreparing(ctx, timeout,
+			func(ctx context.Context) (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
+				return conn.UpdateAgentCollaborator(ctx, &input)
+			},
+		)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Collaborator (%s)", new.ID.ValueString()), err.Error())
 
@@ -253,7 +259,7 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 		}
 
 		if new.PrepareAgent.ValueBool() {
-			if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), timeout); err != nil {
 				response.Diagnostics.AddError("preparing Agent", err.Error())
 				return
 			}
@@ -272,11 +278,18 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DisassociateAgentCollaborator(ctx, &bedrockagent.DisassociateAgentCollaboratorInput{
+	input := bedrockagent.DisassociateAgentCollaboratorInput{
 		AgentId:        data.AgentID.ValueStringPointer(),
 		AgentVersion:   data.AgentVersion.ValueStringPointer(),
 		CollaboratorId: data.CollaboratorID.ValueStringPointer(),
-	})
+	}
+
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
+			return conn.DisassociateAgentCollaborator(ctx, &input)
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -289,7 +302,7 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, data.AgentID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))...)
+		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, data.AgentID.ValueString(), timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -312,7 +325,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 	output, err := conn.GetAgentCollaborator(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -330,6 +343,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 }
 
 type agentCollaboratorResourceModel struct {
+	framework.WithRegionModel
 	AgentID                  types.String                                          `tfsdk:"agent_id"`
 	AgentVersion             types.String                                          `tfsdk:"agent_version"`
 	AgentDescriptor          fwtypes.ListNestedObjectValueOf[agentDescriptorModel] `tfsdk:"agent_descriptor"`

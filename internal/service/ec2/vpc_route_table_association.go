@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,7 +61,7 @@ func resourceRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +79,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AssociateRouteTable(ctx, input)
 		},
 		errCodeInvalidRouteTableIDNotFound,
@@ -97,15 +98,15 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	association, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.RouteTableAssociation, error) {
 		return findRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -115,8 +116,6 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
 
-	association := outputRaw.(*awstypes.RouteTableAssociation)
-
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)
 	d.Set(names.AttrSubnetID, association.SubnetId)
@@ -124,7 +123,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -160,7 +159,7 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -170,7 +169,7 @@ func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
@@ -220,9 +219,10 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 // routeTableAssociationDelete attempts to delete a route table association.
 func routeTableAssociationDelete(ctx context.Context, conn *ec2.Client, associationID string, timeout time.Duration) error {
 	log.Printf("[INFO] Deleting Route Table Association: %s", associationID)
-	_, err := conn.DisassociateRouteTable(ctx, &ec2.DisassociateRouteTableInput{
+	input := ec2.DisassociateRouteTableInput{
 		AssociationId: aws.String(associationID),
-	})
+	}
+	_, err := conn.DisassociateRouteTable(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil

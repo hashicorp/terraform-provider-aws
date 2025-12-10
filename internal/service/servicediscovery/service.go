@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -14,16 +14,16 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -127,6 +127,8 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
+							Deprecated: "failure_threshold is deprecated. The argument is no longer supported by AWS and the " +
+								"value is always set to 1. The attribute will be removed in a future major version.",
 						},
 					},
 				},
@@ -152,12 +154,10 @@ func resourceService() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.ServiceTypeOption](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -172,16 +172,16 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsConfig = expandDNSConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("dns_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DnsConfig = expandDNSConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("health_check_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.HealthCheckConfig = expandHealthCheckConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.HealthCheckCustomConfig = expandHealthCheckCustomConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.HealthCheckCustomConfig = expandHealthCheckCustomConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
@@ -203,13 +203,13 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	service, err := findServiceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -223,21 +223,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
-		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dns_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_config: %s", err)
 		}
 	} else {
 		d.Set("dns_config", nil)
 	}
 	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
-		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("health_check_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_config", nil)
 	}
 	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
-		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("health_check_custom_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check_custom_config: %s", err)
 		}
 	} else {
@@ -250,7 +250,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -262,12 +262,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			},
 		}
 
-		if v, ok := d.GetOk("dns_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Service.DnsConfig = expandDNSConfigChange(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("dns_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Service.DnsConfig = expandDNSConfigChange(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("health_check_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Service.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("health_check_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Service.HealthCheckConfig = expandHealthCheckConfig(v.([]any)[0].(map[string]any))
 		}
 
 		output, err := conn.UpdateService(ctx, input)
@@ -286,7 +286,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
@@ -389,7 +389,7 @@ func findServiceByID(ctx context.Context, conn *servicediscovery.Client, id stri
 	output, err := conn.GetService(ctx, input)
 
 	if errs.IsA[*awstypes.ServiceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -406,14 +406,14 @@ func findServiceByID(ctx context.Context, conn *servicediscovery.Client, id stri
 	return output.Service, nil
 }
 
-func expandDNSConfig(tfMap map[string]interface{}) *awstypes.DnsConfig {
+func expandDNSConfig(tfMap map[string]any) *awstypes.DnsConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.DnsConfig{}
 
-	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dns_records"].([]any); ok && len(v) > 0 {
 		apiObject.DnsRecords = expandDNSRecords(v)
 	}
 
@@ -428,21 +428,21 @@ func expandDNSConfig(tfMap map[string]interface{}) *awstypes.DnsConfig {
 	return apiObject
 }
 
-func expandDNSConfigChange(tfMap map[string]interface{}) *awstypes.DnsConfigChange {
+func expandDNSConfigChange(tfMap map[string]any) *awstypes.DnsConfigChange {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.DnsConfigChange{}
 
-	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dns_records"].([]any); ok && len(v) > 0 {
 		apiObject.DnsRecords = expandDNSRecords(v)
 	}
 
 	return apiObject
 }
 
-func expandDNSRecord(tfMap map[string]interface{}) *awstypes.DnsRecord {
+func expandDNSRecord(tfMap map[string]any) *awstypes.DnsRecord {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -460,7 +460,7 @@ func expandDNSRecord(tfMap map[string]interface{}) *awstypes.DnsRecord {
 	return apiObject
 }
 
-func expandDNSRecords(tfList []interface{}) []awstypes.DnsRecord {
+func expandDNSRecords(tfList []any) []awstypes.DnsRecord {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -468,7 +468,7 @@ func expandDNSRecords(tfList []interface{}) []awstypes.DnsRecord {
 	var apiObjects []awstypes.DnsRecord
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -486,12 +486,12 @@ func expandDNSRecords(tfList []interface{}) []awstypes.DnsRecord {
 	return apiObjects
 }
 
-func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]interface{} {
+func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DnsRecords; v != nil {
 		tfMap["dns_records"] = flattenDNSRecords(v)
@@ -508,12 +508,12 @@ func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]interface{} {
 	return tfMap
 }
 
-func flattenDNSRecord(apiObject *awstypes.DnsRecord) map[string]interface{} {
+func flattenDNSRecord(apiObject *awstypes.DnsRecord) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.TTL; v != nil {
 		tfMap["ttl"] = aws.ToInt64(v)
@@ -526,12 +526,12 @@ func flattenDNSRecord(apiObject *awstypes.DnsRecord) map[string]interface{} {
 	return tfMap
 }
 
-func flattenDNSRecords(apiObjects []awstypes.DnsRecord) []interface{} {
+func flattenDNSRecords(apiObjects []awstypes.DnsRecord) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDNSRecord(&apiObject))
@@ -540,7 +540,7 @@ func flattenDNSRecords(apiObjects []awstypes.DnsRecord) []interface{} {
 	return tfList
 }
 
-func expandHealthCheckConfig(tfMap map[string]interface{}) *awstypes.HealthCheckConfig {
+func expandHealthCheckConfig(tfMap map[string]any) *awstypes.HealthCheckConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -562,12 +562,12 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *awstypes.HealthCheck
 	return apiObject
 }
 
-func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]interface{} {
+func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FailureThreshold; v != nil {
 		tfMap["failure_threshold"] = aws.ToInt32(v)
@@ -584,7 +584,7 @@ func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]
 	return tfMap
 }
 
-func expandHealthCheckCustomConfig(tfMap map[string]interface{}) *awstypes.HealthCheckCustomConfig {
+func expandHealthCheckCustomConfig(tfMap map[string]any) *awstypes.HealthCheckCustomConfig {
 	if len(tfMap) < 1 {
 		return nil
 	}
@@ -598,12 +598,12 @@ func expandHealthCheckCustomConfig(tfMap map[string]interface{}) *awstypes.Healt
 	return apiObject
 }
 
-func flattenHealthCheckCustomConfig(apiObject *awstypes.HealthCheckCustomConfig) map[string]interface{} {
+func flattenHealthCheckCustomConfig(apiObject *awstypes.HealthCheckCustomConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FailureThreshold; v != nil {
 		tfMap["failure_threshold"] = aws.ToInt32(v)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -126,11 +126,11 @@ func TestNewCustomFilterList(t *testing.T) {
 		return ret
 	}
 
-	filters.Add(map[string]interface{}{
+	filters.Add(map[string]any{
 		names.AttrName:   "foo",
 		names.AttrValues: valuesSet("bar", "baz"),
 	})
-	filters.Add(map[string]interface{}{
+	filters.Add(map[string]any{
 		names.AttrName:   "pizza",
 		names.AttrValues: valuesSet("cheese"),
 	})

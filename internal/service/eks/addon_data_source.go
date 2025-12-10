@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -77,7 +77,7 @@ func dataSourceAddon() *schema.Resource {
 	}
 }
 
-func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -108,7 +108,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

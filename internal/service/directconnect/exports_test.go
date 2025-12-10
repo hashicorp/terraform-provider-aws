@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -36,4 +36,5 @@ var (
 	FindMacSecKeyByTwoPartKey          = findMacSecKeyByTwoPartKey
 	FindVirtualInterfaceByID           = findVirtualInterfaceByID
 	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
+	GatewayAssociationStateUpgradeV1   = gatewayAssociationStateUpgradeV1
 )

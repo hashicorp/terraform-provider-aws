@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -215,7 +215,7 @@ data "aws_region" "current" {}
 
 data "aws_service" "test" {
   reverse_dns_prefix = "com.amazonaws"
-  region             = data.aws_region.current.name
+  region             = data.aws_region.current.region
   service_id         = "s3"
 }
 `

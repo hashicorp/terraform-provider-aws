@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,7 +44,7 @@ func resourceDomainPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -57,7 +58,7 @@ func resourceDomainPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -71,8 +72,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		DomainName:     aws.String(domainName),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateElasticsearchDomainConfig(ctx, input)
 		}, "A change/update is in progress")
 
@@ -91,13 +92,13 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDomainPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,7 +118,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 

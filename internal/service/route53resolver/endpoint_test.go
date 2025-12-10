@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,10 +37,11 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "route53resolver", "resolver-endpoint/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -73,7 +74,7 @@ func TestAccRoute53ResolverEndpoint_basic_ipv6(t *testing.T) {
 				Config: testAccEndpointConfig_basic_ipv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "route53resolver", "resolver-endpoint/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV6"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, names.AttrID),
@@ -202,6 +203,37 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverEndpoint_directionInboundDelegation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep awstypes.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_directionInboundDelegation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND_DELEGATION"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccRoute53ResolverEndpoint_resolverEndpointType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep awstypes.ResolverEndpoint
@@ -243,7 +275,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfroute53resolver.FindResolverEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -530,6 +562,31 @@ resource "aws_route53_resolver_endpoint" "test" {
   protocols = ["Do53", "DoH"]
 }
 `, name))
+}
+
+func testAccEndpointConfig_directionInboundDelegation(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND_DELEGATION"
+  name      = %[1]q
+
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+}
+`, rName))
 }
 
 func testAccEndpointConfig_resolverEndpointType(rName, resolverEndpointType string) string {

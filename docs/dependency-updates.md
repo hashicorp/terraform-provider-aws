@@ -12,7 +12,6 @@ Ensure that the following steps are tracked within the issue and completed withi
 
 - Update go version in `go.mod`
 - Verify `make test lint` works as expected
-- Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
 - Update `docs/development-environment.md`
 - Update `.go-version`
@@ -22,7 +21,7 @@ See [#9992](https://github.com/hashicorp/terraform-provider-aws/issues/9992) / [
 
 ## AWS Go SDK Updates
 
-Almost exclusively, `github.com/aws/aws-sdk-go` and `github.com/aws/aws-sdk-go-v2` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
+Almost exclusively, `github.com/aws/aws-sdk-go-v2` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
 
 ### Authentication changes
 

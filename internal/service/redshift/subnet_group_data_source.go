@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_redshift_subnet_group", name="Subnet Group")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
@@ -46,7 +47,7 @@ func dataSourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package detective_test
@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,6 +35,8 @@ func testAccGraph_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "graph_arn", "detective", regexache.MustCompile(`graph:[a-z0-9]{32}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "graph_arn"),
 				),
 			},
 			{
@@ -125,7 +128,7 @@ func testAccCheckGraphDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdetective.FindGraphByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

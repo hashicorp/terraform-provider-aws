@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
+func validPrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "IAM_ALLOWED_PRINCIPALS" {

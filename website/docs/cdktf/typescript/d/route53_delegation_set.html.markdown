@@ -40,12 +40,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Required) Delegation set ID.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Delegation Set.
 * `callerReference` - Caller Reference of the delegation set.
 * `nameServers` - List of DNS name servers for the delegation set.
 
-<!-- cache-key: cdktf-0.20.8 input-40fcc3d8081992110595bf5da825dc8f40806338d89694588a485216d94caf0d -->
+<!-- cache-key: cdktf-0.20.8 input-e0157be2b1a8fb263f30bc8f943368960dbd3dd2db6ad598549505973e3eae80 -->

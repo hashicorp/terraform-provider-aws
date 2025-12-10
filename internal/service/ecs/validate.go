@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validateClusterName(v interface{}, k string) (ws []string, errors []error) {
+func validateClusterName(v any, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(

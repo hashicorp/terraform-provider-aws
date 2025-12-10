@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains
@@ -32,9 +32,9 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,12 +51,8 @@ func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 type domainResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[domainResourceModel]
 	framework.WithTimeouts
-}
-
-func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53domains_domain"
 }
 
 func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -84,7 +80,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
+			"billing_contact": framework.ResourceOptionalComputedListOfObjectsAttribute[contactDetailModel](ctx, 1, nil, fwplanmodifiers.ListDefaultValueFromPath[fwtypes.ListNestedObjectValueOf[contactDetailModel]](path.Root("registrant_contact"))),
 			"billing_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -122,7 +118,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
+			"name_server": framework.ResourceOptionalComputedListOfObjectsAttribute[nameserverModel](ctx, 6, nil, listplanmodifier.UseStateForUnknown()), //nolint:mnd // 6 is the maximum number of items
 			"registrant_privacy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -379,7 +375,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		data.HostedZoneID = types.StringNull()
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
@@ -404,7 +400,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -428,7 +424,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		data.HostedZoneID = types.StringNull()
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
@@ -556,7 +552,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		renewForYears := fwflex.Int32ValueFromFramework(ctx, new.DurationInYears) - fwflex.Int32ValueFromFramework(ctx, old.DurationInYears)
+		renewForYears := fwflex.Int32ValueFromFrameworkInt64(ctx, new.DurationInYears) - fwflex.Int32ValueFromFrameworkInt64(ctx, old.DurationInYears)
 
 		if err := renewDomain(ctx, conn, domainName, currentExpirationDate, renewForYears, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
@@ -611,7 +607,8 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) delete", domainName), err.Error())
 
 		return
@@ -619,7 +616,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	// Delete the associated Route 53 hosted zone.
 	if hostedZoneID := fwflex.StringValueFromFramework(ctx, data.HostedZoneID); hostedZoneID != "" {
-		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true); err != nil {
+		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true, timeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", hostedZoneID), err.Error())
 
 			return
@@ -632,8 +629,6 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		// duration_in_years can only be increased.
 		var oldDurationInYears, newDurationInYears types.Int64
@@ -652,7 +647,10 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 
 		// expiration_date is newly computed if duration_in_years is changed.
 		if newDurationInYears.ValueInt64() != oldDurationInYears.ValueInt64() {
-			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), timetypes.NewRFC3339Unknown())
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("expiration_date"), timetypes.NewRFC3339Unknown())...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		} else {
 			var expirationDate timetypes.RFC3339
 			response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("expiration_date"), &expirationDate)...)
@@ -660,7 +658,10 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 				return
 			}
 
-			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), expirationDate)
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("expiration_date"), expirationDate)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }

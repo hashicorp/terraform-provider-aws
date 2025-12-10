@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,6 +77,7 @@ func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
+	attachmentResourceName := "aws_internet_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,10 +87,10 @@ func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
 		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_attachment(rName),
+				Config: testAccVPCInternetGatewayConfig_attachmentStandalone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,7 +192,7 @@ func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -283,6 +284,29 @@ resource "aws_internet_gateway" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccVPCInternetGatewayConfig_attachmentStandalone(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway_attachment" "test" {
+  internet_gateway_id = aws_internet_gateway.test.id
+  vpc_id              = aws_vpc.test.id
 }
 `, rName)
 }

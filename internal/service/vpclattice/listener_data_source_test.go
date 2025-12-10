@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -16,10 +16,6 @@ import (
 
 func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test"
 
@@ -47,10 +43,6 @@ func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_listener.test_tags"
 	tag_name := "tag0"
@@ -78,13 +70,8 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 
 func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
 	dataSourceName := "data.aws_vpclattice_listener.test_multi_target"
@@ -180,7 +167,7 @@ data "aws_vpclattice_listener" "test" {
 }
 
 func testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName string, targetGroupName1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
   type = "INSTANCE"

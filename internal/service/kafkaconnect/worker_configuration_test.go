@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect_test
@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +34,8 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`worker-configuration/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "properties_file_content", "key.converter=org.apache.kafka.connect.storage.StringConverter\nvalue.converter=org.apache.kafka.connect.storage.StringConverter\n"),
@@ -169,7 +171,7 @@ func testAccCheckWorkerConfigurationDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfkafkaconnect.FindWorkerConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

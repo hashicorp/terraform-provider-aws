@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amount` - (Required) The limit amount. If time-based, this amount is in minutes. If data-based, this amount is in terabytes (TB). The value must be a positive number.
 * `breach_action` - (Optional) The action that Amazon Redshift takes when the limit is reached. The default is `log`. Valid values are `log`, `emit-metric`, and `disable`.
 * `cluster_identifier` - (Required) The identifier of the cluster that you want to limit usage.
@@ -79,4 +80,4 @@ Using `terraform import`, import Redshift usage limits using the `id`. For examp
 % terraform import aws_redshift_usage_limit.example example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-66b262f3ea166c96e47be520f77ad628bb0cc4e80252fff83651756e7d728428 -->
+<!-- cache-key: cdktf-0.20.8 input-48d541c7ced2b77bfd6bda8bf5e389b0ebe02a8e6c9280a6c4ac4855f6dc8917 -->

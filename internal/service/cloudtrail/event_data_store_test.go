@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -439,7 +439,7 @@ func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -500,7 +500,8 @@ resource "aws_cloudtrail_event_data_store" "test" {
 func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  multi_region = true
+  multi_region        = true
+  enable_key_rotation = true
   policy = jsonencode({
     Id = %[1]q
     Statement = [{

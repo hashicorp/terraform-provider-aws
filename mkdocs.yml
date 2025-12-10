@@ -32,13 +32,20 @@ nav:
       - How We Prioritize: prioritization.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
+      - AI Agents: ai-agents.md
+      - AI Agent Guides:
+          - ARN-Based Resource Identity: ai-agent-guides/arn-based-resource-identity.md
+          - Parameterized Resource Identity: ai-agent-guides/parameterized-resource-identity.md
+          - Smarterr: ai-agent-guides/smarterr.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
+      - Enhanced Region Support: enhanced-region-support.md
       - Error Handling: error-handling.md
+      - Go-VCR: go-vcr.md
       - ID Attributes: id-attributes.md
       - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md

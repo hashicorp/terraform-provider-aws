@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -244,8 +244,7 @@ func TestAccIAMPolicyDocumentDataSource_invalidSidValid(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccPolicyDocumentDataSourceConfig_invalidSid,
-				PlanOnly: true,
+				Config: testAccPolicyDocumentDataSourceConfig_invalidSid,
 			},
 		},
 	})

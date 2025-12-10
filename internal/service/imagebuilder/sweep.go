@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -103,7 +103,7 @@ func sweepDistributionConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
@@ -144,7 +144,7 @@ func sweepImagePipelines(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListImagePipelinesInput{}
@@ -185,7 +185,7 @@ func sweepImageRecipes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListImageRecipesInput{}
@@ -226,7 +226,7 @@ func sweepContainerRecipes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListContainerRecipesInput{}
@@ -267,7 +267,7 @@ func sweepImages(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListImagesInput{}
@@ -308,7 +308,7 @@ func sweepInfrastructureConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
@@ -349,7 +349,7 @@ func sweepLifecyclePolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.ImageBuilderClient(ctx)
 	input := &imagebuilder.ListLifecyclePoliciesInput{}

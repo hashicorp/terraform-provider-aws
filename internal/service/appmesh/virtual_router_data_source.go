@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh
@@ -56,14 +56,14 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualRouterSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
 	}
 }
 
-func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 

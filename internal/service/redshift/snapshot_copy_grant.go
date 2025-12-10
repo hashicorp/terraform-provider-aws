@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -14,14 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,12 +57,10 @@ func resourceSnapshotCopyGrant() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -84,7 +82,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
@@ -95,13 +93,13 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSnapshotCopyGrantRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	grant, err := findSnapshotCopyGrantByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -127,7 +125,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -135,7 +133,7 @@ func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSnapshotCopyGrantRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -152,7 +150,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Copy Grant (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
@@ -171,7 +169,7 @@ func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Client, nam
 	output, err := conn.DescribeSnapshotCopyGrants(ctx, input)
 
 	if errs.IsA[*awstypes.SnapshotCopyGrantNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

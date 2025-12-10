@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -87,13 +88,13 @@ func resourceDocumentationPart() *schema.Resource {
 	}
 }
 
-func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	input := apigateway.CreateDocumentationPartInput{
-		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]interface{})),
+		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]any)),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
 		RestApiId:  aws.String(apiID),
 	}
@@ -109,7 +110,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -120,7 +121,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 
 	docPart, err := findDocumentationPartByTwoPartKey(ctx, conn, apiID, documentationPartID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Documentation Part (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -138,7 +139,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -173,7 +174,7 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -209,7 +210,7 @@ func findDocumentationPartByTwoPartKey(ctx context.Context, conn *apigateway.Cli
 	output, err := conn.GetDocumentationPart(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -244,11 +245,11 @@ func documentationPartParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLocation {
+func expandDocumentationPartLocation(l []any) *types.DocumentationPartLocation {
 	if len(l) == 0 {
 		return nil
 	}
-	loc := l[0].(map[string]interface{})
+	loc := l[0].(map[string]any)
 	out := &types.DocumentationPartLocation{
 		Type: types.DocumentationPartType(loc[names.AttrType].(string)),
 	}
@@ -267,12 +268,12 @@ func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLo
 	return out
 }
 
-func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []interface{} {
+func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []any {
 	if l == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if v := l.Method; v != nil {
 		m["method"] = aws.ToString(v)
@@ -292,5 +293,5 @@ func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []inte
 
 	m[names.AttrType] = string(l.Type)
 
-	return []interface{}{m}
+	return []any{m}
 }

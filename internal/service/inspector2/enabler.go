@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,6 +47,10 @@ func ResourceEnabler() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,7 +98,7 @@ const (
 	ResNameEnabler = "Enabler"
 )
 
-func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -110,14 +115,14 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	id := enablerID(accountIDs, typeEnable)
 
 	var out *inspector2.EnableOutput
-	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.Enable(ctx, in)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		if out == nil {
-			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError(nil))
 		}
 
 		if len(out.FailedAccounts) == 0 {
@@ -138,14 +143,12 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 			return false
 		}) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
-		return retry.NonRetryableError(err)
+		return tfresource.NonRetryableError(err)
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.Enable(ctx, in)
-	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}
@@ -191,7 +194,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -201,7 +204,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	s, err := AccountStatuses(ctx, conn, accountIDs)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Enabler (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -237,7 +240,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -316,7 +319,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient)
 	conn := client.Inspector2Client(ctx)
@@ -423,7 +426,7 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) (map[string]AccountResourceStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{statusComplete},
 		Refresh: statusEnablerAccountAndResourceTypes(ctx, conn, accountIDs),
@@ -441,7 +444,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{},
 		Refresh: statusEnablerAccount(ctx, conn, accountIDs),
@@ -467,7 +470,7 @@ var (
 )
 
 // statusEnablerAccountAndResourceTypes checks the status of Inspector for the account and resource types
-func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
@@ -501,10 +504,10 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 
 // statusEnablerAccount checks only the status of Inspector for the account as a whole.
 // It is only used for deletion, so the non-error states are in-progress or not-found
-func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -556,8 +559,10 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
-			if k == "LambdaCode" {
-				k = "LAMBDA_CODE"
+			if strings.ToUpper(k) == "LAMBDACODE" {
+				k = string(types.ResourceScanTypeLambdaCode)
+			} else if strings.ToUpper(k) == "CODEREPOSITORY" {
+				k = string(types.ResourceScanTypeCodeRepository)
 			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
@@ -570,7 +575,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 	}
 
 	if len(results) == 0 {
-		return results, &retry.NotFoundError{}
+		return results, &sdkretry.NotFoundError{}
 	}
 
 	return results, err

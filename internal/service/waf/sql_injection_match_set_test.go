@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +36,7 @@ func TestAccWAFSQLInjectionMatchSet_basic(t *testing.T) {
 				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`sqlinjectionset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
@@ -220,7 +222,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfwaf.FindSQLInjectionMatchSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

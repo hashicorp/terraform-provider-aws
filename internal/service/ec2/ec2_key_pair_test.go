@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,20 +9,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2KeyPair_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -60,7 +60,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 
 func TestAccEC2KeyPair_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -112,7 +112,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 
 func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -146,7 +146,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 
 func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -180,7 +180,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 
 func TestAccEC2KeyPair_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var keyPair types.KeyPairInfo
+	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -218,7 +218,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindKeyPairByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -233,7 +233,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyPairExists(ctx context.Context, n string, v *types.KeyPairInfo) resource.TestCheckFunc {
+func testAccCheckKeyPairExists(ctx context.Context, n string, v *awstypes.KeyPairInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,15 +44,15 @@ func dataSourceEIPs() *schema.Resource {
 	}
 }
 
-func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAddressesInput{}
+	input := ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 
@@ -65,7 +65,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filters = nil
 	}
 
-	output, err := findEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)
@@ -77,7 +77,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	for _, v := range output {
 		publicIPs = append(publicIPs, aws.ToString(v.PublicIp))
 
-		if v.Domain == types.DomainTypeVpc {
+		if v.Domain == awstypes.DomainTypeVpc {
 			allocationIDs = append(allocationIDs, aws.ToString(v.AllocationId))
 		}
 	}

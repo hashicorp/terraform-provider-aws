@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,13 +29,9 @@ func newAccountSuppressionAttributesResource(context.Context) (resource.Resource
 }
 
 type accountSuppressionAttributesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSuppressionAttributesResourceModel]
 	framework.WithNoOpDelete
 	framework.WithImportByID
-}
-
-func (*accountSuppressionAttributesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_sesv2_account_suppression_attributes"
 }
 
 func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -42,7 +39,7 @@ func (r *accountSuppressionAttributesResource) Schema(ctx context.Context, reque
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"suppressed_reasons": schema.SetAttribute{
-				CustomType:  fwtypes.NewSetTypeOf[fwtypes.StringEnum[awstypes.SuppressionListReason]](ctx),
+				CustomType:  fwtypes.SetOfStringEnumType[awstypes.SuppressionListReason](),
 				Required:    true,
 				ElementType: fwtypes.StringEnumType[awstypes.SuppressionListReason](),
 			},
@@ -91,7 +88,7 @@ func (r *accountSuppressionAttributesResource) Read(ctx context.Context, request
 
 	suppressionAttributes, err := findAccountSuppressionAttributes(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -153,6 +150,7 @@ func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (
 }
 
 type accountSuppressionAttributesResourceModel struct {
-	ID                types.String                                                           `tfsdk:"id"`
-	SuppressedReasons fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SuppressionListReason]] `tfsdk:"suppressed_reasons"`
+	framework.WithRegionModel
+	ID                types.String                                            `tfsdk:"id"`
+	SuppressedReasons fwtypes.SetOfStringEnum[awstypes.SuppressionListReason] `tfsdk:"suppressed_reasons"`
 }

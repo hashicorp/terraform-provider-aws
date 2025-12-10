@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpipes "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,6 +49,7 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
@@ -306,6 +307,55 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.0", "p2"),
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccPipeConfig_kmsKeyIdentifier(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 		},
@@ -1653,7 +1703,7 @@ func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfpipes.FindPipeByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2056,6 +2106,34 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName))
+}
+
+func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  kms_key_identifier = %[2]q
+  name               = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  source             = aws_sqs_queue.source.arn
+  target             = aws_sqs_queue.target.arn
+}
+`, rName, kmsKeyID))
 }
 
 func testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName string) string {
@@ -3103,18 +3181,15 @@ func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "target" {
-  cluster_identifier                  = "%[1]s-target"
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = "%[1]s-target"
+  database_name         = "test"
+  master_username       = "tfacctest"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 
 resource "aws_pipes_pipe" "test" {
@@ -3244,9 +3319,9 @@ resource "aws_security_group" "target" {
 }
 
 resource "aws_batch_compute_environment" "target" {
-  compute_environment_name = "%[1]s-target"
-  service_role             = aws_iam_role.target.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-target"
+  service_role = aws_iam_role.target.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -3262,10 +3337,14 @@ resource "aws_batch_compute_environment" "target" {
 }
 
 resource "aws_batch_job_queue" "target" {
-  compute_environments = [aws_batch_compute_environment.target.arn]
-  name                 = "%[1]s-target"
-  priority             = 1
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.target.arn
+    order               = 1
+  }
+
+  name     = "%[1]s-target"
+  priority = 1
+  state    = "ENABLED"
 }
 
 resource "aws_batch_job_definition" "target" {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -694,7 +694,7 @@ func testAccCheckNFSFileShareDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfstoragegateway.FindNFSFileShareByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -731,7 +731,7 @@ func testAccCheckNFSFileShareExists(ctx context.Context, n string, v *awstypes.N
 }
 
 func testAccNFSFileShareConfig_baseS3(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -917,6 +917,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 
@@ -937,6 +938,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 

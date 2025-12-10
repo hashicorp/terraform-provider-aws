@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package osis_test
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/osis/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -230,6 +231,7 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.security_group_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.subnet_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.vpc_endpoint_management", "SERVICE"),
 				),
 			},
 			{
@@ -287,6 +289,54 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline types.Pipeline
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	resourceName := "aws_osis_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
+		CheckDestroy: testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.89.0",
+					},
+				},
+				Config: testAccPipelineConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPipelineConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
@@ -298,7 +348,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfosis.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -372,7 +422,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_osis_pipeline" "test" {
   pipeline_name               = %[1]q
-  pipeline_configuration_body = <<-EOT
+  pipeline_configuration_body = <<EOS
             version: "2"
             test-pipeline:
               source:
@@ -382,13 +432,13 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
                     codec:
                       ndjson:
-        EOT
+EOS
   max_units                   = 1
   min_units                   = 1
 }
@@ -429,7 +479,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -480,7 +530,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -532,7 +582,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -583,7 +633,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -601,6 +651,7 @@ resource "aws_osis_pipeline" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }
@@ -643,7 +694,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -712,7 +763,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -723,8 +774,9 @@ resource "aws_osis_pipeline" "test" {
   min_units                   = 1
 
   vpc_options {
-    security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids      = [aws_security_group.test.id]
+    subnet_ids              = [aws_subnet.test.id]
+    vpc_endpoint_management = "SERVICE"
   }
 }
 `, rName)

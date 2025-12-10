@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package location
@@ -53,7 +53,7 @@ func DataSourceRouteCalculator() *schema.Resource {
 	}
 }
 
-func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -77,7 +77,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
 

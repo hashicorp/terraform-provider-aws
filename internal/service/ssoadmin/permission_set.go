@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -16,13 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,7 +32,7 @@ import (
 
 // @SDKResource("aws_ssoadmin_permission_set", name="Permission Set")
 // @Tags
-func ResourcePermissionSet() *schema.Resource {
+func resourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetCreate,
 		ReadWithoutTimeout:   resourcePermissionSetRead,
@@ -95,12 +96,10 @@ func ResourcePermissionSet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -135,7 +134,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -144,9 +143,9 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	permissionSet, err := FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+	permissionSet, err := findPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -170,12 +169,12 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", permissionSetARN, err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	return diags
 }
 
-func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -229,7 +228,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -263,7 +262,7 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func FindPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionSet, error) {
+func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionSet, error) {
 	input := &ssoadmin.DescribePermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -272,7 +271,7 @@ func FindPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSet
 	output, err := conn.DescribePermissionSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -318,7 +317,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	output, err := conn.DescribePermissionSetProvisioningStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -335,11 +334,11 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	return output.PermissionSetProvisioningStatus, nil
 }
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -352,7 +351,7 @@ func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client,
 }
 
 func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string, timeout time.Duration) (*awstypes.PermissionSetProvisioningStatus, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusValuesInProgress),
 		Target:  enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceARN, requestID),

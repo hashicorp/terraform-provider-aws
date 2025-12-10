@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -58,7 +59,7 @@ func resourceBlockPublicAccessConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -67,7 +68,7 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 	blockPublicSecurityGroupRules := d.Get("block_public_security_group_rules")
 	blockPublicAccessConfiguration.BlockPublicSecurityGroupRules = aws.Bool(blockPublicSecurityGroupRules.(bool))
 	if v, ok := d.GetOk("permitted_public_security_group_rule_range"); ok {
-		blockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges = expandPortRanges(v.([]interface{}))
+		blockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges = expandPortRanges(v.([]any))
 	}
 
 	input := &emr.PutBlockPublicAccessConfigurationInput{
@@ -85,13 +86,13 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 	return append(diags, resourceBlockPublicAccessConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	bpa, err := findBlockPublicAccessConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Block Public Access Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,7 +110,7 @@ func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -152,8 +153,8 @@ func defaultBlockPublicAccessConfiguration() *awstypes.BlockPublicAccessConfigur
 	}
 }
 
-func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.MinRange; v != nil {
 		tfMap["min_range"] = aws.ToInt32(v)
@@ -166,12 +167,12 @@ func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfMap []interface{}
+	var tfMap []any
 
 	for _, apiObject := range apiObjects {
 		tfMap = append(tfMap, flattenPortRange(&apiObject))
@@ -180,7 +181,7 @@ func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
 	return tfMap
 }
 
-func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
+func expandPortRange(tfMap map[string]any) *awstypes.PortRange {
 	apiObject := &awstypes.PortRange{}
 
 	apiObject.MinRange = aws.Int32(int32(tfMap["min_range"].(int)))
@@ -189,7 +190,7 @@ func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
 	return apiObject
 }
 
-func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
+func expandPortRanges(tfList []any) []awstypes.PortRange {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -197,7 +198,7 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	var apiObjects []awstypes.PortRange
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}

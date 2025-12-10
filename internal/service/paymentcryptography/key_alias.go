@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography
@@ -18,29 +18,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_paymentcryptography_key_alias",name="Key Alias")
-func newResourceKeyAlias(context.Context) (resource.ResourceWithConfigure, error) {
+func newKeyAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyAliasResource{}
 
 	return r, nil
 }
 
 type keyAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[keyAliasResourceModel]
 	framework.WithImportByID
-}
-
-func (*keyAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key_alias"
 }
 
 func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -118,7 +115,7 @@ func (r *keyAliasResource) Read(ctx context.Context, request resource.ReadReques
 
 	output, err := findkeyAliasByName(ctx, conn, data.AliasName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -197,6 +194,7 @@ func (r *keyAliasResource) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 type keyAliasResourceModel struct {
+	framework.WithRegionModel
 	KeyARN    types.String `tfsdk:"key_arn"`
 	AliasName types.String `tfsdk:"alias_name"`
 	ID        types.String `tfsdk:"id"`
@@ -216,7 +214,7 @@ func findkeyAliasByName(ctx context.Context, conn *paymentcryptography.Client, n
 	output, err := conn.GetAlias(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

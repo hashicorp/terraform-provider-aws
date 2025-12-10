@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_partition: Add `storage_descriptor.additional_locations` argument
+```

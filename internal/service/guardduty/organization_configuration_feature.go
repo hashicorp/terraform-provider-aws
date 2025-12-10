@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_organization_configuration_feature", name="Organization Configuration Feature")
-func ResourceOrganizationConfigurationFeature() *schema.Resource {
+func resourceOrganizationConfigurationFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationFeaturePut,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationFeatureRead,
@@ -71,7 +72,7 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -94,8 +95,8 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 		Name:       awstypes.OrgFeature(name),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]interface{})) > 0 {
-		feature.AdditionalConfiguration = expandOrganizationAdditionalConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
+		feature.AdditionalConfiguration = expandOrganizationAdditionalConfigurations(v.([]any))
 	}
 
 	input := &guardduty.UpdateOrganizationConfigurationInput{
@@ -117,7 +118,7 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	return append(diags, resourceOrganizationConfigurationFeatureRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -128,7 +129,7 @@ func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema
 
 	feature, err := FindOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -179,7 +180,7 @@ func FindOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn 
 	}))
 }
 
-func expandOrganizationAdditionalConfiguration(tfMap map[string]interface{}) awstypes.OrganizationAdditionalConfiguration {
+func expandOrganizationAdditionalConfiguration(tfMap map[string]any) awstypes.OrganizationAdditionalConfiguration {
 	apiObject := awstypes.OrganizationAdditionalConfiguration{}
 
 	if v, ok := tfMap["auto_enable"].(string); ok && v != "" {
@@ -193,7 +194,7 @@ func expandOrganizationAdditionalConfiguration(tfMap map[string]interface{}) aws
 	return apiObject
 }
 
-func expandOrganizationAdditionalConfigurations(tfList []interface{}) []awstypes.OrganizationAdditionalConfiguration {
+func expandOrganizationAdditionalConfigurations(tfList []any) []awstypes.OrganizationAdditionalConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -201,7 +202,7 @@ func expandOrganizationAdditionalConfigurations(tfList []interface{}) []awstypes
 	var apiObjects []awstypes.OrganizationAdditionalConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -215,8 +216,8 @@ func expandOrganizationAdditionalConfigurations(tfList []interface{}) []awstypes
 	return apiObjects
 }
 
-func flattenOrganizationAdditionalConfigurationResult(apiObject awstypes.OrganizationAdditionalConfigurationResult) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenOrganizationAdditionalConfigurationResult(apiObject awstypes.OrganizationAdditionalConfigurationResult) map[string]any {
+	tfMap := map[string]any{}
 
 	tfMap["auto_enable"] = string(apiObject.AutoEnable)
 
@@ -225,12 +226,12 @@ func flattenOrganizationAdditionalConfigurationResult(apiObject awstypes.Organiz
 	return tfMap
 }
 
-func flattenOrganizationAdditionalConfigurationResults(apiObjects []awstypes.OrganizationAdditionalConfigurationResult) []interface{} {
+func flattenOrganizationAdditionalConfigurationResults(apiObjects []awstypes.OrganizationAdditionalConfigurationResult) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenOrganizationAdditionalConfigurationResult(apiObject))

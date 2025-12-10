@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts
@@ -15,26 +15,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssmcontacts_contact", name="Contact")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.15.0")
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
 		ReadWithoutTimeout:   resourceContactRead,
 		UpdateWithoutTimeout: resourceContactUpdate,
 		DeleteWithoutTimeout: resourceContactDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -58,8 +56,6 @@ func ResourceContact() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -67,7 +63,7 @@ const (
 	ResNameContact = "Contact"
 )
 
-func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
@@ -93,13 +89,13 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceContactRead(ctx, d, meta)...)
 }
 
-func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMContacts Contact (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -116,7 +112,7 @@ func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
@@ -135,7 +131,7 @@ func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceContactRead(ctx, d, meta)...)
 }
 
-func resourceContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContactDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -14,29 +14,30 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_data_quality_ruleset", name="Data Quality Ruleset")
 // @Tags(identifierAttribute="arn")
-func ResourceDataQualityRuleset() *schema.Resource {
+func resourceDataQualityRuleset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataQualityRulesetCreate,
 		ReadWithoutTimeout:   resourceDataQualityRulesetRead,
 		UpdateWithoutTimeout: resourceDataQualityRulesetUpdate,
 		DeleteWithoutTimeout: resourceDataQualityRulesetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -105,7 +106,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 	}
 }
 
-func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -121,8 +122,8 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TargetTable = expandTargetTable(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TargetTable = expandTargetTable(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateDataQualityRuleset(ctx, input)
@@ -135,14 +136,14 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Id()
 
-	dataQualityRuleset, err := FindDataQualityRulesetByName(ctx, conn, name)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	dataQualityRuleset, err := findDataQualityRulesetByName(ctx, conn, name)
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Data Quality Ruleset (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -175,7 +176,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -202,7 +203,7 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -222,7 +223,31 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func expandTargetTable(tfMap map[string]interface{}) *awstypes.DataQualityTargetTable {
+func findDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
+	input := &glue.GetDataQualityRulesetInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetDataQualityRuleset(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandTargetTable(tfMap map[string]any) *awstypes.DataQualityTargetTable {
 	if tfMap == nil {
 		return nil
 	}
@@ -239,12 +264,12 @@ func expandTargetTable(tfMap map[string]interface{}) *awstypes.DataQualityTarget
 	return apiObject
 }
 
-func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []interface{} {
+func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDatabaseName: aws.ToString(apiObject.DatabaseName),
 		names.AttrTableName:    aws.ToString(apiObject.TableName),
 	}
@@ -253,5 +278,5 @@ func flattenTargetTable(apiObject *awstypes.DataQualityTargetTable) []interface{
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

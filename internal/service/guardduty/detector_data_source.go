@@ -1,25 +1,36 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_guardduty_detector", name="Detector")
-func DataSourceDetector() *schema.Resource {
+// @Tags
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceDetector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"features": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -69,11 +80,12 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -89,7 +101,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 		detectorID = aws.ToString(output)
 	}
 
-	gdo, err := FindDetectorByID(ctx, conn, detectorID)
+	gdo, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
@@ -103,9 +115,19 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	} else {
 		d.Set("features", nil)
 	}
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Service:   "guardduty",
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("detector/%s", detectorID),
+	}.String()
+	d.Set(names.AttrARN, arn)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)
+
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }

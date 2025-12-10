@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -78,7 +79,7 @@ func resourceFlowDefinition() *schema.Resource {
 											validation.StringLenBetween(1, 10240),
 											validation.StringIsJSON,
 										),
-										StateFunc: func(v interface{}) string {
+										StateFunc: func(v any) string {
 											json, _ := structure.NormalizeJsonString(v)
 											return json
 										},
@@ -245,68 +246,66 @@ func resourceFlowDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("flow_definition_name").(string)
 	input := &sagemaker.CreateFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
-		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
+		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]any)),
 		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
-		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
+		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]any)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
-		loopConfig, err := expandFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
+	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]any)) > 0) {
+		loopConfig, err := expandFlowDefinitionHumanLoopActivationConfig(v.([]any))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition Human Loop Activation Config (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Flow Definition Human Loop Activation Config (%s): %s", name, err)
 		}
 		input.HumanLoopActivationConfig = loopConfig
 	}
 
-	if v, ok := d.GetOk("human_loop_request_source"); ok && (len(v.([]interface{})) > 0) {
-		input.HumanLoopRequestSource = expandFlowDefinitionHumanLoopRequestSource(v.([]interface{}))
+	if v, ok := d.GetOk("human_loop_request_source"); ok && (len(v.([]any)) > 0) {
+		input.HumanLoopRequestSource = expandFlowDefinitionHumanLoopRequestSource(v.([]any))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %#v", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	log.Printf("[DEBUG] Creating SageMaker AI Flow Definition: %#v", input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowDefinition(ctx, input)
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Flow Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitFlowDefinitionActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to become active: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Flow Definition (%s) to become active: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	flowDefinition, err := findFlowDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Flow Definition (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SageMaker AI Flow Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Flow Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, flowDefinition.FlowDefinitionArn)
@@ -332,7 +331,7 @@ func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -340,11 +339,11 @@ func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
+	log.Printf("[DEBUG] Deleting SageMaker AI Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinition(ctx, &sagemaker.DeleteFlowDefinitionInput{
 		FlowDefinitionName: aws.String(d.Id()),
 	})
@@ -354,11 +353,11 @@ func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Flow Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFlowDefinitionDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Flow Definition (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -372,7 +371,7 @@ func findFlowDefinitionByName(ctx context.Context, conn *sagemaker.Client, name 
 	output, err := conn.DescribeFlowDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -389,14 +388,14 @@ func findFlowDefinitionByName(ctx context.Context, conn *sagemaker.Client, name 
 	return output, nil
 }
 
-func expandFlowDefinitionHumanLoopActivationConfig(l []interface{}) (*awstypes.HumanLoopActivationConfig, error) {
+func expandFlowDefinitionHumanLoopActivationConfig(l []any) (*awstypes.HumanLoopActivationConfig, error) {
 	if len(l) == 0 || l[0] == nil {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	loopConfig, err := expandFlowDefinitionHumanLoopActivationConditionsConfig(m["human_loop_activation_conditions_config"].([]interface{}))
+	loopConfig, err := expandFlowDefinitionHumanLoopActivationConditionsConfig(m["human_loop_activation_conditions_config"].([]any))
 	if err != nil {
 		return nil, err
 	}
@@ -407,24 +406,24 @@ func expandFlowDefinitionHumanLoopActivationConfig(l []interface{}) (*awstypes.H
 	return config, nil
 }
 
-func flattenFlowDefinitionHumanLoopActivationConfig(config *awstypes.HumanLoopActivationConfig) []map[string]interface{} {
+func flattenFlowDefinitionHumanLoopActivationConfig(config *awstypes.HumanLoopActivationConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"human_loop_activation_conditions_config": flattenFlowDefinitionHumanLoopActivationConditionsConfig(config.HumanLoopActivationConditionsConfig),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFlowDefinitionHumanLoopActivationConditionsConfig(l []interface{}) (*awstypes.HumanLoopActivationConditionsConfig, error) {
+func expandFlowDefinitionHumanLoopActivationConditionsConfig(l []any) (*awstypes.HumanLoopActivationConditionsConfig, error) {
 	if len(l) == 0 || l[0] == nil {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	output := &awstypes.HumanLoopActivationConditionsConfig{}
 
 	if v, ok := m["human_loop_activation_conditions"]; ok && v.(string) != "" {
@@ -439,24 +438,24 @@ func expandFlowDefinitionHumanLoopActivationConditionsConfig(l []interface{}) (*
 	return output, nil
 }
 
-func flattenFlowDefinitionHumanLoopActivationConditionsConfig(config *awstypes.HumanLoopActivationConditionsConfig) []map[string]interface{} {
+func flattenFlowDefinitionHumanLoopActivationConditionsConfig(config *awstypes.HumanLoopActivationConditionsConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"human_loop_activation_conditions": config.HumanLoopActivationConditions,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFlowDefinitionOutputConfig(l []interface{}) *awstypes.FlowDefinitionOutputConfig {
+func expandFlowDefinitionOutputConfig(l []any) *awstypes.FlowDefinitionOutputConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.FlowDefinitionOutputConfig{
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
@@ -469,25 +468,25 @@ func expandFlowDefinitionOutputConfig(l []interface{}) *awstypes.FlowDefinitionO
 	return config
 }
 
-func flattenFlowDefinitionOutputConfig(config *awstypes.FlowDefinitionOutputConfig) []map[string]interface{} {
+func flattenFlowDefinitionOutputConfig(config *awstypes.FlowDefinitionOutputConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrKMSKeyID: aws.ToString(config.KmsKeyId),
 		"s3_output_path":   aws.ToString(config.S3OutputPath),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFlowDefinitionHumanLoopRequestSource(l []interface{}) *awstypes.HumanLoopRequestSource {
+func expandFlowDefinitionHumanLoopRequestSource(l []any) *awstypes.HumanLoopRequestSource {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.HumanLoopRequestSource{
 		AwsManagedHumanLoopRequestSource: awstypes.AwsManagedHumanLoopRequestSource(m["aws_managed_human_loop_request_source"].(string)),
@@ -496,24 +495,24 @@ func expandFlowDefinitionHumanLoopRequestSource(l []interface{}) *awstypes.Human
 	return config
 }
 
-func flattenFlowDefinitionHumanLoopRequestSource(config *awstypes.HumanLoopRequestSource) []map[string]interface{} {
+func flattenFlowDefinitionHumanLoopRequestSource(config *awstypes.HumanLoopRequestSource) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"aws_managed_human_loop_request_source": config.AwsManagedHumanLoopRequestSource,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFlowDefinitionHumanLoopConfig(l []interface{}) *awstypes.HumanLoopConfig {
+func expandFlowDefinitionHumanLoopConfig(l []any) *awstypes.HumanLoopConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.HumanLoopConfig{
 		HumanTaskUiArn:  aws.String(m["human_task_ui_arn"].(string)),
@@ -523,7 +522,7 @@ func expandFlowDefinitionHumanLoopConfig(l []interface{}) *awstypes.HumanLoopCon
 		WorkteamArn:     aws.String(m["workteam_arn"].(string)),
 	}
 
-	if v, ok := m["public_workforce_task_price"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["public_workforce_task_price"].([]any); ok && len(v) > 0 {
 		config.PublicWorkforceTaskPrice = expandFlowDefinitionPublicWorkforceTaskPrice(v)
 	}
 
@@ -542,12 +541,12 @@ func expandFlowDefinitionHumanLoopConfig(l []interface{}) *awstypes.HumanLoopCon
 	return config
 }
 
-func flattenFlowDefinitionHumanLoopConfig(config *awstypes.HumanLoopConfig) []map[string]interface{} {
+func flattenFlowDefinitionHumanLoopConfig(config *awstypes.HumanLoopConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"human_task_ui_arn": aws.ToString(config.HumanTaskUiArn),
 		"task_count":        aws.ToInt32(config.TaskCount),
 		"task_description":  aws.ToString(config.TaskDescription),
@@ -571,31 +570,31 @@ func flattenFlowDefinitionHumanLoopConfig(config *awstypes.HumanLoopConfig) []ma
 		m["task_time_limit_in_seconds"] = aws.ToInt32(config.TaskTimeLimitInSeconds)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFlowDefinitionPublicWorkforceTaskPrice(l []interface{}) *awstypes.PublicWorkforceTaskPrice {
+func expandFlowDefinitionPublicWorkforceTaskPrice(l []any) *awstypes.PublicWorkforceTaskPrice {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.PublicWorkforceTaskPrice{}
 
-	if v, ok := m["amount_in_usd"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["amount_in_usd"].([]any); ok && len(v) > 0 {
 		config.AmountInUsd = expandFlowDefinitionAmountInUsd(v)
 	}
 
 	return config
 }
 
-func expandFlowDefinitionAmountInUsd(l []interface{}) *awstypes.USD {
+func expandFlowDefinitionAmountInUsd(l []any) *awstypes.USD {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.USD{}
 
@@ -614,12 +613,12 @@ func expandFlowDefinitionAmountInUsd(l []interface{}) *awstypes.USD {
 	return config
 }
 
-func flattenFlowDefinitionAmountInUsd(config *awstypes.USD) []map[string]interface{} {
+func flattenFlowDefinitionAmountInUsd(config *awstypes.USD) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.Cents != nil {
 		m["cents"] = aws.ToInt32(config.Cents)
@@ -633,19 +632,19 @@ func flattenFlowDefinitionAmountInUsd(config *awstypes.USD) []map[string]interfa
 		m["tenth_fractions_of_a_cent"] = aws.ToInt32(config.TenthFractionsOfACent)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenFlowDefinitionPublicWorkforceTaskPrice(config *awstypes.PublicWorkforceTaskPrice) []map[string]interface{} {
+func flattenFlowDefinitionPublicWorkforceTaskPrice(config *awstypes.PublicWorkforceTaskPrice) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.AmountInUsd != nil {
 		m["amount_in_usd"] = flattenFlowDefinitionAmountInUsd(config.AmountInUsd)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

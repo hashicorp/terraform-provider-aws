@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor_test
@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +42,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "packet_size"),
@@ -63,7 +63,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -95,7 +95,7 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "packet_size", "256"),
@@ -140,7 +140,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "probe/{probe_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "packet_size", "512"),
@@ -152,7 +152,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -171,7 +171,7 @@ func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkmonitor.FindProbeByTwoPartKey(ctx, conn, rs.Primary.Attributes["monitor_name"], rs.Primary.Attributes["probe_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -209,7 +209,7 @@ func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc
 		description := "Created By Amazon CloudWatch Network Monitor for " + rName
 		v, err := tfec2.FindSecurityGroupByDescriptionAndVPCID(ctx, conn, description, aws.ToString(vpc.VpcId))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Already gone.
 			return nil
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange
@@ -18,20 +18,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dataexchange_revision", name="Revision")
 // @Tags(identifierAttribute="arn")
-func ResourceRevision() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,
 		ReadWithoutTimeout:   resourceRevisionRead,
 		UpdateWithoutTimeout: resourceRevisionUpdate,
 		DeleteWithoutTimeout: resourceRevisionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -44,7 +45,7 @@ func ResourceRevision() *schema.Resource {
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 16348),
+				ValidateFunc: validation.StringLenBetween(0, 16_348),
 			},
 			"data_set_id": {
 				Type:     schema.TypeString,
@@ -58,11 +59,10 @@ func ResourceRevision() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRevisionRead(ctx, d, meta)...)
 }
 
-func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -91,9 +91,9 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading DataExchange Revision (%s): %s", d.Id(), err)
 	}
 
-	revision, err := FindRevisionById(ctx, conn, dataSetId, revisionId)
+	revision, err := findRevisionByID(ctx, conn, dataSetId, revisionId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataExchange Revision (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,7 +113,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRevisionRead(ctx, d, meta)...)
 }
 
-func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 

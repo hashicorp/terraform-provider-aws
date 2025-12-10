@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1079,7 +1079,7 @@ func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigatewayv2.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1488,7 +1488,8 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
+	input := apigateway.GetAccountInput{}
+	output, err := conn.GetAccount(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)

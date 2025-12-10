@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -124,7 +123,7 @@ type Generator struct {
 	outputPaginator string
 }
 
-func (g *Generator) Printf(format string, args ...interface{}) {
+func (g *Generator) Printf(format string, args ...any) {
 	fmt.Fprintf(&g.buf, format, args...)
 }
 

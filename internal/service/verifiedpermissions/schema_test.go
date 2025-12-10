@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -11,12 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,6 +120,62 @@ func TestAccVerifiedPermissionsSchema_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceSchema, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsSchema_upgrade_V6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schema verifiedpermissions.GetSchemaOutput
+	resourceName := "aws_verifiedpermissions_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+			testAccPolicyStoresPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		CheckDestroy: testAccCheckSchemaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccSchemaConfig_basic("NAMESPACE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
+					resource.TestCheckResourceAttrSet(resourceName, "definition.value"),
+				),
+			},
+			{
+				Config:                   testAccSchemaConfig_basic("NAMESPACE"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "definition.0.value"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -135,7 +192,7 @@ func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfverifiedpermissions.FindSchemaByPolicyStoreID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

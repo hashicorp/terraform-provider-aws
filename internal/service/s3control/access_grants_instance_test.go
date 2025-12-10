@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -167,9 +167,9 @@ func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+			_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -193,7 +193,7 @@ func testAccCheckAccessGrantsInstanceExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+		_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

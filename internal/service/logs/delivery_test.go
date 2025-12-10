@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,9 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,10 +29,10 @@ func testAccDelivery_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -45,12 +44,12 @@ func testAccDelivery_basic(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryConfig_basic(rName),
+				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -67,6 +66,10 @@ func testAccDelivery_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 		},
 	})
@@ -79,10 +82,10 @@ func testAccDelivery_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -94,12 +97,12 @@ func testAccDelivery_disappears(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryConfig_basic(rName),
+				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDelivery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,10 +118,10 @@ func testAccDelivery_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -130,12 +133,12 @@ func testAccDelivery_tags(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -152,11 +155,15 @@ func testAccDelivery_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 			{
-				Config: testAccLogDeliveryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliveryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -171,9 +178,9 @@ func testAccDelivery_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLogDeliveryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -197,10 +204,10 @@ func testAccDelivery_update(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -212,12 +219,12 @@ func testAccDelivery_update(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),
+				Config: testAccDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -236,11 +243,15 @@ func testAccDelivery_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
 			},
 			{
-				Config: testAccLogDeliveryConfig_allAttributes(rName, "", "{region}/{yyyy}/{MM}/{dd}/"),
+				Config: testAccDeliveryConfig_allAttributes(rName, "", "{region}/{yyyy}/{MM}/{dd}/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -255,13 +266,58 @@ func testAccDelivery_update(t *testing.T) {
 					})),
 				},
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"field_delimiter",
+					"s3_delivery_configuration.0.enable_hive_compatible_path",
+				},
+			},
 		},
 	})
 }
 
-func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccDelivery_cloudFrontDistribution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Delivery
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// CloudFront distribution delivery source must be in us-east-1.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryConfig_cloudFrontDistribution(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckDeliveryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_delivery" {
@@ -270,7 +326,7 @@ func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflogs.FindDeliveryByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -285,14 +341,14 @@ func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeliveryExists(ctx context.Context, n string, v *awstypes.Delivery) resource.TestCheckFunc {
+func testAccCheckDeliveryExists(ctx context.Context, t *testing.T, n string, v *awstypes.Delivery) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindDeliveryByID(ctx, conn, rs.Primary.ID)
 
@@ -306,8 +362,8 @@ func testAccCheckDeliveryExists(ctx context.Context, n string, v *awstypes.Deliv
 	}
 }
 
-func testAccLogDeliveryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_basic(rName), testAccLogDeliveryDestinationConfig_basic(rName), `
+func testAccDeliveryConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), testAccDeliveryDestinationConfig_basic(rName), `
 resource "aws_cloudwatch_log_delivery" "test" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
@@ -315,8 +371,8 @@ resource "aws_cloudwatch_log_delivery" "test" {
 `)
 }
 
-func testAccLogDeliveryConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_basic(rName), testAccLogDeliveryDestinationConfig_basic(rName), fmt.Sprintf(`
+func testAccDeliveryConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), testAccDeliveryDestinationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery" "test" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
@@ -328,8 +384,8 @@ resource "aws_cloudwatch_log_delivery" "test" {
 `, tag1Key, tag1Value))
 }
 
-func testAccLogDeliveryConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_basic(rName), testAccLogDeliveryDestinationConfig_basic(rName), fmt.Sprintf(`
+func testAccDeliveryConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), testAccDeliveryDestinationConfig_basic(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery" "test" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
@@ -342,8 +398,8 @@ resource "aws_cloudwatch_log_delivery" "test" {
 `, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccLogDeliveryConfig_allAttributes(rName, fieldDelimiter, suffixPath string) string {
-	return acctest.ConfigCompose(testAccLogDeliverySourceConfig_basic(rName), fmt.Sprintf(`
+func testAccDeliveryConfig_allAttributes(rName, fieldDelimiter, suffixPath string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -372,4 +428,37 @@ resource "aws_cloudwatch_log_delivery" "test" {
   }
 }
 `, rName, fieldDelimiter, suffixPath))
+}
+
+func testAccDeliveryConfig_cloudFrontDistribution(rName string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_baseCloudFrontDistribution(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_source" "test" {
+  name         = %[1]q
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.test.arn
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name          = %[1]q
+  output_format = "parquet"
+
+  delivery_destination_configuration {
+    destination_resource_arn = "${aws_s3_bucket.test.arn}/prefix"
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+
+  s3_delivery_configuration {
+    suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
+  }
+}
+`, rName))
 }

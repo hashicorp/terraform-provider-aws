@@ -7,4 +7,5 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"{{ .SourcePackage }}"
+	"github.com/YakDriver/smarterr"
 )

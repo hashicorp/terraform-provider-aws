@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs
@@ -17,23 +17,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivs_playback_key_pair", name="Playback Key Pair")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.PlaybackKeyPair")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tlsEcdsaPublicKeyPem=true)
+// @Testing(importIgnore="public_key")
+// @Testing(plannableImportAction=Replace)
 func ResourcePlaybackKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaybackKeyPairCreate,
 		ReadWithoutTimeout:   resourcePlaybackKeyPairRead,
 		DeleteWithoutTimeout: resourcePlaybackKeyPairDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -63,8 +66,6 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -72,7 +73,7 @@ const (
 	ResNamePlaybackKeyPair = "Playback Key Pair"
 )
 
-func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -104,14 +105,14 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourcePlaybackKeyPairRead(ctx, d, meta)...)
 }
 
-func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	out, err := FindPlaybackKeyPairByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVS PlaybackKeyPair (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +129,7 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)

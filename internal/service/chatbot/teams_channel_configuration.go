@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot
@@ -23,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,12 +49,8 @@ func newTeamsChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type teamsChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[teamsChannelConfigurationResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *teamsChannelConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_chatbot_teams_channel_configuration"
 }
 
 func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -188,7 +185,7 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 
 	output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -224,7 +221,7 @@ func (r *teamsChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -275,7 +272,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Teams Channel Configuration", map[string]any{
 		"team_id":                data.TeamID.ValueString(),
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
@@ -284,7 +281,7 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return conn.DeleteMicrosoftTeamsChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -301,10 +298,6 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
 		return
 	}
-}
-
-func (r *teamsChannelConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func (r *teamsChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -329,7 +322,7 @@ func findTeamsChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -357,11 +350,11 @@ const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -373,7 +366,7 @@ func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, 
 }
 
 func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{teamsChannelConfigurationAvailable},
 		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
@@ -392,7 +385,7 @@ func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 }
 
 func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{teamsChannelConfigurationAvailable},
 		Target:     []string{},
 		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
@@ -411,6 +404,7 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type teamsChannelConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ChannelID                 types.String                      `tfsdk:"channel_id"`
 	ChannelName               types.String                      `tfsdk:"channel_name"`
 	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`

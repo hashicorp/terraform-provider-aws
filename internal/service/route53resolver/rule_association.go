@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -13,27 +13,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(domainTfVar="domain")
 func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,
 		ReadWithoutTimeout:   resourceRuleAssociationRead,
 		DeleteWithoutTimeout: resourceRuleAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -63,7 +64,7 @@ func resourceRuleAssociation() *schema.Resource {
 	}
 }
 
-func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -91,13 +92,13 @@ func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRuleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	ruleAssociation, err := findResolverRuleAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,7 +115,7 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -147,7 +148,7 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	output, err := conn.GetResolverRuleAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -164,11 +165,11 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	return output.ResolverRuleAssociation, nil
 }
 
-func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findResolverRuleAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -181,7 +182,7 @@ func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id
 }
 
 func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusCreating),
 		Target:     enum.Slice(awstypes.ResolverRuleAssociationStatusComplete),
 		Refresh:    statusRuleAssociation(ctx, conn, id),
@@ -202,7 +203,7 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Clien
 }
 
 func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusRuleAssociation(ctx, conn, id),

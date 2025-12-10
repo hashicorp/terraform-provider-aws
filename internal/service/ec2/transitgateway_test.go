@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -25,8 +25,8 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,17 +39,17 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:      testAccTransitGatewayConnect_basic,
 			acctest.CtDisappears: testAccTransitGatewayConnect_disappears,
 			"tags":               testAccTransitGatewayConnect_tags,
-			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation,
-			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
-			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation,
+			"transitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation,
+			"transitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
+			"transitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation,
 		},
 		"ConnectPeer": {
 			acctest.CtBasic:         testAccTransitGatewayConnectPeer_basic,
 			acctest.CtDisappears:    testAccTransitGatewayConnectPeer_disappears,
 			"tags":                  testAccTransitGatewayConnectPeer_tags,
-			"BgpAsn":                testAccTransitGatewayConnectPeer_bgpASN,
-			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
-			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
+			"bgpASN":                testAccTransitGatewayConnectPeer_bgpASN,
+			"insideCIDRBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
+			"transitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
 		"DefaultRouteTableAssociation": {
 			acctest.CtBasic:            testAccTransitGatewayDefaultRouteTableAssociation_basic,
@@ -65,52 +65,54 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:               testAccTransitGateway_basic,
 			acctest.CtDisappears:          testAccTransitGateway_disappears,
 			"tags":                        testAccTransitGateway_tags,
-			"AmazonSideASN":               testAccTransitGateway_AmazonSideASN,
-			"AutoAcceptSharedAttachments": testAccTransitGateway_AutoAcceptSharedAttachments,
-			"CidrBlocks":                  testAccTransitGateway_cidrBlocks,
-			"DefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled,
-			"DefaultRouteTableAssociation":                       testAccTransitGateway_DefaultRouteTableAssociation,
-			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
-			"Description":                                        testAccTransitGateway_Description,
-			"DnsSupport":                                         testAccTransitGateway_DNSSupport,
-			"SecurityGroupReferencingSupport":                    testAccTransitGateway_SecurityGroupReferencingSupport,
-			"SecurityGroupReferencingSupportExistingResource":    testAccTransitGateway_SecurityGroupReferencingSupportExistingResource,
-			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
+			"amazonSideASN":               testAccTransitGateway_amazonSideASN,
+			"autoAcceptSharedAttachments": testAccTransitGateway_autoAcceptSharedAttachments,
+			"cidrBlocks":                  testAccTransitGateway_cidrBlocks,
+			"defaultRouteTableAssociationAndPropagationDisabled": testAccTransitGateway_defaultRouteTableAssociationAndPropagationDisabled,
+			"defaultRouteTableAssociation":                       testAccTransitGateway_defaultRouteTableAssociation,
+			"defaultRouteTablePropagation":                       testAccTransitGateway_defaultRouteTablePropagation,
+			"description":                                        testAccTransitGateway_description,
+			"dnsSupport":                                         testAccTransitGateway_dnsSupport,
+			"securityGroupReferencingSupport":                    testAccTransitGateway_securityGroupReferencingSupport,
+			"securityGroupReferencingSupportExistingResource":    testAccTransitGateway_securityGroupReferencingSupportExistingResource,
+			"vpnEcmpSupport":                                     testAccTransitGateway_vpnECMPSupport,
+			"encryptionSupportWhenCreated":                       testAccTransitGateway_encryptionSupportWhenCreated,
+			"encryptionSupportWhenUpdated":                       testAccTransitGateway_encryptionSupportWhenUpdated,
 		},
 		"MulticastDomain": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastDomain_basic,
 			acctest.CtDisappears: testAccTransitGatewayMulticastDomain_disappears,
 			"tags":               testAccTransitGatewayMulticastDomain_tags,
-			"IGMPv2Support":      testAccTransitGatewayMulticastDomain_igmpv2Support,
+			"igmpv2Support":      testAccTransitGatewayMulticastDomain_igmpv2Support,
 		},
 		"MulticastDomainAssociation": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastDomainAssociation_basic,
 			acctest.CtDisappears: testAccTransitGatewayMulticastDomainAssociation_disappears,
-			"DomainDisappears":   testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
-			"TwoAssociations":    testAccTransitGatewayMulticastDomainAssociation_twoAssociations,
+			"domainDisappears":   testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
+			"twoAssociations":    testAccTransitGatewayMulticastDomainAssociation_twoAssociations,
 		},
 		"MulticastGroupMember": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastGroupMember_basic,
 			acctest.CtDisappears: testAccTransitGatewayMulticastGroupMember_disappears,
-			"DomainDisappears":   testAccTransitGatewayMulticastGroupMember_Disappears_domain,
-			"TwoMembers":         testAccTransitGatewayMulticastGroupMember_twoMembers,
+			"domainDisappears":   testAccTransitGatewayMulticastGroupMember_Disappears_domain,
+			"twoMembers":         testAccTransitGatewayMulticastGroupMember_twoMembers,
 		},
 		"MulticastGroupSource": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastGroupSource_basic,
 			acctest.CtDisappears: testAccTransitGatewayMulticastGroupSource_disappears,
-			"DomainDisappears":   testAccTransitGatewayMulticastGroupSource_Disappears_domain,
+			"domainDisappears":   testAccTransitGatewayMulticastGroupSource_Disappears_domain,
 		},
 		"PeeringAttachment": {
 			acctest.CtBasic:      testAccTransitGatewayPeeringAttachment_basic,
 			acctest.CtDisappears: testAccTransitGatewayPeeringAttachment_disappears,
 			"tags":               testAccTransitGatewayPeeringAttachment_tags,
-			"DifferentAccount":   testAccTransitGatewayPeeringAttachment_differentAccount,
+			"differentAccount":   testAccTransitGatewayPeeringAttachment_differentAccount,
 			"options":            testAccTransitGatewayPeeringAttachment_options,
 		},
 		"PeeringAttachmentAccepter": {
 			acctest.CtBasic:    testAccTransitGatewayPeeringAttachmentAccepter_basic,
 			"tags":             testAccTransitGatewayPeeringAttachmentAccepter_tags,
-			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
+			"differentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 		},
 		"PolicyTable": {
 			acctest.CtBasic:            testAccTransitGatewayPolicyTable_basic,
@@ -126,7 +128,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:              testAccTransitGatewayPrefixListReference_basic,
 			acctest.CtDisappears:         testAccTransitGatewayPrefixListReference_disappears,
 			"disappearsTransitGateway":   testAccTransitGatewayPrefixListReference_disappears_TransitGateway,
-			"TransitGatewayAttachmentId": testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID,
+			"transitGatewayAttachmentID": testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID,
 		},
 		"Route": {
 			acctest.CtBasic:                      testAccTransitGatewayRoute_basic,
@@ -144,32 +146,36 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"RouteTableAssociation": {
 			acctest.CtBasic:              testAccTransitGatewayRouteTableAssociation_basic,
 			acctest.CtDisappears:         testAccTransitGatewayRouteTableAssociation_disappears,
-			"ReplaceExistingAssociation": testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation,
+			"replaceExistingAssociation": testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation,
+			"attachmentChange":           testAccTransitGatewayRouteTableAssociation_attachmentChange,
+			"recreatedDXGateway":         testAccTransitGatewayRouteTableAssociation_recreatedDXGateway,
 		},
 		"RouteTablePropagation": {
 			acctest.CtBasic:      testAccTransitGatewayRouteTablePropagation_basic,
 			acctest.CtDisappears: testAccTransitGatewayRouteTablePropagation_disappears,
+			"attachmentChange":   testAccTransitGatewayRouteTablePropagation_attachmentChange,
+			"recreatedDXGateway": testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway,
 		},
-		"VpcAttachment": {
+		"VPCAttachment": {
 			acctest.CtBasic:                   testAccTransitGatewayVPCAttachment_basic,
 			acctest.CtDisappears:              testAccTransitGatewayVPCAttachment_disappears,
 			"tags":                            testAccTransitGatewayVPCAttachment_tags,
-			"ApplianceModeSupport":            testAccTransitGatewayVPCAttachment_ApplianceModeSupport,
-			"DnsSupport":                      testAccTransitGatewayVPCAttachment_DNSSupport,
-			"Ipv6Support":                     testAccTransitGatewayVPCAttachment_IPv6Support,
-			"SecurityGroupReferencingSupport": testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport,
-			"SecurityGroupReferencingSupportV5690Diff":                         testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportV5690Diff,
-			"SecurityGroupReferencingSupportExistingResource":                  testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupportExistingResource,
-			"SharedTransitGateway":                                             testAccTransitGatewayVPCAttachment_SharedTransitGateway,
-			"SubnetIds":                                                        testAccTransitGatewayVPCAttachment_SubnetIDs,
-			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation,
-			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
-			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagation,
+			"applianceModeSupport":            testAccTransitGatewayVPCAttachment_applianceModeSupport,
+			"dnsSupport":                      testAccTransitGatewayVPCAttachment_dnsSupport,
+			"ipv6Support":                     testAccTransitGatewayVPCAttachment_ipv6Support,
+			"securityGroupReferencingSupport": testAccTransitGatewayVPCAttachment_securityGroupReferencingSupport,
+			"securityGroupReferencingSupportV5690Diff":                         testAccTransitGatewayVPCAttachment_securityGroupReferencingSupportV5690Diff,
+			"securityGroupReferencingSupportExistingResource":                  testAccTransitGatewayVPCAttachment_securityGroupReferencingSupportExistingResource,
+			"sharedTransitGateway":                                             testAccTransitGatewayVPCAttachment_sharedTransitGateway,
+			"subnetIDs":                                                        testAccTransitGatewayVPCAttachment_subnetIDs,
+			"transitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociation,
+			"transitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
+			"transitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_transitGatewayDefaultRouteTablePropagation,
 		},
-		"VpcAttachmentAccepter": {
+		"VPCAttachmentAccepter": {
 			acctest.CtBasic: testAccTransitGatewayVPCAttachmentAccepter_basic,
 			"tags":          testAccTransitGatewayVPCAttachmentAccepter_tags,
-			"TransitGatewayDefaultRouteTableAssociationAndPropagation": testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation,
+			"transitGatewayDefaultRouteTableAssociationAndPropagation": testAccTransitGatewayVPCAttachmentAccepter_transitGatewayDefaultRouteTableAssociationAndPropagation,
 		},
 	}
 
@@ -251,7 +257,7 @@ func testAccTransitGateway_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 	})
 }
 
-func testAccTransitGateway_AmazonSideASN(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_amazonSideASN(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -291,7 +297,7 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T, semaphore tfsync.Semaphor
 	})
 }
 
-func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_autoAcceptSharedAttachments(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -384,7 +390,7 @@ func testAccTransitGateway_cidrBlocks(t *testing.T, semaphore tfsync.Semaphore) 
 	})
 }
 
-func testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_defaultRouteTableAssociationAndPropagationDisabled(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -417,7 +423,7 @@ func testAccTransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t 
 	})
 }
 
-func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_defaultRouteTableAssociation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -465,7 +471,7 @@ func testAccTransitGateway_DefaultRouteTableAssociation(t *testing.T, semaphore 
 	})
 }
 
-func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_defaultRouteTablePropagation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -513,7 +519,7 @@ func testAccTransitGateway_DefaultRouteTablePropagation(t *testing.T, semaphore 
 	})
 }
 
-func testAccTransitGateway_DNSSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_dnsSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -553,7 +559,7 @@ func testAccTransitGateway_DNSSupport(t *testing.T, semaphore tfsync.Semaphore) 
 	})
 }
 
-func testAccTransitGateway_SecurityGroupReferencingSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_securityGroupReferencingSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -593,7 +599,7 @@ func testAccTransitGateway_SecurityGroupReferencingSupport(t *testing.T, semapho
 	})
 }
 
-func testAccTransitGateway_SecurityGroupReferencingSupportExistingResource(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_securityGroupReferencingSupportExistingResource(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -649,7 +655,7 @@ func testAccTransitGateway_SecurityGroupReferencingSupportExistingResource(t *te
 	})
 }
 
-func testAccTransitGateway_VPNECMPSupport(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_vpnECMPSupport(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -689,7 +695,7 @@ func testAccTransitGateway_VPNECMPSupport(t *testing.T, semaphore tfsync.Semapho
 	})
 }
 
-func testAccTransitGateway_Description(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGateway_description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2 awstypes.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -724,6 +730,77 @@ func testAccTransitGateway_Description(t *testing.T, semaphore tfsync.Semaphore)
 					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
+			},
+		},
+	})
+}
+
+// Encryption support is enabled when creating a transit gateway
+func testAccTransitGateway_encryptionSupportWhenCreated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// A transit gateway is created without encryption support, then updated to enable it
+func testAccTransitGateway_encryptionSupportWhenUpdated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueDisable)),
+				),
+			},
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -816,7 +893,7 @@ func testAccCheckTransitGatewayDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfec2.FindTransitGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -851,7 +928,7 @@ func testAccCheckTransitGatewayRecreated(i, j *awstypes.TransitGateway) resource
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -871,7 +948,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 
 		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Association not found")
 		}
 
@@ -879,7 +956,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -899,7 +976,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 
 		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -911,7 +988,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 
@@ -931,7 +1008,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 
 		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
 		}
 
@@ -939,7 +1016,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 
@@ -959,7 +1036,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagat
 
 		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -1183,4 +1260,12 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTransitGatewayConfig_encryptionSupport() string {
+	return `
+resource "aws_ec2_transit_gateway" "test" {
+  encryption_support = "enable"
+}
+`
 }

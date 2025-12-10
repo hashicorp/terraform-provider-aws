@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datapipeline
@@ -21,7 +21,7 @@ func listPipelineTags(ctx context.Context, conn *datapipeline.Client, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists datapipeline service tags and set them in Context.

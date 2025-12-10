@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -17,7 +17,7 @@ func TestAccMediaLive_serial(t *testing.T) {
 			acctest.CtBasic:      testAccMultiplex_basic,
 			acctest.CtDisappears: testAccMultiplex_disappears,
 			"update":             testAccMultiplex_update,
-			"updateTags":         testAccMediaLiveMultiplex_tagsSerial,
+			"tags":               testAccMediaLiveMultiplex_tagsSerial,
 			"start":              testAccMultiplex_start,
 		},
 		"MultiplexProgram": {

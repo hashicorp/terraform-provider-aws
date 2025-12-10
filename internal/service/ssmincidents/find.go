@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +23,7 @@ func FindResponsePlanByID(context context.Context, client *ssmincidents.Client, 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -37,28 +37,4 @@ func FindResponsePlanByID(context context.Context, client *ssmincidents.Client, 
 	}
 
 	return output, nil
-}
-
-func FindReplicationSetByID(context context.Context, client *ssmincidents.Client, arn string) (*types.ReplicationSet, error) {
-	input := &ssmincidents.GetReplicationSetInput{
-		Arn: aws.String(arn),
-	}
-	output, err := client.GetReplicationSet(context, input)
-	if err != nil {
-		var notFoundError *types.ResourceNotFoundException
-		if errors.As(err, &notFoundError) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if output == nil || output.ReplicationSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.ReplicationSet, nil
 }

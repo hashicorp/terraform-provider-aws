@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -185,7 +185,7 @@ func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfds.FindRegionByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["region_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -284,7 +284,7 @@ func testAccRegionConfig_basic(rName, domain string) string {
 # but references VPC/subnets in the secondary directory's region.
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -298,7 +298,7 @@ func testAccRegionConfig_tags1(rName, domain, tagKey1, tagValue1 string) string 
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -316,7 +316,7 @@ func testAccRegionConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagVa
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id
@@ -335,7 +335,7 @@ func testAccRegionConfig_desiredNumberOfDomainControllers(rName, domain string, 
 	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_directory_service_region" "test" {
   directory_id = aws_directory_service_directory.test.id
-  region_name  = data.aws_region.secondary.name
+  region_name  = data.aws_region.secondary.region
 
   vpc_settings {
     vpc_id     = aws_vpc.secondary.id

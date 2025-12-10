@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -11,27 +11,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_acmpca_certificate_authority_certificate", name="Certificate Authority Certificate")
+// @ArnIdentity("certificate_authority_arn")
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca;acmpca.GetCertificateAuthorityCertificateOutput")
+// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(checkDestroyNoop=true)
 func resourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCertificate: {
@@ -56,7 +57,7 @@ func resourceCertificateAuthorityCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -81,13 +82,13 @@ func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schem
 	return append(diags, resourceCertificateAuthorityCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	output, err := findCertificateAuthorityCertificateByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -112,8 +113,7 @@ func findCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 

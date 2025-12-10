@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -117,7 +118,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	var groups []string
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		groups = append(groups, fmt.Sprintf("%s-%d", rName, i))
 	}
 
@@ -173,7 +174,7 @@ func testAccCheckNotificationDestroy(ctx context.Context, groups []string) resou
 				err = tfresource.NewEmptyResultError(nil)
 			}
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

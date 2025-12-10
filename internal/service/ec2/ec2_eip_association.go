@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -10,12 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,7 +80,7 @@ func resourceEIPAssociation() *schema.Resource {
 	}
 }
 
-func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,11 +119,11 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.AssociationId))
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 
@@ -142,17 +143,17 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEIPAssociationRead(ctx, d, meta)...)
 }
 
-func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
 	address, err := findEIPByAssociationID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,12 +172,12 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
 	input := ec2.DisassociateAddressInput{

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -10,15 +10,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func testOntapStorageVirtualMachineStateDataV0() map[string]interface{} {
-	return map[string]interface{}{
+func testOntapStorageVirtualMachineStateDataV0() map[string]any {
+	return map[string]any{
 		"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name": "MeArrugoDerrito",
 	}
 }
 
-func testOntapStorageVirtualMachineStateDataV1() map[string]interface{} {
+func testOntapStorageVirtualMachineStateDataV1() map[string]any {
 	v0 := testOntapStorageVirtualMachineStateDataV0()
-	return map[string]interface{}{
+	return map[string]any{
 		"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name": v0["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"],
 	}
 }

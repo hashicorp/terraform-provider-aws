@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,7 +42,7 @@ func resourceStage() *schema.Resource {
 		DeleteWithoutTimeout: resourceStageDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME", d.Id())
@@ -164,12 +165,10 @@ func resourceStage() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -194,8 +193,8 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		waitForCache = true
 	}
 
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CanarySettings = expandCanarySettings(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -206,8 +205,8 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DocumentationVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Variables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("variables"); ok && len(v.(map[string]any)) > 0 {
+		input.Variables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
@@ -238,7 +237,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -246,7 +245,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	stageName := d.Get("stage_name").(string)
 	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -292,7 +291,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -328,8 +327,8 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("canary_settings") {
 			oldCanarySettingsRaw, newCanarySettingsRaw := d.GetChange("canary_settings")
 			operations = appendCanarySettingsPatchOperations(operations,
-				oldCanarySettingsRaw.([]interface{}),
-				newCanarySettingsRaw.([]interface{}),
+				oldCanarySettingsRaw.([]any),
+				newCanarySettingsRaw.([]any),
 			)
 		}
 		if d.HasChange("deployment_id") {
@@ -362,12 +361,12 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("variables") {
 			o, n := d.GetChange("variables")
-			oldV := o.(map[string]interface{})
-			newV := n.(map[string]interface{})
+			oldV := o.(map[string]any)
+			newV := n.(map[string]any)
 			operations = append(operations, diffVariablesOps(oldV, newV, "/variables/")...)
 		}
 		if d.HasChange("access_log_settings") {
-			accessLogSettings := d.Get("access_log_settings").([]interface{})
+			accessLogSettings := d.Get("access_log_settings").([]any)
 			if len(accessLogSettings) == 1 {
 				operations = append(operations,
 					types.PatchOperation{
@@ -409,7 +408,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -440,7 +439,7 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	output, err := conn.GetStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -457,11 +456,11 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	return output, nil
 }
 
-func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -476,7 +475,7 @@ func waitStageCacheAvailable(ctx context.Context, conn *apigateway.Client, apiID
 	const (
 		timeout = 90 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusDeleteInProgress, types.CacheClusterStatusFlushInProgress),
 		Target:  enum.Slice(types.CacheClusterStatusAvailable),
 		Refresh: stageCacheStatus(ctx, conn, apiID, name),
@@ -496,7 +495,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusFlushInProgress),
 		Target: enum.Slice(
 			types.CacheClusterStatusAvailable,
@@ -518,7 +517,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 	return nil, err
 }
 
-func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []types.PatchOperation {
+func diffVariablesOps(oldVars, newVars map[string]any, prefix string) []types.PatchOperation {
 	ops := make([]types.PatchOperation, 0)
 
 	for k := range oldVars {
@@ -549,10 +548,10 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []
 	return ops
 }
 
-func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
+func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[string]any {
+	result := make([]map[string]any, 0, 1)
 	if accessLogSettings != nil {
-		result = append(result, map[string]interface{}{
+		result = append(result, map[string]any{
 			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
 			names.AttrFormat:         aws.ToString(accessLogSettings.Format),
 		})
@@ -560,7 +559,7 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]any) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -573,7 +572,7 @@ func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 		apiObject.PercentTraffic = v
 	}
 
-	if v, ok := tfMap["stage_variable_overrides"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["stage_variable_overrides"].(map[string]any); ok && len(v) > 0 {
 		apiObject.StageVariableOverrides = flex.ExpandStringValueMap(v)
 	}
 
@@ -584,8 +583,8 @@ func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	return apiObject
 }
 
-func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
-	settings := make(map[string]interface{})
+func flattenCanarySettings(canarySettings *types.CanarySettings) []any {
+	settings := make(map[string]any)
 
 	if canarySettings == nil {
 		return nil
@@ -601,32 +600,32 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 	settings["use_stage_cache"] = canarySettings.UseStageCache
 	settings["deployment_id"] = canarySettings.DeploymentId
 
-	return []interface{}{settings}
+	return []any{settings}
 }
 
-func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []interface{}) []types.PatchOperation {
+func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []any) []types.PatchOperation {
 	if len(newCanarySettingsRaw) == 0 { // Schema guarantees either 0 or 1
 		return append(operations, types.PatchOperation{
 			Op:   types.Op("remove"),
 			Path: aws.String("/canarySettings"),
 		})
 	}
-	newSettings := newCanarySettingsRaw[0].(map[string]interface{})
+	newSettings := newCanarySettingsRaw[0].(map[string]any)
 
-	var oldSettings map[string]interface{}
+	var oldSettings map[string]any
 	if len(oldCanarySettingsRaw) == 1 { // Schema guarantees either 0 or 1
-		oldSettings = oldCanarySettingsRaw[0].(map[string]interface{})
+		oldSettings = oldCanarySettingsRaw[0].(map[string]any)
 	} else {
-		oldSettings = map[string]interface{}{
+		oldSettings = map[string]any{
 			"percent_traffic":          0.0,
-			"stage_variable_overrides": make(map[string]interface{}),
+			"stage_variable_overrides": make(map[string]any),
 			"use_stage_cache":          false,
 			"deployment_id":            "",
 		}
 	}
 
-	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]interface{})
-	newOverrides := newSettings["stage_variable_overrides"].(map[string]interface{})
+	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]any)
+	newOverrides := newSettings["stage_variable_overrides"].(map[string]any)
 	operations = append(operations, diffVariablesOps(oldOverrides, newOverrides, "/canarySettings/stageVariableOverrides/")...)
 
 	oldPercentTraffic := oldSettings["percent_traffic"].(float64)

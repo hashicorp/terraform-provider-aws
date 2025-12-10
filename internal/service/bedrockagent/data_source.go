@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -38,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,16 +62,71 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type dataSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataSourceResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (*dataSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_data_source"
-}
-
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
+		Blocks: map[string]schema.Block{
+			"filter_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"pattern_object_filter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfigurationModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"filters": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"exclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"inclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"object_type": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"data_deletion_policy": schema.StringAttribute{
@@ -123,6 +179,51 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 						},
 					},
 					Blocks: map[string]schema.Block{
+						"confluence_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceCrawlerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerConfigurationNestedObjectSchema,
+									},
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[confluenceSourceConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ConfluenceAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												"host_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.ConfluenceHostType](),
+												},
+												"host_url": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"s3_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataSourceConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -147,6 +248,225 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										Validators: []validator.Set{
 											setvalidator.SizeAtMost(1),
 											setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 300)),
+										},
+									},
+								},
+							},
+						},
+						"salesforce_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceCrawlerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerConfigurationNestedObjectSchema,
+									},
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[salesforceSourceConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SalesforceAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												"host_url": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"share_point_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sharepointDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sharePointCrawlerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: crawlerConfigurationNestedObjectSchema,
+									},
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sharePointSourceConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SharePointAuthType](),
+												},
+												"credentials_secret_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+												names.AttrDomain: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 50),
+													},
+												},
+												"host_type": schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.SharePointHostType](),
+												},
+												"site_urls": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Required:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 100),
+														setvalidator.ValueStringsAre(
+															stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+														),
+													},
+												},
+												"tenant_id": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(36, 36),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must provide a valid tenant ID"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"web_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[webDataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"crawler_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[webCrawlerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"exclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"inclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												names.AttrScope: schema.StringAttribute{
+													Optional:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.WebScopeType](),
+												},
+												"user_agent": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(15, 40),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"crawler_limits": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[webCrawlerLimitsModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"max_pages": schema.Int32Attribute{
+																Optional: true,
+																Validators: []validator.Int32{
+																	int32validator.AtLeast(1),
+																},
+															},
+															"rate_limit": schema.Int32Attribute{
+																Optional: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(1, 300),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"source_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[webSourceConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"url_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[urlConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"seed_urls": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[seedURLModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																	listvalidator.SizeAtMost(100),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrURL: schema.StringAttribute{
+																			Optional: true,
+																			Validators: []validator.String{
+																				stringvalidator.RegexMatches(regexache.MustCompile(`^https?://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -318,7 +638,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"intermediate_storage": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[intermediaStorageModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[intermediateStorageModel](ctx),
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
 										},
@@ -491,7 +811,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	input.ClientToken = aws.String(id.UniqueId())
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -539,7 +859,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 
 	ds, err := findDataSourceByTwoPartKey(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -579,7 +899,7 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -601,10 +921,11 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
+	input := bedrockagent.DeleteDataSourceInput{
 		DataSourceId:    data.DataSourceID.ValueStringPointer(),
 		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteDataSource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -632,7 +953,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -649,11 +970,11 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	return output.DataSource, nil
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -666,7 +987,7 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSource
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
@@ -685,7 +1006,7 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
@@ -704,6 +1025,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 type dataSourceResourceModel struct {
+	framework.WithRegionModel
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`
@@ -742,14 +1064,38 @@ func (m *dataSourceResourceModel) setID() (string, error) {
 }
 
 type dataSourceConfigurationModel struct {
-	Type            fwtypes.StringEnum[awstypes.DataSourceType]                     `tfsdk:"type"`
-	S3Configuration fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel] `tfsdk:"s3_configuration"`
+	ConfluenceConfiguration fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel] `tfsdk:"confluence_configuration"`
+	S3Configuration         fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]         `tfsdk:"s3_configuration"`
+	SalesforceConfiguration fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel] `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel] `tfsdk:"share_point_configuration"`
+	Type                    fwtypes.StringEnum[awstypes.DataSourceType]                             `tfsdk:"type"`
+	WebConfiguration        fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]        `tfsdk:"web_configuration"`
+}
+
+type confluenceDataSourceConfigurationModel struct {
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[confluenceCrawlerConfigurationModel] `tfsdk:"crawler_configuration"`
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[confluenceSourceConfigurationModel]  `tfsdk:"source_configuration"`
 }
 
 type s3DataSourceConfigurationModel struct {
-	BucketARN            fwtypes.ARN                      `tfsdk:"bucket_arn"`
-	BucketOwnerAccountID types.String                     `tfsdk:"bucket_owner_account_id"`
-	InclusionPrefixes    fwtypes.SetValueOf[types.String] `tfsdk:"inclusion_prefixes"`
+	BucketARN            fwtypes.ARN         `tfsdk:"bucket_arn"`
+	BucketOwnerAccountID types.String        `tfsdk:"bucket_owner_account_id"`
+	InclusionPrefixes    fwtypes.SetOfString `tfsdk:"inclusion_prefixes"`
+}
+
+type salesforceDataSourceConfigurationModel struct {
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[salesforceCrawlerConfigurationModel] `tfsdk:"crawler_configuration"`
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[salesforceSourceConfigurationModel]  `tfsdk:"source_configuration"`
+}
+
+type sharepointDataSourceConfigurationModel struct {
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[sharePointCrawlerConfigurationModel] `tfsdk:"crawler_configuration"`
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[sharePointSourceConfigurationModel]  `tfsdk:"source_configuration"`
+}
+
+type webDataSourceConfigurationModel struct {
+	CrawlerConfiguration fwtypes.ListNestedObjectValueOf[webCrawlerConfigurationModel] `tfsdk:"crawler_configuration"`
+	SourceConfiguration  fwtypes.ListNestedObjectValueOf[webSourceConfigurationModel]  `tfsdk:"source_configuration"`
 }
 
 type serverSideEncryptionConfigurationModel struct {
@@ -768,11 +1114,11 @@ type parsingConfigurationModel struct {
 }
 
 type customTransformationConfigurationModel struct {
-	IntermediateStorage fwtypes.ListNestedObjectValueOf[intermediaStorageModel] `tfsdk:"intermediate_storage"`
-	Transformation      fwtypes.ListNestedObjectValueOf[transformationModel]    `tfsdk:"transformation"`
+	IntermediateStorage fwtypes.ListNestedObjectValueOf[intermediateStorageModel] `tfsdk:"intermediate_storage"`
+	Transformation      fwtypes.ListNestedObjectValueOf[transformationModel]      `tfsdk:"transformation"`
 }
 
-type intermediaStorageModel struct {
+type intermediateStorageModel struct {
 	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"s3_location"`
 }
 
@@ -800,6 +1146,141 @@ type bedrockFoundationModelConfigurationModel struct {
 
 type parsingPromptModel struct {
 	ParsingPromptText types.String `tfsdk:"parsing_prompt_string"`
+}
+
+type confluenceSourceConfigurationModel struct {
+	AuthType             fwtypes.StringEnum[awstypes.ConfluenceAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	HostType             fwtypes.StringEnum[awstypes.ConfluenceHostType] `tfsdk:"host_type"`
+	HostURL              types.String                                    `tfsdk:"host_url"`
+}
+
+type salesforceSourceConfigurationModel struct {
+	AuthType             fwtypes.StringEnum[awstypes.SalesforceAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	HostURL              types.String                                    `tfsdk:"host_url"`
+}
+
+type sharePointSourceConfigurationModel struct {
+	AuthType             fwtypes.StringEnum[awstypes.SharePointAuthType] `tfsdk:"auth_type"`
+	CredentialsSecretARN fwtypes.ARN                                     `tfsdk:"credentials_secret_arn"`
+	Domain               types.String                                    `tfsdk:"domain"`
+	HostType             fwtypes.StringEnum[awstypes.SharePointHostType] `tfsdk:"host_type"`
+	SiteURLs             fwtypes.SetOfString                             `tfsdk:"site_urls"`
+	TenantID             types.String                                    `tfsdk:"tenant_id"`
+}
+
+type webSourceConfigurationModel struct {
+	URLConfiguration fwtypes.ListNestedObjectValueOf[urlConfigurationModel] `tfsdk:"url_configuration"`
+}
+
+type urlConfigurationModel struct {
+	SeedURLs fwtypes.ListNestedObjectValueOf[seedURLModel] `tfsdk:"seed_urls"`
+}
+
+type seedURLModel struct {
+	URL types.String `tfsdk:"url"`
+}
+
+type confluenceCrawlerConfigurationModel struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfigurationModel] `tfsdk:"filter_configuration"`
+}
+
+type salesforceCrawlerConfigurationModel struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfigurationModel] `tfsdk:"filter_configuration"`
+}
+
+type sharePointCrawlerConfigurationModel struct {
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[crawlFilterConfigurationModel] `tfsdk:"filter_configuration"`
+}
+
+type webCrawlerConfigurationModel struct {
+	CrawlerLimits    fwtypes.ListNestedObjectValueOf[webCrawlerLimitsModel] `tfsdk:"crawler_limits"`
+	ExclusionFilters fwtypes.SetOfString                                    `tfsdk:"exclusion_filters"`
+	InclusionFilters fwtypes.SetOfString                                    `tfsdk:"inclusion_filters"`
+	Scope            fwtypes.StringEnum[awstypes.WebScopeType]              `tfsdk:"scope"`
+	UserAgent        types.String                                           `tfsdk:"user_agent"`
+}
+
+type webCrawlerLimitsModel struct {
+	MaxPages  types.Int32 `tfsdk:"max_pages"`
+	RateLimit types.Int32 `tfsdk:"rate_limit"`
+}
+
+type crawlFilterConfigurationModel struct {
+	PatternObjectFilter fwtypes.ListNestedObjectValueOf[patternObjectFilterConfigurationModel] `tfsdk:"pattern_object_filter"`
+	Type                types.String                                                           `tfsdk:"type"`
+}
+
+type patternObjectFilterConfigurationModel struct {
+	Filters fwtypes.ListNestedObjectValueOf[patternObjectFilterModel] `tfsdk:"filters"`
+}
+
+type patternObjectFilterModel struct {
+	ExclusionFilters fwtypes.SetOfString `tfsdk:"exclusion_filters"`
+	InclusionFilters fwtypes.SetOfString `tfsdk:"inclusion_filters"`
+	ObjectType       types.String        `tfsdk:"object_type"`
+}
+
+func (c crawlFilterConfigurationModel) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
+	return schema.NestedBlockObject{
+		Blocks: map[string]schema.Block{
+			"filter_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"pattern_object_filter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfigurationModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"filters": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"exclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"inclusion_filters": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 25),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 1000),
+														),
+													},
+												},
+												"object_type": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 type chunkingConfigurationModel struct {

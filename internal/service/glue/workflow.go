@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -20,23 +20,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_workflow", name="Workflow")
 // @Tags(identifierAttribute="arn")
-func ResourceWorkflow() *schema.Resource {
+func resourceWorkflow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkflowCreate,
 		ReadWithoutTimeout:   resourceWorkflowRead,
 		UpdateWithoutTimeout: resourceWorkflowUpdate,
 		DeleteWithoutTimeout: resourceWorkflowDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -68,7 +66,7 @@ func ResourceWorkflow() *schema.Resource {
 	}
 }
 
-func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -79,7 +77,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
-		input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
+		input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -100,7 +98,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -145,7 +143,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -155,7 +153,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if kv, ok := d.GetOk("default_run_properties"); ok {
-			input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
+			input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -176,12 +174,12 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
-	err := DeleteWorkflow(ctx, conn, d.Id())
+	err := deleteWorkflow(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Workflow (%s): %s", d.Id(), err)
 	}
@@ -189,7 +187,7 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func DeleteWorkflow(ctx context.Context, conn *glue.Client, name string) error {
+func deleteWorkflow(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteWorkflowInput{
 		Name: aws.String(name),
 	}

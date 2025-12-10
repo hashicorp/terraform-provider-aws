@@ -1,0 +1,7 @@
+```release-note:note
+provider: On December 3, 2024, Amazon SageMaker was renamed to Amazon SageMaker AI. While resource and data source names remain the same in the provider, documentation and error messages have been updated to reflect the name change.
+```
+
+```release-note:note
+resource/aws_sagemaker_notebook_instance: `accelerator_types` is deprecated and will be removed in a future version. Use `instance_type` instead.
+```

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +46,7 @@ func resourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -63,7 +63,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -74,7 +74,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	value, err := findTag(ctx, conn, identifier, key)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", names.ECS, identifier, key)
 		d.SetId("")
 		return diags
@@ -91,7 +91,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 

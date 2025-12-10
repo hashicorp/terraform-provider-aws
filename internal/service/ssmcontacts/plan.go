@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,12 +98,12 @@ const (
 	ResNamePlan = "Plan"
 )
 
-func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
-	stages := expandStages(d.Get(names.AttrStage).([]interface{}))
+	stages := expandStages(d.Get(names.AttrStage).([]any))
 	plan := &types.Plan{
 		Stages: stages,
 	}
@@ -127,13 +127,13 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMContacts Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,7 +150,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
@@ -161,7 +161,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges(names.AttrStage) {
-		stages := expandStages(d.Get(names.AttrStage).([]interface{}))
+		stages := expandStages(d.Get(names.AttrStage).([]any))
 		in.Plan = &types.Plan{
 			Stages: stages,
 		}
@@ -181,7 +181,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -209,7 +209,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsagemaker.FindFlowDefinitionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -217,7 +217,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Flow Definition %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Flow Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -232,7 +232,7 @@ func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinit
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Flow Definition ID is set")
+			return fmt.Errorf("No SageMaker AI Flow Definition ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -355,7 +355,7 @@ resource "aws_sagemaker_flow_definition" "test" {
     task_count                            = 1
     task_description                      = %[1]q
     task_title                            = %[1]q
-    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {

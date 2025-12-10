@@ -1,8 +1,6 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "test" {
   name = var.rName
 
@@ -20,6 +18,8 @@ resource "aws_iam_role" "test" {
 
   tags = var.resource_tags
 }
+
+data "aws_partition" "current" {}
 
 variable "rName" {
   description = "Name for resource"

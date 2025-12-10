@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
 
 // Exports for use in tests only.
 var (
+	FindCapacityReservationByName     = findCapacityReservationByName
 	FindDataCatalogByName             = findDataCatalogByName
 	FindDatabaseByName                = findDatabaseByName
 	FindNamedQueryByID                = findNamedQueryByID
@@ -12,9 +13,10 @@ var (
 	FindWorkGroupByName               = findWorkGroupByName
 	QueryExecutionResult              = queryExecutionResult
 
-	ResourceDataCatalog       = resourceDataCatalog
-	ResourceDatabase          = resourceDatabase
-	ResourceNamedQuery        = resourceNamedQuery
-	ResourcePreparedStatement = resourcePreparedStatement
-	ResourceWorkGroup         = resourceWorkGroup
+	ResourceCapacityReservation = newCapacityReservationResource
+	ResourceDataCatalog         = resourceDataCatalog
+	ResourceDatabase            = resourceDatabase
+	ResourceNamedQuery          = resourceNamedQuery
+	ResourcePreparedStatement   = resourcePreparedStatement
+	ResourceWorkGroup           = resourceWorkGroup
 )

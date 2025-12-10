@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,22 +27,22 @@ func TestDiffPortSettings(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Old           []interface{}
-		New           []interface{}
+		Old           []any
+		New           []any
 		ExpectedAuths []awstypes.IpPermission
 		ExpectedRevs  []awstypes.IpPermission
 	}{
 		{ // No change
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -53,22 +53,22 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs:  nil,
 		},
 		{ // Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"from_port":        8888,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -86,15 +86,15 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs: nil,
 		},
 		{ // Removal
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New:           []interface{}{},
+			New:           []any{},
 			ExpectedAuths: nil,
 			ExpectedRevs: []awstypes.IpPermission{
 				{
@@ -106,16 +106,16 @@ func TestDiffPortSettings(t *testing.T) {
 			},
 		},
 		{ // Removal + Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "UDP",
@@ -172,7 +172,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -266,7 +266,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -344,7 +344,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -488,7 +488,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -600,7 +600,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -671,7 +671,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

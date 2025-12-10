@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -12,16 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -97,12 +98,10 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
@@ -142,14 +141,14 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	output, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -172,7 +171,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
@@ -226,10 +225,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(remove) > 0 {
 			for _, v := range remove {
-				_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, &docdb.RemoveSourceIdentifierFromSubscriptionInput{
+				input := docdb.RemoveSourceIdentifierFromSubscriptionInput{
 					SourceIdentifier: aws.String(v),
 					SubscriptionName: aws.String(d.Id()),
-				})
+				}
+				_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "removing DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
@@ -239,10 +239,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(add) > 0 {
 			for _, v := range add {
-				_, err := conn.AddSourceIdentifierToSubscription(ctx, &docdb.AddSourceIdentifierToSubscriptionInput{
+				input := docdb.AddSourceIdentifierToSubscriptionInput{
 					SourceIdentifier: aws.String(v),
 					SubscriptionName: aws.String(d.Id()),
-				})
+				}
+				_, err := conn.AddSourceIdentifierToSubscription(ctx, &input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "adding DocumentDB Cluster Event Subscription (%s) source identifier: %s", d.Id(), err)
@@ -254,15 +255,16 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(ctx, &docdb.DeleteEventSubscriptionInput{
+	input := docdb.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventSubscription(ctx, &input)
 
 	if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
 		return diags
@@ -291,7 +293,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name s
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -317,7 +319,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: input,
 				LastError:   err,
 			}
@@ -328,7 +330,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 		}
 
 		for _, v := range page.EventSubscriptionsList {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -337,11 +339,11 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -354,7 +356,7 @@ func statusEventSubscription(ctx context.Context, conn *docdb.Client, name strin
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
@@ -373,7 +375,7 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name 
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
@@ -392,7 +394,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name 
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEventSubscription(ctx, conn, name),

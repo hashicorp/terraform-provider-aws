@@ -40,6 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_node_count` - (Optional) Number of cache node instances to reserve.
   Default value is `1`.
 * `id` - (Optional) Customer-specified identifier to track this reservation.
@@ -52,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN for the reserved cache node.
 * `duration` - Duration of the reservation as an RFC3339 duration.
-* `fixed_price` – Fixed price charged for this reserved cache node.
+* `fixed_price` - Fixed price charged for this reserved cache node.
 * `cache_node_type` - Node type for the reserved cache nodes.
 * `offering_type` - Offering type of this reserved cache node.
 * `product_description` - Engine type for the reserved cache node.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ds
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,7 +65,7 @@ func resourceSharedDirectoryAccepter() *schema.Resource {
 	}
 }
 
-func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -89,13 +90,13 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceSharedDirectoryAccepterRead(ctx, d, meta)...)
 }
 
-func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	dir, err := findSharedDirectoryAccepterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Shared Directory Accepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,12 +114,12 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Shared Directory Accepter: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
@@ -153,11 +154,11 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 	return output, nil
 }
 
-func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -170,7 +171,7 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Clie
 }
 
 func waitSharedDirectoryAccepted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ShareStatusPendingAcceptance, awstypes.ShareStatusSharing),
 		Target:                    enum.Slice(awstypes.ShareStatusShared),
 		Refresh:                   statusDirectoryShareStatus(ctx, conn, id),

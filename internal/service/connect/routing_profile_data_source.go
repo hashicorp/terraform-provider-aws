@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,6 +58,18 @@ func dataSourceRoutingProfile() *schema.Resource {
 						"concurrency": {
 							Type:     schema.TypeInt,
 							Computed: true,
+						},
+						"cross_channel_behavior": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"behavior_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -111,7 +123,7 @@ func dataSourceRoutingProfile() *schema.Resource {
 	}
 }
 
-func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -146,7 +158,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
 	d.Set(names.AttrDescription, routingProfile.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies, d.Get("media_concurrencies").(*schema.Set).List())); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
 	d.Set(names.AttrName, routingProfile.Name)
@@ -197,7 +209,7 @@ func findRoutingProfileSummaries(ctx context.Context, conn *connect.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

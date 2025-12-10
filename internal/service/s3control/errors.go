@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -10,6 +10,7 @@ const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidIAMRole                       = "InvalidIamRole"
 	errCodeInvalidRequest                       = "InvalidRequest"
+	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchAccessPoint                    = "NoSuchAccessPoint"
 	errCodeNoSuchAccessPointPolicy              = "NoSuchAccessPointPolicy"
 	errCodeNoSuchAsyncRequest                   = "NoSuchAsyncRequest"
@@ -20,4 +21,5 @@ const (
 	errCodeNoSuchOutpost                        = "NoSuchOutpost"
 	errCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
+	errCodeUnknownError                         = "UnknownError"
 )

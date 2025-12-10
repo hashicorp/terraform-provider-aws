@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -26,11 +26,7 @@ func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type serviceDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*serviceDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service"
+	framework.DataSourceWithModel[serviceDataSourceModel]
 }
 
 func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -45,10 +41,6 @@ func (d *serviceDataSource) Schema(ctx context.Context, request datasource.Schem
 				Computed: true,
 			},
 			"partition": schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			"reverse_dns_name": schema.StringAttribute{
@@ -145,10 +137,10 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 type serviceDataSourceModel struct {
+	framework.WithRegionModel
 	DNSName          types.String `tfsdk:"dns_name"`
 	ID               types.String `tfsdk:"id"`
 	Partition        types.String `tfsdk:"partition"`
-	Region           types.String `tfsdk:"region"`
 	ReverseDNSName   types.String `tfsdk:"reverse_dns_name"`
 	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
 	ServiceID        types.String `tfsdk:"service_id"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -68,7 +68,7 @@ func sweepAccessGrants(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -110,7 +110,7 @@ func sweepAccessGrantsInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -152,7 +152,7 @@ func sweepAccessGrantsLocations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -194,7 +194,7 @@ func sweepAccessPoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -218,7 +218,7 @@ func sweepAccessPoints(region string) error {
 
 		for _, v := range page.AccessPointList {
 			arn := aws.ToString(v.AccessPointArn)
-			id, err := AccessPointCreateResourceID(arn)
+			id, err := accessPointCreateResourceID(arn)
 			if err != nil {
 				log.Printf("[WARN] S3 Access Point (%s): %s", arn, err)
 				continue
@@ -249,7 +249,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -293,7 +293,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)
@@ -341,7 +341,7 @@ func sweepStorageLensConfigurations(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.S3ControlClient(ctx)
 	accountID := client.AccountID(ctx)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -92,8 +93,6 @@ func resourceRoute() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -748,7 +747,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 	}
 }
 
-func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -756,7 +755,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(name),
-		Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
+		Spec:              expandRouteSpec(d.Get("spec").([]any)),
 		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
@@ -776,15 +775,15 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	route, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.RouteData, error) {
 		return findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Mesh Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -793,8 +792,6 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", d.Id(), err)
 	}
-
-	route := outputRaw.(*awstypes.RouteData)
 
 	d.Set(names.AttrARN, route.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
@@ -811,7 +808,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -819,7 +816,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input := &appmesh.UpdateRouteInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			RouteName:         aws.String(d.Get(names.AttrName).(string)),
-			Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
+			Spec:              expandRouteSpec(d.Get("spec").([]any)),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		}
 
@@ -837,7 +834,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -865,7 +862,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-router-name/route-name'", d.Id())
@@ -908,7 +905,7 @@ func findRouteByFourPartKey(ctx context.Context, conn *appmesh.Client, meshName,
 	}
 
 	if output.Status.Status == awstypes.RouteStatusCodeDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.Status.Status),
 			LastRequest: input,
 		}
@@ -921,7 +918,7 @@ func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.Describ
 	output, err := conn.DescribeRoute(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

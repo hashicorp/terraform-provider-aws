@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -53,7 +54,7 @@ func resourceThingGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -79,7 +80,7 @@ func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceThingGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -90,7 +91,7 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 
 	_, err = findThingGroupMembershipByTwoPartKey(ctx, conn, thingGroupName, thingName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Group Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,7 +107,7 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -160,7 +161,7 @@ func findThingGroups(ctx context.Context, conn *iot.Client, input *iot.ListThing
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

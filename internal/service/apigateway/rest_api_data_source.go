@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -51,6 +52,10 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -89,7 +94,7 @@ func dataSourceRestAPI() *schema.Resource {
 	}
 }
 
-func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -130,7 +135,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	switch {
 	case err == nil:
 		d.Set("root_resource_id", rootResource.Id)
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)

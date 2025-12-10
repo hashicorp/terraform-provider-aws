@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -8,26 +8,31 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
+// @Testing(importIgnore="policy")
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -35,12 +40,8 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_dynamodb_resource_policy"
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -97,7 +98,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 	})
 
@@ -117,17 +118,11 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().DynamoDBClient(ctx)
 
 	output, err := findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -191,9 +186,10 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
+	input := dynamodb.DeleteResourcePolicyInput{
 		ResourceArn: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -214,7 +210,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn str
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -232,6 +228,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn str
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ConfirmRemoveSelfResourceAccess types.Bool        `tfsdk:"confirm_remove_self_resource_access"`
 	ID                              types.String      `tfsdk:"id"`
 	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`
@@ -239,17 +236,12 @@ type resourcePolicyResourceModel struct {
 	RevisionID                      types.String      `tfsdk:"revision_id"`
 }
 
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
-}
-
 func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
+}
+
+func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	r.WithImportByIdentity.ImportState(ctx, request, response)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 }

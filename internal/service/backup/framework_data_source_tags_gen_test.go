@@ -31,10 +31,11 @@ func testAccBackupFrameworkDataSource_tagsSerial(t *testing.T) {
 
 func testAccBackupFrameworkDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,10 +60,11 @@ func testAccBackupFrameworkDataSource_tags(t *testing.T) {
 
 func testAccBackupFrameworkDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,10 +85,11 @@ func testAccBackupFrameworkDataSource_tags_NullMap(t *testing.T) {
 
 func testAccBackupFrameworkDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,10 +110,11 @@ func testAccBackupFrameworkDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccBackupFrameworkDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
@@ -139,10 +143,11 @@ func testAccBackupFrameworkDataSource_tags_DefaultTags_nonOverlapping(t *testing
 
 func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
@@ -165,7 +170,7 @@ func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -177,10 +182,11 @@ func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *test
 
 func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_framework.test"
 	rName := randomFrameworkName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
@@ -198,7 +204,7 @@ func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},

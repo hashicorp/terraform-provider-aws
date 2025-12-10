@@ -5,15 +5,16 @@ package events
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 )
 
-func listAPIDestinationsPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListApiDestinationsInput, fn func(*eventbridge.ListApiDestinationsOutput, bool) bool) error {
+func listAPIDestinationsPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListApiDestinationsInput, fn func(*eventbridge.ListApiDestinationsOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListApiDestinations(ctx, input)
+		output, err := conn.ListApiDestinations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func listAPIDestinationsPages(ctx context.Context, conn *eventbridge.Client, inp
 	}
 	return nil
 }
-func listArchivesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListArchivesInput, fn func(*eventbridge.ListArchivesOutput, bool) bool) error {
+func listArchivesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListArchivesInput, fn func(*eventbridge.ListArchivesOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListArchives(ctx, input)
+		output, err := conn.ListArchives(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -41,11 +42,11 @@ func listArchivesPages(ctx context.Context, conn *eventbridge.Client, input *eve
 	}
 	return nil
 }
-func listConnectionsPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListConnectionsInput, fn func(*eventbridge.ListConnectionsOutput, bool) bool) error {
+func listConnectionsPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListConnectionsInput, fn func(*eventbridge.ListConnectionsOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListConnections(ctx, input)
+		output, err := conn.ListConnections(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -57,11 +58,11 @@ func listConnectionsPages(ctx context.Context, conn *eventbridge.Client, input *
 	}
 	return nil
 }
-func listEventBusesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
+func listEventBusesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListEventBuses(ctx, input)
+		output, err := conn.ListEventBuses(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -73,11 +74,11 @@ func listEventBusesPages(ctx context.Context, conn *eventbridge.Client, input *e
 	}
 	return nil
 }
-func listEventSourcesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput, fn func(*eventbridge.ListEventSourcesOutput, bool) bool) error {
+func listEventSourcesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput, fn func(*eventbridge.ListEventSourcesOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListEventSources(ctx, input)
+		output, err := conn.ListEventSources(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -89,11 +90,11 @@ func listEventSourcesPages(ctx context.Context, conn *eventbridge.Client, input 
 	}
 	return nil
 }
-func listRulesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
+func listRulesPages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListRules(ctx, input)
+		output, err := conn.ListRules(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -105,11 +106,11 @@ func listRulesPages(ctx context.Context, conn *eventbridge.Client, input *eventb
 	}
 	return nil
 }
-func listTargetsByRulePages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
+func listTargetsByRulePages(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool, optFns ...func(*eventbridge.Options)) error {
 	for {
-		output, err := conn.ListTargetsByRule(ctx, input)
+		output, err := conn.ListTargetsByRule(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

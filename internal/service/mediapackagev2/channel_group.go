@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package mediapackagev2
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,21 +40,17 @@ const (
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccChannelGroupImportStateIdFunc)
 // @Testing(importStateIdAttribute=name)
-func newResourceChannelGroup(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceChannelGroup{}
+func newChannelGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &channelGroupResource{}
 
 	return r, nil
 }
 
-type resourceChannelGroup struct {
-	framework.ResourceWithConfigure
+type channelGroupResource struct {
+	framework.ResourceWithModel[channelGroupResourceModel]
 }
 
-func (r *resourceChannelGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_media_packagev2_channel_group"
-}
-
-func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *channelGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -77,9 +74,9 @@ func (r *resourceChannelGroup) Schema(ctx context.Context, request resource.Sche
 	response.Schema = s
 }
 
-func (r *resourceChannelGroup) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *channelGroupResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().MediaPackageV2Client(ctx)
-	var data resourceChannelGroupData
+	var data channelGroupResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -111,9 +108,9 @@ func (r *resourceChannelGroup) Create(ctx context.Context, request resource.Crea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceChannelGroup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *channelGroupResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().MediaPackageV2Client(ctx)
-	var data resourceChannelGroupData
+	var data channelGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -122,7 +119,7 @@ func (r *resourceChannelGroup) Read(ctx context.Context, request resource.ReadRe
 
 	output, err := findChannelGroupByID(ctx, conn, data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -146,9 +143,9 @@ func (r *resourceChannelGroup) Read(ctx context.Context, request resource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceChannelGroup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *channelGroupResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().MediaPackageV2Client(ctx)
-	var state, plan resourceChannelGroupData
+	var state, plan channelGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -160,7 +157,7 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -191,9 +188,9 @@ func (r *resourceChannelGroup) Update(ctx context.Context, request resource.Upda
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *channelGroupResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().MediaPackageV2Client(ctx)
-	var data resourceChannelGroupData
+	var data channelGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -201,7 +198,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Channel Group", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Channel Group", map[string]any{
 		names.AttrName: data.Name.ValueString(),
 	})
 
@@ -223,7 +220,7 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findChannelGroupByID(ctx, conn, data.Name.ValueString())
 	})
 
@@ -235,15 +232,12 @@ func (r *resourceChannelGroup) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
-func (r *resourceChannelGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *channelGroupResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-func (r *resourceChannelGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-type resourceChannelGroupData struct {
+type channelGroupResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String `tfsdk:"arn"`
 	Name         types.String `tfsdk:"name"`
 	Description  types.String `tfsdk:"description"`
@@ -260,7 +254,7 @@ func findChannelGroupByID(ctx context.Context, conn *mediapackagev2.Client, id s
 	out, err := conn.GetChannelGroup(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: in,
 			LastError:   err,
 		}

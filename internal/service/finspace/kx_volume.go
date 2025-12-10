@@ -1,4 +1,6 @@
-// // Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 // // SPDX-License-Identifier: MPL-2.0
 package finspace
 
@@ -13,16 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -154,7 +156,6 @@ func ResourceKxVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -163,7 +164,7 @@ const (
 	kxVolumeIDPartCount = 2
 )
 
-func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -181,7 +182,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &finspace.CreateKxVolumeInput{
 		ClientToken:         aws.String(id.UniqueId()),
-		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
+		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
 		VolumeName:          aws.String(volumeName),
@@ -193,8 +194,8 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
+	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Nas1Configuration = expandNas1Configuration(v.([]any))
 	}
 
 	out, err := conn.CreateKxVolume(ctx, in)
@@ -219,13 +220,13 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
 }
 
-func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := FindKxVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxVolume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -245,7 +246,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set(names.AttrAvailabilityZones, aws.StringSlice(out.AvailabilityZoneIds))
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 
 	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
@@ -264,7 +265,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -280,8 +281,8 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateVolume = true
 	}
 
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && d.HasChanges("nas1_configuration") {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
+	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]any)) > 0 && d.HasChanges("nas1_configuration") {
+		in.Nas1Configuration = expandNas1Configuration(v.([]any))
 		updateVolume = true
 	}
 
@@ -301,7 +302,7 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
 }
 
-func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -321,7 +322,7 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	_, err = waitKxVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxVolume, d.Id(), err)
 	}
 
@@ -329,7 +330,7 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxVolumeStatusCreating),
 		Target:                    enum.Slice(types.KxVolumeStatusActive),
 		Refresh:                   statusKxVolume(ctx, conn, id),
@@ -347,7 +348,7 @@ func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, 
 }
 
 func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxVolumeStatusCreating, types.KxVolumeStatusUpdating),
 		Target:                    enum.Slice(types.KxVolumeStatusActive),
 		Refresh:                   statusKxVolume(ctx, conn, id),
@@ -365,7 +366,7 @@ func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, 
 }
 
 func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.KxVolumeStatusDeleting),
 		Target:  enum.Slice(types.KxVolumeStatusDeleted),
 		Refresh: statusKxVolume(ctx, conn, id),
@@ -380,10 +381,10 @@ func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, 
 	return nil, err
 }
 
-func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindKxVolumeByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -410,7 +411,7 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -426,12 +427,12 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	return out, nil
 }
 
-func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
+func expandNas1Configuration(tfList []any) *types.KxNAS1Configuration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.KxNAS1Configuration{}
 
@@ -445,12 +446,12 @@ func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
 	return a
 }
 
-func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{} {
+func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Size; v != nil {
 		m[names.AttrSize] = aws.ToInt32(v)
@@ -460,15 +461,15 @@ func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{
 		m[names.AttrType] = v
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
+func flattenCluster(apiObject *types.KxAttachedCluster) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ClusterName; aws.ToString(v) != "" {
 		m[names.AttrClusterName] = aws.ToString(v)
@@ -485,12 +486,12 @@ func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
 	return m
 }
 
-func flattenAttachedClusters(apiObjects []types.KxAttachedCluster) []interface{} {
+func flattenAttachedClusters(apiObjects []types.KxAttachedCluster) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenCluster(&apiObject))

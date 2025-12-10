@@ -45,10 +45,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateId` - (Required) The certificate identifier.
-
-    - Must contain from 1 to 255 alphanumeric characters and hyphens.
-
 * `certificatePem` - (Optional) The contents of the .pem X.509 certificate file for the certificate. Either `certificatePem` or `certificateWallet` must be set.
 * `certificateWallet` - (Optional) The contents of the Oracle Wallet certificate for use with SSL, provided as a base64-encoded String. Either `certificatePem` or `certificateWallet` must be set.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -92,4 +90,4 @@ Using `terraform import`, import certificates using the `certificateId`. For exa
 % terraform import aws_dms_certificate.test test-dms-certificate-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-43c2ddd8bdacc0b322a9d01379d67b520abc0514fee6ac2b769064b1afbc324d -->
+<!-- cache-key: cdktf-0.20.8 input-86a25e45b799cd50dbd385d55a882c5125d5d03c52da2d01d98ecef425e7a83c -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package nullable
@@ -87,14 +87,14 @@ func TestValidationBool(t *testing.T) {
 			f:   ValidateTypeStringNullableBool,
 		},
 		{
-			val:             "1",
-			f:               ValidateTypeStringNullableBool,
-			expectedWarning: regexache.MustCompile(`^\w+: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider$`),
+			val:         "1",
+			f:           ValidateTypeStringNullableBool,
+			expectedErr: regexache.MustCompile(`^expected \w+ to be one of '', 'true', or 'false', got '.+'$`),
 		},
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexache.MustCompile(`^\w+: cannot parse 'A' as boolean: .+$`),
+			expectedErr: regexache.MustCompile(`^expected \w+ to be one of '', 'true', or 'false', got '.+'$`),
 		},
 		{
 			val:         1,

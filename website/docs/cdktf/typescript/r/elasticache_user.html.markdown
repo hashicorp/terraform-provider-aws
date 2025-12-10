@@ -32,7 +32,7 @@ class MyConvertedCode extends TerraformStack {
     new ElasticacheUser(this, "test", {
       accessString:
         "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember",
-      engine: "REDIS",
+      engine: "redis",
       passwords: ["password123456789"],
       userId: "testUserId",
       userName: "testUserName",
@@ -59,7 +59,7 @@ class MyConvertedCode extends TerraformStack {
       authenticationMode: {
         type: "iam",
       },
-      engine: "REDIS",
+      engine: "redis",
       userId: "testUserId",
       userName: "testUserName",
     });
@@ -86,7 +86,7 @@ class MyConvertedCode extends TerraformStack {
         passwords: ["password1", "password2"],
         type: "password",
       },
-      engine: "REDIS",
+      engine: "redis",
       userId: "testUserId",
       userName: "testUserName",
     });
@@ -100,12 +100,13 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `accessString` - (Required) Access permissions string used for this user. See [Specifying Permissions Using an Access String](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.RBAC.html#Access-string) for more details.
-* `engine` - (Required) The current supported values are `REDIS`, `VALKEY`.
+* `engine` - (Required) The current supported values are `redis`, `valkey` (case insensitive).
 * `userId` - (Required) The ID of the user.
 * `userName` - (Required) The username of the user.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticationMode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `noPasswordRequired` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.
@@ -159,4 +160,4 @@ Using `terraform import`, import ElastiCache users using the `userId`. For examp
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-feee5459f755de2c1b960e96f1cab1eff6d80cd3a3b572cad808a7d31fb9009f -->
+<!-- cache-key: cdktf-0.20.8 input-6c06a82050e24759a7072986f5befc6084861761f3a2f07716ea62a32b75a1c4 -->

@@ -40,8 +40,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workgroupName` - (Required) The name of the workgroup associated with the database.
 
 ## Attribute Reference
@@ -55,6 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 * `publiclyAccessible` - A value that specifies whether the workgroup can be accessed from a public network.
 * `securityGroupIds` - An array of security group IDs to associate with the workgroup.
 * `subnetIds` - An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
+* `trackName` - The name of the track for the workgroup.
 * `workgroupId` - The Redshift Workgroup ID.
 
 ### Endpoint
@@ -76,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `privateIpAddress` - The IPv4 address of the network interface within the subnet.
 * `subnetId` - The unique identifier of the subnet.
 
-<!-- cache-key: cdktf-0.20.8 input-374d27f8fbd13cb2f6821046b5a1fe85a8500dfa779b30e1ffd4cad3110ce132 -->
+<!-- cache-key: cdktf-0.20.8 input-694cd55672591c32871dd2095116e69edec959f297502c13cb90376417ca136b -->

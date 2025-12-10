@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca_test
@@ -17,7 +17,7 @@ func TestCertificateAuthorityMigrateState(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_to_v1": {
 			StateVersion: 0,

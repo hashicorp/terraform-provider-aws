@@ -5,7 +5,8 @@ package appfabric_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -47,11 +48,15 @@ func testAccAppFabricAppBundle_tagsSerial(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -220,11 +225,15 @@ func testAccAppFabricAppBundle_tags(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -279,11 +288,15 @@ func testAccAppFabricAppBundle_tags_null(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -326,11 +339,15 @@ func testAccAppFabricAppBundle_tags_EmptyMap(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -402,11 +419,15 @@ func testAccAppFabricAppBundle_tags_AddOnUpdate(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -487,11 +508,15 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -620,11 +645,15 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -706,11 +735,15 @@ func testAccAppFabricAppBundle_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -878,11 +911,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1031,11 +1068,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1200,11 +1241,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_overlapping(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1286,11 +1331,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToProviderOnly(t *testing.
 
 func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1371,11 +1420,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_updateToResourceOnly(t *testing.
 
 func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1434,11 +1487,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1489,11 +1546,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 
 func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1555,11 +1616,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullOverlappingResourceTag(t *te
 
 func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1623,11 +1688,15 @@ func testAccAppFabricAppBundle_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 
 func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1675,11 +1744,15 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1768,11 +1841,15 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1851,11 +1928,15 @@ func testAccAppFabricAppBundle_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1884,7 +1965,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1932,7 +2013,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1980,7 +2061,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2009,11 +2090,15 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 
 func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.AppBundle
+
+	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2041,7 +2126,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2098,7 +2183,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2154,7 +2239,7 @@ func testAccAppFabricAppBundle_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

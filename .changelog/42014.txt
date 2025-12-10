@@ -1,0 +1,43 @@
+```release-note:enhancement
+data-source/aws_availability_zone: Mark `region` as Optional, allowing a value to be configured
+```
+
+```release-note:enhancement
+data-source/aws_availability_zone: Add `group_long_name` attribute
+```
+
+```release-note:note
+resource/aws_config_aggregate_authorization: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `authorized_aws_region` attribute instead
+```
+
+```release-note:note
+data-source/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged
+```
+
+```release-note:note
+resource/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged
+```
+
+```release-note:note
+resource/aws_dx_hosted_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `connection_region` attribute instead
+```
+
+```release-note:note
+resource/aws_cloudformation_stack_set_instance: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `stack_set_instance_region` attribute instead
+```
+
+```release-note:note
+data-source/aws_vpc_endpoint_service: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead
+```
+
+```release-note:note
+data-source/aws_vpc_peering_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `requester_region` attribute instead
+```
+
+```release-note:note
+data-source/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead
+```
+
+```release-note:note
+resource/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead
+```

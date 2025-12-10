@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -245,7 +245,7 @@ resource "aws_ami" "test" {
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 
   tags = {
     %[2]q = %[3]q
@@ -270,7 +270,7 @@ resource "aws_ami" "test" {
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 
   tags = {
     %[2]q = %[3]q
@@ -296,7 +296,7 @@ resource "aws_ami" "test" {
 resource "aws_ami_copy" "test" {
   name              = %q
   source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 `, rName, rName))
 }
@@ -318,7 +318,7 @@ resource "aws_ami_copy" "test" {
   description       = %q
   name              = %q
   source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 `, rName, description, rName))
 }
@@ -340,7 +340,7 @@ resource "aws_ami" "test" {
 resource "aws_ami_copy" "test" {
   name              = "%s-copy"
   source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 `, rName, rName))
 }
@@ -368,7 +368,7 @@ resource "aws_ami" "test" {
 resource "aws_ami_copy" "test" {
   name                    = "%s-copy"
   source_ami_id           = aws_ami.test.id
-  source_ami_region       = data.aws_region.current.name
+  source_ami_region       = data.aws_region.current.region
   destination_outpost_arn = data.aws_outposts_outpost.test.arn
 }
 `, rName, rName))

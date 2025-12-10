@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -143,7 +144,6 @@ func resourceConnector() *schema.Resource {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -392,23 +392,21 @@ func resourceConnector() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateConnectorInput{
-		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
-		ConnectorConfiguration:           flex.ExpandStringValueMap(d.Get("connector_configuration").(map[string]interface{})),
+		Capacity:                         expandCapacity(d.Get("capacity").([]any)[0].(map[string]any)),
+		ConnectorConfiguration:           flex.ExpandStringValueMap(d.Get("connector_configuration").(map[string]any)),
 		ConnectorName:                    aws.String(name),
-		KafkaCluster:                     expandCluster(d.Get("kafka_cluster").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterClientAuthentication: expandClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterEncryptionInTransit:  expandClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})[0].(map[string]interface{})),
+		KafkaCluster:                     expandCluster(d.Get("kafka_cluster").([]any)[0].(map[string]any)),
+		KafkaClusterClientAuthentication: expandClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]any)[0].(map[string]any)),
+		KafkaClusterEncryptionInTransit:  expandClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]any)[0].(map[string]any)),
 		KafkaConnectVersion:              aws.String(d.Get("kafkaconnect_version").(string)),
 		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
@@ -419,12 +417,12 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.ConnectorDescription = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("log_delivery"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LogDelivery = expandLogDelivery(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("log_delivery"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LogDelivery = expandLogDelivery(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("worker_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.WorkerConfiguration = expandWorkerConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("worker_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.WorkerConfiguration = expandWorkerConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateConnector(ctx, input)
@@ -442,13 +440,13 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	connector, err := findConnectorByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -460,7 +458,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(names.AttrARN, connector.ConnectorArn)
 	if connector.Capacity != nil {
-		if err := d.Set("capacity", []interface{}{flattenCapacityDescription(connector.Capacity)}); err != nil {
+		if err := d.Set("capacity", []any{flattenCapacityDescription(connector.Capacity)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity: %s", err)
 		}
 	} else {
@@ -469,21 +467,21 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("connector_configuration", connector.ConnectorConfiguration)
 	d.Set(names.AttrDescription, connector.ConnectorDescription)
 	if connector.KafkaCluster != nil {
-		if err := d.Set("kafka_cluster", []interface{}{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
+		if err := d.Set("kafka_cluster", []any{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster", nil)
 	}
 	if connector.KafkaClusterClientAuthentication != nil {
-		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
+		if err := d.Set("kafka_cluster_client_authentication", []any{flattenClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster_client_authentication: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_client_authentication", nil)
 	}
 	if connector.KafkaClusterEncryptionInTransit != nil {
-		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
+		if err := d.Set("kafka_cluster_encryption_in_transit", []any{flattenClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster_encryption_in_transit: %s", err)
 		}
 	} else {
@@ -491,7 +489,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
 	if connector.LogDelivery != nil {
-		if err := d.Set("log_delivery", []interface{}{flattenLogDeliveryDescription(connector.LogDelivery)}); err != nil {
+		if err := d.Set("log_delivery", []any{flattenLogDeliveryDescription(connector.LogDelivery)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting log_delivery: %s", err)
 		}
 	} else {
@@ -504,7 +502,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
 	d.Set(names.AttrVersion, connector.CurrentVersion)
 	if connector.WorkerConfiguration != nil {
-		if err := d.Set("worker_configuration", []interface{}{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
+		if err := d.Set("worker_configuration", []any{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting worker_configuration: %s", err)
 		}
 	} else {
@@ -514,32 +512,58 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &kafkaconnect.UpdateConnectorInput{
-			Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
-			ConnectorArn:   aws.String(d.Id()),
-			CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		currentVersion := d.Get(names.AttrVersion).(string)
+
+		if d.HasChange("capacity") {
+			input := &kafkaconnect.UpdateConnectorInput{
+				Capacity:       expandCapacityUpdate(d.Get("capacity").([]any)[0].(map[string]any)),
+				ConnectorArn:   aws.String(d.Id()),
+				CurrentVersion: aws.String(currentVersion),
+			}
+
+			_, err := conn.UpdateConnector(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector capacity (%s): %s", d.Id(), err)
+			}
+
+			output, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			}
+
+			currentVersion = aws.ToString(output.CurrentVersion)
 		}
 
-		_, err := conn.UpdateConnector(ctx, input)
+		if d.HasChange("connector_configuration") {
+			input := &kafkaconnect.UpdateConnectorInput{
+				ConnectorConfiguration: flex.ExpandStringValueMap(d.Get("connector_configuration").(map[string]any)),
+				ConnectorArn:           aws.String(d.Id()),
+				CurrentVersion:         aws.String(currentVersion),
+			}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector (%s): %s", d.Id(), err)
-		}
+			_, err := conn.UpdateConnector(ctx, input)
 
-		if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector configuration (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
@@ -571,7 +595,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -588,11 +612,11 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	return output, nil
 }
 
-func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findConnectorByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -605,7 +629,7 @@ func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string)
 }
 
 func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateCreating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -626,7 +650,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -647,7 +671,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnector(ctx, conn, arn),
@@ -667,25 +691,25 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn st
 	return nil, err
 }
 
-func expandCapacity(tfMap map[string]interface{}) *awstypes.Capacity {
+func expandCapacity(tfMap map[string]any) *awstypes.Capacity {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Capacity{}
 
-	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AutoScaling = expandAutoScaling(v[0].(map[string]interface{}))
+	if v, ok := tfMap["autoscaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AutoScaling = expandAutoScaling(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ProvisionedCapacity = expandProvisionedCapacity(v[0].(map[string]interface{}))
+	if v, ok := tfMap["provisioned_capacity"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ProvisionedCapacity = expandProvisionedCapacity(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAutoScaling(tfMap map[string]interface{}) *awstypes.AutoScaling {
+func expandAutoScaling(tfMap map[string]any) *awstypes.AutoScaling {
 	if tfMap == nil {
 		return nil
 	}
@@ -704,18 +728,18 @@ func expandAutoScaling(tfMap map[string]interface{}) *awstypes.AutoScaling {
 		apiObject.MinWorkerCount = int32(v)
 	}
 
-	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ScaleInPolicy = expandScaleInPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["scale_in_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScaleInPolicy = expandScaleInPolicy(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ScaleOutPolicy = expandScaleOutPolicy(v[0].(map[string]interface{}))
+	if v, ok := tfMap["scale_out_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScaleOutPolicy = expandScaleOutPolicy(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandScaleInPolicy(tfMap map[string]interface{}) *awstypes.ScaleInPolicy {
+func expandScaleInPolicy(tfMap map[string]any) *awstypes.ScaleInPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -729,7 +753,7 @@ func expandScaleInPolicy(tfMap map[string]interface{}) *awstypes.ScaleInPolicy {
 	return apiObject
 }
 
-func expandScaleOutPolicy(tfMap map[string]interface{}) *awstypes.ScaleOutPolicy {
+func expandScaleOutPolicy(tfMap map[string]any) *awstypes.ScaleOutPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -743,7 +767,7 @@ func expandScaleOutPolicy(tfMap map[string]interface{}) *awstypes.ScaleOutPolicy
 	return apiObject
 }
 
-func expandProvisionedCapacity(tfMap map[string]interface{}) *awstypes.ProvisionedCapacity {
+func expandProvisionedCapacity(tfMap map[string]any) *awstypes.ProvisionedCapacity {
 	if tfMap == nil {
 		return nil
 	}
@@ -761,25 +785,25 @@ func expandProvisionedCapacity(tfMap map[string]interface{}) *awstypes.Provision
 	return apiObject
 }
 
-func expandCapacityUpdate(tfMap map[string]interface{}) *awstypes.CapacityUpdate {
+func expandCapacityUpdate(tfMap map[string]any) *awstypes.CapacityUpdate {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CapacityUpdate{}
 
-	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AutoScaling = expandAutoScalingUpdate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["autoscaling"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AutoScaling = expandAutoScalingUpdate(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ProvisionedCapacity = expandProvisionedCapacityUpdate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["provisioned_capacity"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ProvisionedCapacity = expandProvisionedCapacityUpdate(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAutoScalingUpdate(tfMap map[string]interface{}) *awstypes.AutoScalingUpdate {
+func expandAutoScalingUpdate(tfMap map[string]any) *awstypes.AutoScalingUpdate {
 	if tfMap == nil {
 		return nil
 	}
@@ -798,18 +822,18 @@ func expandAutoScalingUpdate(tfMap map[string]interface{}) *awstypes.AutoScaling
 		apiObject.MinWorkerCount = int32(v)
 	}
 
-	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ScaleInPolicy = expandScaleInPolicyUpdate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["scale_in_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScaleInPolicy = expandScaleInPolicyUpdate(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ScaleOutPolicy = expandScaleOutPolicyUpdate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["scale_out_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScaleOutPolicy = expandScaleOutPolicyUpdate(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandScaleInPolicyUpdate(tfMap map[string]interface{}) *awstypes.ScaleInPolicyUpdate {
+func expandScaleInPolicyUpdate(tfMap map[string]any) *awstypes.ScaleInPolicyUpdate {
 	if tfMap == nil {
 		return nil
 	}
@@ -823,7 +847,7 @@ func expandScaleInPolicyUpdate(tfMap map[string]interface{}) *awstypes.ScaleInPo
 	return apiObject
 }
 
-func expandScaleOutPolicyUpdate(tfMap map[string]interface{}) *awstypes.ScaleOutPolicyUpdate {
+func expandScaleOutPolicyUpdate(tfMap map[string]any) *awstypes.ScaleOutPolicyUpdate {
 	if tfMap == nil {
 		return nil
 	}
@@ -837,7 +861,7 @@ func expandScaleOutPolicyUpdate(tfMap map[string]interface{}) *awstypes.ScaleOut
 	return apiObject
 }
 
-func expandProvisionedCapacityUpdate(tfMap map[string]interface{}) *awstypes.ProvisionedCapacityUpdate {
+func expandProvisionedCapacityUpdate(tfMap map[string]any) *awstypes.ProvisionedCapacityUpdate {
 	if tfMap == nil {
 		return nil
 	}
@@ -855,21 +879,21 @@ func expandProvisionedCapacityUpdate(tfMap map[string]interface{}) *awstypes.Pro
 	return apiObject
 }
 
-func expandCluster(tfMap map[string]interface{}) *awstypes.KafkaCluster {
+func expandCluster(tfMap map[string]any) *awstypes.KafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.KafkaCluster{}
 
-	if v, ok := tfMap["apache_kafka_cluster"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ApacheKafkaCluster = expandApacheCluster(v[0].(map[string]interface{}))
+	if v, ok := tfMap["apache_kafka_cluster"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ApacheKafkaCluster = expandApacheCluster(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandApacheCluster(tfMap map[string]interface{}) *awstypes.ApacheKafkaCluster {
+func expandApacheCluster(tfMap map[string]any) *awstypes.ApacheKafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
@@ -880,14 +904,14 @@ func expandApacheCluster(tfMap map[string]interface{}) *awstypes.ApacheKafkaClus
 		apiObject.BootstrapServers = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Vpc = expandVPC(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vpc"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Vpc = expandVPC(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandVPC(tfMap map[string]interface{}) *awstypes.Vpc {
+func expandVPC(tfMap map[string]any) *awstypes.Vpc {
 	if tfMap == nil {
 		return nil
 	}
@@ -905,7 +929,7 @@ func expandVPC(tfMap map[string]interface{}) *awstypes.Vpc {
 	return apiObject
 }
 
-func expandClusterClientAuthentication(tfMap map[string]interface{}) *awstypes.KafkaClusterClientAuthentication {
+func expandClusterClientAuthentication(tfMap map[string]any) *awstypes.KafkaClusterClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
@@ -919,7 +943,7 @@ func expandClusterClientAuthentication(tfMap map[string]interface{}) *awstypes.K
 	return apiObject
 }
 
-func expandClusterEncryptionInTransit(tfMap map[string]interface{}) *awstypes.KafkaClusterEncryptionInTransit {
+func expandClusterEncryptionInTransit(tfMap map[string]any) *awstypes.KafkaClusterEncryptionInTransit {
 	if tfMap == nil {
 		return nil
 	}
@@ -933,21 +957,21 @@ func expandClusterEncryptionInTransit(tfMap map[string]interface{}) *awstypes.Ka
 	return apiObject
 }
 
-func expandPlugin(tfMap map[string]interface{}) *awstypes.Plugin {
+func expandPlugin(tfMap map[string]any) *awstypes.Plugin {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Plugin{}
 
-	if v, ok := tfMap["custom_plugin"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CustomPlugin = expandCustomPlugin(v[0].(map[string]interface{}))
+	if v, ok := tfMap["custom_plugin"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CustomPlugin = expandCustomPlugin(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPlugins(tfList []interface{}) []awstypes.Plugin {
+func expandPlugins(tfList []any) []awstypes.Plugin {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -955,7 +979,7 @@ func expandPlugins(tfList []interface{}) []awstypes.Plugin {
 	var apiObjects []awstypes.Plugin
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -972,7 +996,7 @@ func expandPlugins(tfList []interface{}) []awstypes.Plugin {
 	return apiObjects
 }
 
-func expandCustomPlugin(tfMap map[string]interface{}) *awstypes.CustomPlugin {
+func expandCustomPlugin(tfMap map[string]any) *awstypes.CustomPlugin {
 	if tfMap == nil {
 		return nil
 	}
@@ -990,43 +1014,43 @@ func expandCustomPlugin(tfMap map[string]interface{}) *awstypes.CustomPlugin {
 	return apiObject
 }
 
-func expandLogDelivery(tfMap map[string]interface{}) *awstypes.LogDelivery {
+func expandLogDelivery(tfMap map[string]any) *awstypes.LogDelivery {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.LogDelivery{}
 
-	if v, ok := tfMap["worker_log_delivery"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.WorkerLogDelivery = expandWorkerLogDelivery(v[0].(map[string]interface{}))
+	if v, ok := tfMap["worker_log_delivery"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WorkerLogDelivery = expandWorkerLogDelivery(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandWorkerLogDelivery(tfMap map[string]interface{}) *awstypes.WorkerLogDelivery {
+func expandWorkerLogDelivery(tfMap map[string]any) *awstypes.WorkerLogDelivery {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.WorkerLogDelivery{}
 
-	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Firehose = expandFirehoseLogDelivery(v[0].(map[string]interface{}))
+	if v, ok := tfMap["firehose"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Firehose = expandFirehoseLogDelivery(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3 = expandS3LogDelivery(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3 = expandS3LogDelivery(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogsLogDelivery(tfMap map[string]interface{}) *awstypes.CloudWatchLogsLogDelivery {
+func expandCloudWatchLogsLogDelivery(tfMap map[string]any) *awstypes.CloudWatchLogsLogDelivery {
 	if tfMap == nil {
 		return nil
 	}
@@ -1044,7 +1068,7 @@ func expandCloudWatchLogsLogDelivery(tfMap map[string]interface{}) *awstypes.Clo
 	return apiObject
 }
 
-func expandFirehoseLogDelivery(tfMap map[string]interface{}) *awstypes.FirehoseLogDelivery {
+func expandFirehoseLogDelivery(tfMap map[string]any) *awstypes.FirehoseLogDelivery {
 	if tfMap == nil {
 		return nil
 	}
@@ -1062,7 +1086,7 @@ func expandFirehoseLogDelivery(tfMap map[string]interface{}) *awstypes.FirehoseL
 	return apiObject
 }
 
-func expandS3LogDelivery(tfMap map[string]interface{}) *awstypes.S3LogDelivery {
+func expandS3LogDelivery(tfMap map[string]any) *awstypes.S3LogDelivery {
 	if tfMap == nil {
 		return nil
 	}
@@ -1084,7 +1108,7 @@ func expandS3LogDelivery(tfMap map[string]interface{}) *awstypes.S3LogDelivery {
 	return apiObject
 }
 
-func expandWorkerConfiguration(tfMap map[string]interface{}) *awstypes.WorkerConfiguration {
+func expandWorkerConfiguration(tfMap map[string]any) *awstypes.WorkerConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1102,76 +1126,76 @@ func expandWorkerConfiguration(tfMap map[string]interface{}) *awstypes.WorkerCon
 	return apiObject
 }
 
-func flattenCapacityDescription(apiObject *awstypes.CapacityDescription) map[string]interface{} {
+func flattenCapacityDescription(apiObject *awstypes.CapacityDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoScaling; v != nil {
-		tfMap["autoscaling"] = []interface{}{flattenAutoScalingDescription(v)}
+		tfMap["autoscaling"] = []any{flattenAutoScalingDescription(v)}
 	}
 
 	if v := apiObject.ProvisionedCapacity; v != nil {
-		tfMap["provisioned_capacity"] = []interface{}{flattenProvisionedCapacityDescription(v)}
+		tfMap["provisioned_capacity"] = []any{flattenProvisionedCapacityDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAutoScalingDescription(apiObject *awstypes.AutoScalingDescription) map[string]interface{} {
+func flattenAutoScalingDescription(apiObject *awstypes.AutoScalingDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"max_worker_count": apiObject.MaxWorkerCount,
 		"mcu_count":        apiObject.McuCount,
 		"min_worker_count": apiObject.MinWorkerCount,
 	}
 
 	if v := apiObject.ScaleInPolicy; v != nil {
-		tfMap["scale_in_policy"] = []interface{}{flattenScaleInPolicyDescription(v)}
+		tfMap["scale_in_policy"] = []any{flattenScaleInPolicyDescription(v)}
 	}
 
 	if v := apiObject.ScaleOutPolicy; v != nil {
-		tfMap["scale_out_policy"] = []interface{}{flattenScaleOutPolicyDescription(v)}
+		tfMap["scale_out_policy"] = []any{flattenScaleOutPolicyDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenScaleInPolicyDescription(apiObject *awstypes.ScaleInPolicyDescription) map[string]interface{} {
+func flattenScaleInPolicyDescription(apiObject *awstypes.ScaleInPolicyDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cpu_utilization_percentage": apiObject.CpuUtilizationPercentage,
 	}
 
 	return tfMap
 }
 
-func flattenScaleOutPolicyDescription(apiObject *awstypes.ScaleOutPolicyDescription) map[string]interface{} {
+func flattenScaleOutPolicyDescription(apiObject *awstypes.ScaleOutPolicyDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cpu_utilization_percentage": apiObject.CpuUtilizationPercentage,
 	}
 
 	return tfMap
 }
 
-func flattenProvisionedCapacityDescription(apiObject *awstypes.ProvisionedCapacityDescription) map[string]interface{} {
+func flattenProvisionedCapacityDescription(apiObject *awstypes.ProvisionedCapacityDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"mcu_count":    apiObject.McuCount,
 		"worker_count": apiObject.WorkerCount,
 	}
@@ -1179,44 +1203,44 @@ func flattenProvisionedCapacityDescription(apiObject *awstypes.ProvisionedCapaci
 	return tfMap
 }
 
-func flattenClusterDescription(apiObject *awstypes.KafkaClusterDescription) map[string]interface{} {
+func flattenClusterDescription(apiObject *awstypes.KafkaClusterDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ApacheKafkaCluster; v != nil {
-		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheClusterDescription(v)}
+		tfMap["apache_kafka_cluster"] = []any{flattenApacheClusterDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenApacheClusterDescription(apiObject *awstypes.ApacheKafkaClusterDescription) map[string]interface{} {
+func flattenApacheClusterDescription(apiObject *awstypes.ApacheKafkaClusterDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BootstrapServers; v != nil {
 		tfMap["bootstrap_servers"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenVPCDescription(v)}
+		tfMap["vpc"] = []any{flattenVPCDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenVPCDescription(apiObject *awstypes.VpcDescription) map[string]interface{} {
+func flattenVPCDescription(apiObject *awstypes.VpcDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroups; v != nil {
 		tfMap[names.AttrSecurityGroups] = v
@@ -1229,50 +1253,50 @@ func flattenVPCDescription(apiObject *awstypes.VpcDescription) map[string]interf
 	return tfMap
 }
 
-func flattenClusterClientAuthenticationDescription(apiObject *awstypes.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
+func flattenClusterClientAuthenticationDescription(apiObject *awstypes.KafkaClusterClientAuthenticationDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"authentication_type": apiObject.AuthenticationType,
 	}
 
 	return tfMap
 }
 
-func flattenClusterEncryptionInTransitDescription(apiObject *awstypes.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
+func flattenClusterEncryptionInTransitDescription(apiObject *awstypes.KafkaClusterEncryptionInTransitDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"encryption_type": apiObject.EncryptionType,
 	}
 
 	return tfMap
 }
 
-func flattenPluginDescription(apiObject *awstypes.PluginDescription) map[string]interface{} {
+func flattenPluginDescription(apiObject *awstypes.PluginDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CustomPlugin; v != nil {
-		tfMap["custom_plugin"] = []interface{}{flattenCustomPluginDescription(v)}
+		tfMap["custom_plugin"] = []any{flattenCustomPluginDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPluginDescriptions(apiObjects []awstypes.PluginDescription) []interface{} {
+func flattenPluginDescriptions(apiObjects []awstypes.PluginDescription) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPluginDescription(&apiObject))
@@ -1281,12 +1305,12 @@ func flattenPluginDescriptions(apiObjects []awstypes.PluginDescription) []interf
 	return tfList
 }
 
-func flattenCustomPluginDescription(apiObject *awstypes.CustomPluginDescription) map[string]interface{} {
+func flattenCustomPluginDescription(apiObject *awstypes.CustomPluginDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"revision": apiObject.Revision,
 	}
 
@@ -1297,48 +1321,48 @@ func flattenCustomPluginDescription(apiObject *awstypes.CustomPluginDescription)
 	return tfMap
 }
 
-func flattenLogDeliveryDescription(apiObject *awstypes.LogDeliveryDescription) map[string]interface{} {
+func flattenLogDeliveryDescription(apiObject *awstypes.LogDeliveryDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.WorkerLogDelivery; v != nil {
-		tfMap["worker_log_delivery"] = []interface{}{flattenWorkerLogDeliveryDescription(v)}
+		tfMap["worker_log_delivery"] = []any{flattenWorkerLogDeliveryDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenWorkerLogDeliveryDescription(apiObject *awstypes.WorkerLogDeliveryDescription) map[string]interface{} {
+func flattenWorkerLogDeliveryDescription(apiObject *awstypes.WorkerLogDeliveryDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
+		tfMap[names.AttrCloudWatchLogs] = []any{flattenCloudWatchLogsLogDeliveryDescription(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {
-		tfMap["firehose"] = []interface{}{flattenFirehoseLogDeliveryDescription(v)}
+		tfMap["firehose"] = []any{flattenFirehoseLogDeliveryDescription(v)}
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = []interface{}{flattenS3LogDeliveryDescription(v)}
+		tfMap["s3"] = []any{flattenS3LogDeliveryDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchLogsLogDeliveryDescription(apiObject *awstypes.CloudWatchLogsLogDeliveryDescription) map[string]interface{} {
+func flattenCloudWatchLogsLogDeliveryDescription(apiObject *awstypes.CloudWatchLogsLogDeliveryDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -1349,12 +1373,12 @@ func flattenCloudWatchLogsLogDeliveryDescription(apiObject *awstypes.CloudWatchL
 	return tfMap
 }
 
-func flattenFirehoseLogDeliveryDescription(apiObject *awstypes.FirehoseLogDeliveryDescription) map[string]interface{} {
+func flattenFirehoseLogDeliveryDescription(apiObject *awstypes.FirehoseLogDeliveryDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -1365,12 +1389,12 @@ func flattenFirehoseLogDeliveryDescription(apiObject *awstypes.FirehoseLogDelive
 	return tfMap
 }
 
-func flattenS3LogDeliveryDescription(apiObject *awstypes.S3LogDeliveryDescription) map[string]interface{} {
+func flattenS3LogDeliveryDescription(apiObject *awstypes.S3LogDeliveryDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -1385,12 +1409,12 @@ func flattenS3LogDeliveryDescription(apiObject *awstypes.S3LogDeliveryDescriptio
 	return tfMap
 }
 
-func flattenWorkerConfigurationDescription(apiObject *awstypes.WorkerConfigurationDescription) map[string]interface{} {
+func flattenWorkerConfigurationDescription(apiObject *awstypes.WorkerConfigurationDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"revision": apiObject.Revision,
 	}
 

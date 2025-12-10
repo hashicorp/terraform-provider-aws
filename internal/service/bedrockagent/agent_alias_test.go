@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -120,7 +120,7 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -272,7 +272,7 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbedrockagent.FindAgentAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_alias_id"], rs.Primary.Attributes["agent_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -324,7 +324,10 @@ resource "aws_bedrock_provisioned_model_throughput" "test" {
 }
 
 func testAccAgentAliasConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), testAccAgentAliasConfig_alias(rName))
+	return acctest.ConfigCompose(
+		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentAliasConfig_alias(rName),
+	)
 }
 
 func testAccAgentAliasConfig_alias(rName string) string {

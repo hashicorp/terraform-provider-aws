@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Vocabulary.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_vocabulary" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_vocabulary" "example" {
 
 By `vocabulary_id`
 
-```hcl
+```terraform
 data "aws_connect_vocabulary" "example" {
   instance_id   = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   vocabulary_id = "cccccccc-bbbb-cccc-dddd-111111111111"
@@ -32,13 +32,14 @@ data "aws_connect_vocabulary" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `vocabulary_id` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Vocabulary by name
 * `vocabulary_id` - (Optional) Returns information on a specific Vocabulary by Vocabulary id
+
+~> **NOTE:** `instance_id` and one of either `name` or `vocabulary_id` is required.
 
 ## Attribute Reference
 

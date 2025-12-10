@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -14,30 +14,28 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_workflow", name="Workflow")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceWorkflow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkflowCreate,
 		ReadWithoutTimeout:   resourceWorkflowRead,
 		UpdateWithoutTimeout: resourceWorkflowUpdate,
 		DeleteWithoutTimeout: resourceWorkflowDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -105,12 +103,10 @@ func resourceWorkflow() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`), "valid semantic version must be provided"),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -154,13 +150,13 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	workflow, err := findWorkflowByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,7 +182,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -194,7 +190,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -222,7 +218,7 @@ func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn strin
 	output, err := conn.GetWorkflow(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
