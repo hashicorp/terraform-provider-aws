@@ -425,7 +425,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 
 	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
 		if failureReason := output.FailureReason; failureReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureReason)))
 		}
 
 		return output, err
@@ -449,7 +449,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 
 	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
 		if failureReason := output.FailureReason; failureReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureReason)))
 		}
 
 		return output, err

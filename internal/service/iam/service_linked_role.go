@@ -260,7 +260,7 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id stri
 				errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(v.Region), strings.Join(v.Resources, ", ")))
 			}
 
-			tfresource.SetLastError(err, fmt.Errorf("%s: %w", aws.ToString(reason.Reason), errors.Join(errs...)))
+			retry.SetLastError(err, fmt.Errorf("%s: %w", aws.ToString(reason.Reason), errors.Join(errs...)))
 		}
 
 		return err

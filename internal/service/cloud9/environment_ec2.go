@@ -325,7 +325,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err
@@ -349,7 +349,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err

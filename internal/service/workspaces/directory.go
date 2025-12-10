@@ -789,7 +789,7 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}
@@ -815,7 +815,7 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

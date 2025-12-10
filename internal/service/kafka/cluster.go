@@ -1260,7 +1260,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, tim
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
 		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -1281,7 +1281,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, tim
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
 		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -1302,7 +1302,7 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn 
 
 	if output, ok := outputRaw.(*types.ClusterOperationInfo); ok {
 		if state, errorInfo := aws.ToString(output.OperationState), output.ErrorInfo; state == clusterOperationStateUpdateFailed && errorInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(errorInfo.ErrorCode), aws.ToString(errorInfo.ErrorString)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(errorInfo.ErrorCode), aws.ToString(errorInfo.ErrorString)))
 		}
 
 		return output, err

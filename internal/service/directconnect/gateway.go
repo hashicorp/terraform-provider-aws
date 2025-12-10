@@ -245,7 +245,7 @@ func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -264,7 +264,7 @@ func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}

@@ -641,7 +641,7 @@ func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Details)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Details)))
 		return output, smarterr.NewError(err)
 	}
 

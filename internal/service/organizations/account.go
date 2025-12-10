@@ -497,7 +497,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.CreateAccountStatus); ok {
 		if state := output.State; state == awstypes.CreateAccountStateFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err

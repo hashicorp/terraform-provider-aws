@@ -200,7 +200,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 	}
 
 	if output, ok := outputRaw.(*securityhub.GetConfigurationPolicyAssociationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
 
 		return output, err
 	}

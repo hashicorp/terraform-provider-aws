@@ -1175,7 +1175,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1196,7 +1196,7 @@ func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, do
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1217,7 +1217,7 @@ func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err

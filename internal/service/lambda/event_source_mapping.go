@@ -1002,7 +1002,7 @@ func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
 
 		return output, err
 	}
@@ -1024,7 +1024,7 @@ func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
 
 		return output, err
 	}
@@ -1046,7 +1046,7 @@ func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
 
 		return output, err
 	}

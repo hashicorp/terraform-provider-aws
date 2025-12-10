@@ -272,7 +272,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 
 	if output, ok := outputRaw.(*awstypes.DNSSECStatus); ok {
 		if serveSignature := aws.ToString(output.ServeSignature); serveSignature == serveSignatureInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

@@ -263,7 +263,7 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Cl
 
 	if output, ok := outputRaw.(*awstypes.FirewallDomainList); ok {
 		if status := output.Status; status == awstypes.FirewallDomainListStatusCompleteImportFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

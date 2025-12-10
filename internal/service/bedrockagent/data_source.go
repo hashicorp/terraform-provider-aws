@@ -997,7 +997,7 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -1016,7 +1016,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}

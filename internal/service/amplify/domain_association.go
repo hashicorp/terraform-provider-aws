@@ -338,7 +338,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err
@@ -371,7 +371,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err
@@ -402,7 +402,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err

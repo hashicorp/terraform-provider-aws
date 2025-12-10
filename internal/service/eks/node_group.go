@@ -757,7 +757,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 
 	if output, ok := outputRaw.(*types.Nodegroup); ok {
 		if status, health := output.Status, output.Health; status == types.NodegroupStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, issuesError(health.Issues))
+			retry.SetLastError(err, issuesError(health.Issues))
 		}
 
 		return output, err
@@ -778,7 +778,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 
 	if output, ok := outputRaw.(*types.Nodegroup); ok {
 		if status, health := output.Status, output.Health; status == types.NodegroupStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, issuesError(health.Issues))
+			retry.SetLastError(err, issuesError(health.Issues))
 		}
 
 		return output, err
@@ -799,7 +799,7 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, cluste
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err
