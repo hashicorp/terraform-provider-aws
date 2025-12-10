@@ -193,14 +193,125 @@ The following arguments are optional:
 The `knowledge_base_configuration` configuration block supports the following arguments:
 
 * `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`, `SQL`.
-* `kendra_knowledge_base_configuration` - (Optional) Configuration for Kendra knowledge base. See [`kendra_knowledge_base_configuration` block](#kendra_knowledge_base_configuration-block) for details.
-* `vector_knowledge_base_configuration` - (Optional) Details about the embeddings model that'sused to convert the data source. See [`vector_knowledge_base_configuration` block](#vector_knowledge_base_configuration-block) for details.
+* `kendra_knowledge_base_configuration` - (Optional) Settings for an Amazon Kendra knowledge base. See [`kendra_knowledge_base_configuration` block](#kendra_knowledge_base_configuration-block) for details.
+* `sql_knowledge_base_configuration` - (Optional) Configurations for a knowledge base connected to an SQL database. See [`sql_knowledge_base_configuration` block](#sql_knowledge_base_configuration-block) for details.
+* `vector_knowledge_base_configuration` - (Optional) Details about the model that's used to convert the data source into vector embeddings. See [`vector_knowledge_base_configuration` block](#vector_knowledge_base_configuration-block) for details.
 
 ### `kendra_knowledge_base_configuration` block
 
 The `kendra_knowledge_base_configuration` configuration block supports the following arguments:
 
 * `kendra_index_arn` - (Required) ARN of the Amazon Kendra index.
+
+### `sql_knowledge_base_configuration` block
+
+The `sql_knowledge_base_configuration` configuration block supports the following arguments:
+
+* `redshift_configuration` - (Optional) Configurations for a knowledge base connected to an Amazon Redshift database. See [`redshift_configuration` block](#knowledge-base-redshift_configuration-block) for details.
+* `type` - (Required) Type of SQL database to connect to the knowledge base. Valid values: `REDSHIFT`.
+
+### Knowledge Base `redshift_configuration` block
+
+The `redshift_configuration` configuration block supports the following arguments:
+
+* `query_engine_configuration` - (Required) Configurations for an Amazon Redshift query engine. See [`query_engine_configuration` block](#query_engine_configuration-block) for details.
+* `query_generation_configuration` - (Optional) Configurations for generating queries. See [`query_generation_configuration` block](#query_generation_configuration-block) for details.
+* `storage_configuration` - (Required) Configurations for Amazon Redshift database storage. See [`storage_configuration` block](#storage_configuration-block) for details.
+
+### `query_engine_configuration` block
+
+The `query_engine_configuration` configuration block supports the following arguments:
+
+* `provisioned_configuration` - (Optional) Configurations for a provisioned Amazon Redshift query engine. See [`provisioned_configuration` block](#provisioned_configuration-block) for details.
+* `serverless_configuration` - (Optional) Configurations for a serverless Amazon Redshift query engine. See [`serverless_configuration` block](#serverless_configuration-block) for details.
+* `type` - (Required) Type of query engine. Valid values: `SERVERLESS`, `PROVISIONED`.
+
+### `provisioned_configuration` block
+
+The `provisioned_configuration` configuration block supports the following arguments:
+
+* `auth_configuration` - (Required) Configurations for authentication to Amazon Redshift. See [`auth_configuration` block](#provisioned-auth_configuration-block) for details.
+* `cluster_identifier` - (Required) ID of the Amazon Redshift cluster.
+
+### Provisioned `auth_configuration` block
+
+The `auth_configuration` configuration block supports the following arguments:
+
+* `database_user` - (Optional) Database username for authentication to an Amazon Redshift provisioned data warehouse.
+* `type` - (Required) Type of authentication to use. Valid values: `IAM`, `USERNAME_PASSWORD`, ``USERNAME`.
+* `username_password_secret_arn` - (Optional) ARN of a Secrets Manager secret for authentication.
+
+### `serverless_configuration` block
+
+The `serverless_configuration` configuration block supports the following arguments:
+
+* `auth_configuration` - (Required) Configurations for authentication to a Redshift Serverless. See [`auth_configuration` block](#serverless-auth_configuration-block) for details.
+* `workgroup_arn` - (Required) ARN of the Amazon Redshift workgroup.
+
+### Serverless `auth_configuration` block
+
+The `auth_configuration` configuration block supports the following arguments:
+
+* `type` - (Required) Type of authentication to use. Valid values: `IAM`, `USERNAME_PASSWORD`.
+* `username_password_secret_arn` - (Optional) ARN of a Secrets Manager secret for authentication.
+
+### `query_generation_configuration` block
+
+The `query_generation_configuration` configuration block supports the following arguments:
+
+* `execution_timeout_seconds` - (Optional) Time after which query generation will time out.
+* `generation_context` - (Optional) Configurations for context to use during query generation. See [`generation_context` block](#generation_context-block) for details.
+
+### `generation_context` block
+
+The `generation_context` configuration block supports the following arguments:
+
+* `curated_query` - (Optional) Information about example queries to help the query engine generate appropriate SQL queries. See [`curated_query` block](#curated_query-block) for details.
+* `table` - (Optional) Information about a table in the database. See [`table` block](#table-block) for details.
+
+### `curated_query` block
+
+The `curated_query` configuration block supports the following arguments:
+
+* `natural_language` - (Required) Example natural language query.
+* `sql` - (Required) SQL equivalent of `natural_language`.
+
+### `table` block
+
+The `table` configuration block supports the following arguments:
+
+* `column` - (Optional) Information about a column in the table. See [`column` block](#column-block) for details.
+* `description` - (Optional) Description of the table that helps the query engine understand the contents of the table.
+* `inclusion` - (Optional) Whether to include or exclude the table during query generation. Valid values `INCLUDE`, `EXCLUDE`.
+* `name` - (Required) Name of the table for which the other fields in this object apply.
+
+### `column` block
+
+The `column` configuration block supports the following arguments:
+
+* `description` - (Optional) Description of the column that helps the query engine understand the contents of the column.
+* `inclusion` - (Optional) Whether to include or exclude the column during query generation. Valid values `INCLUDE`, `EXCLUDE`.
+* `name` - (Required) Name of the column for which the other fields in this object apply.
+
+### `storage_configuration` block
+
+The `storage_configuration` configuration block supports the following arguments:
+
+* `aws_data_catalog_configuration` - (Optional) Configurations for storage in AWS Glue Data Catalog. See [`aws_data_catalog_configuration` block](#aws_data_catalog_configuration-block) for details.
+* `redshift_configuration` - (Optional) Configurations for storage in Amazon Redshift. See [`redshift_configuration` block](#storage-redshift_configuration-block) for details.
+* `type` - (Required) Data storage service to use. Valid values: `REDSHIFT`, `AWS_DATA_CATALOG`.
+
+### `aws_data_catalog_configuration` block
+
+The `aws_data_catalog_configuration` configuration block supports the following arguments:
+
+* `table_names` - (Required) List of names of the tables to use.
+
+### Storage `redshift_configuration` block
+
+The `redshift_configuration` configuration block supports the following arguments:
+
+* `database_name` - (Required) Name of the Amazon Redshift database.
 
 ### `vector_knowledge_base_configuration` block
 
