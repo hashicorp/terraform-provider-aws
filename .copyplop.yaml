@@ -12,7 +12,7 @@ license:
 
 files:
   include_paths:
-    - "internal/service/[a-d]**"
+    - "internal/service/[a-m]**"
     - "internal/service/[t-z]**"
   extensions:
     - ".go"
