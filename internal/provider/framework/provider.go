@@ -425,6 +425,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
+		tffunction.NewUserAgentFunction,
 	}
 }
 

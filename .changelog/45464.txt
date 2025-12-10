@@ -4,3 +4,6 @@ provider: The `provider_meta` block is now supported. The `user_agent` argument 
 ```release-note:enhancement
 provider: Add `user_agent` argument
 ```
+```release-note:new-function
+user_agent
+```
