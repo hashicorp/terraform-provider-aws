@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -82,15 +81,22 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"routing_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[agentAliasRoutingConfigurationListItemModel](ctx),
-				Optional:   true,
-				Computed:   true,
+			"routing_configuration": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"agent_version": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+						},
+						"provisioned_throughput": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+				Optional: true,
+				Computed: true,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[agentAliasRoutingConfigurationListItemModel](ctx),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -170,6 +176,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 	if response.Diagnostics.HasError() {
 		return
 	}
+
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -266,8 +273,8 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		}
 	}
 
-	// set unknowns if a tags only update
 	if new.RoutingConfiguration.IsUnknown() {
+		// set unknowns if a tags only update
 		new.RoutingConfiguration = old.RoutingConfiguration
 	}
 
@@ -386,7 +393,7 @@ type agentAliasResourceModel struct {
 	AgentID              types.String                                                                 `tfsdk:"agent_id"`
 	Description          types.String                                                                 `tfsdk:"description"`
 	ID                   types.String                                                                 `tfsdk:"id"`
-	RoutingConfiguration fwtypes.ListNestedObjectValueOf[agentAliasRoutingConfigurationListItemModel] `tfsdk:"routing_configuration"`
+	RoutingConfiguration types.List `tfsdk:"routing_configuration"`
 	Tags                 tftags.Map                                                                   `tfsdk:"tags"`
 	TagsAll              tftags.Map                                                                   `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                               `tfsdk:"timeouts"`
