@@ -34,15 +34,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type operationTypeCtxKey string
-type operationTypeCtxValue string
-
-const (
-	operationType   operationTypeCtxKey   = "OPERATION_KEY"
-	readOperation   operationTypeCtxValue = "READ"
-	updateOperation operationTypeCtxValue = "UPDATE"
-)
-
 // @FrameworkResource("aws_verifiedpermissions_identity_source", name="Identity Source")
 func newIdentitySourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &identitySourceResource{}
@@ -217,7 +208,7 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := &verifiedpermissions.CreateIdentitySourceInput{}
-	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, readOperation), plan, input)...)
+	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -312,7 +303,7 @@ func (r *identitySourceResource) Update(ctx context.Context, request resource.Up
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
 
-		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, updateOperation), plan, input, flex.WithFieldNamePrefix("Update"))...)
+		response.Diagnostics.Append(flex.Expand(ctx, plan, input, flex.WithFieldNamePrefix("Update"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
