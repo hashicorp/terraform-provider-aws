@@ -52,6 +52,19 @@
     "autoflex.target.type": "*"
   },
   {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "struct { Field1 float32 }",
+    "toType": "*struct { Field1 basetypes.Float32Value \"tfsdk:\\\"field1\\\"\" }"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",

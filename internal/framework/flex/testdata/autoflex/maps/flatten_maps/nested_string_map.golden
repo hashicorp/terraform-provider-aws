@@ -7,6 +7,19 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfNestedMapOfString"
   },
   {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsNestedMapOfString",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfNestedMapOfString",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.awsNestedMapOfString",
+    "toType": "*flex.tfNestedMapOfString"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
