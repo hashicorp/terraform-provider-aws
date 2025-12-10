@@ -1566,6 +1566,11 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.AppNetworkAccessType = awstypes.AppNetworkAccessType(v.(string))
 		}
 
+		if input.AppNetworkAccessType == awstypes.AppNetworkAccessTypeVpcOnly {
+			input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
+			input.SubnetIds = flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
+		}
+
 		if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]any)) {
 			input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 		}
