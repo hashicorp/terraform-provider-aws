@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -35,6 +35,7 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(resourceName, "enable_accelerated_recovery", dataSourceName, "enable_accelerated_recovery"),
 				),
 			},
 		},
@@ -62,6 +63,7 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(resourceName, "enable_accelerated_recovery", dataSourceName, "enable_accelerated_recovery"),
 				),
 			},
 		},

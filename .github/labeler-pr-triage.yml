@@ -276,6 +276,12 @@ service/arcregionswitch:
           - any-glob-to-any-file:
               - 'internal/service/arcregionswitch/**/*'
               - 'website/**/arcregionswitch_*'
+service/arczonalshift:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/arczonalshift/**/*'
+              - 'website/**/arczonalshift_*'
 service/athena:
   - any:
       - changed-files:
