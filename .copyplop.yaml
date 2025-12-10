@@ -1,4 +1,4 @@
-# Example configuration for IBM project
+# Terraform AWS Provider Copyplop Configuration
 copyright:
   holder: "IBM Corp."
   start_year: 2014
@@ -10,6 +10,7 @@ license:
   identifier: "MPL-2.0"
   format: "SPDX-License-Identifier: {{.Identifier}}"
 
+# see breakdown of file types below
 files:
   include_paths:
     - "internal/**"
@@ -46,3 +47,33 @@ third_party:
   action: "above"
   patterns:
     - "Copyright.*[a-zA-Z0-9].*"
+
+# Breakdown of file types in the repository (23,516 files, 2025)
+# these account for 99.9% of files
+# Count    Ext       Pct   Should (c)?
+# 7984     go        34.0% y
+# 6780     markdown  28.8% y
+# 5043     txt       21.4% n (mostly changelogs, config)
+# 2206     tf        9.4%  y
+# 512      gtpl      2.2%  y
+# 312      md        1.3%  y
+# 233      golden    1.0%  n
+# 110      yml       0.5%  y
+# 62       zip       0.3%  n (binary)
+# 42       hcl       0.2%  y
+# 32       json      0.1%  y
+# 25       sh        0.1%  y
+# 24       tmpl      0.1%  n (non-header pieces of templates)
+# 17       tfvars    0.1%  n
+# 15       mod       0.1%  n
+# 13       js        0.1%  n
+# 12       png       0.1%  n (binary)
+# 10       csv       0.0%  n
+# 9        sum       0.0%  n
+# 8        yaml      0.0%  y
+# 8        pem       0.0%  n
+# 6        tpl       0.0%  n (xml templates)
+# 6        py        0.0%  y
+# 5        xml       0.0%  n
+# 5        gitignore 0.0%  n
+# 3        svg       0.0%  n
