@@ -153,6 +153,10 @@ func (r *eventRuleResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
+	if aws.ToString(output.EventPattern) == "" {
+		output.EventPattern = nil
+	}
+
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
