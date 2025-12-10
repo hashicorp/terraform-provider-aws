@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_access_point, name="Access Point")
+// @SDKResource("aws_s3_access_point", name="Access Point")
 // @Tags(identifierAttribute="arn")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
@@ -156,16 +156,21 @@ func resourceAccessPoint() *schema.Resource {
 func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
-	conn := c.S3ControlClient(ctx)
 
 	accountID := c.AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	name := d.Get(names.AttrName).(string)
+	bucketName := d.Get(names.AttrBucket).(string)
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
+
 	input := s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
-		Bucket:    aws.String(d.Get(names.AttrBucket).(string)),
+		Bucket:    aws.String(bucketName),
 		Name:      aws.String(name),
 		Tags:      getTagsIn(ctx),
 	}
@@ -225,12 +230,15 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
-	conn := c.S3ControlClient(ctx)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	output, err := findAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
@@ -336,12 +344,16 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	if d.HasChange(names.AttrPolicy) {
 		if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
@@ -380,12 +392,16 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	log.Printf("[DEBUG] Deleting S3 Access Point: %s", d.Id())
 	input := s3control.DeleteAccessPointInput{

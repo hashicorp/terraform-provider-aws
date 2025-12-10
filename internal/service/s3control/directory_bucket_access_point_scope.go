@@ -101,6 +101,8 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 
 func (r *directoryBucketAccessPointScopeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan directoryBucketAccessPointScopeModel
+	// Directory Bucket Access Point Scope operations use the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
 	conn := r.Meta().S3ControlClient(ctx)
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
@@ -129,6 +131,8 @@ func (r *directoryBucketAccessPointScopeResource) Create(ctx context.Context, re
 
 func (r *directoryBucketAccessPointScopeResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data directoryBucketAccessPointScopeModel
+	// Directory Bucket Access Point Scope operations use the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
 	conn := r.Meta().S3ControlClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -164,6 +168,8 @@ func (r *directoryBucketAccessPointScopeResource) Read(ctx context.Context, requ
 
 func (r *directoryBucketAccessPointScopeResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var state, plan directoryBucketAccessPointScopeModel
+	// Directory Bucket Access Point Scope operations use the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
 	conn := r.Meta().S3ControlClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -195,6 +201,8 @@ func (r *directoryBucketAccessPointScopeResource) Update(ctx context.Context, re
 
 func (r *directoryBucketAccessPointScopeResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data directoryBucketAccessPointScopeModel
+	// Directory Bucket Access Point Scope operations use the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
 	conn := r.Meta().S3ControlClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)

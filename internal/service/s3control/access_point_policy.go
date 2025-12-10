@@ -54,9 +54,10 @@ func resourceAccessPointPolicy() *schema.Resource {
 
 func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
-	resourceID, err := accessPointCreateResourceID(d.Get("access_point_arn").(string))
+	accessPointARN := d.Get("access_point_arn").(string)
+	resourceID, err := accessPointCreateResourceID(accessPointARN)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -65,6 +66,10 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
@@ -90,12 +95,16 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
@@ -126,12 +135,16 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
@@ -155,12 +168,16 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	accountID, name, err := accessPointParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	log.Printf("[DEBUG] Deleting S3 Access Point Policy: %s", d.Id())
 	input := s3control.DeleteAccessPointPolicyInput{
