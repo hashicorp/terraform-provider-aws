@@ -140,8 +140,8 @@ func (r *resourceTrustStore) Create(ctx context.Context, request resource.Create
 	}
 
 	// Add CA certificates bundle source if provided
-	if !data.CaCertificatesBundleSource.IsNull() {
-		bundleSourceList, d := data.CaCertificatesBundleSource.ToSlice(ctx)
+	if !data.CACertificatesBundleSource.IsNull() {
+		bundleSourceList, d := data.CACertificatesBundleSource.ToSlice(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
@@ -149,8 +149,8 @@ func (r *resourceTrustStore) Create(ctx context.Context, request resource.Create
 
 		if len(bundleSourceList) > 0 {
 			bundleSource := bundleSourceList[0]
-			if !bundleSource.CaCertificatesBundleS3Location.IsNull() {
-				s3LocationList, d := bundleSource.CaCertificatesBundleS3Location.ToSlice(ctx)
+			if !bundleSource.CACertificatesBundleS3Location.IsNull() {
+				s3LocationList, d := bundleSource.CACertificatesBundleS3Location.ToSlice(ctx)
 				smerr.AddEnrich(ctx, &response.Diagnostics, d)
 				if response.Diagnostics.HasError() {
 					return
@@ -236,15 +236,15 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.CaCertificatesBundleSource.Equal(state.CaCertificatesBundleSource) {
+	if !plan.CACertificatesBundleSource.Equal(state.CACertificatesBundleSource) {
 		input := cloudfront.UpdateTrustStoreInput{
 			Id:      fwflex.StringFromFramework(ctx, state.ID),
 			IfMatch: fwflex.StringFromFramework(ctx, state.Etag),
 		}
 
 		// Add CA certificates bundle source from plan
-		if !plan.CaCertificatesBundleSource.IsNull() {
-			bundleSourceList, d := plan.CaCertificatesBundleSource.ToSlice(ctx)
+		if !plan.CACertificatesBundleSource.IsNull() {
+			bundleSourceList, d := plan.CACertificatesBundleSource.ToSlice(ctx)
 			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return
@@ -252,8 +252,8 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 
 			if len(bundleSourceList) > 0 {
 				bundleSource := bundleSourceList[0]
-				if !bundleSource.CaCertificatesBundleS3Location.IsNull() {
-					s3LocationList, d := bundleSource.CaCertificatesBundleS3Location.ToSlice(ctx)
+				if !bundleSource.CACertificatesBundleS3Location.IsNull() {
+					s3LocationList, d := bundleSource.CACertificatesBundleS3Location.ToSlice(ctx)
 					smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 					if resp.Diagnostics.HasError() {
 						return
@@ -419,7 +419,7 @@ func findTrustStoreByID(ctx context.Context, conn *cloudfront.Client, id string)
 
 type trustStoreResourceModel struct {
 	ARN                        types.String                                                     `tfsdk:"arn"`
-	CaCertificatesBundleSource fwtypes.ListNestedObjectValueOf[caCertificatesBundleSourceModel] `tfsdk:"ca_certificates_bundle_source"`
+	CACertificatesBundleSource fwtypes.ListNestedObjectValueOf[caCertificatesBundleSourceModel] `tfsdk:"ca_certificates_bundle_source"`
 	Etag                       types.String                                                     `tfsdk:"etag"`
 	ID                         types.String                                                     `tfsdk:"id"`
 	LastModifiedTime           timetypes.RFC3339                                                `tfsdk:"last_modified_time"`
@@ -430,7 +430,7 @@ type trustStoreResourceModel struct {
 }
 
 type caCertificatesBundleSourceModel struct {
-	CaCertificatesBundleS3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"ca_certificates_bundle_s3_location"`
+	CACertificatesBundleS3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"ca_certificates_bundle_s3_location"`
 }
 
 type s3LocationModel struct {
@@ -454,7 +454,7 @@ func flattenTrustStoreIntoResourceModel(ctx context.Context, output *cloudfront.
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.TrustStore.LastModifiedTime)
 	data.NumberOfCaCertificates = flex.Int32ToFramework(ctx, output.TrustStore.NumberOfCaCertificates)
 
-	// Note: CaCertificatesBundleSource is not returned by the GetTrustStore API
+	// Note: CACertificatesBundleSource is not returned by the GetTrustStore API
 	// The value from the plan/state is preserved as it was set during creation
 }
 
