@@ -207,8 +207,8 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	input := &verifiedpermissions.CreateIdentitySourceInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	var input verifiedpermissions.CreateIdentitySourceInput
+	response.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -217,7 +217,7 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 	input.ClientToken = aws.String(clientToken)
 
 	output, err := tfresource.RetryWhenIsA[*verifiedpermissions.CreateIdentitySourceOutput, *awstypes.ResourceNotFoundException](ctx, 1*time.Minute, func(ctx context.Context) (*verifiedpermissions.CreateIdentitySourceOutput, error) {
-		return conn.CreateIdentitySource(ctx, input)
+		return conn.CreateIdentitySource(ctx, &input)
 	})
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -295,16 +295,16 @@ func (r *identitySourceResource) Update(ctx context.Context, request resource.Up
 	}
 
 	if !plan.Configuration.Equal(state.Configuration) || !plan.PolicyStoreID.Equal(state.PolicyStoreID) || !plan.PrincipalEntityType.Equal(state.PrincipalEntityType) {
-		input := &verifiedpermissions.UpdateIdentitySourceInput{
+		input := verifiedpermissions.UpdateIdentitySourceInput{
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
 
-		response.Diagnostics.Append(flex.Expand(ctx, plan, input, flex.WithFieldNamePrefix("Update"))...)
+		response.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Update"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateIdentitySource(ctx, input)
+		_, err := conn.UpdateIdentitySource(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -342,12 +342,12 @@ func (r *identitySourceResource) Delete(ctx context.Context, request resource.De
 		names.AttrID: state.ID.ValueString(),
 	})
 
-	input := &verifiedpermissions.DeleteIdentitySourceInput{
+	input := verifiedpermissions.DeleteIdentitySourceInput{
 		IdentitySourceId: flex.StringFromFramework(ctx, state.ID),
 		PolicyStoreId:    flex.StringFromFramework(ctx, state.PolicyStoreID),
 	}
 
-	_, err := conn.DeleteIdentitySource(ctx, input)
+	_, err := conn.DeleteIdentitySource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -607,12 +607,12 @@ type openIDConnectGroupConfiguration struct {
 }
 
 func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Client, id string, policyStoreID string) (*verifiedpermissions.GetIdentitySourceOutput, error) {
-	in := &verifiedpermissions.GetIdentitySourceInput{
+	in := verifiedpermissions.GetIdentitySourceInput{
 		IdentitySourceId: aws.String(id),
 		PolicyStoreId:    aws.String(policyStoreID),
 	}
 
-	out, err := conn.GetIdentitySource(ctx, in)
+	out, err := conn.GetIdentitySource(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
