@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_kinesisanalyticsv2_application: Add `application_configuration.application_encryption_configuration` argument ([#45356](https://github.com/hashicorp/terraform-provider-aws/issues/45356))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_20` as a valid value for `runtime_environment` ([#45356](https://github.com/hashicorp/terraform-provider-aws/issues/45356))
 * resource/aws_lambda_capacity_provider: Add resource identity support ([#45456](https://github.com/hashicorp/terraform-provider-aws/issues/45456))
+* resource/aws_odb_network_peering_connection: Add network peering creation using `odb_network_arn` for resource sharing model. ([#45509](https://github.com/hashicorp/terraform-provider-aws/issues/45509))
 * resource/aws_rds_cluster: Add `upgrade_rollout_order` attribute ([#45527](https://github.com/hashicorp/terraform-provider-aws/issues/45527))
 * resource/aws_s3vectors_index: Add `encryption_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
 * resource/aws_s3vectors_index: Add `metadata_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
