@@ -99,6 +99,14 @@ func RegisterSweepers() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_cloudfront_trust_store", &resource.Sweeper{
+		Name: "aws_cloudfront_trust_store",
+		F:    sweepTrustStoresWrapper,
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
+	})
+
 	resource.AddTestSweepers("aws_cloudfront_vpc_origin", &resource.Sweeper{
 		Name: "aws_cloudfront_vpc_origin",
 		F:    sweepVPCOrigins,
@@ -765,6 +773,36 @@ func sweepOriginAccessControls(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Origin Access Controls (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTrustStoresWrapper(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	sweepResources, err := sweepTrustStores(ctx, client)
+	if err != nil {
+		return err
+	}
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Trust Store sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Trust Stores (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Trust Stores (%s): %w", region, err)
 	}
 
 	return nil
