@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -55,6 +55,7 @@ const (
 type resourceTrustStore struct {
 	framework.ResourceWithModel[trustStoreResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -177,25 +178,25 @@ func (r *resourceTrustStore) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.TrustStore.Id)
-	data.ARN = flex.StringToFramework(ctx, out.TrustStore.Arn)
+	data.ID = fwflex.StringToFramework(ctx, out.TrustStore.Id)
+	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	_, err = waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+	output, error := waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
+	if error != nil {
+		smerr.AddError(ctx, &response.Diagnostics, error, smerr.ID, data.ID.String())
 		return
 	}
 
 	// Fetch the created trust store and populate the resource model
-	output, err := findTrustStoreByID(ctx, conn, data.ID.ValueString())
+	/* output, err := findTrustStoreByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
-	}
+	}*/
 
-	// Use custom flattener to populate the resource model
-	flattenTrustStoreIntoResourceModel(ctx, output, &data)
+	// Use fwflex.Flatten to populate the resource model
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -220,8 +221,9 @@ func (r *resourceTrustStore) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// Use custom flattener to populate the resource model
-	flattenTrustStoreIntoResourceModel(ctx, out, &state)
+	// Use fwflex.Flatten to populate the resource model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.TrustStore, &state))
+	state.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -284,26 +286,26 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		plan.Etag = flex.StringToFramework(ctx, out.ETag)
-		plan.Status = flex.StringValueToFramework(ctx, out.TrustStore.Status)
+		plan.Etag = fwflex.StringToFramework(ctx, out.ETag)
+		plan.Status = fwflex.StringValueToFramework(ctx, out.TrustStore.Status)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	output, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
 
 	// Fetch the updated trust store and populate the resource model
-	output, err := findTrustStoreByID(ctx, conn, plan.ID.ValueString())
+	/* output, err := findTrustStoreByID(ctx, conn, plan.ID.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
-	}
+	} */
 
-	// Use custom flattener to populate the resource model
-	flattenTrustStoreIntoResourceModel(ctx, output, &plan)
+	// Use fwflex.Flatten to populate the resource model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -345,9 +347,9 @@ func (r *resourceTrustStore) ImportState(ctx context.Context, req resource.Impor
 }
 
 func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.TrustStore, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.TrustStoreStatusActive)},
+		Target:                    enum.Slice(awstypes.TrustStoreStatusActive),
 		Refresh:                   statusTrustStore(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -363,8 +365,8 @@ func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id strin
 }
 
 func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.TrustStore, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.TrustStoreStatusActive)},
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrustStoreStatusActive),
 		Target:  []string{},
 		Refresh: statusTrustStore(ctx, conn, id),
 		Timeout: timeout,
@@ -378,7 +380,7 @@ func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id stri
 	return nil, smarterr.NewError(err)
 }
 
-func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findTrustStoreByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -401,7 +403,7 @@ func findTrustStoreByID(ctx context.Context, conn *cloudfront.Client, id string)
 	out, err := conn.GetTrustStore(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFound](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			})
@@ -438,24 +440,6 @@ type s3LocationModel struct {
 	Key     types.String `tfsdk:"key"`
 	Region  types.String `tfsdk:"region"`
 	Version types.String `tfsdk:"version"`
-}
-
-// flattenTrustStoreIntoResourceModel populates the Terraform resource model with data from the AWS API response
-func flattenTrustStoreIntoResourceModel(ctx context.Context, output *cloudfront.GetTrustStoreOutput, data *trustStoreResourceModel) {
-	if output == nil || output.TrustStore == nil {
-		return
-	}
-
-	// Populate computed attributes from the API response
-	data.ARN = flex.StringToFramework(ctx, output.TrustStore.Arn)
-	data.Name = flex.StringToFramework(ctx, output.TrustStore.Name)
-	data.Status = flex.StringValueToFramework(ctx, output.TrustStore.Status)
-	data.Etag = flex.StringToFramework(ctx, output.ETag)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.TrustStore.LastModifiedTime)
-	data.NumberOfCaCertificates = flex.Int32ToFramework(ctx, output.TrustStore.NumberOfCaCertificates)
-
-	// Note: CACertificatesBundleSource is not returned by the GetTrustStore API
-	// The value from the plan/state is preserved as it was set during creation
 }
 
 func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

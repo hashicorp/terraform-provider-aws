@@ -43,7 +43,7 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "trust-store/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
@@ -115,7 +115,7 @@ func TestAccCloudFrontTrustStore_withVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "trust-store/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
@@ -161,7 +161,7 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "trust-store/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
@@ -177,7 +177,7 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "trust-store/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
@@ -349,7 +349,7 @@ resource "aws_cloudfront_trust_store" "test" {
     }
   }
 }
-`, rName, "ca-bundle.pem", testCertificateContent())
+`, rName, key, testCertificateContent())
 }
 
 func testAccTrustStoreConfig_update(rName, key string) string {
