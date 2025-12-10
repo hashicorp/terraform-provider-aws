@@ -113,7 +113,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -169,7 +169,7 @@ func (r *resourceNetworkPeeringConnection) ValidateConfig(ctx context.Context, r
 
 	//Neither is present
 	if data.OdbNetworkId.IsNull() && data.OdbNetworkArn.IsNull() {
-		err := errors.New("either odb_network_id or odb_network_arn must be present. Neither is present")
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Neither is present.")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
 			err.Error(),
@@ -179,7 +179,7 @@ func (r *resourceNetworkPeeringConnection) ValidateConfig(ctx context.Context, r
 
 	//Both are present
 	if !data.OdbNetworkId.IsNull() && !data.OdbNetworkArn.IsNull() {
-		err := errors.New("either odb_network_id or odb_network_arn must be present. Both are present")
+		err := errors.New("either odb_network_id or odb_network_arn must be present. Both are present.")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, data.DisplayName.String(), err),
 			err.Error(),
