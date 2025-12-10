@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -126,7 +126,7 @@ func sweepCachePolicies(region string) error {
 			id := aws.ToString(v.CachePolicy.Id)
 			output, err := findCachePolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -217,7 +217,7 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 			id := aws.ToString(v.Id)
 			output, err := findDistributionByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -308,7 +308,7 @@ func sweepFunctions(region string) error {
 			name := aws.ToString(v.Name)
 			output, err := findFunctionByTwoPartKey(ctx, conn, name, awstypes.FunctionStageDevelopment)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -364,7 +364,7 @@ func sweepKeyGroup(region string) error {
 			id := aws.ToString(v.KeyGroup.Id)
 			output, err := findKeyGroupByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -505,7 +505,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findFieldLevelEncryptionConfigByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -561,7 +561,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findFieldLevelEncryptionProfileByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -619,7 +619,7 @@ func sweepOriginRequestPolicies(region string) error {
 			id := aws.ToString(v.OriginRequestPolicy.Id)
 			output, err := findOriginRequestPolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -677,7 +677,7 @@ func sweepResponseHeadersPolicies(region string) error {
 			id := aws.ToString(v.ResponseHeadersPolicy.Id)
 			output, err := findResponseHeadersPolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -733,7 +733,7 @@ func sweepOriginAccessControls(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findOriginAccessControlByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -135,7 +135,7 @@ func testAccPreCheckSharingWithOrganizationEnabled(ctx context.Context, t *testi
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
 	}
 
@@ -176,7 +176,7 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfram.FindPrincipalAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes[names.AttrPrincipal])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

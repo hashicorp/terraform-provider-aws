@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,7 +110,7 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 		return findNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface (%s) Security Group (%s) Attachment not found, removing from state", networkInterfaceID, sgID)
 		d.SetId("")
 		return diags
@@ -137,7 +138,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.R
 
 	eni, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 

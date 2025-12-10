@@ -421,7 +421,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -851,7 +851,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 	return func() (any, string, error) {
 		certificate, err := findCertificateByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -905,7 +905,7 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string)
 	return func() (any, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

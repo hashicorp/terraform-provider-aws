@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -474,7 +475,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -647,7 +648,7 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) sdkretry.S
 	return func() (any, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

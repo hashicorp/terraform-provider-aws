@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -343,7 +344,7 @@ func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	stackInstances, err := findStackInstancesByNameCallAs(ctx, meta, stackSetName, callAs, deployedByOU == "OU", flex.ExpandStringValueSet(d.Get(AttrAccounts).(*schema.Set)), flex.ExpandStringValueSet(d.Get(AttrRegions).(*schema.Set)))
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Stack Instances (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -670,14 +671,14 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName,
 
 	// set based on the first account and region which means they may not be accurate for all stack instances
 	stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, output.Accounts[0], output.Regions[0], callAs)
-	if none || tfresource.NotFound(err) {
+	if none || retry.NotFound(err) {
 		return output, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return output, err
 	}
 

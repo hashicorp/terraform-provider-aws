@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -135,7 +136,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	asn := int32(d.Get("bgp_asn").(int))
 	bgpPeer, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect BGP Peer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -214,7 +215,7 @@ func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string
 	return func() (any, string, error) {
 		output, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -364,7 +364,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -416,7 +416,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -443,7 +443,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			tfList = append(tfList, tfMap)
 			continue
 		}

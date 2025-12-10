@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -429,7 +430,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	volume, err := findONTAPVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for NetApp ONTAP Volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -672,7 +673,7 @@ func statusVolume(ctx context.Context, conn *fsx.Client, id string) sdkretry.Sta
 	return func() (any, string, error) {
 		output, err := findVolumeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -790,7 +791,7 @@ func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, vol
 	return func() (any, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -807,7 +807,7 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 func statusScheduledQuery(conn *timestreamquery.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findScheduledQueryByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

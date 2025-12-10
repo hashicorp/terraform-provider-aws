@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -121,7 +122,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	out, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -147,7 +148,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	policy, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {

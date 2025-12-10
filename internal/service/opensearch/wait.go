@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,7 +46,7 @@ func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainN
 	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 		if err != nil {
@@ -98,7 +99,7 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 		out, err = findDomainByName(ctx, conn, domainName)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			return tfresource.NonRetryableError(err)

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -178,7 +179,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 
 	replicationSet, err := findReplicationSetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents Replication Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -296,7 +297,7 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn st
 	return func() (any, string, error) {
 		output, err := findReplicationSetByID(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

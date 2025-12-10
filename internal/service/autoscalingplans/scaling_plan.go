@@ -844,7 +844,7 @@ func statusScalingPlanCode(conn *autoscalingplans.Client, scalingPlanName string
 	return func(ctx context.Context) (any, string, error) {
 		scalingPlan, err := findScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

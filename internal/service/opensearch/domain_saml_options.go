@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,7 +125,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 
 	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

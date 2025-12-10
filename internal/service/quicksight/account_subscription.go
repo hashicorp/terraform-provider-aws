@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -251,7 +252,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 
 	out, err := findAccountSubscriptionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Account Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -341,7 +342,7 @@ func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id 
 	return func() (any, string, error) {
 		output, err := findAccountSubscriptionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

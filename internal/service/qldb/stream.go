@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -156,7 +157,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	ledgerName := d.Get("ledger_name").(string)
 	stream, err := findStreamByTwoPartKey(ctx, conn, ledgerName, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QLDB Stream %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -279,7 +280,7 @@ func statusStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, str
 			StreamId:   aws.String(streamID),
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -315,7 +316,7 @@ func statusStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, str
 	return func() (any, string, error) {
 		output, err := findStreamByTwoPartKey(ctx, conn, ledgerName, streamID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

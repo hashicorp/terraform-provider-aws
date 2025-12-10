@@ -668,7 +668,7 @@ func statusApplication(conn *emrserverless.Client, id string) retry.StateRefresh
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -145,7 +145,7 @@ func (r *vectorBucketResource) Read(ctx context.Context, request resource.ReadRe
 	arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
 	output, err := findVectorBucketByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
