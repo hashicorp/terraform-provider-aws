@@ -262,37 +262,37 @@ func expandDataProviderSettings(tfList []interface{}) awstypes.DataProviderSetti
 
 	if v, ok := tfMap["docdb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberDocDbSettings{
-			Value: *expandDocDbDataProviderSettings(v),
+			Value: *expandDocDBDataProviderSettings(v),
 		}
 	}
 
 	if v, ok := tfMap["ibm_db2_luw_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberIbmDb2LuwSettings{
-			Value: *expandIbmDb2LuwDataProviderSettings(v),
+			Value: *expandIBMDB2LUWDataProviderSettings(v),
 		}
 	}
 
 	if v, ok := tfMap["ibm_db2_zos_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberIbmDb2zOsSettings{
-			Value: *expandIbmDb2zOsDataProviderSettings(v),
+			Value: *expandIBMDB2zOSDataProviderSettings(v),
 		}
 	}
 
 	if v, ok := tfMap["mariadb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMariaDbSettings{
-			Value: *expandMariaDbDataProviderSettings(v),
+			Value: *expandMariaDBDataProviderSettings(v),
 		}
 	}
 
 	if v, ok := tfMap["microsoft_sql_server_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings{
-			Value: *expandMicrosoftSqlServerDataProviderSettings(v),
+			Value: *expandMicrosoftSQLServerDataProviderSettings(v),
 		}
 	}
 
 	if v, ok := tfMap["mongodb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMongoDbSettings{
-			Value: *expandMongoDbDataProviderSettings(v),
+			Value: *expandMongoDBDataProviderSettings(v),
 		}
 	}
 
@@ -337,19 +337,19 @@ func expandMySQLDataProviderSettings(tfList []interface{}) *awstypes.MySqlDataPr
 	return expandGenericDataProviderSettings[awstypes.MySqlDataProviderSettings](tfList)
 }
 
-func expandDocDbDataProviderSettings(tfList []interface{}) *awstypes.DocDbDataProviderSettings {
+func expandDocDBDataProviderSettings(tfList []interface{}) *awstypes.DocDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.DocDbDataProviderSettings](tfList)
 }
 
-func expandIbmDb2LuwDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2LuwDataProviderSettings {
+func expandIBMDB2LUWDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2LuwDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.IbmDb2LuwDataProviderSettings](tfList)
 }
 
-func expandIbmDb2zOsDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2zOsDataProviderSettings {
+func expandIBMDB2zOSDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2zOsDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.IbmDb2zOsDataProviderSettings](tfList)
 }
 
-func expandMariaDbDataProviderSettings(tfList []interface{}) *awstypes.MariaDbDataProviderSettings {
+func expandMariaDBDataProviderSettings(tfList []interface{}) *awstypes.MariaDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MariaDbDataProviderSettings](tfList)
 }
 
@@ -357,11 +357,11 @@ func expandSybaseAseDataProviderSettings(tfList []interface{}) *awstypes.SybaseA
 	return expandGenericDataProviderSettings[awstypes.SybaseAseDataProviderSettings](tfList)
 }
 
-func expandMicrosoftSqlServerDataProviderSettings(tfList []interface{}) *awstypes.MicrosoftSqlServerDataProviderSettings {
+func expandMicrosoftSQLServerDataProviderSettings(tfList []interface{}) *awstypes.MicrosoftSqlServerDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MicrosoftSqlServerDataProviderSettings](tfList)
 }
 
-func expandMongoDbDataProviderSettings(tfList []interface{}) *awstypes.MongoDbDataProviderSettings {
+func expandMongoDBDataProviderSettings(tfList []interface{}) *awstypes.MongoDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MongoDbDataProviderSettings](tfList)
 }
 
