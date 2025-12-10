@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -11,8 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,7 +23,7 @@ const (
 )
 
 func waitUpgradeSucceeded(ctx context.Context, conn *opensearch.Client, name string, timeout time.Duration) (*opensearch.GetUpgradeStatusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
 		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded),
 		Refresh:    statusUpgradeStatus(ctx, conn, name),
@@ -45,7 +46,7 @@ func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainN
 	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = findDomainByName(ctx, conn, domainName)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 		if err != nil {
@@ -98,7 +99,7 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 		out, err = findDomainByName(ctx, conn, domainName)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			return tfresource.NonRetryableError(err)
@@ -118,7 +119,7 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 	// opensearch maintains information about the domain in multiple (at least 2) places that need
 	// to clear before it is really deleted - otherwise, requesting information about domain immediately
 	// after delete will return info about just deleted domain
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{configStatusUnknown, configStatusExists},
 		Target:                    []string{configStatusNotFound},
 		Refresh:                   domainConfigStatus(ctx, conn, domainName),

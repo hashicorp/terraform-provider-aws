@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -9,7 +9,7 @@ import (
 	"iter"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
@@ -19,7 +19,7 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	lastRequest := 123
 	err := NewEmptyResultError(lastRequest)
 
-	var nfe *retry.NotFoundError
+	var nfe *sdkretry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -99,7 +99,7 @@ func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
 	lastRequest := 123
 	err := NewTooManyResultsError(count, lastRequest)
 
-	var nfe *retry.NotFoundError
+	var nfe *sdkretry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {

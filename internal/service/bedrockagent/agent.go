@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -31,13 +31,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -246,7 +247,7 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	agentID := data.ID.ValueString()
 	agent, err := findAgentByID(ctx, conn, agentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -547,7 +548,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -564,11 +565,11 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	return output.Agent, nil
 }
 
-func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -581,7 +582,7 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retr
 }
 
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -600,7 +601,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -619,7 +620,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -638,7 +639,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 }
 
 func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -657,7 +658,7 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
 		Refresh: statusAgent(ctx, conn, id),
