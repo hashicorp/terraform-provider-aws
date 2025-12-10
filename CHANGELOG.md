@@ -26,10 +26,7 @@ BUG FIXES:
 * resource/aws_ec2_transit_gateway: Fix potential crash when setting `encryption_support`. This addresses a regression introduced in [v6.25.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6250-december-4-2025). ([#45462](https://github.com/hashicorp/terraform-provider-aws/issues/45462))
 * resource/aws_lambda_function: Fix persistent diff when `image_config` has `null` values set in config ([#45511](https://github.com/hashicorp/terraform-provider-aws/issues/45511))
 * resource/aws_route53_zone: Operations to enable accelerated recovery are enforced to run serially when multiple hosted zones are configured ([#45457](https://github.com/hashicorp/terraform-provider-aws/issues/45457))
-<<<<<<< HEAD
-=======
 * resource/aws_sagemaker_model: Mark `vpc_config.security_group_ids` and `vpc_config.subnets` as `ForceNew` ([#45491](https://github.com/hashicorp/terraform-provider-aws/issues/45491))
->>>>>>> f-autoflex-xmlwrapper-enhancements
 * resource/aws_secretsmanager_secret_version: Avoid sending GetSecretValue calls when the secret is write-only ([#44876](https://github.com/hashicorp/terraform-provider-aws/issues/44876))
 
 ## 6.25.0 (December 4, 2025)
