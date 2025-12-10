@@ -47,12 +47,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -61,6 +55,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
@@ -100,23 +101,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -153,17 +157,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -175,6 +168,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"max_write_request_units": "1",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -211,23 +218,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -243,23 +253,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "4"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -296,23 +309,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -328,23 +344,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -381,17 +400,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -403,6 +411,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"max_write_request_units": "2",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -418,17 +440,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -440,6 +451,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"max_write_request_units": "4",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -476,17 +501,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -498,6 +512,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"max_write_request_units": "2",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -513,17 +541,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -535,6 +552,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"max_write_request_units": "2",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -571,17 +602,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -593,6 +613,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 						"write_units_per_second": "5000",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -661,17 +695,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -683,6 +706,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 						"max_write_request_units": "2",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -698,23 +735,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -751,23 +791,26 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -783,17 +826,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rName,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
@@ -804,6 +836,20 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
