@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -838,19 +837,8 @@ func (l *keyListResource) List(ctx context.Context, request list.ListRequest, st
 
 				tflog.Info(ctx, "Reading KMS key")
 				diags := resourceKeyRead(ctx, rd, awsClient)
-				if diags.HasError() {
-					// Skip multi-Region replica keys.
-					if errors := sdkdiag.Errors(diags); len(errors) == 1 && strings.Contains(errors[0].Summary, "is not a multi-Region primary key") {
-						continue
-					}
-
-					result = fwdiag.NewListResultSDKDiagnostics(diags)
-					yield(result)
-					return
-				}
-
-				if rd.Id() == "" {
-					// Resources is logically deleted.
+				if diags.HasError() || rd.Id() == "" {
+					// Resource can't be read or is logically deleted.
 					continue
 				}
 
