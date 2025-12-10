@@ -587,6 +587,10 @@ func (l *parameterListResource) List(ctx context.Context, request list.ListReque
 					yield(result)
 					return
 				}
+				if rd.Id() == "" {
+					// Resource is logically deleted
+					continue
+				}
 
 				err = l.SetTags(ctx, awsClient, rd)
 				if err != nil {
