@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `image_pipeline_execution_settings` configuration block to support invoking image pipelines directly for image creation
+```
