@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -144,7 +144,7 @@ func testAccCheckTrackerAssociationDestroy(ctx context.Context) resource.TestChe
 			err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 			if err != nil {
-				if tfresource.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				if retry.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err

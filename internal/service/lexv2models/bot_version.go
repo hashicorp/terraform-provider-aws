@@ -29,6 +29,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -165,7 +166,7 @@ func (r *botVersionResource) Read(ctx context.Context, request resource.ReadRequ
 	botID, botVersion := parts[0], parts[1]
 	output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -257,7 +258,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botV
 	return func() (any, string, error) {
 		output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

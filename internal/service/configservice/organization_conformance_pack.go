@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -180,7 +181,7 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 
 	pack, err := findOrganizationConformancePackByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Organization Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -431,7 +432,7 @@ func statusOrganizationConformancePack(ctx context.Context, conn *configservice.
 	return func() (any, string, error) {
 		output, err := findOrganizationConformancePackStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

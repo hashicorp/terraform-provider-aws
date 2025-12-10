@@ -274,7 +274,7 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -428,7 +428,7 @@ func statusS3AccessPointAttachment(conn *fsx.Client, name string) retry.StateRef
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

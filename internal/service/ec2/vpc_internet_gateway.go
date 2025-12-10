@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -98,7 +99,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		return findInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Internet Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,7 +155,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete))
 
-		if err != nil && !tfresource.NotFound(err) {
+		if err != nil && !retry.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}

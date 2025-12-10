@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -228,7 +229,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	notebookInstance, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Notebook Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -355,7 +356,7 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 
 	notebook, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -445,7 +446,7 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	notebook, err := findNotebookInstanceByName(ctx, conn, id)
 
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 		return err

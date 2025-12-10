@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -144,7 +145,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 
 	tg, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy Default Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -220,7 +221,7 @@ func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbPr
 	return func() (any, string, error) {
 		output, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, dbProxyName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

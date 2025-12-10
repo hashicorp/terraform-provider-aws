@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 
 			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
-			if err != nil && !tfresource.NotFound(err) {
+			if err != nil && !retry.NotFound(err) {
 				log.Printf("[WARN] Reading DocumentDB Cluster %s Global Cluster information: %s", id, err)
 				continue
 			}

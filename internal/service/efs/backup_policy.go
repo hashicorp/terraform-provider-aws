@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,7 +85,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findBackupPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,7 +187,7 @@ func statusBackupPolicy(ctx context.Context, conn *efs.Client, id string) sdkret
 	return func() (any, string, error) {
 		output, err := findBackupPolicyByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

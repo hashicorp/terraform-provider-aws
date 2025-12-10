@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -115,7 +116,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	member, err := findMemberByAccountID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -168,7 +169,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		err = unprocessedAccountsError(output.UnprocessedAccounts)
 	}
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
 		return diags
 	}

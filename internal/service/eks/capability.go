@@ -286,7 +286,7 @@ func (r *capabilityResource) Read(ctx context.Context, request resource.ReadRequ
 	clusterName, capabilityName := fwflex.StringValueFromFramework(ctx, data.ClusterName), fwflex.StringValueFromFramework(ctx, data.CapabilityName)
 	output, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

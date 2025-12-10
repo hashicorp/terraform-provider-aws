@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -115,7 +115,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +148,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -207,7 +207,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	err = findPolicyAttachmentByTwoPartKey(ctx, conn, lbName, policyName)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		// Policy not attached.
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy Attachment (%s/%s): %s", lbName, policyName, err)
@@ -270,7 +270,7 @@ func unassignPolicy(ctx context.Context, conn *elasticloadbalancing.Client, lbNa
 
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return reassignments, nil
 	}
 

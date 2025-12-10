@@ -8,14 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusApplication(ctx context.Context, conn *kinesisanalytics.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

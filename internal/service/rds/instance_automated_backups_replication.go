@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,7 +118,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 
 	backup, err := findDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance Automated Backup %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -141,7 +142,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	backup, err := findDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		return diags
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance Automated Backup (%s): %s", d.Id(), err)
@@ -254,7 +255,7 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn 
 	return func() (any, string, error) {
 		output, err := findDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -290,7 +291,7 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func(ctx context.Context) (bool, error) {
 		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -91,7 +92,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	instanceID, functionARN := parts[0], parts[1]
 	_, err = findLambdaFunctionAssociationByTwoPartKey(ctx, conn, instanceID, functionARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

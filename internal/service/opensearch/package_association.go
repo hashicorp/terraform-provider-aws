@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -94,7 +95,7 @@ func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 	packageID := d.Get("package_id").(string)
 	pkgAssociation, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Package Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -191,7 +192,7 @@ func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, doma
 	return func() (any, string, error) {
 		output, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

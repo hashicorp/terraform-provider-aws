@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -80,7 +81,7 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 
 	output, err := findStandardsSubscriptionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,7 +175,7 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -190,7 +191,7 @@ func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Cl
 	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -8,14 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusCanaryState(ctx context.Context, conn *synthetics.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindCanaryByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

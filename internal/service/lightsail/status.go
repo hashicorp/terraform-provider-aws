@@ -12,14 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusContainerService(ctx context.Context, conn *lightsail.Client, serviceName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		containerService, err := FindContainerServiceByName(ctx, conn, serviceName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -35,7 +35,7 @@ func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsai
 	return func() (any, string, error) {
 		deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

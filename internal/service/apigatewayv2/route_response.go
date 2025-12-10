@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -97,7 +98,7 @@ func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := findRouteResponseByThreePartKey(ctx, conn, d.Get("api_id").(string), d.Get("route_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Route Response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -106,7 +107,7 @@ func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceDat
 
 	cfd, err := findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Conditional Forwarder (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

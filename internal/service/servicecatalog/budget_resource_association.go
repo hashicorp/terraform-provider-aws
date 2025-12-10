@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -101,7 +102,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 
 	output, err := waitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Budget Resource Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +149,7 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 
 	err = waitBudgetResourceAssociationDeleted(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutDelete))
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Budget Resource Disassociation (%s): %s", d.Id(), err)
 	}
 

@@ -370,7 +370,7 @@ func statusMonitor(conn *internetmonitor.Client, name string) retry.StateRefresh
 	return func(ctx context.Context) (any, string, error) {
 		monitor, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
