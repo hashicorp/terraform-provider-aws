@@ -27,6 +27,7 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 	var truststore cloudfront.GetTrustStoreOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey := "ca-bundle.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,7 +39,7 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustStoreConfig_basic(rName),
+				Config: testAccTrustStoreConfig_basic(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -46,9 +47,9 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region"),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", objectKey),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_ca_certificates", "1"),
 				),
@@ -70,6 +71,7 @@ func TestAccCloudFrontTrustStore_disappears(t *testing.T) {
 	var truststore cloudfront.GetTrustStoreOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey := "ca-bundle.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -81,7 +83,7 @@ func TestAccCloudFrontTrustStore_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustStoreConfig_basic(rName),
+				Config: testAccTrustStoreConfig_basic(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceTrustStore, resourceName),
@@ -97,6 +99,7 @@ func TestAccCloudFrontTrustStore_withVersion(t *testing.T) {
 	var truststore cloudfront.GetTrustStoreOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey := "ca-bundle.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -108,7 +111,7 @@ func TestAccCloudFrontTrustStore_withVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustStoreConfig_withVersion(rName),
+				Config: testAccTrustStoreConfig_withVersion(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -116,9 +119,9 @@ func TestAccCloudFrontTrustStore_withVersion(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region"),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", objectKey),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.version"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_ca_certificates", "1"),
@@ -141,6 +144,8 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 	var truststore1, truststore2 cloudfront.GetTrustStoreOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey1 := "ca-bundle_v1.pem"
+	objectKey2 := "ca-bundle_v2.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -152,7 +157,7 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustStoreConfig_update(rName, "ca-bundle-v1.pem"),
+				Config: testAccTrustStoreConfig_basic(rName, objectKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -160,15 +165,15 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket"),
-					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", "ca-bundle-v1.pem"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region"),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", objectKey1),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_ca_certificates", "1"),
 				),
 			},
 			{
-				Config: testAccTrustStoreConfig_update(rName, "ca-bundle-v2.pem"),
+				Config: testAccTrustStoreConfig_update(rName, objectKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -176,9 +181,9 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.TrustStoreStatusActive)),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket"),
-					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", "ca-bundle-v2.pem"),
-					resource.TestCheckResourceAttrSet(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region"),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.key", objectKey2),
+					resource.TestCheckResourceAttr(resourceName, "ca_certificates_bundle_source.0.ca_certificates_bundle_s3_location.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_ca_certificates", "1"),
 					testAccCheckTrustStoreRecreated(&truststore1, &truststore2),
@@ -289,42 +294,16 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-// testAccTrustStoreConfigS3Object returns the S3 object configuration with the given key
-func testAccTrustStoreConfigS3Object(key string, withVersioning bool) string {
-	versioningConfig := ""
-	dependsOn := ""
-
-	if withVersioning {
-		versioningConfig = `
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-`
-		dependsOn = "\n  depends_on = [aws_s3_bucket_versioning.test]"
-	}
-
-	return fmt.Sprintf(`%s
+func testAccTrustStoreConfig_basic(rName, key string) string {
+	return testAccTrustStoreConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.id
   key     = %[2]q
   content = <<-EOT
 %[3]s
-EOT%s
-}
-`, versioningConfig, key, testCertificateContent(), dependsOn)
+EOT
 }
 
-// testAccTrustStoreConfigResource returns the trust store resource configuration
-func testAccTrustStoreConfigResource(rName string, withVersion bool) string {
-	versionLine := ""
-	if withVersion {
-		versionLine = "\n      version = aws_s3_object.test.version_id"
-	}
-
-	return fmt.Sprintf(`
 resource "aws_cloudfront_trust_store" "test" {
   name = %[1]q
 
@@ -332,27 +311,76 @@ resource "aws_cloudfront_trust_store" "test" {
     ca_certificates_bundle_s3_location {
       bucket = aws_s3_bucket.test.id
       key    = aws_s3_object.test.key
-      region = data.aws_region.current.name%s
+      region = data.aws_region.current.name
     }
   }
 }
-`, rName, versionLine)
+`, rName, key, testCertificateContent())
+
 }
 
-func testAccTrustStoreConfig_basic(rName string) string {
-	return testAccTrustStoreConfigBase(rName) +
-		testAccTrustStoreConfigS3Object("ca-bundle.pem", false) +
-		testAccTrustStoreConfigResource(rName, false)
+func testAccTrustStoreConfig_withVersion(rName, key string) string {
+	return testAccTrustStoreConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
-func testAccTrustStoreConfig_withVersion(rName string) string {
-	return testAccTrustStoreConfigBase(rName) +
-		testAccTrustStoreConfigS3Object("ca-bundle.pem", true) +
-		testAccTrustStoreConfigResource(rName, true)
+resource "aws_s3_object" "test" {
+  bucket     = aws_s3_bucket.test.id
+  key        = %[2]q
+  content    = <<-EOT
+%[3]s
+EOT
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket  = aws_s3_bucket.test.id
+      key     = aws_s3_object.test.key
+      region  = data.aws_region.current.name
+      version = aws_s3_object.test.version_id
+    }
+  }
+}
+`, rName, "ca-bundle.pem", testCertificateContent())
 }
 
 func testAccTrustStoreConfig_update(rName, key string) string {
-	return testAccTrustStoreConfigBase(rName) +
-		testAccTrustStoreConfigS3Object(key, false) +
-		testAccTrustStoreConfigResource(rName, false)
+	return testAccTrustStoreConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "test" {
+  bucket     = aws_s3_bucket.test.id
+  key        = %[2]q
+  content    = <<-EOT
+%[3]s
+EOT
+  depends_on = [aws_s3_bucket_versioning.test]
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket  = aws_s3_bucket.test.id
+      key     = aws_s3_object.test.key
+      region  = data.aws_region.current.name
+      version = aws_s3_object.test.version_id
+    }
+  }
+}
+`, rName, key, testCertificateContent())
 }
