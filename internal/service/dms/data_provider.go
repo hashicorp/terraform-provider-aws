@@ -121,7 +121,7 @@ func resourceDataProviderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &dms.CreateDataProviderInput{
 		Engine:   aws.String(d.Get(names.AttrEngine).(string)),
-		Settings: expandDataProviderSettings(d.Get("settings").([]interface{})),
+		Settings: expandDataProviderSettings(d.Get("settings").([]any)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -194,7 +194,7 @@ func resourceDataProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("settings") {
-			input.Settings = expandDataProviderSettings(d.Get("settings").([]interface{}))
+			input.Settings = expandDataProviderSettings(d.Get("settings").([]any))
 		}
 
 		_, err := conn.ModifyDataProvider(ctx, input)
@@ -254,74 +254,74 @@ func findDataProviderByARN(ctx context.Context, conn *dms.Client, arn string) (*
 	return tfresource.AssertSingleValueResult(output.DataProviders)
 }
 
-func expandDataProviderSettings(tfList []interface{}) awstypes.DataProviderSettings {
+func expandDataProviderSettings(tfList []any) awstypes.DataProviderSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["docdb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["docdb_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberDocDbSettings{
 			Value: *expandDocDBDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["ibm_db2_luw_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["ibm_db2_luw_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberIbmDb2LuwSettings{
 			Value: *expandIBMDB2LUWDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["ibm_db2_zos_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["ibm_db2_zos_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberIbmDb2zOsSettings{
 			Value: *expandIBMDB2zOSDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["mariadb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["mariadb_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMariaDbSettings{
 			Value: *expandMariaDBDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["microsoft_sql_server_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["microsoft_sql_server_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMicrosoftSqlServerSettings{
 			Value: *expandMicrosoftSQLServerDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["mongodb_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["mongodb_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMongoDbSettings{
 			Value: *expandMongoDBDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["mysql_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["mysql_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberMySqlSettings{
 			Value: *expandMySQLDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["oracle_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["oracle_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberOracleSettings{
 			Value: *expandOracleDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["postgres_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["postgres_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberPostgreSqlSettings{
 			Value: *expandPostgreSQLDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["redshift_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["redshift_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberRedshiftSettings{
 			Value: *expandRedshiftDataProviderSettings(v),
 		}
 	}
 
-	if v, ok := tfMap["sybase_ase_settings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["sybase_ase_settings"].([]any); ok && len(v) > 0 && v[0] != nil {
 		return &awstypes.DataProviderSettingsMemberSybaseAseSettings{
 			Value: *expandSybaseAseDataProviderSettings(v),
 		}
@@ -330,56 +330,56 @@ func expandDataProviderSettings(tfList []interface{}) awstypes.DataProviderSetti
 	return nil
 }
 
-func expandPostgreSQLDataProviderSettings(tfList []interface{}) *awstypes.PostgreSqlDataProviderSettings {
+func expandPostgreSQLDataProviderSettings(tfList []any) *awstypes.PostgreSqlDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.PostgreSqlDataProviderSettings](tfList)
 }
 
-func expandMySQLDataProviderSettings(tfList []interface{}) *awstypes.MySqlDataProviderSettings {
+func expandMySQLDataProviderSettings(tfList []any) *awstypes.MySqlDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MySqlDataProviderSettings](tfList)
 }
 
-func expandDocDBDataProviderSettings(tfList []interface{}) *awstypes.DocDbDataProviderSettings {
+func expandDocDBDataProviderSettings(tfList []any) *awstypes.DocDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.DocDbDataProviderSettings](tfList)
 }
 
-func expandIBMDB2LUWDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2LuwDataProviderSettings {
+func expandIBMDB2LUWDataProviderSettings(tfList []any) *awstypes.IbmDb2LuwDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.IbmDb2LuwDataProviderSettings](tfList)
 }
 
-func expandIBMDB2zOSDataProviderSettings(tfList []interface{}) *awstypes.IbmDb2zOsDataProviderSettings {
+func expandIBMDB2zOSDataProviderSettings(tfList []any) *awstypes.IbmDb2zOsDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.IbmDb2zOsDataProviderSettings](tfList)
 }
 
-func expandMariaDBDataProviderSettings(tfList []interface{}) *awstypes.MariaDbDataProviderSettings {
+func expandMariaDBDataProviderSettings(tfList []any) *awstypes.MariaDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MariaDbDataProviderSettings](tfList)
 }
 
-func expandSybaseAseDataProviderSettings(tfList []interface{}) *awstypes.SybaseAseDataProviderSettings {
+func expandSybaseAseDataProviderSettings(tfList []any) *awstypes.SybaseAseDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.SybaseAseDataProviderSettings](tfList)
 }
 
-func expandMicrosoftSQLServerDataProviderSettings(tfList []interface{}) *awstypes.MicrosoftSqlServerDataProviderSettings {
+func expandMicrosoftSQLServerDataProviderSettings(tfList []any) *awstypes.MicrosoftSqlServerDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MicrosoftSqlServerDataProviderSettings](tfList)
 }
 
-func expandMongoDBDataProviderSettings(tfList []interface{}) *awstypes.MongoDbDataProviderSettings {
+func expandMongoDBDataProviderSettings(tfList []any) *awstypes.MongoDbDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.MongoDbDataProviderSettings](tfList)
 }
 
-func expandOracleDataProviderSettings(tfList []interface{}) *awstypes.OracleDataProviderSettings {
+func expandOracleDataProviderSettings(tfList []any) *awstypes.OracleDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.OracleDataProviderSettings](tfList)
 }
 
-func expandRedshiftDataProviderSettings(tfList []interface{}) *awstypes.RedshiftDataProviderSettings {
+func expandRedshiftDataProviderSettings(tfList []any) *awstypes.RedshiftDataProviderSettings {
 	return expandGenericDataProviderSettings[awstypes.RedshiftDataProviderSettings](tfList)
 }
 
-func expandGenericDataProviderSettings[T any](tfList []interface{}) *T {
+func expandGenericDataProviderSettings[T any](tfList []any) *T {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	var settings T
 	v := &settings
 
@@ -419,12 +419,12 @@ func expandGenericDataProviderSettings[T any](tfList []interface{}) *T {
 	return v
 }
 
-func flattenDataProviderSettings(settings awstypes.DataProviderSettings) []interface{} {
+func flattenDataProviderSettings(settings awstypes.DataProviderSettings) []any {
 	if settings == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	switch v := settings.(type) {
 	case *awstypes.DataProviderSettingsMemberDocDbSettings:
@@ -451,15 +451,15 @@ func flattenDataProviderSettings(settings awstypes.DataProviderSettings) []inter
 		m["sybase_ase_settings"] = flattenGenericDataProviderSettings(&v.Value)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenGenericDataProviderSettings(settings interface{}) []interface{} {
+func flattenGenericDataProviderSettings(settings any) []any {
 	if settings == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 	val := reflect.ValueOf(settings).Elem()
 
 	if field := val.FieldByName("CertificateArn"); field.IsValid() && !field.IsNil() {
@@ -484,5 +484,5 @@ func flattenGenericDataProviderSettings(settings interface{}) []interface{} {
 		}
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
