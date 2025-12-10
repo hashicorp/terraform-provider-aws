@@ -668,6 +668,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("mongo_db_atlas_configuration"),
+									path.MatchRelative().AtParent().AtName("neptune_analytics_configuration"),
 									path.MatchRelative().AtParent().AtName("opensearch_managed_cluster_configuration"),
 									path.MatchRelative().AtParent().AtName("opensearch_serverless_configuration"),
 									path.MatchRelative().AtParent().AtName("pinecone_configuration"),
@@ -751,6 +752,55 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 													},
 												},
 												"vector_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"neptune_analytics_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneAnalyticsConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"graph_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneAnalyticsFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"text_field": schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -1595,6 +1645,7 @@ type storageLocationModel struct {
 
 type storageConfigurationModel struct {
 	MongoDBAtlasConfiguration             fwtypes.ListNestedObjectValueOf[mongoDBAtlasConfigurationModel]             `tfsdk:"mongo_db_atlas_configuration"`
+	NeptuneAnalyticsConfiguration         fwtypes.ListNestedObjectValueOf[neptuneAnalyticsConfigurationModel]         `tfsdk:"neptune_analytics_configuration"`
 	OpenSearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[openSearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
 	OpenSearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[openSearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
 	PineconeConfiguration                 fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]                 `tfsdk:"pinecone_configuration"`
@@ -1619,6 +1670,16 @@ type mongoDBAtlasFieldMappingModel struct {
 	MetadataField types.String `tfsdk:"metadata_field"`
 	TextField     types.String `tfsdk:"text_field"`
 	VectorField   types.String `tfsdk:"vector_field"`
+}
+
+type neptuneAnalyticsConfigurationModel struct {
+	FieldMapping fwtypes.ListNestedObjectValueOf[neptuneAnalyticsFieldMappingModel] `tfsdk:"field_mapping"`
+	GraphARN     fwtypes.ARN                                                        `tfsdk:"graph_arn"`
+}
+
+type neptuneAnalyticsFieldMappingModel struct {
+	MetadataField types.String `tfsdk:"metadata_field"`
+	TextField     types.String `tfsdk:"text_field"`
 }
 
 type openSearchManagedClusterConfigurationModel struct {

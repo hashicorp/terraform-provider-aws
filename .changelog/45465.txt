@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.sql_knowledge_base_configuration` argument
+resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.sql_knowledge_base_configuration` and `storage_configuration.neptune_analytics_configuration` arguments
 ```
 
 ```release-note:bug

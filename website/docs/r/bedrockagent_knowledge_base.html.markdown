@@ -256,7 +256,7 @@ The `redshift_configuration` configuration block supports the following argument
 
 * `query_engine_configuration` - (Required) Configurations for an Amazon Redshift query engine. See [`query_engine_configuration` block](#query_engine_configuration-block) for details.
 * `query_generation_configuration` - (Optional) Configurations for generating queries. See [`query_generation_configuration` block](#query_generation_configuration-block) for details.
-* `storage_configuration` - (Required) Configurations for Amazon Redshift database storage. See [`storage_configuration` block](#storage_configuration-block) for details.
+* `storage_configuration` - (Required) Configurations for Amazon Redshift database storage. See [`storage_configuration` block](#redshift-storage_configuration-block) for details.
 
 ### `query_engine_configuration` block
 
@@ -333,7 +333,7 @@ The `column` configuration block supports the following arguments:
 * `inclusion` - (Optional) Whether to include or exclude the column during query generation. Valid values `INCLUDE`, `EXCLUDE`.
 * `name` - (Required) Name of the column for which the other fields in this object apply.
 
-### `storage_configuration` block
+### Redshift `storage_configuration` block
 
 The `storage_configuration` configuration block supports the following arguments:
 
@@ -397,8 +397,9 @@ The `s3_location` configuration block supports the following arguments:
 
 The `storage_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `MONGO_DB_ATLAS`, `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`, `S3_VECTORS`.
-* `mongo_db_atlas_configuration` – (Optional) The storage configuration of the knowledge base in MongoDB Atlas. See [`opensearch_managed_cluster_comongo_db_atlas_configurationnfiguration` block](#mongo_db_atlas_configuration-block) for details.
+* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `MONGO_DB_ATLAS`, `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`, `S3_VECTORS`, `NEPTUNE_ANALYTICS`.
+* `mongo_db_atlas_configuration` – (Optional) The storage configuration of the knowledge base in MongoDB Atlas. See [`mongo_db_atlas_configuration` block](#mongo_db_atlas_configuration-block) for details.
+* `neptune_analytics_configuration` – (Optional) The storage configuration of the knowledge base in Amazon Neptune Analytics. See [`neptune_analytics_configuration` block](#neptune_analytics_configuration-block) for details.
 * `opensearch_managed_cluster_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Managed Cluster. See [`opensearch_managed_cluster_configuration` block](#opensearch_managed_cluster_configuration-block) for details.
 * `opensearch_serverless_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Serverless. See [`opensearch_serverless_configuration` block](#opensearch_serverless_configuration-block) for details.
 * `pinecone_configuration` - (Optional)  The storage configuration of the knowledge base in Pinecone. See [`pinecone_configuration` block](#pinecone_configuration-block) for details.
@@ -421,6 +422,15 @@ The `mongo_db_atlas_configuration` configuration block supports the following ar
 * `vector_index_name` – (Required) The name of the vector index.
 * `endpoint_service_name` – (Optional) The name of the service that hosts the MongoDB Atlas database.
 * `text_index_name` – (Optional) The name of the vector index.
+
+### `neptune_analytics_configuration` block
+
+The `neptune_analytics_configuration` configuration block supports the following arguments:
+
+* `field_mapping` - (Required) The names of the fields to which to map information about the vector store. This block supports the following arguments:
+    * `metadata_field` - (Required) Name of the field in which Amazon Bedrock stores metadata about the vector store.
+    * `text_field` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
+* `graph_arn` - (Required) ARN of the Neptune Analytics vector store.
 
 ### `opensearch_managed_cluster_configuration` block
 
