@@ -1605,10 +1605,6 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
 	_, tokenOk := diff.GetOk("auth_token")
 
-	if !tokenOk && !strategyOk {
-		return nil
-	}
-
 	if strategyOk {
 		if awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 			return nil
@@ -1617,6 +1613,14 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 				return nil
 			}
 		}
+	}
+
+	if !tokenOk && !strategyOk {
+		return nil
+	}
+
+	if tokenOk && !strategyOk {
+		return nil
 	}
 
 	//AuthTokenUpdateStrategyTypeDelete can only be there while migrating to RBAC
