@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestUserAgentFunction_basic(t *testing.T) {
+func TestUserAgentFunction_valid(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
@@ -29,18 +29,57 @@ func TestUserAgentFunction_basic(t *testing.T) {
 					resource.TestCheckOutput("test", "test-module/0.0.1 (test comment)"),
 				),
 			},
-			{
-				Config: testUserAgentFunctionConfig("test-module", "0.0.1", ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckOutput("test", "test-module/0.0.1"),
-				),
-			},
+		},
+	})
+}
+
+func TestUserAgentFunction_valid_name(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+		},
+		Steps: []resource.TestStep{
 			{
 				Config: testUserAgentFunctionConfig("test-module", "", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckOutput("test", "test-module"),
 				),
 			},
+		},
+	})
+}
+
+func TestUserAgentFunction_valid_nameVersion(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testUserAgentFunctionConfig("test-module", "0.0.1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckOutput("test", "test-module/0.0.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestUserAgentFunction_valid_nameComment(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+		},
+		Steps: []resource.TestStep{
 			{
 				Config: testUserAgentFunctionConfig("test-module", "", "test comment"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -51,7 +90,7 @@ func TestUserAgentFunction_basic(t *testing.T) {
 	})
 }
 
-func TestUserAgentFunction_missingName(t *testing.T) {
+func TestUserAgentFunction_invalid(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
