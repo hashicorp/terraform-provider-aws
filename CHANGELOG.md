@@ -341,6 +341,8 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_iam_policy` ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
+* **New List Resource:** `aws_iam_role_policy_attachment` ([#44739](https://github.com/hashicorp/terraform-provider-aws/issues/44739))
 * **New Resource:** `aws_bedrockagentcore_memory` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
 * **New Resource:** `aws_bedrockagentcore_memory_strategy` ([#44306](https://github.com/hashicorp/terraform-provider-aws/issues/44306))
 * **New Resource:** `aws_bedrockagentcore_oauth2_credential_provider` ([#44307](https://github.com/hashicorp/terraform-provider-aws/issues/44307))
@@ -354,9 +356,7 @@ ENHANCEMENTS:
 * data-source/aws_organizations_organizational_unit_child_accounts: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` block ([#44327](https://github.com/hashicorp/terraform-provider-aws/issues/44327))
 * data-source/aws_organizations_organizational_unit_descendant_accounts: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` block ([#44327](https://github.com/hashicorp/terraform-provider-aws/issues/44327))
 * resource/aws_appstream_directory_config: Add `certificate_based_auth_properties` argument ([#44679](https://github.com/hashicorp/terraform-provider-aws/issues/44679))
-* resource/aws_iam_policy: Adds List support ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
 * resource/aws_iam_policy: Adds validation for `path` attribute ([#44703](https://github.com/hashicorp/terraform-provider-aws/issues/44703))
-* resource/aws_iam_role_policy_attachment: Adds List support ([#44739](https://github.com/hashicorp/terraform-provider-aws/issues/44739))
 * resource/aws_odb_network: Add `delete_associated_resources` attribute to enable practitioner to delete associated oci resource. ([#44754](https://github.com/hashicorp/terraform-provider-aws/issues/44754))
 * resource/aws_organizations_account: Add `state` attribute ([#44327](https://github.com/hashicorp/terraform-provider-aws/issues/44327))
 * resource/aws_organizations_organization: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` and `non_master_accounts` blocks ([#44327](https://github.com/hashicorp/terraform-provider-aws/issues/44327))
@@ -377,6 +377,8 @@ FEATURES:
 
 * **New Data Source:** `aws_rds_global_cluster` ([#37286](https://github.com/hashicorp/terraform-provider-aws/issues/37286))
 * **New Data Source:** `aws_vpn_connection` ([#44622](https://github.com/hashicorp/terraform-provider-aws/issues/44622))
+* **New List Resource:** `aws_subnet` ([#44671](https://github.com/hashicorp/terraform-provider-aws/issues/44671))
+* **New List Resource:** `aws_vpc` ([#44609](https://github.com/hashicorp/terraform-provider-aws/issues/44609))
 * **New Resource:** `aws_bedrockagentcore_agent_runtime` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
 * **New Resource:** `aws_bedrockagentcore_agent_runtime_endpoint` ([#44301](https://github.com/hashicorp/terraform-provider-aws/issues/44301))
 * **New Resource:** `aws_bedrockagentcore_api_key_credential_provider` ([#44302](https://github.com/hashicorp/terraform-provider-aws/issues/44302))
@@ -391,8 +393,6 @@ ENHANCEMENTS:
 * resource/aws_imagebuilder_image_recipe: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44604](https://github.com/hashicorp/terraform-provider-aws/issues/44604))
 * resource/aws_launch_template: Update EBS `throughput` maximum validation from 1000 to 2000 MiB/s for gp3 volumes ([#44604](https://github.com/hashicorp/terraform-provider-aws/issues/44604))
 * resource/aws_quicksight_account_subscription: Add `admin_pro_group`, `author_pro_group`, and `reader_pro_group` arguments ([#44638](https://github.com/hashicorp/terraform-provider-aws/issues/44638))
-* resource/aws_subnet: Adds List support ([#44671](https://github.com/hashicorp/terraform-provider-aws/issues/44671))
-* resource/aws_vpc: Adds List support ([#44609](https://github.com/hashicorp/terraform-provider-aws/issues/44609))
 
 BUG FIXES:
 
@@ -547,6 +547,10 @@ FEATURES:
 * **New Data Source:** `aws_odb_cloud_vm_cluster` ([#43790](https://github.com/hashicorp/terraform-provider-aws/issues/43790))
 * **New Data Source:** `aws_odb_network` ([#43715](https://github.com/hashicorp/terraform-provider-aws/issues/43715))
 * **New Data Source:** `aws_odb_network_peering_connection` ([#43757](https://github.com/hashicorp/terraform-provider-aws/issues/43757))
+* **New List Resource:** `aws_batch_job_queue` ([#43960](https://github.com/hashicorp/terraform-provider-aws/issues/43960))
+* **New List Resource:** `aws_cloudwatch_log_group` ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
+* **New List Resource:** `aws_iam_role` ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
+* **New List Resource:** `aws_instance` ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
 * **New Resource:** `aws_controltower_baseline` ([#42397](https://github.com/hashicorp/terraform-provider-aws/issues/42397))
 * **New Resource:** `aws_odb_cloud_autonomous_vm_cluster` ([#43809](https://github.com/hashicorp/terraform-provider-aws/issues/43809))
 * **New Resource:** `aws_odb_cloud_exadata_infrastructure` ([#43650](https://github.com/hashicorp/terraform-provider-aws/issues/43650))
@@ -556,11 +560,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_batch_job_queue: Adds List support ([#43960](https://github.com/hashicorp/terraform-provider-aws/issues/43960))
-* resource/aws_cloudwatch_log_group: Adds List support ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
 * resource/aws_ecs_service: Add `deployment_configuration.lifecycle_hook.hook_details` argument ([#44289](https://github.com/hashicorp/terraform-provider-aws/issues/44289))
-* resource/aws_iam_role: Adds List support ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
-* resource/aws_instance: Adds List support ([#44129](https://github.com/hashicorp/terraform-provider-aws/issues/44129))
 * resource/aws_rds_global_cluster: Remove provider-side conflict between `source_db_cluster_identifier` and `engine` arguments ([#44252](https://github.com/hashicorp/terraform-provider-aws/issues/44252))
 * resource/aws_scheduler_schedule: Add `action_after_completion` argument ([#44264](https://github.com/hashicorp/terraform-provider-aws/issues/44264))
 * resource/aws_sfn_state_machine: Add resource identity support ([#44286](https://github.com/hashicorp/terraform-provider-aws/issues/44286))
