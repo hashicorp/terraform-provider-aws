@@ -3,29 +3,29 @@ subcategory: ""
 layout: "aws"
 page_title: "AWS: user_agent"
 description: |-
-  Formats a User-Agent product for use with the user_agent argument in the provider or provider_meta block..
+  Formats a User-Agent product for use with the `user_agent` argument in the `provider` or `provider_meta` block.
 ---
 # Function: user_agent
 
-~> Provider-defined functions are supported in Terraform 1.8 and later.
-
-Formats a User-Agent product for use with the user_agent argument in the provider or provider_meta block..
+Formats a User-Agent product for use with the `user_agent` argument in the `provider` or `provider_meta` block.
 
 ## Example Usage
 
 ```terraform
-# result: foo-bar
+# result: "example-module/0.0.1 (example comment)"
 output "example" {
-  value = provider::aws::user_agent("foo")
+  value = provider::aws::user_agent("example-module", "0.0.1", "example comment")
 }
 ```
 
 ## Signature
 
 ```text
-user_agent(arg string) string
+user_agent(product_name string, product_version string, comment string) string
 ```
 
 ## Arguments
 
-1. `arg` (String) Example argument description.
+1. `product_name` (String) Product name.
+1. `product_version` (String) Product version.
+1. `comment` (String) Comment describing any additional product details.
