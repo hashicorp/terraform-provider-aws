@@ -816,7 +816,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -827,7 +827,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rHashKey := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rRangeKey := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -835,49 +834,24 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
+			// Step 1: Create GSI with hash key not on table
 			{
-				Config: testAccGlobalSecondaryIndexConfig_differentKeys(rNameTable, rName, rNameTable, ""),
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
-
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
 				},
 			},
-			// When using the new resource it is necessary to ignore the global_secondary_index blocks during tests
-			// due to these blocks being still computed in the old aws_dynamodb_table resource.
-			// During normal usage these do not produce diffs due to custom ignore logic.
-			{
-				ResourceName:      resourceNameTable,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"global_secondary_index",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttr(names.AttrName, rNameTable),
-					acctest.ImportCheckResourceAttr("attribute.#", "1"),
-					acctest.ImportCheckResourceAttr("attribute.0.%", "2"),
-					acctest.ImportCheckResourceAttr("attribute.0.name", rNameTable),
-					acctest.ImportCheckResourceAttr("attribute.0.type", "S"),
-				),
-			},
+			// Step 1a: Import check
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -885,64 +859,380 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
+			// Step 1b: Validate table after refresh
 			{
-				Config: testAccGlobalSecondaryIndexConfig_differentKeys(rNameTable, rName, rHashKey, rRangeKey),
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rHashKey := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSortKey := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create GSI with keys not on table
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey, rSortKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
-
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rHashKey,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rRangeKey,
-						"attribute_type": "S",
-						"key_type":       "RANGE",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rSortKey),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
 				},
 			},
-			{
-				ResourceName:      resourceNameTable,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"attribute",
-					"global_secondary_index",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttr(names.AttrName, rNameTable),
-					acctest.ImportCheckResourceAttr("attribute.#", "3"),
-					acctest.ImportCheckResourceAttr("attribute.0.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.0.name"),
-					acctest.ImportCheckResourceAttr("attribute.0.type", "S"),
-					acctest.ImportCheckResourceAttr("attribute.1.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.1.name"),
-					acctest.ImportCheckResourceAttr("attribute.1.type", "S"),
-					acctest.ImportCheckResourceAttr("attribute.2.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.2.name"),
-					acctest.ImportCheckResourceAttr("attribute.2.type", "S"),
-				),
-			},
+			// Step 1a: Import check
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// Step 1b: Validate table after refresh
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rSortKey),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rHashKey1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rHashKey2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create GSI with hash key same as table's hash key
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+				},
+			},
+
+			// Step 2: Modify GSI to use a new hash key not on the table
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey1),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+				},
+			},
+			// Step 2a: Import check
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// Step 2b: Validate table after refresh
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey1),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
+			},
+
+			// Step 3: Modify GSI to use a new hash key not on the table
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey2),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+				},
+			},
+			// Step 3a: Import check
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// Step 3b: Validate table after refresh
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey2),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rHashKey1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSortKey1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rHashKey2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSortKey2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create GSI with hash key same as table's hash key
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rNameTable),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+				},
+			},
+
+			// Step 2: Modify GSI to use new keys not on the table
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey1, rSortKey1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey1),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rSortKey1),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
+			},
+			// Step 2a: Import check
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// Step 2b: Validate table after refresh
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey1),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rSortKey1),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
+			},
+
+			// Step 3: Modify GSI to use new hash keys not on the table
+			{
+				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey2, rSortKey2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rHashKey2),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rSortKey2),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("RANGE"),
+						}),
+					})),
+				},
+			},
+			// Step 3a: Import check
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// Step 3b: Validate table after refresh
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rNameTable),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rHashKey2),
+								"type": knownvalue.StringExact("S"),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"name": knownvalue.StringExact(rSortKey2),
+								"type": knownvalue.StringExact("S"),
+							}),
+						})),
+					},
+				},
 			},
 		},
 	})
@@ -1952,9 +2242,8 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName, projectionType, nka)
 }
 
-func testAccGlobalSecondaryIndexConfig_differentKeys(tableName, indexName, pkGsi, skGsi string) string {
-	if skGsi == "" {
-		return fmt.Sprintf(`
+func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(tableName, indexName, hashKey string) string {
+	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
@@ -1978,9 +2267,10 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 }
-`, tableName, indexName, pkGsi)
-	}
+`, tableName, indexName, hashKey)
+}
 
+func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(tableName, indexName, hashKey, sortKey string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
@@ -1992,7 +2282,6 @@ resource "aws_dynamodb_global_secondary_index" "test" {
     attribute_type = "S"
     key_type       = "HASH"
   }
-
   key_schema {
     attribute_name = %[4]q
     attribute_type = "S"
@@ -2011,7 +2300,7 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 }
-`, tableName, indexName, pkGsi, skGsi)
+`, tableName, indexName, hashKey, sortKey)
 }
 
 func testAccGlobalSecondaryIndexConfig_multipleGsi_create(tableName, indexName1, indexName2 string) string {
