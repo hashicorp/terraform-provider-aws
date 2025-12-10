@@ -6,7 +6,6 @@ package verifiedpermissions
 import (
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -254,14 +253,10 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	state.PrincipalEntityType = flex.StringToFramework(ctx, out.PrincipalEntityType)
-
-	configuration, d := flattenConfiguration(ctx, out.Configuration)
-	response.Diagnostics.Append(d...)
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	state.Configuration = configuration
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -294,10 +289,6 @@ func (r *identitySourceResource) Read(ctx context.Context, request resource.Read
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	configuration, d := flattenConfiguration(ctx, output.Configuration)
-	response.Diagnostics.Append(d...)
-	state.Configuration = configuration
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -347,12 +338,6 @@ func (r *identitySourceResource) Update(ctx context.Context, request resource.Up
 		}
 
 		response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		configuration, d := flattenConfiguration(ctx, out.Configuration)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		plan.Configuration = configuration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -402,73 +387,6 @@ func (r *identitySourceResource) ImportState(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("policy_store_id"), policyStoreID)...)
 }
 
-func flattenConfiguration(ctx context.Context, apiObject awstypes.ConfigurationDetail) (fwtypes.ListNestedObjectValueOf[configuration], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[configuration](ctx), diags
-	}
-
-	obj := &configuration{}
-
-	switch v := apiObject.(type) {
-	case *awstypes.ConfigurationDetailMemberCognitoUserPoolConfiguration:
-		var cognitoUserPoolConfigurationData cognitoUserPoolConfiguration
-		d := flex.Flatten(ctx, v.Value, &cognitoUserPoolConfigurationData)
-		diags.Append(d...)
-
-		obj.CognitoUserPoolConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &cognitoUserPoolConfigurationData)
-		obj.OpenIDConnectConfiguration = fwtypes.NewListNestedObjectValueOfNull[openIDConnectConfiguration](ctx)
-	case *awstypes.ConfigurationDetailMemberOpenIdConnectConfiguration:
-		var openIDConnectConfigurationData openIDConnectConfiguration
-		d := flex.Flatten(ctx, v.Value, &openIDConnectConfigurationData)
-		diags.Append(d...)
-
-		// Manually set as Union types are not supported by AutoFlex yet.
-		tokenSelectionData, d := flattenTokenSelection(ctx, v.Value.TokenSelection)
-		diags.Append(d...)
-		openIDConnectConfigurationData.TokenSelection = tokenSelectionData
-
-		obj.CognitoUserPoolConfiguration = fwtypes.NewListNestedObjectValueOfNull[cognitoUserPoolConfiguration](ctx)
-		obj.OpenIDConnectConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &openIDConnectConfigurationData)
-	default:
-		log.Println("union is nil or unknown type")
-	}
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obj), diags
-}
-
-func flattenTokenSelection(ctx context.Context, apiObject awstypes.OpenIdConnectTokenSelectionDetail) (fwtypes.ListNestedObjectValueOf[openIDConnectTokenSelection], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if apiObject == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[openIDConnectTokenSelection](ctx), diags
-	}
-
-	obj := &openIDConnectTokenSelection{}
-
-	switch v := apiObject.(type) {
-	case *awstypes.OpenIdConnectTokenSelectionDetailMemberAccessTokenOnly:
-		var openIDConnectAccessTokenConfigurationData openIDConnectAccessTokenConfiguration
-		d := flex.Flatten(ctx, v.Value, &openIDConnectAccessTokenConfigurationData)
-		diags.Append(d...)
-
-		obj.AccessTokenOnly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &openIDConnectAccessTokenConfigurationData)
-		obj.IdentityTokenOnly = fwtypes.NewListNestedObjectValueOfNull[openIDConnectIdentityTokenConfiguration](ctx)
-	case *awstypes.OpenIdConnectTokenSelectionDetailMemberIdentityTokenOnly:
-		var openIDConnectIdentityTokenConfigurationData openIDConnectIdentityTokenConfiguration
-		d := flex.Flatten(ctx, v.Value, &openIDConnectIdentityTokenConfigurationData)
-		diags.Append(d...)
-
-		obj.AccessTokenOnly = fwtypes.NewListNestedObjectValueOfNull[openIDConnectAccessTokenConfiguration](ctx)
-		obj.IdentityTokenOnly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &openIDConnectIdentityTokenConfigurationData)
-	default:
-		log.Println("union is nil or unknown type")
-	}
-
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obj), diags
-}
-
 type identitySourceResourceModel struct {
 	framework.WithRegionModel
 	Configuration       fwtypes.ListNestedObjectValueOf[configuration] `tfsdk:"configuration"`
@@ -482,69 +400,9 @@ type configuration struct {
 	OpenIDConnectConfiguration   fwtypes.ListNestedObjectValueOf[openIDConnectConfiguration]   `tfsdk:"open_id_connect_configuration"`
 }
 
-type cognitoUserPoolConfiguration struct {
-	UserPoolARN        fwtypes.ARN                                                `tfsdk:"user_pool_arn"`
-	ClientIds          fwtypes.ListValueOf[types.String]                          `tfsdk:"client_ids"`
-	GroupConfiguration fwtypes.ListNestedObjectValueOf[cognitoGroupConfiguration] `tfsdk:"group_configuration"`
-}
-
-type cognitoGroupConfiguration struct {
-	GroupEntityType types.String `tfsdk:"group_entity_type"`
-}
-
-type openIDConnectConfiguration struct {
-	Issuer             types.String                                                     `tfsdk:"issuer"`
-	TokenSelection     fwtypes.ListNestedObjectValueOf[openIDConnectTokenSelection]     `tfsdk:"token_selection"`
-	EntityIDPrefix     types.String                                                     `tfsdk:"entity_id_prefix"`
-	GroupConfiguration fwtypes.ListNestedObjectValueOf[openIDConnectGroupConfiguration] `tfsdk:"group_configuration"`
-}
-
-type openIDConnectTokenSelection struct {
-	AccessTokenOnly   fwtypes.ListNestedObjectValueOf[openIDConnectAccessTokenConfiguration]   `tfsdk:"access_token_only"`
-	IdentityTokenOnly fwtypes.ListNestedObjectValueOf[openIDConnectIdentityTokenConfiguration] `tfsdk:"identity_token_only"`
-}
-
-type openIDConnectAccessTokenConfiguration struct {
-	Audiences        fwtypes.ListValueOf[types.String] `tfsdk:"audiences"`
-	PrincipalIdClaim types.String                      `tfsdk:"principal_id_claim"`
-}
-
-type openIDConnectIdentityTokenConfiguration struct {
-	ClientIds        fwtypes.ListValueOf[types.String] `tfsdk:"client_ids"`
-	PrincipalIdClaim types.String                      `tfsdk:"principal_id_claim"`
-}
-
-type openIDConnectGroupConfiguration struct {
-	GroupClaim      types.String `tfsdk:"group_claim"`
-	GroupEntityType types.String `tfsdk:"group_entity_type"`
-}
-
-func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Client, id string, policyStoreID string) (*verifiedpermissions.GetIdentitySourceOutput, error) {
-	in := &verifiedpermissions.GetIdentitySourceInput{
-		IdentitySourceId: aws.String(id),
-		PolicyStoreId:    aws.String(policyStoreID),
-	}
-
-	out, err := conn.GetIdentitySource(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.IdentitySourceId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
 var (
 	_ flex.TypedExpander = configuration{}
+	_ flex.Flattener     = &configuration{}
 )
 
 func (m configuration) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
@@ -602,8 +460,62 @@ func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result 
 	return nil, diags
 }
 
+func (m *configuration) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ConfigurationDetailMemberCognitoUserPoolConfiguration:
+		var model cognitoUserPoolConfiguration
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.CognitoUserPoolConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.ConfigurationDetailMemberOpenIdConnectConfiguration:
+		var model openIDConnectConfiguration
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.OpenIDConnectConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
+}
+
+type cognitoUserPoolConfiguration struct {
+	UserPoolARN        fwtypes.ARN                                                `tfsdk:"user_pool_arn"`
+	ClientIds          fwtypes.ListValueOf[types.String]                          `tfsdk:"client_ids"`
+	GroupConfiguration fwtypes.ListNestedObjectValueOf[cognitoGroupConfiguration] `tfsdk:"group_configuration"`
+}
+
+type cognitoGroupConfiguration struct {
+	GroupEntityType types.String `tfsdk:"group_entity_type"`
+}
+
+type openIDConnectConfiguration struct {
+	Issuer             types.String                                                     `tfsdk:"issuer"`
+	TokenSelection     fwtypes.ListNestedObjectValueOf[openIDConnectTokenSelection]     `tfsdk:"token_selection"`
+	EntityIDPrefix     types.String                                                     `tfsdk:"entity_id_prefix"`
+	GroupConfiguration fwtypes.ListNestedObjectValueOf[openIDConnectGroupConfiguration] `tfsdk:"group_configuration"`
+}
+
+type openIDConnectTokenSelection struct {
+	AccessTokenOnly   fwtypes.ListNestedObjectValueOf[openIDConnectAccessTokenConfiguration]   `tfsdk:"access_token_only"`
+	IdentityTokenOnly fwtypes.ListNestedObjectValueOf[openIDConnectIdentityTokenConfiguration] `tfsdk:"identity_token_only"`
+}
+
 var (
 	_ flex.TypedExpander = openIDConnectTokenSelection{}
+	_ flex.Flattener     = &openIDConnectTokenSelection{}
 )
 
 func (m openIDConnectTokenSelection) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
@@ -659,4 +571,74 @@ func (m openIDConnectTokenSelection) expandToUpdateOpenIDConnectTokenSelection(c
 	}
 
 	return nil, diags
+}
+
+func (m *openIDConnectTokenSelection) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.OpenIdConnectTokenSelectionDetailMemberAccessTokenOnly:
+		var model openIDConnectAccessTokenConfiguration
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.AccessTokenOnly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.OpenIdConnectTokenSelectionDetailMemberIdentityTokenOnly:
+		var model openIDConnectIdentityTokenConfiguration
+		di := flex.Flatten(ctx, t.Value, &model)
+		diags.Append(di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.IdentityTokenOnly = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
+}
+
+type openIDConnectAccessTokenConfiguration struct {
+	Audiences        fwtypes.ListValueOf[types.String] `tfsdk:"audiences"`
+	PrincipalIdClaim types.String                      `tfsdk:"principal_id_claim"`
+}
+
+type openIDConnectIdentityTokenConfiguration struct {
+	ClientIds        fwtypes.ListValueOf[types.String] `tfsdk:"client_ids"`
+	PrincipalIdClaim types.String                      `tfsdk:"principal_id_claim"`
+}
+
+type openIDConnectGroupConfiguration struct {
+	GroupClaim      types.String `tfsdk:"group_claim"`
+	GroupEntityType types.String `tfsdk:"group_entity_type"`
+}
+
+func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Client, id string, policyStoreID string) (*verifiedpermissions.GetIdentitySourceOutput, error) {
+	in := &verifiedpermissions.GetIdentitySourceInput{
+		IdentitySourceId: aws.String(id),
+		PolicyStoreId:    aws.String(policyStoreID),
+	}
+
+	out, err := conn.GetIdentitySource(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.IdentitySourceId == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
