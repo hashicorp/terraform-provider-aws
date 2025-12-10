@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -173,7 +173,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	output, err := conn.DescribeObservabilityConfiguration(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -188,7 +188,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	}
 
 	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -197,7 +197,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	return output.ObservabilityConfiguration, nil
 }
 
-func statusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusObservabilityConfiguration(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findObservabilityConfigurationByARN(ctx, conn, arn)
 
@@ -217,7 +217,7 @@ func waitObservabilityConfigurationCreated(ctx context.Context, conn *apprunner.
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.ObservabilityConfigurationStatusActive),
 		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
@@ -237,7 +237,7 @@ func waitObservabilityConfigurationDeleted(ctx context.Context, conn *apprunner.
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ObservabilityConfigurationStatusActive),
 		Target:  []string{},
 		Refresh: statusObservabilityConfiguration(ctx, conn, arn),

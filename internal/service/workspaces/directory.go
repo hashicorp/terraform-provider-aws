@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -722,7 +722,7 @@ func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) 
 	}
 
 	if state := output.State; state == types.WorkspaceDirectoryStateDeregistered {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -758,7 +758,7 @@ func findDirectories(ctx context.Context, conn *workspaces.Client, input *worksp
 	return output, nil
 }
 
-func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
+func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
@@ -778,7 +778,7 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
 		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
 		Refresh: statusDirectory(ctx, conn, directoryID),
@@ -800,7 +800,7 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.WorkspaceDirectoryStateRegistering,
 			types.WorkspaceDirectoryStateRegistered,

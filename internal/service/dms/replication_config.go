@@ -14,7 +14,7 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -380,7 +380,7 @@ func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -426,7 +426,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -442,7 +442,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 	return output, nil
 }
 
-func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
+func statusReplication(ctx context.Context, conn *dms.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
@@ -472,7 +472,7 @@ func setLastReplicationError(err error, replication *awstypes.Replication) {
 }
 
 func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			replicationStatusReady,
 			replicationStatusInitialising,
@@ -501,7 +501,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
 		Refresh:    statusReplication(ctx, conn, arn),
@@ -521,7 +521,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationDeleted(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},
 		Refresh:    statusReplication(ctx, conn, arn),

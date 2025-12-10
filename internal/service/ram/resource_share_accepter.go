@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -334,7 +334,7 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -354,7 +354,7 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 	return output, nil
 }
 
-func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
+func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
@@ -373,7 +373,7 @@ func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn st
 }
 
 func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShareInvitation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareInvitationStatusPending),
 		Target:  enum.Slice(awstypes.ResourceShareInvitationStatusAccepted),
 		Refresh: statusResourceShareInvitation(ctx, conn, arn),
@@ -390,7 +390,7 @@ func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, 
 }
 
 func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShare, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
 		Target:  []string{},
 		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),

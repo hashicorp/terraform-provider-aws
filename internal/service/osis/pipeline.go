@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -376,7 +376,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 	output, err := conn.GetPipeline(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -393,7 +393,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 	return output.Pipeline, nil
 }
 
-func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
+func statusPipeline(ctx context.Context, conn *osis.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPipelineByName(ctx, conn, name)
 
@@ -410,7 +410,7 @@ func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.S
 }
 
 func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusCreating, awstypes.PipelineStatusStarting),
 		Target:     enum.Slice(awstypes.PipelineStatusActive),
 		Refresh:    statusPipeline(ctx, conn, name),
@@ -433,7 +433,7 @@ func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, ti
 }
 
 func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusUpdating),
 		Target:     enum.Slice(awstypes.PipelineStatusActive),
 		Refresh:    statusPipeline(ctx, conn, name),
@@ -456,7 +456,7 @@ func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, ti
 }
 
 func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusPipeline(ctx, conn, name),

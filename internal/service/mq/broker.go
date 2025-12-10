@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -699,7 +699,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	output, err := conn.DescribeBroker(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -716,7 +716,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.StateRefreshFunc {
+func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
@@ -733,7 +733,7 @@ func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.St
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
@@ -749,7 +749,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.BrokerStateCreationFailed,
 			types.BrokerStateDeletionInProgress,
@@ -770,7 +770,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,

@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -411,7 +411,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	return dataLakes, nil
 }
 
-func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
@@ -427,7 +427,7 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 	}
 }
 
-func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
@@ -448,7 +448,7 @@ func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
@@ -471,7 +471,7 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeUpdate(ctx, conn, arn),
@@ -494,7 +494,7 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted, awstypes.DataLakeStatusFailed),
 		Target:  []string{},
 		Refresh: statusDataLakeCreate(ctx, conn, arn),

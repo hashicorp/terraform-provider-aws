@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -247,7 +247,7 @@ func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebu
 	return output.ReportGroups, nil
 }
 
-func statusReportGroup(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+func statusReportGroup(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findReportGroupByARN(ctx, conn, arn)
 
@@ -267,7 +267,7 @@ func waitReportGroupDeleted(ctx context.Context, conn *codebuild.Client, arn str
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ReportGroupStatusTypeDeleting),
 		Target:  []string{},
 		Refresh: statusReportGroup(ctx, conn, arn),

@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -193,7 +193,7 @@ func findTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autosc
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
+func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
@@ -210,7 +210,7 @@ func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client
 }
 
 func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{TrafficSourceStateAdding},
 		Target:  []string{TrafficSourceStateAdded, TrafficSourceStateInService},
 		Refresh: statusTrafficSourceAttachment(ctx, conn, asgName, trafficSourceType, trafficSourceID),
@@ -227,7 +227,7 @@ func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.C
 }
 
 func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{TrafficSourceStateRemoving, TrafficSourceStateRemoved},
 		Target:  []string{},
 		Refresh: statusTrafficSourceAttachment(ctx, conn, asgName, trafficSourceType, trafficSourceID),

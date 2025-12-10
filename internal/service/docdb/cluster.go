@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1101,7 +1101,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1135,7 +1135,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1155,7 +1155,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
@@ -1172,7 +1172,7 @@ func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.S
 }
 
 func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusCreating,
 			clusterStatusBackingUp,
@@ -1199,7 +1199,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, 
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusDeleting,

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -157,7 +157,7 @@ func findGroupUserByThreePartKey(ctx context.Context, conn *cognitoidentityprovi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.UserNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
+			return &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -174,5 +174,5 @@ func findGroupUserByThreePartKey(ctx context.Context, conn *cognitoidentityprovi
 		}
 	}
 
-	return &retry.NotFoundError{}
+	return &sdkretry.NotFoundError{}
 }

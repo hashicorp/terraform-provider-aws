@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -262,7 +262,7 @@ func findAccountAssignments(
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -296,7 +296,7 @@ func findAccountAssignmentCreationStatus(
 	output, err := conn.DescribeAccountAssignmentCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -313,7 +313,7 @@ func findAccountAssignmentCreationStatus(
 	return output.AccountAssignmentCreationStatus, nil
 }
 
-func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
 
@@ -338,7 +338,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	output, err := conn.DescribeAccountAssignmentDeletionStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -355,7 +355,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	return output.AccountAssignmentDeletionStatus, nil
 }
 
-func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
 
@@ -372,7 +372,7 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client,
 }
 
 func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string, timeout time.Duration) (*awstypes.AccountAssignmentOperationStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusValuesInProgress),
 		Target:     enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceARN, requestID),
@@ -393,7 +393,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, in
 }
 
 func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, instanceArn, requestID string, timeout time.Duration) (*awstypes.AccountAssignmentOperationStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusValuesInProgress),
 		Target:     enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),

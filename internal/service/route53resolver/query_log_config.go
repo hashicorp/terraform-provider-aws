@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -158,7 +158,7 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	output, err := conn.GetResolverQueryLogConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -175,7 +175,7 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	return output.ResolverQueryLogConfig, nil
 }
 
-func statusQueryLogConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusQueryLogConfig(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResolverQueryLogConfigByID(ctx, conn, id)
 
@@ -197,7 +197,7 @@ const (
 )
 
 func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigStatusCreated),
 		Refresh: statusQueryLogConfig(ctx, conn, id),
@@ -214,7 +214,7 @@ func waitQueryLogConfigCreated(ctx context.Context, conn *route53resolver.Client
 }
 
 func waitQueryLogConfigDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigStatusDeleting),
 		Target:  []string{},
 		Refresh: statusQueryLogConfig(ctx, conn, id),

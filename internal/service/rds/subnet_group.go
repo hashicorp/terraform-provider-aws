@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -198,7 +198,7 @@ func findDBSubnetGroupByName(ctx context.Context, conn *rds.Client, name string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBSubnetGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -224,7 +224,7 @@ func findDBSubnetGroups(ctx context.Context, conn *rds.Client, input *rds.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBSubnetGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

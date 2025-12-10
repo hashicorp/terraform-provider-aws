@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -267,7 +267,7 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -283,7 +283,7 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
@@ -300,7 +300,7 @@ func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) ret
 }
 
 func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{snapshotStatusCreating},
 		Target:  []string{snapshotStatusAvailable},
 		Refresh: statusSnapshot(ctx, conn, name),
@@ -317,7 +317,7 @@ func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name stri
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{snapshotStatusDeleting},
 		Target:  []string{},
 		Refresh: statusSnapshot(ctx, conn, name),

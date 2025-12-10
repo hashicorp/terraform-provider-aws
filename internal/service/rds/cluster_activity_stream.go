@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -151,7 +151,7 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	}
 
 	if status := output.ActivityStreamStatus; status == types.ActivityStreamStatusStopped {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: string(status),
 		}
 	}
@@ -159,7 +159,7 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	return output, nil
 }
 
-func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
+func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterWithActivityStream(ctx, conn, arn)
 
@@ -179,7 +179,7 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStarting),
 		Target:     enum.Slice(types.ActivityStreamStatusStarted),
 		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
@@ -201,7 +201,7 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStopping),
 		Target:     []string{},
 		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),

@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -290,7 +290,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	output, err := conn.DescribeBackupJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -307,7 +307,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	return output, nil
 }
 
-func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
+func statusJobState(ctx context.Context, conn *backup.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
@@ -324,7 +324,7 @@ func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.S
 }
 
 func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
 		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
 		Refresh: statusJobState(ctx, conn, id),

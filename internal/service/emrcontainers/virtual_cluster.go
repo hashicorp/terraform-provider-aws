@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -209,7 +209,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *
 	output, err := conn.DescribeVirtualCluster(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -238,7 +238,7 @@ func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id 
 	}
 
 	if output.State == awstypes.VirtualClusterStateTerminated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.State),
 			LastRequest: input,
 		}
@@ -247,7 +247,7 @@ func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id 
 	return output, nil
 }
 
-func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
+func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVirtualClusterByID(ctx, conn, id)
 
@@ -264,7 +264,7 @@ func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id st
 }
 
 func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, id string, timeout time.Duration) (*awstypes.VirtualCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VirtualClusterStateTerminating),
 		Target:  []string{},
 		Refresh: statusVirtualCluster(ctx, conn, id),

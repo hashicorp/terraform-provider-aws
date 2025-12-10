@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1103,7 +1103,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	output, err := conn.DescribeUserProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1120,7 +1120,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	return output, nil
 }
 
-func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) retry.StateRefreshFunc {
+func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
@@ -1140,7 +1140,7 @@ func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domai
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusPending, awstypes.UserProfileStatusUpdating),
 		Target:  enum.Slice(awstypes.UserProfileStatusInService),
 		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
@@ -1162,7 +1162,7 @@ func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainI
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),

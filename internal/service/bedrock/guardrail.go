@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -708,7 +708,7 @@ func (r *guardrailResource) ImportState(ctx context.Context, req resource.Import
 }
 
 func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
 		Refresh:                   statusGuardrail(ctx, conn, id, version),
@@ -726,7 +726,7 @@ func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusUpdating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
 		Refresh:                   statusGuardrail(ctx, conn, id, version),
@@ -744,7 +744,7 @@ func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GuardrailStatusDeleting, awstypes.GuardrailStatusReady),
 		Target:  []string{},
 		Refresh: statusGuardrail(ctx, conn, id, version),
@@ -759,7 +759,7 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
+func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
@@ -783,7 +783,7 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	output, err := conn.GetGuardrail(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -275,7 +275,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -295,7 +295,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
+func statusIntegration(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
@@ -312,7 +312,7 @@ func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.
 }
 
 func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{integrationStatusCreating, integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
 		Refresh: statusIntegration(ctx, conn, arn),
@@ -331,7 +331,7 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 }
 
 func waitIntegrationDeleted(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{integrationStatusDeleting, integrationStatusActive},
 		Target:  []string{},
 		Refresh: statusIntegration(ctx, conn, arn),

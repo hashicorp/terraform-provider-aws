@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -184,7 +184,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	output, err := conn.DescribeVpcIngressConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -199,7 +199,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	}
 
 	if status := output.VpcIngressConnection.Status; status == types.VpcIngressConnectionStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -208,7 +208,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	return output.VpcIngressConnection, nil
 }
 
-func statusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusVPCIngressConnection(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCIngressConnectionByARN(ctx, conn, arn)
 
@@ -227,7 +227,7 @@ func waitVPCIngressConnectionCreated(ctx context.Context, conn *apprunner.Client
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.VpcIngressConnectionStatusPendingCreation),
 		Target:  enum.Slice(types.VpcIngressConnectionStatusAvailable),
 		Refresh: statusVPCIngressConnection(ctx, conn, arn),
@@ -247,7 +247,7 @@ func waitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.Client
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.VpcIngressConnectionStatusAvailable, types.VpcIngressConnectionStatusPendingDeletion),
 		Target:  []string{},
 		Refresh: statusVPCIngressConnection(ctx, conn, arn),

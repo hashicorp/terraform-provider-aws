@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -24,7 +24,7 @@ const (
 )
 
 func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateUpdating, awstypes.CanaryStateCreating),
 		Target:  enum.Slice(awstypes.CanaryStateReady),
 		Refresh: statusCanaryState(ctx, conn, name),
@@ -45,7 +45,7 @@ func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) 
 }
 
 func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.CanaryStateStopping,
 			awstypes.CanaryStateUpdating,
@@ -71,7 +71,7 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string
 }
 
 func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.CanaryStateStarting,
 			awstypes.CanaryStateUpdating,
@@ -95,7 +95,7 @@ func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string
 }
 
 func waitCanaryDeleted(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateDeleting, awstypes.CanaryStateStopped),
 		Target:  []string{},
 		Refresh: statusCanaryState(ctx, conn, name),

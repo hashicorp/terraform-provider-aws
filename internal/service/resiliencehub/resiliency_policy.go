@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -433,7 +433,7 @@ const (
 )
 
 func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
 		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
@@ -451,7 +451,7 @@ func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client
 }
 
 func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
 		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
@@ -469,7 +469,7 @@ func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client
 }
 
 func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{},
 		Refresh: statusResiliencyPolicy(ctx, conn, arn),
@@ -484,7 +484,7 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
+func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
@@ -507,7 +507,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	out, err := conn.DescribeResiliencyPolicy(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

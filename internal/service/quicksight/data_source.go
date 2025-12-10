@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -352,7 +352,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	output, err := conn.DescribeDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -382,7 +382,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	output, err := conn.DescribeDataSourcePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -399,7 +399,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	return output.Permissions, nil
 }
 
-func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
@@ -419,7 +419,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
@@ -443,7 +443,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful),
 		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),

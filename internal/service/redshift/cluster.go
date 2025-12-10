@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1042,7 +1042,7 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 }
 
 func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterRestoreStatusStarting, clusterRestoreStatusRestoring},
 		Target:     []string{clusterRestoreStatusCompleted},
 		Refresh:    statusClusterRestoration(ctx, conn, id),
@@ -1061,7 +1061,7 @@ func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, 
 	return nil, err
 }
 
-func statusClusterRestoration(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusClusterRestoration(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 

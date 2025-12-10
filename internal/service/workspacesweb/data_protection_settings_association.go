@@ -20,7 +20,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_data_protection_settings_association", name="Data Protection Settings Association")
@@ -92,7 +92,7 @@ func (r *dataProtectionSettingsAssociationResource) Read(ctx context.Context, re
 
 	// Check if the association exists by getting the data protection settings and checking associated portals
 	output, err := findDataProtectionSettingsByARN(ctx, conn, data.DataProtectionSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

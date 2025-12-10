@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -204,12 +204,12 @@ func (e *vpcEndpointNotFoundError) Is(err error) bool {
 }
 
 func (e *vpcEndpointNotFoundError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message: e.Error(),
 	}
 
@@ -274,7 +274,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearch.Client, input *opens
 	return output.VpcEndpoints, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *opensearch.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
@@ -291,7 +291,7 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearch.Client, id string) 
 }
 
 func waitVPCEndpointCreated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusCreating),
 		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
@@ -304,7 +304,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearch.Client, id str
 }
 
 func waitVPCEndpointUpdated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusUpdating),
 		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
@@ -317,7 +317,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearch.Client, id str
 }
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCEndpoint(ctx, conn, id),

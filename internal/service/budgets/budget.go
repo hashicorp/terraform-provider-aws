@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -571,8 +571,7 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -600,8 +599,7 @@ func findNotifications(ctx context.Context, conn *budgets.Client, accountID, bud
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -619,7 +617,7 @@ func findNotifications(ctx context.Context, conn *budgets.Client, accountID, bud
 	}
 
 	if len(output) == 0 {
-		return nil, &retry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -639,8 +637,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budge
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -658,7 +655,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budge
 	}
 
 	if len(output) == 0 {
-		return nil, &retry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

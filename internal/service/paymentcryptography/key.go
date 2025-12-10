@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -432,7 +432,7 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 }
 
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.KeyStateCreateInProgress),
 		Target:                    enum.Slice(awstypes.KeyStateCreateComplete),
 		Refresh:                   statusKey(ctx, conn, id),
@@ -450,7 +450,7 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
 		Target:  []string{},
 		Refresh: statusKey(ctx, conn, id),
@@ -465,7 +465,7 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 	return nil, err
 }
 
-func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
+func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -488,7 +488,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	out, err := conn.GetKey(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -503,7 +503,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.
 	if state := out.Key.KeyState; state == awstypes.KeyStateDeletePending || state == awstypes.KeyStateDeleteComplete {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: in,
 		}

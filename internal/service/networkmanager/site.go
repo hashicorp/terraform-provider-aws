@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -278,7 +278,7 @@ func findSites(ctx context.Context, conn *networkmanager.Client, input *networkm
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -308,7 +308,7 @@ func findSiteByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.SiteId) != siteID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -316,7 +316,7 @@ func findSiteByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 	return output, nil
 }
 
-func statusSiteState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string) retry.StateRefreshFunc {
+func statusSiteState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
@@ -333,7 +333,7 @@ func statusSiteState(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitSiteCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string, timeout time.Duration) (*awstypes.Site, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SiteStatePending),
 		Target:  enum.Slice(awstypes.SiteStateAvailable),
 		Timeout: timeout,
@@ -350,7 +350,7 @@ func waitSiteCreated(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitSiteDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string, timeout time.Duration) (*awstypes.Site, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SiteStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -367,7 +367,7 @@ func waitSiteDeleted(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitSiteUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string, timeout time.Duration) (*awstypes.Site, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SiteStateUpdating),
 		Target:  enum.Slice(awstypes.SiteStateAvailable),
 		Timeout: timeout,
