@@ -844,7 +844,7 @@ func (l *keyListResource) List(ctx context.Context, request list.ListRequest, st
 						continue
 					}
 
-					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading KMS key %s: %s", id, sdkdiag.DiagnosticsString(diags)))
+					result = fwdiag.NewListResultSDKDiagnostics(diags)
 					yield(result)
 					return
 				}
