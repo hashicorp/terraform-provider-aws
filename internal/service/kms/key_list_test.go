@@ -57,8 +57,8 @@ func TestAccKMSKey_List_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc(resourceName1, identity1.Checks()),
-					tfquerycheck.ExpectIdentityFunc(resourceName2, identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_kms_key.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_kms_key.test", identity2.Checks()),
 				},
 			},
 		},
