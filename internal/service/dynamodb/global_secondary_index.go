@@ -565,6 +565,8 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		} else {
 			g, err := findGSIFromTable(utRes.TableDescription, new.IndexName.ValueString())
+			table = utRes.TableDescription
+
 			if err != nil || g == nil {
 				response.Diagnostics.AddError(
 					"Unable to find remote GSI after update",
@@ -578,25 +580,11 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 				return
 			}
-
-			response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &new, *g, utRes.TableDescription)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
 		}
 
 		if _, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf(`Error while waiting for table "%s" to be active`, new.TableName.ValueString()),
-				err.Error(),
-			)
-
-			return
-		}
-
-		if _, err := waitGSIActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.TableName.ValueString()),
 				err.Error(),
 			)
 
@@ -610,6 +598,20 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			)
 
 			return
+		}
+
+		if g, err := waitGSIActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
+			response.Diagnostics.AddError(
+				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.TableName.ValueString()),
+				err.Error(),
+			)
+
+			return
+		} else {
+			response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &new, *g, table)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 
