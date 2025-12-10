@@ -56,6 +56,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "upgrade_rollout_order", resourceName, "upgrade_rollout_order"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},

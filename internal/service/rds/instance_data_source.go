@@ -207,6 +207,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
@@ -307,6 +311,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("storage_throughput", instance.StorageThroughput)
 	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
+	d.Set("upgrade_rollout_order", instance.UpgradeRolloutOrder)
 	d.Set("vpc_security_groups", tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
