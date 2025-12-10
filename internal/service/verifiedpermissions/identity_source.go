@@ -321,7 +321,7 @@ func (r *identitySourceResource) Update(ctx context.Context, request resource.Up
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
 
-		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, updateOperation), plan, input)...)
+		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, updateOperation), plan, input, flex.WithFieldNamePrefix("Update"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
