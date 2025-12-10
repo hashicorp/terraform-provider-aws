@@ -133,6 +133,7 @@ func TestAccODBNetworkPeeringConnection_variables(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:             oracleDBNwkPeeringTestResource.basicConfig_useVariables(vpcName, odbNetName, odbPeeringDisplayName),
 				PlanOnly:           true,
