@@ -849,8 +849,12 @@ func (l *keyListResource) List(ctx context.Context, request list.ListRequest, st
 					return
 				}
 
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
+				if rd.Id() == "" {
+					// Resources is logically deleted.
+					continue
+				}
+
+				if err := l.SetTags(ctx, awsClient, rd); err != nil {
 					result = fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)
 					return
