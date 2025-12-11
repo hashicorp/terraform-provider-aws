@@ -1795,7 +1795,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 
@@ -1807,6 +1807,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	expectTableGSINoChange := statecheck.CompareValue(compare.ValuesSame())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
@@ -1814,15 +1816,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_migrate_allOld(rNameTable, rName1, rName2),
+				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-
-					resource.TestCheckResourceAttr(resourceNameTable, "global_secondary_index.#", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+				},
 			},
 			{
-				Config:       testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
+				Config:       testAccGlobalSecondaryIndexConfig_migrate_multiple(rNameTable, rName1, rName2),
 				ResourceName: resourceName1,
 				ImportState:  true,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
@@ -1832,18 +1835,17 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 				ImportStateVerify:  false,
 			},
 			{
-				Config:       testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
+				Config:       testAccGlobalSecondaryIndexConfig_migrate_multiple(rNameTable, rName1, rName2),
 				ResourceName: resourceName2,
 				ImportState:  true,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
+					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName2), nil
 				},
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
-			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
-				Config:   testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
+				Config:   testAccGlobalSecondaryIndexConfig_migrate_multiple(rNameTable, rName1, rName2),
 				PlanOnly: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -1875,7 +1877,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_migrate_allOld(rNameTable, rName1, rName2),
+				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 
@@ -2682,7 +2684,7 @@ import {
 `, indexName1))
 }
 
-func testAccGlobalSecondaryIndexConfig_migrate_allOld(tableName, indexName1, indexName2 string) string {
+func testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(tableName, indexName1, indexName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2718,6 +2720,46 @@ resource "aws_dynamodb_table" "test" {
 
   attribute {
     name = %[3]q
+    type = "S"
+  }
+}
+`, tableName, indexName1, indexName2)
+}
+
+func testAccGlobalSecondaryIndexConfig_migrate_multiple(tableName, indexName1, indexName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test1" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection_type = "ALL"
+
+  key_schema {
+    attribute_name = %[2]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_global_secondary_index" "test2" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[3]q
+  projection_type = "ALL"
+
+  key_schema {
+    attribute_name = %[3]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
     type = "S"
   }
 }
