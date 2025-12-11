@@ -52,9 +52,10 @@ func testAccAccountDataSourceConfig_basic(name string, email string) string {
 resource "aws_organizations_account" "test" {
   name  = %[1]q
   email = %[2]q
+  close_on_deletion = true
 }
 
-data "aws_organizations_account" "name" {
+data "aws_organizations_account" "test" {
   account_id = aws_organizations_account.test.id
 }
 
