@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Supporting module-scoped User-Agents with Terraform Protocol V5
 
 **Summary:** In order to implement `provider_meta` in both the standard and AWSCC provider, we need to navigate the absence of support for structural attributes in Terraform Plugin SDK V2 and Terraform protocol V5.  

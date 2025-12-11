@@ -23,6 +23,7 @@ files:
     - ".go"
     - ".yml"
     - ".yaml"
+    - ".md"
 
   comment_styles:
     go: "//"

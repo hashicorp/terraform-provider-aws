@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Terraform Resource Schema Migrator
 
 Migrates a Plugin SDK v2 resource schema to the identical Plugin Framework schema.

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Continuous Integration
 
 Continuous integration (CI) includes processes that run when you submit a pull request (PR). These processes can be divided into two broad categories: enrichment and testing.

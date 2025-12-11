@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Acceptance Testing Environment Variable Dictionary
 
 Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `internal/acctest` package.
