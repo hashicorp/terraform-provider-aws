@@ -238,6 +238,8 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
+	setTagsOut(ctx, output.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -272,7 +274,6 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.Identifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		_, err := conn.UpdateDomain(ctx, &input)
-
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating DataZone Domain (%s)", new.ID.ValueString()), err.Error())
 
