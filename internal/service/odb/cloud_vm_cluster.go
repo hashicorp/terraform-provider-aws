@@ -580,36 +580,10 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
 		odbNetwork = plan.OdbNetworkArn
 	}
-	getOdbNetworkInput := odb.GetOdbNetworkInput{
-		OdbNetworkId: odbNetwork.ValueStringPointer(),
-	}
-	odbNetworkOutput, err := conn.GetOdbNetwork(ctx, &getOdbNetworkInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	plan.OdbNetworkId = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkId)
-	plan.OdbNetworkArn = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkArn)
-	cloudExadataInfra = plan.CloudExadataInfrastructureId
-	if cloudExadataInfra.IsNull() || cloudExadataInfra.IsUnknown() {
-		cloudExadataInfra = plan.CloudExadataInfrastructureArn
-	}
-	getCloudExadataInfraInput := odb.GetCloudExadataInfrastructureInput{
-		CloudExadataInfrastructureId: cloudExadataInfra.ValueStringPointer(),
-	}
-	cloudExadataInfraOutput, err := conn.GetCloudExadataInfrastructure(ctx, &getCloudExadataInfraInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureId)
-	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureArn)
+	plan.OdbNetworkId = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkId)
+	plan.OdbNetworkArn = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkArn)
+	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureId)
+	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -652,32 +626,10 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	state.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
-	getOdbNetworkInput := odb.GetOdbNetworkInput{
-		OdbNetworkId: out.OdbNetworkId,
-	}
-	odbNetworkOutput, err := conn.GetOdbNetwork(ctx, &getOdbNetworkInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	state.OdbNetworkId = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkId)
-	state.OdbNetworkArn = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkArn)
-	getCloudExadataInfraInput := odb.GetCloudExadataInfrastructureInput{
-		CloudExadataInfrastructureId: out.CloudExadataInfrastructureId,
-	}
-	cloudExadataInfraOutput, err := conn.GetCloudExadataInfrastructure(ctx, &getCloudExadataInfraInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureId)
-	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureArn)
+	state.OdbNetworkId = flex.StringToFramework(ctx, out.OdbNetworkId)
+	state.OdbNetworkArn = flex.StringToFramework(ctx, out.OdbNetworkArn)
+	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, out.CloudExadataInfrastructureId)
+	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, out.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
