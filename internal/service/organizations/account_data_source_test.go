@@ -53,6 +53,10 @@ resource "aws_organizations_account" "test" {
   name              = %[1]q
   email             = %[2]q
   close_on_deletion = true
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 data "aws_organizations_account" "test" {
