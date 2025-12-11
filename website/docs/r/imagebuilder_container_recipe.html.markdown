@@ -15,7 +15,7 @@ Manages an Image Builder Container Recipe.
 ```terraform
 resource "aws_imagebuilder_container_recipe" "example" {
   name    = "example"
-  version = "1.0.0"
+  version = "1.0.x"
 
   container_type = "DOCKER"
   parent_image   = "arn:aws:imagebuilder:eu-central-1:aws:image/amazon-linux-x86-latest/x.x.x"
@@ -56,7 +56,7 @@ The following arguments are required:
 * `name` - (Required) The name of the container recipe.
 * `parent_image` (Required) The base image for the container recipe.
 * `target_repository` (Required) The destination repository for the container image. Detailed below.
-* `version` (Required) Version of the container recipe.
+* `version` (Required) The semantic version of the container recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. The version can include at most one `x`, which will increment off the latest version which matches the wildcard. For example, 1.0.x.
 
 The following arguments are optional:
 
