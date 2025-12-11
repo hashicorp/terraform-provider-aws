@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -6,7 +6,6 @@ package lakeformation_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"testing"
 
@@ -1114,6 +1113,29 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
+	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]any{}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {
+			tfMap[names.AttrDatabaseName] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.name"]; v != "" {
+			tfMap[names.AttrName] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_catalog_id"]; v != "" {
+			tfMap["table_catalog_id"] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
+			tfMap[names.AttrTableName] = v
+		}
+
+		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]any{tfMap})
+		noResource = false
+	}
+
 	if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != "0" {
 		tfMap := map[string]any{}
 
@@ -1252,29 +1274,6 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
-		tfMap := map[string]any{}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {
-			tfMap[names.AttrDatabaseName] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.name"]; v != "" {
-			tfMap[names.AttrName] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.table_catalog_id"]; v != "" {
-			tfMap["table_catalog_id"] = v
-		}
-
-		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
-			tfMap[names.AttrTableName] = v
-		}
-
-		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]any{tfMap})
-		noResource = false
-	}
-
 	if noResource {
 		// if after read, there is no resource, it has been deleted
 		return 0, nil
@@ -1285,11 +1284,10 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		return 0, fmt.Errorf("acceptance test: error creating permissions filter for (%s): %w", rs.Primary.ID, err)
 	}
 
-	var allPermissions []awstypes.PrincipalResourcePermissions
+	var permissions []awstypes.PrincipalResourcePermissions
 
 	err = tfresource.Retry(ctx, tflakeformation.IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		pages := lakeformation.NewListPermissionsPaginator(conn, input)
-
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 
@@ -1310,11 +1308,9 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {
-				if reflect.ValueOf(permission).IsZero() {
-					continue
+				if filter(permission) {
+					permissions = append(permissions, permission)
 				}
-
-				allPermissions = append(allPermissions, permission)
 			}
 		}
 
@@ -1331,13 +1327,10 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	if err != nil {
-		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions after retry %v: %w", input, err)
+		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions: %w", err)
 	}
 
-	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := tflakeformation.FilterPermissions(filter, allPermissions)
-
-	return len(cleanPermissions), nil
+	return len(permissions), nil
 }
 
 func permissionsFilter(attributes map[string]string) (tflakeformation.PermissionsFilter, error) {

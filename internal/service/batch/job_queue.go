@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -38,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -217,7 +218,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 
 	jobQueue, err := findJobQueueByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -396,7 +397,7 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 	}
 
 	if status := output.Status; status == awstypes.JQStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: string(status),
 		}
 	}
@@ -408,11 +409,11 @@ func findJobQueue(ctx context.Context, conn *batch.Client, input *batch.Describe
 	return tfresource.AssertSingleValueResultIterErr(listJobQueues(ctx, conn, input))
 }
 
-func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
+func statusJobQueue(ctx context.Context, conn *batch.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -425,7 +426,7 @@ func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.St
 }
 
 func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusCreating, awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -446,7 +447,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -467,7 +468,7 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -576,7 +577,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 				return
 			}
 
-			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx))
+			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
 
 			var data jobQueueResourceModel
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -182,19 +182,19 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 
 	// Aggregate types.
 	case basetypes.ObjectValuable:
-		diags.Append(expander.object(ctx, sourcePath, vFrom, targetPath, vTo)...)
+		diags.Append(expander.object(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ListValuable:
-		diags.Append(expander.list(ctx, sourcePath, vFrom, targetPath, vTo)...)
+		diags.Append(expander.list(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.MapValuable:
-		diags.Append(expander.map_(ctx, vFrom, vTo)...)
+		diags.Append(expander.map_(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.SetValuable:
-		diags.Append(expander.set(ctx, sourcePath, vFrom, targetPath, vTo)...)
+		diags.Append(expander.set(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -538,7 +538,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 }
 
 // string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
-func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, d := vFrom.ToObjectValue(ctx)
@@ -588,7 +588,7 @@ func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, v
 }
 
 // list copies a Plugin Framework List(ish) value to a compatible AWS API value.
-func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFrom basetypes.ListValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFrom basetypes.ListValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToListValue(ctx)
@@ -599,16 +599,16 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 			return diags
 		}
 	}
@@ -622,13 +622,13 @@ func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFr
 }
 
 // listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
-		if isXMLWrapperStruct(vTo.Type()) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
 			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
 			return diags
 		}
@@ -701,13 +701,13 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 }
 
 // listOrSetOfString copies a Plugin Framework ListOfString(ish) or SetOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
-		if isXMLWrapperStruct(vTo.Type()) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
 			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
 			return diags
 		}
@@ -766,7 +766,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 }
 
 // map_ copies a Plugin Framework Map(ish) value to a compatible AWS API value.
-func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToMapValue(ctx)
@@ -893,7 +893,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 }
 
 // set copies a Plugin Framework Set(ish) value to a compatible AWS API value.
-func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFrom basetypes.SetValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFrom basetypes.SetValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToSetValue(ctx)
@@ -904,16 +904,16 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo, fieldOpts)...)
 			return diags
 		}
 	}
@@ -927,13 +927,13 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 }
 
 // nestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
-func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct before handling as generic struct
-		if isXMLWrapperStruct(tTo) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(tTo) {
 			diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, vTo)...)
 			return diags
 		}
@@ -947,7 +947,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			// Check if target is a pointer to XML wrapper struct
-			if isXMLWrapperStruct(tElem) {
+			if fieldOpts.xmlWrapper && isXMLWrapperStruct(tElem) {
 				// Create new instance of the XML wrapper struct
 				newWrapper := reflect.New(tElem)
 				diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, newWrapper.Elem())...)
@@ -1221,7 +1221,8 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		})
 
 		opts := fieldOpts{
-			legacy: fromFieldOpts.Legacy(),
+			legacy:     fromFieldOpts.Legacy(),
+			xmlWrapper: fromFieldOpts.XMLWrapperField() != "",
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
@@ -1587,7 +1588,15 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 		return false
 	}
 
-	return true
+	// Items and Quantity should be the only non-anonymous fields
+	nNonAnonymousFields := 0
+	for i := 0; i < t.NumField(); i++ {
+		if !t.Field(i).Anonymous {
+			nNonAnonymousFields++
+		}
+	}
+
+	return nNonAnonymousFields == 2
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct

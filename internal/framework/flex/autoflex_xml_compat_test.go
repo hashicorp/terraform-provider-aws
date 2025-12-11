@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -23,8 +23,8 @@ type FunctionAssociation struct {
 }
 
 type FunctionAssociations struct {
-	Quantity *int32
-	Items    []FunctionAssociation
+	Items    []FunctionAssociation `json:"Items"`
+	Quantity *int32                `json:"Quantity"`
 }
 
 // Terraform model types
@@ -34,7 +34,7 @@ type FunctionAssociationTF struct {
 }
 
 type DistributionConfigTF struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations"`
+	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
 }
 
 type DistributionConfigAWS struct {
@@ -132,7 +132,7 @@ type DirectXMLWrapper struct {
 }
 
 type DirectWrapperTF struct {
-	Items fwtypes.SetValueOf[types.String] `tfsdk:"items"`
+	Items fwtypes.SetValueOf[types.String] `tfsdk:"items" autoflex:",xmlwrapper=items"`
 }
 
 type DirectWrapperAWS struct {
@@ -168,6 +168,11 @@ func TestExpandXMLWrapperDirect(t *testing.T) {
 func TestIsXMLWrapperStruct(t *testing.T) {
 	t.Parallel()
 
+	type embedWithField struct {
+		Count int64
+	}
+	type embedWithoutField struct{}
+
 	testCases := []struct {
 		name     string
 		input    any
@@ -181,6 +186,14 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 		{
 			name:     "valid XML wrapper with slice of strings",
 			input:    DirectXMLWrapper{},
+			expected: true,
+		},
+		{
+			name: "valid XML wrapper with anonymous struct",
+			input: struct {
+				Items    []string
+				Quantity *int32
+			}{},
 			expected: true,
 		},
 		{
@@ -214,6 +227,51 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 			}{},
 			expected: false,
 		},
+		{
+			name: "struct with extra field",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				Name     string
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with anonymous embedWithField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithField
+			}{},
+			expected: true,
+		},
+		{
+			name: "struct with anonymous embedWithoutField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithoutField
+			}{},
+			expected: true,
+		},
+		{
+			name: "struct with private embedWithField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				private  embedWithField
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with private embedWithoutField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				private  embedWithoutField
+			}{},
+			expected: false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -239,23 +297,13 @@ type awsHeadersForFlatten struct {
 	Quantity *int32
 }
 
-// CloudFront FunctionAssociation test types
-type awsFunctionAssociationsForFlatten struct {
-	Items    []FunctionAssociation `json:"Items"`
-	Quantity *int32                `json:"Quantity"`
-}
-
-type tfFunctionAssociationsModelForFlatten struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",wrapper=items"`
-}
-
 // TF model types with wrapper tags (for flattening - AWS to TF)
 type tfStatusCodesModelForFlatten struct {
-	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",wrapper=items"`
+	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",xmlwrapper=items"`
 }
 
 type tfHeadersModelForFlatten struct {
-	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",wrapper=items"`
+	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",xmlwrapper=items"`
 }
 
 func TestFlattenXMLWrapper(t *testing.T) {
@@ -291,7 +339,7 @@ func TestFlattenXMLWrapper(t *testing.T) {
 			},
 		},
 		"complex type - function associations": {
-			Source: awsFunctionAssociationsForFlatten{
+			Source: FunctionAssociations{
 				Items: []FunctionAssociation{
 					{
 						EventType:   "viewer-request",
@@ -304,22 +352,18 @@ func TestFlattenXMLWrapper(t *testing.T) {
 				},
 				Quantity: aws.Int32(2),
 			},
-			Target: &tfFunctionAssociationsModelForFlatten{},
-			WantTarget: &tfFunctionAssociationsModelForFlatten{
-				FunctionAssociations: func() fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] {
-					elems := []*FunctionAssociationTF{
-						{
-							EventType:   types.StringValue("viewer-request"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
-						},
-						{
-							EventType:   types.StringValue("viewer-response"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
-						},
-					}
-					setValue, _ := fwtypes.NewSetNestedObjectValueOfSlice(ctx, elems, nil)
-					return setValue
-				}(),
+			Target: &DistributionConfigTF{},
+			WantTarget: &DistributionConfigTF{
+				FunctionAssociations: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
+					{
+						EventType:   types.StringValue("viewer-request"),
+						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
+					},
+					{
+						EventType:   types.StringValue("viewer-response"),
+						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
+					},
+				}),
 			},
 		},
 		"empty slice to null set": {
@@ -330,6 +374,118 @@ func TestFlattenXMLWrapper(t *testing.T) {
 			Target: &tfStatusCodesModelForFlatten{},
 			WantTarget: &tfStatusCodesModelForFlatten{
 				StatusCodes: fwtypes.NewSetValueOfNull[types.Int64](ctx),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
+
+type FunctionAssociationsTF struct {
+	Items    fwtypes.ListNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"items"`
+	Quantity types.Int64                                            `tfsdk:"quantity"`
+}
+
+type DistributionConfigTFNoXMLWrapper struct {
+	FunctionAssociations fwtypes.ListNestedObjectValueOf[FunctionAssociationsTF] `tfsdk:"function_associations"`
+}
+
+func TestExpandNoXMLWrapper(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"valid function associations": {
+			Source: DistributionConfigTFNoXMLWrapper{
+				FunctionAssociations: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &FunctionAssociationsTF{
+					Items: fwtypes.NewListNestedObjectValueOfSliceMust(
+						ctx,
+						[]*FunctionAssociationTF{
+							{
+								EventType:   types.StringValue("viewer-request"),
+								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+							},
+							{
+								EventType:   types.StringValue("viewer-response"),
+								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+							},
+						},
+					),
+					Quantity: types.Int64Value(2),
+				}),
+			},
+			Target: &DistributionConfigAWS{},
+			WantTarget: &DistributionConfigAWS{
+				FunctionAssociations: &FunctionAssociations{
+					Quantity: aws.Int32(2),
+					Items: []FunctionAssociation{
+						{
+							EventType:   "viewer-request",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   "viewer-response",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
+
+func TestFlattenNoXMLWrapper(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"complex type - function associations": {
+			Source: DistributionConfigAWS{
+				FunctionAssociations: &FunctionAssociations{
+					Quantity: aws.Int32(2),
+					Items: []FunctionAssociation{
+						{
+							EventType:   "viewer-request",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   "viewer-response",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					},
+				},
+			},
+			// 	Items: []FunctionAssociation{
+			// 		{
+			// 			EventType:   "viewer-request",
+			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
+			// 		},
+			// 		{
+			// 			EventType:   "viewer-response",
+			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
+			// 		},
+			// 	},
+			// 	Quantity: aws.Int32(2),
+			// },
+			Target: &DistributionConfigTFNoXMLWrapper{},
+			WantTarget: &DistributionConfigTFNoXMLWrapper{
+				FunctionAssociations: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &FunctionAssociationsTF{
+					Items: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
+						{
+							EventType:   types.StringValue("viewer-request"),
+							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   types.StringValue("viewer-response"),
+							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					}),
+					Quantity: types.Int64Value(2),
+				}),
 			},
 		},
 	}

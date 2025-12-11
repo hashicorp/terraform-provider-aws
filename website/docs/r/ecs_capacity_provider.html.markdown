@@ -55,7 +55,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.ecs_infrastructure.arn
-    propagate_tags          = "TASK_DEFINITION"
+    propagate_tags          = "CAPACITY_PROVIDER"
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
@@ -122,6 +122,7 @@ This resource supports the following arguments:
 * `infrastructure_role_arn` - (Required) The Amazon Resource Name (ARN) of the infrastructure role that Amazon ECS uses to manage instances on your behalf. This role must have permissions to launch, terminate, and manage Amazon EC2 instances, as well as access to other AWS services required for Amazon ECS Managed Instances functionality. For more information, see [Amazon ECS infrastructure IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/infrastructure_IAM_role.html) in the Amazon ECS Developer Guide.
 * `instance_launch_template` - (Required) The launch template configuration that specifies how Amazon ECS should launch Amazon EC2 instances. This includes the instance profile, network configuration, storage settings, and instance requirements for attribute-based instance type selection. For more information, see [Store instance launch parameters in Amazon EC2 launch templates](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html) in the Amazon EC2 User Guide. Detailed below.
 * `propagate_tags` - (Optional) Specifies whether to propagate tags from the capacity provider to the Amazon ECS Managed Instances. When enabled, tags applied to the capacity provider are automatically applied to all instances launched by this provider. Valid values are `CAPACITY_PROVIDER` and `NONE`.
+* `infrastructure_optimization` - (Optional) Defines how Amazon ECS Managed Instances optimizes the infrastructure in your capacity provider. Configure it to turn on or off the infrastructure optimization in your capacity provider, and to control the idle EC2 instances optimization delay.
 
 ### `instance_launch_template`
 
@@ -166,6 +167,13 @@ This resource supports the following arguments:
 * `spot_max_price_percentage_over_lowest_price` - (Optional) The maximum price for Spot instances as a percentage over the lowest priced On-Demand instance. This helps control Spot instance costs while maintaining access to capacity.
 * `total_local_storage_gb` - (Optional) The minimum and maximum total local storage in gigabytes (GB) for instance types with local storage.
 * `vcpu_count` - (Required) The minimum and maximum number of vCPUs for the instance types. Amazon ECS selects instance types that have vCPU counts within this range.
+
+### `infrastructure_optimization`
+
+* `scale_in_after` - (Optional) This parameter defines the number of seconds Amazon ECS Managed Instances waits before optimizing EC2 instances that have become idle or underutilized. A longer delay increases the likelihood of placing new tasks on idle instances, reducing startup time. A shorter delay helps reduce infrastructure costs by optimizing idle instances more quickly. Valid values are:
+    * Not set (null) - Uses the default optimization behavior.
+    * `-1` - Disables automatic infrastructure optimization.
+    * `0` to `3600` (inclusive) - Specifies the number of seconds to wait before optimizing instances.
 
 ## Attribute Reference
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -33,6 +33,9 @@ const (
 	loadBalancerAttributeConnectionLogsS3Enabled                         = "connection_logs.s3.enabled"
 	loadBalancerAttributeConnectionLogsS3Bucket                          = "connection_logs.s3.bucket"
 	loadBalancerAttributeConnectionLogsS3Prefix                          = "connection_logs.s3.prefix"
+	loadBalancerAttributeHealthCheckLogsS3Enabled                        = "health_check_logs.s3.enabled"
+	loadBalancerAttributeHealthCheckLogsS3Bucket                         = "health_check_logs.s3.bucket"
+	loadBalancerAttributeHealthCheckLogsS3Prefix                         = "health_check_logs.s3.prefix"
 	loadBalancerAttributeRoutingHTTPDesyncMitigationMode                 = "routing.http.desync_mitigation_mode"
 	loadBalancerAttributeRoutingHTTPDropInvalidHeaderFieldsEnabled       = "routing.http.drop_invalid_header_fields.enabled"
 	loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled            = "routing.http.preserve_host_header.enabled"
@@ -201,8 +204,8 @@ const (
 	healthCheckPortTrafficPort = "traffic-port"
 )
 
-func healthCheckProtocolEnumValues() []string {
-	return enum.Slice(
+func healthCheckProtocolEnumValues() []awstypes.ProtocolEnum {
+	return enum.EnumSlice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

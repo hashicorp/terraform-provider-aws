@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -177,8 +177,8 @@ func (r *memoryResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	memoryID := fwflex.StringValueFromFramework(ctx, data.ID)
 	out, err := findMemoryByID(ctx, conn, memoryID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -299,7 +299,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 func statusMemory(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findMemoryByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

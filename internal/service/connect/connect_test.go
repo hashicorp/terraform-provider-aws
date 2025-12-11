@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -128,6 +128,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtDisappears:           testAccRoutingProfile_disappears,
 			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
+			"crossChannelBehavior":         testAccRoutingProfile_crossChannelBehavior,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
 			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,

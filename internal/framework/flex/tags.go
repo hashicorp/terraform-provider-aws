@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 // Based on from https://cs.opensource.google/go/go/+/refs/tags/go1.23.0:src/encoding/json/tags.go
@@ -50,7 +50,7 @@ func (o tagOptions) NoFlatten() bool {
 	return o.Contains("noflatten")
 }
 
-func (o tagOptions) WrapperField() string {
+func (o tagOptions) XMLWrapperField() string {
 	if len(o) == 0 {
 		return ""
 	}
@@ -58,7 +58,7 @@ func (o tagOptions) WrapperField() string {
 	for s != "" {
 		var option string
 		option, s, _ = strings.Cut(s, ",")
-		if name, value, found := strings.Cut(option, "="); found && name == "wrapper" {
+		if name, value, found := strings.Cut(option, "="); found && name == "xmlwrapper" {
 			return value
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -182,6 +182,33 @@ provider "aws" {
 `, key1)
 }
 
+// ConfigTagPolicyCompliance enables tag policy enforcement with the provided severity
+func ConfigTagPolicyCompliance(severity string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+}
+`, severity)
+}
+
+// ConfigTagPolicyComplianceAndDefaultTags1 enables tag policy enforcement with the
+// provided severity and a default tag
+func ConfigTagPolicyComplianceAndDefaultTags1(severity, key1, value1 string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+
+  default_tags {
+    tags = {
+      %[2]s = %[3]q
+    }
+  }
+}
+`, severity, key1, value1)
+}
+
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -266,6 +293,17 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 `, tag1, value1, tag2, value2))
+}
+
+func ConfigAssumeRole() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  assume_role {
+    role_arn = %[1]q
+  }
+}
+`, os.Getenv(envvar.AccAssumeRoleARN))
 }
 
 func ConfigAssumeRolePolicy(policy string) string {
@@ -579,7 +617,7 @@ resource "aws_security_group" "sg_for_lambda" {
 
 func ConfigVPCWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -588,19 +626,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, subnetCount),
+`, rName),
 	)
 }
 
@@ -629,7 +655,7 @@ resource "aws_subnet" "test" {
 
 func ConfigVPCWithSubnetsEnableDNSHostnames(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -639,7 +665,31 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
+`, rName),
+	)
+}
 
+func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigSubnetsIPv6(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName),
+	)
+}
+
+func ConfigSubnets(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_subnet" "test" {
   count = %[2]d
 
@@ -655,20 +705,10 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
+func ConfigSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_subnet" "test" {
   count = %[2]d
 
@@ -752,17 +792,22 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-postgresql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
   master_username             = "test"
   manage_master_user_password = true
+  database_name               = "test"
+  skip_final_snapshot         = true
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
   enable_http_endpoint        = true
   vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
   db_subnet_group_name        = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
@@ -846,9 +891,10 @@ resource "null_resource" "db_setup" {
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json, custom_metadata jsonb);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (to_tsvector('simple', chunks));"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (custom_metadata);"
     EOT
   }
 }

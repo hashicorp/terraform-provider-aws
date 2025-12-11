@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
@@ -33,7 +33,7 @@ const (
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
 func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  enum.Slice(awstypes.AdminStatusEnabled),
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -51,7 +51,7 @@ func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminA
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
 func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AdminStatusDisableInProgress),
 		Target:  []string{adminStatusNotFound},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -69,7 +69,7 @@ func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, admin
 
 // waitPublishingDestinationCreated waits for GuardDuty to return Publishing
 func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
 		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
 		Refresh: statusPublishingDestination(ctx, conn, destinationID, detectorID),

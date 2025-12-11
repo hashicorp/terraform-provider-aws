@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -166,8 +166,9 @@ func autoflexTags(field reflect.StructField) (string, tagOptions) {
 }
 
 type fieldOpts struct {
-	legacy    bool
-	omitempty bool
+	legacy     bool
+	omitempty  bool
+	xmlWrapper bool
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

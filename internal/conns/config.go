@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagpolicy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -56,6 +57,7 @@ type Config struct {
 	SkipRequestingAccountId        bool
 	STSRegion                      string
 	SuppressDebugLog               bool
+	TagPolicyConfig                *tftags.TagPolicyConfig
 	TerraformVersion               string
 	Token                          string
 	TokenBucketRateLimiterCapacity int
@@ -191,9 +193,25 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 
+	// Fetch tag policy details when enforced
+	if c.TagPolicyConfig != nil {
+		tflog.Debug(ctx, "Retrieving tag policy details")
+		reqTags, err := tagpolicy.GetRequiredTags(ctx, cfg)
+		if err != nil {
+			diags = append(diags, errs.NewErrorDiagnostic(
+				"Retrieving Required Tags",
+				`Failed to retrieve required tags from the organizations tag policies. Ensure the calling principal `+
+					`has the "tag:ListRequiredTags" IAM permission and that tag policies are attached to the target account.`+
+					fmt.Sprintf("\n\nOriginal error: %s", err)))
+			return nil, diags
+		}
+		c.TagPolicyConfig.RequiredTags = reqTags
+	}
+
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.tagPolicyConfig = c.TagPolicyConfig
 	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.
