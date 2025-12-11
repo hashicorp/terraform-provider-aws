@@ -471,7 +471,8 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	region := "a-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
 		inputID             string
 		useSchemaWithID     bool
 		noIdentity          bool
@@ -479,22 +480,22 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"Attr_Basic": {
-			attrName:    "name",
-			inputID:     "a_name",
-			expectError: false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			expectError:      false,
 		},
 		"Attr_NoIdentity": {
-			attrName:    "name",
-			inputID:     "a_name",
-			noIdentity:  true,
-			expectError: false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			noIdentity:       true,
+			expectError:      false,
 		},
 
 		"ID_Basic": {
-			attrName:        "id",
-			inputID:         "a_name",
-			useSchemaWithID: true,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			useSchemaWithID:  true,
+			expectError:      false,
 		},
 	}
 
@@ -510,7 +511,12 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 
 			stateAttrs := map[string]string{}
 
-			identitySpec := globalSingleParameterIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = globalSingleParameterIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = globalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
@@ -569,8 +575,8 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
 						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
 					}
-					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.attrName)); e != a {
-						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.identityAttrName)); e != a {
+						t.Errorf("expected Identity `%s` to be %q, got %q", tc.identityAttrName, e, a)
 					}
 				}
 			}
