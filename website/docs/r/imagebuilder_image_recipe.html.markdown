@@ -102,6 +102,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the image recipe.
 * `date_created` - Date the image recipe was created.
+* `latest_major_version_arn` - Amazon Resource Name (ARN) of the latest major version of the image recipe.
+* `latest_minor_version_arn` - Amazon Resource Name (ARN) of the latest minor version of the image recipe.
+* `latest_patch_version_arn` - Amazon Resource Name (ARN) of the latest patch version of the image recipe.
+* `latest_version_arn` - Amazon Resource Name (ARN) of the latest version of the image recipe.
 * `owner` - Owner of the image recipe.
 * `platform` - Platform of the image recipe.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

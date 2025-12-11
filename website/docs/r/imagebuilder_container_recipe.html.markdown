@@ -130,6 +130,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the container recipe was created.
 * `encrypted` - A flag that indicates if the target container is encrypted.
+* `latest_major_version_arn` - Amazon Resource Name (ARN) of the latest major version of the container recipe.
+* `latest_minor_version_arn` - Amazon Resource Name (ARN) of the latest minor version of the container recipe.
+* `latest_patch_version_arn` - Amazon Resource Name (ARN) of the latest patch version of the container recipe.
+* `latest_version_arn` - Amazon Resource Name (ARN) of the latest version of the container recipe.
 * `owner` - Owner of the container recipe.
 * `platform` - Platform of the container recipe.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
