@@ -753,19 +753,24 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		inputID         string
-		inputRegion     string
-		useSchemaWithID bool
-		noIdentity      bool
-		expectedAttrs   map[string]string
-		expectedRegion  string
-		expectedID      string
-		expectError     bool
+		inputID               string
+		inputRegion           string
+		useSchemaWithID       bool
+		noIdentity            bool
+		expectedResourceAttrs map[string]string
+		expectedIdentityAttrs map[string]string
+		expectedRegion        string
+		expectedID            string
+		expectError           bool
 	}{
 		"DefaultRegion": {
 			inputID:     "a_name,a_type",
 			inputRegion: region,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -775,7 +780,11 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 		"RegionOverride": {
 			inputID:     "a_name,a_type",
 			inputRegion: anotherRegion,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -786,7 +795,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			inputID:     "a_name,a_type",
 			inputRegion: region,
 			noIdentity:  true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -803,7 +812,11 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			inputID:         "a_name,a_type",
 			inputRegion:     region,
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -815,7 +828,11 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			inputID:         "trim:a_name,a_type",
 			inputRegion:     region,
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -877,7 +894,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			}
 
 			// Check attr values
-			for name, expectedAttr := range tc.expectedAttrs {
+			for name, expectedAttr := range tc.expectedResourceAttrs {
 				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
 					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
 				}
@@ -905,7 +922,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
 						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
 					}
-					for name, expectedAttr := range tc.expectedAttrs {
+					for name, expectedAttr := range tc.expectedIdentityAttrs {
 						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
 							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
 						}
