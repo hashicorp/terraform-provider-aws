@@ -576,10 +576,6 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	plan.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
-	odbNetwork = plan.OdbNetworkId
-	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
-		odbNetwork = plan.OdbNetworkArn
-	}
 	plan.OdbNetworkId = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkId)
 	plan.OdbNetworkArn = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkArn)
 	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureId)
