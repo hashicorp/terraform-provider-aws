@@ -65,6 +65,9 @@ func (d *domainDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 			},
+			"root_domain_unit_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"portal_url": schema.StringAttribute{
 				Computed: true,
 			},
@@ -124,13 +127,23 @@ func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.Conf
 	}
 }
 
-func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*awstypes.DomainSummary, error) {
+func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*datazone.GetDomainOutput, error) {
 	domain, err := findDomains(ctx, conn, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(domain)
+	domain1, err := tfresource.AssertSingleValueResult(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := findDomainByID(ctx, conn, aws.ToString(domain1.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) ([]awstypes.DomainSummary, error) {
@@ -163,6 +176,7 @@ type domainDataSourceModel struct {
 	LastUpdatedAt    timetypes.RFC3339 `tfsdk:"last_updated_at"`
 	ManagedAccountID types.String      `tfsdk:"managed_account_id"`
 	Name             types.String      `tfsdk:"name"`
+	RootDomainUnitID types.String      `tfsdk:"root_domain_unit_id"`
 	PortalURL        types.String      `tfsdk:"portal_url"`
 	Status           types.String      `tfsdk:"status"`
 }
