@@ -43,7 +43,32 @@
     "autoflex.source.size": 2,
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "source_type": "[]flex.awsExpander",
+    "target_type": "ListNestedObjectTypeOf[flex.tfFlexer]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: First element of nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "element_type": "flex.awsExpander"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "field_name": "AWSField",
+    "field_type": "string",
+    "is_nil": false,
+    "is_zero": false
   },
   {
     "@level": "info",
