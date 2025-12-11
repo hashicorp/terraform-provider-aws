@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 # Terraform AWS Provider Copyplop Configuration
 copyright:
   holder: "IBM Corp."
@@ -13,11 +16,13 @@ license:
 # see breakdown of file types below
 files:
   include_paths:
-    - "internal/**"
+    #- "internal/**"
   exclude_paths:
     - "**/when_string_test.go" # standard library generated files
   extensions:
     - ".go"
+    - ".yml"
+    - ".yaml"
 
   comment_styles:
     go: "//"
