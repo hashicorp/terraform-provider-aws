@@ -29,11 +29,14 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_trust_store", name="Trust Store")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &trustStoreResource{}
 
@@ -67,6 +70,8 @@ func (r *trustStoreResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"number_of_ca_certificates": schema.Int32Attribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"ca_certificates_bundle_source": schema.ListNestedBlock{
@@ -126,6 +131,13 @@ func (r *trustStoreResource) Create(ctx context.Context, req resource.CreateRequ
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Additional fields.
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	outCTS, err := conn.CreateTrustStore(ctx, &input)
@@ -348,6 +360,8 @@ type trustStoreResourceModel struct {
 	ID                         types.String                                                     `tfsdk:"id"`
 	Name                       types.String                                                     `tfsdk:"name"`
 	NumberOfCACertificates     types.Int32                                                      `tfsdk:"number_of_ca_certificates"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 

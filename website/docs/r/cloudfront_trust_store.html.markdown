@@ -52,6 +52,10 @@ The following arguments are required:
 * `name` - (Required) Name of the trust store. Changing this forces a new resource to be created.
 * `ca_certificates_bundle_source` - (Required) Configuration block for the CA certificates bundle source. See [`ca_certificates_bundle_source`](#ca_certificates_bundle_source) below.
 
+The following arguments are optional:
+
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
 ### ca_certificates_bundle_source
 
 * `ca_certificates_bundle_s3_location` - (Required) Configuration block for the S3 location of the CA certificates bundle. See [`ca_certificates_bundle_s3_location`](#ca_certificates_bundle_s3_location) below.
@@ -71,6 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - ETag of the trust store.
 * `id` - ID of the trust store.
 * `number_of_ca_certificates` - Number of CA certificates in the trust store.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

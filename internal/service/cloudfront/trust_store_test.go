@@ -55,6 +55,7 @@ func TestAccCloudFrontTrustStore_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("cloudfront", regexache.MustCompile(`trust-store/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_of_ca_certificates"), knownvalue.Int32Exact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
@@ -189,6 +190,83 @@ func TestAccCloudFrontTrustStore_update(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"ca_certificates_bundle_source",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontTrustStore_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var truststore cloudfront.GetTrustStoreOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_trust_store.test"
+	objectKey := "ca-bundle.pem"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustStoreConfig_tags1(rName, objectKey, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ca_certificates_bundle_source",
+				},
+			},
+			{
+				Config: testAccTrustStoreConfig_tags2(rName, objectKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccTrustStoreConfig_tags1(rName, objectKey, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 		},
@@ -362,4 +440,61 @@ resource "aws_cloudfront_trust_store" "test" {
   }
 }
 `, rName, key, testAccTrustStoreCertificateContent))
+}
+
+func testAccTrustStoreConfig_tags1(rName, key, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccTrustStoreConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.id
+  key     = %[2]q
+  content = <<-EOT
+%[3]s
+EOT
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket = aws_s3_bucket.test.id
+      key    = aws_s3_object.test.key
+      region = data.aws_region.current.name
+    }
+  }
+
+  tags = {
+    %[4]q = %[5]q
+  }
+}
+`, rName, key, testAccTrustStoreCertificateContent, tagKey1, tagValue1))
+}
+
+func testAccTrustStoreConfig_tags2(rName, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccTrustStoreConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.id
+  key     = %[2]q
+  content = <<-EOT
+%[3]s
+EOT
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket = aws_s3_bucket.test.id
+      key    = aws_s3_object.test.key
+      region = data.aws_region.current.name
+    }
+  }
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+}
+`, rName, key, testAccTrustStoreCertificateContent, tagKey1, tagValue1, tagKey2, tagValue2))
 }
