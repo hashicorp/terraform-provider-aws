@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -394,7 +394,7 @@ func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

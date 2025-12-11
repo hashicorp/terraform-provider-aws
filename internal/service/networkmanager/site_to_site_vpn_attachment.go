@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -135,7 +136,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 
 	vpnAttachment, err := findSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Site To Site VPN Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -216,7 +217,7 @@ func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.C
 	output, err := conn.GetSiteToSiteVpnAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -233,11 +234,11 @@ func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.C
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSiteToSiteVPNAttachmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -250,7 +251,7 @@ func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Cli
 }
 
 func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout:                   timeout,
@@ -270,7 +271,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
@@ -292,7 +293,7 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,

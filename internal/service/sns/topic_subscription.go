@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -204,7 +205,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	// avoid errant removals from state on subsequent applies).
 	if v, ok := d.GetOk(names.AttrTopicARN); ok && waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), d.Get(names.AttrProtocol).(string)) {
 		_, err := findSubscriptionInTopic(ctx, conn, v.(string), d.Id())
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -227,7 +228,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -354,7 +355,7 @@ func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn 
 	output, err := conn.GetSubscriptionAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -380,7 +381,7 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -397,7 +398,7 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastRequest: input,
 	}
 }
@@ -419,11 +420,11 @@ func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
 	return true
 }
 
-func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) retry.StateRefreshFunc {
+func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -442,7 +443,7 @@ const (
 )
 
 func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
 		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
@@ -459,7 +460,7 @@ func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string
 }
 
 func waitSubscriptionDeleted(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
 		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),

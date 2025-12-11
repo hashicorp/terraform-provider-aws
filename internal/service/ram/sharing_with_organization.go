@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_ram_sharing_with_organization", name="Sharing With Organization")
@@ -66,7 +66,7 @@ func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.Resource
 
 	err := findSharingWithOrganization(ctx, meta.(*conns.AWSClient))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RAM Sharing With Organization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -111,7 +111,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 	}
 
 	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		return &retry.NotFoundError{
+		return &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("Organization service principal (%s) not enabled", servicePrincipalName),
 		}
 	}
