@@ -69,7 +69,7 @@ func TestInterceptedCRUDHandler(t *testing.T) {
 		region:    "us-west-2", //lintignore:AWSAT003
 	}
 
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, _ getProviderMetaFunc, meta any) (context.Context, error) {
 		return ctx, nil
 	}
 
@@ -374,7 +374,7 @@ func TestInterceptedCustomizeDiffHandler(t *testing.T) {
 		region:    "us-west-2", //lintignore:AWSAT003
 	}
 
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, _ getProviderMetaFunc, meta any) (context.Context, error) {
 		return ctx, nil
 	}
 
@@ -555,7 +555,7 @@ func TestInterceptedImportHandler(t *testing.T) {
 		region:    "us-west-2", //lintignore:AWSAT003
 	}
 
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, _ getProviderMetaFunc, meta any) (context.Context, error) {
 		return ctx, nil
 	}
 

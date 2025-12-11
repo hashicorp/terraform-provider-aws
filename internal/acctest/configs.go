@@ -318,6 +318,19 @@ provider "aws" {
 `, os.Getenv(envvar.AccAssumeRoleARN), policy)
 }
 
+// ConfigProviderMeta returns a terraform block with provider_meta configured
+func ConfigProviderMeta() string {
+	return `
+terraform {
+  provider_meta "aws" {
+    user_agent = [
+      "test-module/0.0.1 (test comment)",
+    ]
+  }
+}
+`
+}
+
 const testAccProviderConfigBase = `
 data "aws_region" "provider_test" {}
 

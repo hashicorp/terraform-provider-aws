@@ -301,10 +301,62 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
+
+There are three ways to provide additional User-Agent information.
+
+1. The `user_agent` provider argument.
+1. The `TF_APPEND_USER_AGENT` environment variable.
+1. The [`provider_meta`](https://developer.hashicorp.com/terraform/internals/provider-meta) `user_agent` argument.
+
+-> The first two options will apply to all resources managed by the provider instance, while the `provider_meta` configuration applies only to resources in the module in which it is configured.
+
+### `user_agent` Provider Argument
+
+When using the `user_agent` provider argument, the items will be appended to the `User-Agent` header in order.
+The [`user_agent` provider-defined function](./functions/user_agent.html.markdown) can be used to format the name, version, and comment components.
+
+```terraform
+provider "aws" {
+  user_agent = [
+    provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+    "other-demo/0.0.2 (other comment)",
+  ]
+}
+```
+
+### `TF_APPEND_USER_AGENT` Environment Variable
+
+When using the environment variable, the provided value will be directly appended to the `User-Agent` header.
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
+### `provider_meta` `user_agent` Argument
+
+The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
+This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
+
+-> In a module, `provider_meta` is defined within the `terraform` block.
+The `provider` block is inherited from the root module.
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  provider_meta "aws" {
+    user_agent = [
+      provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+      "other-demo/0.0.2 (other comment)",
+    ]
+  }
+}
 ```
 
 ## Argument Reference
@@ -507,6 +559,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   This setting is ignored for any service with a custom endpoint specified.
   Note that not all services or regions have valid FIPS endpoints.
   The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
+* `user_agent` (Optional) Product details to append to the User-Agent string sent in all AWS API calls.
 
 ### assume_role Configuration Block
 
