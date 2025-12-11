@@ -1322,17 +1322,22 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	accountID := "123456789012"
 
 	testCases := map[string]struct {
-		inputID             string
-		useSchemaWithID     bool
-		noIdentity          bool
-		expectedAttrs       map[string]string
-		expectedID          string
-		expectError         bool
-		expectedErrorPrefix string
+		inputID               string
+		useSchemaWithID       bool
+		noIdentity            bool
+		expectedResourceAttrs map[string]string
+		expectedIdentityAttrs map[string]string
+		expectedID            string
+		expectError           bool
+		expectedErrorPrefix   string
 	}{
 		"Basic": {
 			inputID: "a_name,a_type",
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1341,7 +1346,11 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		"NoIdentity": {
 			inputID:    "a_name,a_type",
 			noIdentity: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1352,7 +1361,11 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		"WithIDAttr": {
 			inputID:         "a_name,a_type",
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1362,7 +1375,11 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		"WithIDAttr_TrimmedID": {
 			inputID:         "trim:a_name,a_type",
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1418,7 +1435,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			}
 
 			// Check attr values
-			for name, expectedAttr := range tc.expectedAttrs {
+			for name, expectedAttr := range tc.expectedResourceAttrs {
 				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
 					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
 				}
@@ -1443,7 +1460,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
 						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
 					}
-					for name, expectedAttr := range tc.expectedAttrs {
+					for name, expectedAttr := range tc.expectedIdentityAttrs {
 						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
 							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
 						}
