@@ -15,10 +15,6 @@ resource "aws_cleanrooms_collaboration" "test" {
     allow_joins_on_columns_with_different_names = true
     preserve_nulls                              = false
   }
-
-  tags = {
-    Project = var.rName
-  }
 }
 variable "rName" {
   description = "Name for resource"
