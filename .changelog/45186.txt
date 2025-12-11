@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_notifications_managed_notification_additional_channel_association
+```
