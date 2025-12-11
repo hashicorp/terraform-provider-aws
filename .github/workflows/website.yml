@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 ## These checks will be superseded by documentation.yml
 ## when the provider documentation layout is moved to
 ## the Terraform Registry layout.

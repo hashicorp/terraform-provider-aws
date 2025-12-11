@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 # This workflow builds the product for all supported platforms and uploads the resulting
 # binaries as Actions artifacts. The workflow also uploads a build metadata file
 # (metadata.json) -- and a Terraform Registry manifest file (terraform-registry-manifest.json).
