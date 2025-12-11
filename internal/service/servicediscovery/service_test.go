@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -293,6 +294,60 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 	})
 }
 
+func TestAccServiceDiscoveryService_HealthCheckCustomConfigRemoveNoReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_service_discovery_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_healthCheckCustomConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_noHealthCheckCustomConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "SRV"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
@@ -536,4 +591,70 @@ resource "aws_service_discovery_service" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccServiceConfig_healthCheckCustomConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = %[1]q
+  vpc  = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_noHealthCheckCustomConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = %[1]q
+  vpc  = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}
+`, rName)
 }
