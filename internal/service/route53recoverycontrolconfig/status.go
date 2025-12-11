@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoverycontrolconfig
@@ -8,14 +8,14 @@ import (
 
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByARN(ctx, conn, clusterArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -31,7 +31,7 @@ func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingContr
 	return func() (any, string, error) {
 		output, err := findRoutingControlByARN(ctx, conn, routingControlArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -47,7 +47,7 @@ func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelAr
 	return func() (any, string, error) {
 		output, err := findControlPanelByARN(ctx, conn, controlPanelArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -63,7 +63,7 @@ func statusSafetyRule(ctx context.Context, conn *r53rcc.Client, safetyRuleArn st
 	return func() (any, string, error) {
 		output, err := findSafetyRuleByARN(ctx, conn, safetyRuleArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

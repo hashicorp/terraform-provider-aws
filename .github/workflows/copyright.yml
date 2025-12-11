@@ -20,7 +20,7 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
-  copywrite:
+  copyplop:
     name: add headers check
     runs-on: ubuntu-latest
     steps:
@@ -44,9 +44,9 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/hashicorp/copywrite@latest
-      - run: copywrite headers
+      - run: go install github.com/YakDriver/copyplop@v0.2.0
+      - run: copyplop check
       - name: Check for Git Differences
         run: |
           git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after adding copyright headers. Run 'copywrite headers' command and commit."; exit 1)
+            (echo; echo "Unexpected difference in directories after adding copyright headers. Run 'copyplop fix' command and commit."; exit 1)

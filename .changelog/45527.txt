@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `upgrade_rollout_order` attribute
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `upgrade_rollout_order` attribute
+```
+
+```release-note:enhancement
+data-source/aws_rds_cluster: Add `upgrade_rollout_order` attribute
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `upgrade_rollout_order` attribute
+```

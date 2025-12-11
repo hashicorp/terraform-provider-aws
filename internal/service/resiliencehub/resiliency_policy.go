@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package resiliencehub
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -278,7 +279,7 @@ func (r *resiliencyPolicyResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	out, err := findResiliencyPolicyByARN(ctx, conn, state.PolicyARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -487,7 +488,7 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

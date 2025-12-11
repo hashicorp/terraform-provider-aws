@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -30,8 +30,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -270,7 +270,7 @@ func (r *clusterSnapshotCopyResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	out, err := findDBClusterSnapshotByID(ctx, conn, data.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -291,7 +291,7 @@ func (r *clusterSnapshotCopyResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	outAttr, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, data.ID.ValueString(), dbSnapshotAttributeNameRestore)
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameClusterSnapshotCopy, data.ID.String(), err),
 			err.Error(),

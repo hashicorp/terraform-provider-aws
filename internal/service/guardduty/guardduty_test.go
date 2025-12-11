@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -126,7 +126,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("reading this AWS account's single GuardDuty Detector: %s", err)
 	}
 
@@ -141,7 +141,7 @@ func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 

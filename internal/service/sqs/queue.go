@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -287,7 +288,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -521,7 +522,7 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) sdkretr
 	return func() (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -588,7 +589,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 		got, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

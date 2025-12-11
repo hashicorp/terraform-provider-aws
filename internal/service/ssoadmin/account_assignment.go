@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -104,7 +105,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "listing SSO Account Assignments for Account ID (%s) Permission Set (%s): %s", targetID, permissionSetARN, err)
 	}
 
@@ -150,7 +151,7 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 
 	accountAssignment, err := findAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
 		d.SetId("")
 		return diags
@@ -317,7 +318,7 @@ func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client,
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -359,7 +360,7 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client,
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -312,7 +312,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return findRoleByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -534,7 +534,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return fmt.Errorf("reading IAM Policies attached to Role (%s): %w", roleName, err)
 		default:
@@ -548,7 +548,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
 		default:
@@ -576,7 +576,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName string) error {
 	instanceProfiles, err := findInstanceProfilesForRole(ctx, conn, roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 
@@ -673,7 +673,7 @@ func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findRoleByName(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, roleNotFoundState, nil
 		}
 

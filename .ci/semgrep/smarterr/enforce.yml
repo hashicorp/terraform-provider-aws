@@ -188,24 +188,6 @@ rules:
       exclude:
         - "*_test.go"
 
-  - id: go-no-tfresource-notfound
-    languages: [go]
-    message: Use retry.NotFound instead of tfresource.NotFound (migrate to smarterr).
-    severity: ERROR
-    patterns:
-      - pattern: |
-          tfresource.NotFound($ERR)
-      - pattern-not-inside: |
-          retry.NotFound(...)
-    paths:
-      include:
-        - "/internal/service/appsync/"
-        - "/internal/service/bedrockagentcore/"
-        - "/internal/service/cloudwatch/"
-        - "/internal/service/invoicing/"
-      exclude:
-        - "*_test.go"
-
   - id: go-no-bare-assertsinglevalueresult
     languages: [go]
     message: Wrap tfresource.AssertSingleValueResult with smarterr.Assert (migrate to smarterr).

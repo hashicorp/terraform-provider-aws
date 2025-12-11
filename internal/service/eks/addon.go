@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,7 +219,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -454,7 +455,7 @@ func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName s
 	return func() (any, string, error) {
 		output, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -470,7 +471,7 @@ func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addon
 	return func() (any, string, error) {
 		output, err := findAddonUpdateByThreePartKey(ctx, conn, clusterName, addonName, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

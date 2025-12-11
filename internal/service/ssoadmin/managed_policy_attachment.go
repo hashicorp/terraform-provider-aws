@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -80,7 +81,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): already attached", managedPolicyARN, permissionSetARN)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy (%s) Attachment (%s): %s", managedPolicyARN, permissionSetARN, err)
 	}
 
@@ -117,7 +118,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 
 	policy, err := findManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

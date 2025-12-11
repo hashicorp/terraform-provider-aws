@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource_test
@@ -12,51 +12,6 @@ import (
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func TestNotFound(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name     string
-		Err      error
-		Expected bool
-	}{
-		{
-			Name: "nil error",
-			Err:  nil,
-		},
-		{
-			Name: "other error",
-			Err:  errors.New("test"),
-		},
-		{
-			Name:     "not found error",
-			Err:      &sdkretry.NotFoundError{LastError: errors.New("test")},
-			Expected: true,
-		},
-		{
-			Name: "wrapped other error",
-			Err:  fmt.Errorf("test: %w", errors.New("test")),
-		},
-		{
-			Name:     "wrapped not found error",
-			Err:      fmt.Errorf("test: %w", &sdkretry.NotFoundError{LastError: errors.New("test")}),
-			Expected: true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfresource.NotFound(testCase.Err)
-
-			if got != testCase.Expected {
-				t.Errorf("got %t, expected %t", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestTimedOut(t *testing.T) {
 	t.Parallel()

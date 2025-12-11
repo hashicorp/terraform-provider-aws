@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -115,7 +115,7 @@ func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceDa
 	arn := d.Get(names.AttrCertificateARN).(string)
 	certificate, err := findCertificateValidationByARN(ctx, conn, arn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", arn)
 		d.SetId("")
 		return diags
@@ -155,7 +155,7 @@ func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkret
 
 		output, err := findCertificate(ctx, conn, &input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
