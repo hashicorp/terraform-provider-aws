@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,6 +36,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const taskDefinitionPropagationTimeout = 2 * time.Minute
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
@@ -651,65 +654,90 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	if _, ok := d.GetOk("track_latest"); ok {
 		familyOrARN = d.Get(names.AttrFamily).(string)
 	}
-	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
-	}
+    // Wrap the read in a retry that only triggers for brand-new resources.
+    type taskDefWithTags struct {
+        Task *awstypes.TaskDefinition
+        Tags []awstypes.Tag
+    }
 
-	d.SetId(aws.ToString(taskDefinition.Family))
-	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
-	d.Set("cpu", taskDefinition.Cpu)
-	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
-	d.Set(names.AttrFamily, taskDefinition.Family)
-	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("memory", taskDefinition.Memory)
-	d.Set("network_mode", taskDefinition.NetworkMode)
-	d.Set("pid_mode", taskDefinition.PidMode)
-	if err := d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
-	}
-	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
-	d.Set("revision", taskDefinition.Revision)
-	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
-	}
-	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set("track_latest", d.Get("track_latest"))
-	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
-	}
+    output, err := tfresource.RetryWhenNewResourceNotFound(
+        ctx,
+        taskDefinitionPropagationTimeout,
+        func(ctx context.Context) (taskDefWithTags, error) {
+            td, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
+            if err != nil {
+                return taskDefWithTags{}, err
+            }
+            return taskDefWithTags{
+                Task: td,
+                Tags: tags,
+            }, nil
+        },
+        d.IsNewResource(),
+    )
 
-	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
-	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
-	// some other property changes).
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
+    // For existing resources: if it’s really gone, drop from state.
+    if !d.IsNewResource() && retry.NotFound(err) {
+        log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
+        d.SetId("")
+        return diags
+    }
 
-	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_definitions", defs)
+    // Any other error (including exhausted retries for new resources) is fatal.
+    if err != nil {
+        return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
+    }
 
-	setTagsOut(ctx, tags)
+    taskDefinition := output.Task
+    tags := output.Tags
 
-	return diags
+    d.SetId(aws.ToString(taskDefinition.Family))
+    arn := aws.ToString(taskDefinition.TaskDefinitionArn)
+    d.Set(names.AttrARN, arn)
+    d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
+    d.Set("cpu", taskDefinition.Cpu)
+    d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
+    if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
+        return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
+    }
+    d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
+    d.Set(names.AttrFamily, taskDefinition.Family)
+    d.Set("ipc_mode", taskDefinition.IpcMode)
+    d.Set("memory", taskDefinition.Memory)
+    d.Set("network_mode", taskDefinition.NetworkMode)
+    d.Set("pid_mode", taskDefinition.PidMode)
+    if err := d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
+        return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
+    }
+    if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
+        return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
+    }
+    d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
+    d.Set("revision", taskDefinition.Revision)
+    if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
+        return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
+    }
+    d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+    d.Set("track_latest", d.Get("track_latest"))
+    if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
+        return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
+    }
+
+    // keep the existing container_definitions normalization
+    containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
+    containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
+    containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
+
+    defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+    if err != nil {
+        return sdkdiag.AppendFromErr(diags, err)
+    }
+    d.Set("container_definitions", defs)
+
+    setTagsOut(ctx, tags)
+
+    return diags
 }
 
 func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
