@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisanalyticsv2
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -117,7 +118,7 @@ func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData
 
 	snapshot, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,7 +236,7 @@ func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	return func() (any, string, error) {
 		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

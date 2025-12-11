@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func (oracleDBNetPeeringDataSourceTest) testAccCheckCloudOracleDBNetworkPeeringD
 			_, err := oracleDBNetPeeringDSTestEntity.findOracleDBNetworkPeering(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
-				if tfresource.NotFound(err) {
+				if retry.NotFound(err) {
 					return nil
 				}
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameNetworkPeeringConnection, rs.Primary.ID, err)

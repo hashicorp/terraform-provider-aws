@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -169,7 +170,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	trustStore, err := findTrustStoreByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Trust Store %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -295,7 +296,7 @@ func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 	return func() (any, string, error) {
 		output, err := findTrustStoreByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -358,7 +359,7 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elasticloadbalan
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		associations, err := findTrustStoreAssociations(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return 0, nil
 		}
 

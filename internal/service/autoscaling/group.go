@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -34,6 +34,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1328,7 +1329,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1865,7 +1866,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	group, err := findGroupByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -2454,7 +2455,7 @@ func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, nam
 	return func() (any, string, error) {
 		output, err := findGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2475,7 +2476,7 @@ func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, 
 
 		output, err := findInstanceRefresh(ctx, conn, &input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2491,7 +2492,7 @@ func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.Clien
 	return func() (any, string, error) {
 		output, err := findLoadBalancerStates(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2515,7 +2516,7 @@ func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autosc
 	return func() (any, string, error) {
 		output, err := findLoadBalancerTargetGroupStates(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2539,7 +2540,7 @@ func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.Cli
 	return func() (any, string, error) {
 		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2563,7 +2564,7 @@ func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) 
 	return func() (any, string, error) {
 		output, err := findWarmPoolByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2579,7 +2580,7 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, 
 	return func() (any, string, error) {
 		output, err := findWarmPoolByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

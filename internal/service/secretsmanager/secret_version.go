@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -205,7 +205,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if hasWriteOnly {
 		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -225,7 +225,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

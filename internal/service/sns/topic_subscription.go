@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -204,7 +205,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	// avoid errant removals from state on subsequent applies).
 	if v, ok := d.GetOk(names.AttrTopicARN); ok && waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), d.Get(names.AttrProtocol).(string)) {
 		_, err := findSubscriptionInTopic(ctx, conn, v.(string), d.Id())
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -227,7 +228,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -423,7 +424,7 @@ func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client
 	return func() (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

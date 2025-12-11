@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -30,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -196,7 +197,7 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 
@@ -213,7 +214,7 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	awsEncryptionConfig, err := findTableBucketEncryptionConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) encryption", name), err.Error())
 
@@ -247,7 +248,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	name, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.ARN)
 	outputGTB, err := findTableBucketByARN(ctx, conn, tableBucketARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -268,7 +269,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 
@@ -285,7 +286,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	awsEncryptionConfig, err := findTableBucketEncryptionConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) encryption", name), err.Error())
 
@@ -382,7 +383,7 @@ func (r *tableBucketResource) Update(ctx context.Context, request resource.Updat
 		outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 

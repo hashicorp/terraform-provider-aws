@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -157,7 +158,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	theme, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Theme (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -363,7 +364,7 @@ func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, the
 	return func() (any, string, error) {
 		output, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

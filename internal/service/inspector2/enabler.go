@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -203,7 +204,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	s, err := AccountStatuses(ctx, conn, accountIDs)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Enabler (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -506,7 +507,7 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {

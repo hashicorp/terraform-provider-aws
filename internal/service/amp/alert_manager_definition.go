@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -80,7 +80,7 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 
 	amd, err := findAlertManagerDefinitionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Prometheus Alert Manager Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,7 +171,7 @@ func statusAlertManagerDefinition(ctx context.Context, conn *amp.Client, id stri
 	return func() (any, string, error) {
 		output, err := findAlertManagerDefinitionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

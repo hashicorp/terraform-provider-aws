@@ -1,4 +1,6 @@
-// // Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 // // SPDX-License-Identifier: MPL-2.0
 package finspace
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -223,7 +226,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	out, err := FindKxVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxVolume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -319,7 +322,7 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	_, err = waitKxVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxVolume, d.Id(), err)
 	}
 
@@ -381,7 +384,7 @@ func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, 
 func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindKxVolumeByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

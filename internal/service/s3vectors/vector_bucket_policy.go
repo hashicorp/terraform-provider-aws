@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors
@@ -96,7 +96,7 @@ func (r *vectorBucketPolicyResource) Read(ctx context.Context, request resource.
 	arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
 	output, err := findVectorBucketPolicyByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

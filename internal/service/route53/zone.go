@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -195,7 +196,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findHostedZoneByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Hosted Zone %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -386,7 +387,7 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 		hostedZoneDNSSEC, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
 		switch {
-		case tfresource.NotFound(err),
+		case retry.NotFound(err),
 			errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"),
 			tfawserr.ErrMessageContains(err, errCodeAccessDenied, "The operation GetDNSSEC is not available for the current AWS account"):
 		case err != nil:
@@ -437,7 +438,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 		return true
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 

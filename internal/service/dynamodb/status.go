@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -10,14 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -33,7 +33,7 @@ func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, table
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -53,7 +53,7 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 	return func() (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -73,7 +73,7 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, 
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -95,7 +95,7 @@ func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, 
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -117,7 +117,7 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -137,7 +137,7 @@ func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableNa
 	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -157,7 +157,7 @@ func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, op
 	return func() (any, string, error) {
 		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -177,7 +177,7 @@ func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) sdk
 	return func() (any, string, error) {
 		output, err := findTTLByTableName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -197,7 +197,7 @@ func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, opt
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

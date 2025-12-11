@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -164,7 +165,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 
 	resourceShare, err := findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] No RAM Resource Share %s found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -358,7 +359,7 @@ func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn st
 	return func() (any, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) || maybeInvitation.IsNone() {
+		if retry.NotFound(err) || maybeInvitation.IsNone() {
 			return nil, "", nil
 		}
 

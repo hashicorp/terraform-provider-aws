@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -97,7 +98,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 
 	globalNetwork, err := findGlobalNetworkByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Global Network %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +197,7 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Client,
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -226,7 +227,7 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Clie
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -256,7 +257,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		err = nil
 	}
 
@@ -343,7 +344,7 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, 
 	return func() (any, string, error) {
 		output, err := findGlobalNetworkByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

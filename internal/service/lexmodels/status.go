@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels
@@ -11,7 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -24,7 +24,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.Client,
 	return func() (any, string, error) {
 		output, err := findBotVersionByName(ctx, conn, name, version)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -40,7 +40,7 @@ func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 	return func() (any, string, error) {
 		output, err := findSlotTypeVersionByName(ctx, conn, name, version)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

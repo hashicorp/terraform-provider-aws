@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,7 +174,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -300,7 +301,7 @@ func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, d
 	return func() (any, string, error) {
 		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

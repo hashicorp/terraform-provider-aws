@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,7 +112,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	tableName, streamARN := parts[0], parts[1]
 	output, err := findKinesisDataStreamDestinationByTwoPartKey(ctx, conn, streamARN, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,7 +141,7 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	tableName, streamARN := parts[0], parts[1]
 	_, err = findKinesisDataStreamDestinationByTwoPartKey(ctx, conn, streamARN, tableName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -231,7 +232,7 @@ func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Clien
 		}
 		output, err := findKinesisDataStreamDestination(ctx, conn, input, kinesisDataStreamDestinationForStream(streamARN))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

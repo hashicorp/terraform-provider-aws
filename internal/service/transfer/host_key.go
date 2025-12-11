@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -26,6 +26,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/stringplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/privatestate"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -174,7 +175,7 @@ func (r *hostKeyResource) Read(ctx context.Context, request resource.ReadRequest
 
 	serverID, hostKeyID := fwflex.StringValueFromFramework(ctx, data.ServerID), fwflex.StringValueFromFramework(ctx, data.HostKeyID)
 	out, err := findHostKeyByTwoPartKey(ctx, conn, serverID, hostKeyID)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

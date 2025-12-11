@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -140,7 +140,7 @@ func (r *tableBucketReplicationResource) Read(ctx context.Context, request resou
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	output, err := findTableBucketReplicationByARN(ctx, conn, tableBucketARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

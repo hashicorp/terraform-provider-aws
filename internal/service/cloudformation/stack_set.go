@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -311,7 +312,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	callAs := d.Get("call_as").(string)
 	stackSet, err := findStackSetByName(ctx, conn, d.Id(), callAs)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -507,7 +508,7 @@ func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, call
 	return func() (any, string, error) {
 		output, err := findStackSetByName(ctx, conn, name, callAs)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -599,7 +600,7 @@ func statusStackSetOperation(ctx context.Context, conn *cloudformation.Client, s
 	return func() (any, string, error) {
 		output, err := findStackSetOperationByThreePartKey(ctx, conn, stackSetName, operationID, callAs)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

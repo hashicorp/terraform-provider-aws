@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -9,14 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -32,7 +32,7 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -48,7 +48,7 @@ func statusCluster(ctx context.Context, conn *redshift.Client, id string) sdkret
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -64,7 +64,7 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) sd
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -80,7 +80,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name strin
 	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -96,7 +96,7 @@ func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string
 	return func() (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -112,7 +112,7 @@ func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) s
 	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

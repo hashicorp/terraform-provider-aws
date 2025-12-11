@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -295,7 +296,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 
 	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -544,7 +545,7 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -560,7 +561,7 @@ func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Clien
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if tfresource.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
 				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 				mockService := &awstypes.ECSExpressGatewayService{
 					ServiceArn: aws.String(gatewayServiceARN),
@@ -648,7 +649,7 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	if err == nil {
 		return fmt.Errorf("Express Gateway Service %s already exists in cluster %s", serviceName.ValueString(), clusterName)
 	}
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 	return err
