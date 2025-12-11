@@ -73,6 +73,82 @@ func TestAccODBCloudAutonomousVmCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudAutonomousVmCluster_variables(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterResourceTestEntity.autonomousVmClusterDisplayNamePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
+			{
+				Config:             autonomousVmClusterConfig_useVariables(avmcDisplayName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudAutonomousVmCluster_usingARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
+	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
+
+	avmcWithoutTag, avmcWithTag := autonomousVMClusterResourceTestEntity.autonomousVmClusterByARN()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: avmcWithoutTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						return nil
+					}),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: avmcWithTag,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(avmc1.CloudAutonomousVmClusterId), *(avmc2.CloudAutonomousVmClusterId)) != 0 {
+							return errors.New("shouldn't create a new autonomous vm cluster")
+						}
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccODBCloudAutonomousVmCluster_withAllParams(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -479,4 +555,117 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
 `, exaDisplayName, emailAddress)
 
 	return resource
+}
+
+func autonomousVmClusterConfig_useVariables(rName string) string {
+	return fmt.Sprintf(`
+variable cloud_exadata_infrastructure_id {
+  default     = "exa_gjrmtxl4qk"
+  type        = string
+  description = "ODB Exadata Infrastructure Resource ID"
+
+}
+variable odb_network_id {
+  default     = "odbnet_3l9st3litg"
+  type        = string
+  description = "ODB Network"
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  cloud_exadata_infrastructure_id       = var.cloud_exadata_infrastructure_id
+  odb_network_id                        = var.odb_network_id
+  display_name                          = %[3]q
+  autonomous_data_storage_size_in_tbs   = 5
+  memory_per_oracle_compute_unit_in_gbs = 2
+  total_container_databases             = 1
+  cpu_core_count_per_node               = 40
+  license_model                         = "LICENSE_INCLUDED"
+  db_servers                            = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  scan_listener_port_tls                = 8561
+  scan_listener_port_non_tls            = 1024
+  maintenance_window {
+    preference = "NO_PREFERENCE"
+  }
+
+}
+`, rName)
+}
+
+func (autonomousVMClusterResourceTest) autonomousVmClusterByARN() (string, string) {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetworkDisplayName)
+	noTag := fmt.Sprintf(`
+
+
+
+
+%s
+
+%s
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.arn
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.arn
+  odb_network_id                        = aws_odb_network.test.arn
+  display_name                          = %[3]q
+  autonomous_data_storage_size_in_tbs   = 5
+  memory_per_oracle_compute_unit_in_gbs = 2
+  total_container_databases             = 1
+  cpu_core_count_per_node               = 40
+  license_model                         = "LICENSE_INCLUDED"
+  db_servers                            = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  scan_listener_port_tls                = 8561
+  scan_listener_port_non_tls            = 1024
+  maintenance_window {
+    preference = "NO_PREFERENCE"
+  }
+
+}
+`, exaInfra, odbNet, avmcDisplayName)
+
+	withTag := fmt.Sprintf(`
+
+
+%s
+
+%s
+
+
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.arn
+  odb_network_id                        = aws_odb_network.test.arn
+  display_name                          = %[3]q
+  autonomous_data_storage_size_in_tbs   = 5
+  memory_per_oracle_compute_unit_in_gbs = 2
+  total_container_databases             = 1
+  cpu_core_count_per_node               = 40
+  license_model                         = "LICENSE_INCLUDED"
+  db_servers                            = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  scan_listener_port_tls                = 8561
+  scan_listener_port_non_tls            = 1024
+  maintenance_window {
+    preference = "NO_PREFERENCE"
+  }
+  tags = {
+    "env" = "dev"
+  }
+
+}
+`, exaInfra, odbNet, avmcDisplayName)
+
+	return noTag, withTag
 }
