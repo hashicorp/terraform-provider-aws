@@ -57,6 +57,19 @@
   },
   {
     "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field2",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListOfNestedObject]",
+    "autoflex.target.path": "Field2",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsNestedObjectPointer",
+    "target_kind": "ptr",
+    "target_type": "*flex.awsNestedObjectPointer",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
+  },
+  {
+    "@level": "trace",
     "@message": "Matched fields",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Field1",
@@ -74,6 +87,19 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
     "autoflex.target.path": "Field2.Field1",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field2[0].Field1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "autoflex.target.path": "Field2.Field1",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "target_kind": "ptr",
+    "target_type": "*flex.awsSingleStringValue",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
   },
   {
     "@level": "trace",
@@ -144,6 +170,19 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]",
     "autoflex.target.path": "Field4",
     "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleInt64Value"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field4",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field]",
+    "autoflex.target.path": "Field4",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleInt64Value",
+    "target_kind": "slice",
+    "target_type": "[]flex.awsSingleInt64Value",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
   },
   {
     "@level": "trace",

@@ -17,6 +17,17 @@
   },
   {
     "@level": "trace",
+    "@message": "TRACE: Found xmlwrapper tag",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DirectWrapperTF",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DirectWrapperAWS",
+    "xmlWrapperField": "items"
+  },
+  {
+    "@level": "trace",
     "@message": "Matched fields",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
@@ -34,18 +45,5 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
     "autoflex.target.path": "Items",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DirectXMLWrapper"
-  },
-  {
-    "@level": "trace",
-    "@message": "Successfully expanded to XML wrapper",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "Items",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
-    "autoflex.target.path": "Items",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DirectXMLWrapper",
-    "items_count": 2,
-    "source_type": "basetypes.SetValue",
-    "target_type": "flex.DirectXMLWrapper",
-    "wrapper_field": "Items"
   }
 ]
