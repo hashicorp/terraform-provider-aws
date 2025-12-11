@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSV001
 
 The `AWSV001` analyzer reports when a `validation.StringInSlice()` call has the first parameter of a `[]string`, which suggests either that AWS API model constants are not available or that the usage is prior to the AWS Go SDK adding functions that return all values for the enumeration type.

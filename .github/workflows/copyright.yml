@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Copyright Checks
 
 on:
@@ -44,7 +47,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/YakDriver/copyplop@v0.2.0
+      - run: go install github.com/YakDriver/copyplop@latest
       - run: copyplop check
       - name: Check for Git Differences
         run: |

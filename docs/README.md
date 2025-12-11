@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Documentation
 
 This directory contains documentation for the [Terraform AWS Provider Contributor Guide](https://hashicorp.github.io/terraform-provider-aws/). Resource and data source documentation is located in the [`website`](../website/) directory and available in the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest/docs).

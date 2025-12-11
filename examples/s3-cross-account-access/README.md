@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # S3 bucket with cross-account access
 
 This example describes how to create an S3 bucket in one AWS account and give access to that bucket to another user from another AWS account using bucket policy.

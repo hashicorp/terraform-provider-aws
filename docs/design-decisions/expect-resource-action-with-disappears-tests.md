@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Use `plancheck.ExpectResourceAction` with disappears acceptance tests
 
 **Summary:** Acceptance tests exercising out of band deletion (colloquially named "disappears" tests) should utilize the terraform-plugin-testing library's plancheck package to assert expected post apply actions.  

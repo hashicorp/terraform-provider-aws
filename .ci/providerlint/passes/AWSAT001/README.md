@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT001
 
 The `AWSAT001` analyzer reports when a `resource.TestMatchResourceAttr()` call references an Amazon

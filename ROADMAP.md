@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Roadmap:  October 2025 - December 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.

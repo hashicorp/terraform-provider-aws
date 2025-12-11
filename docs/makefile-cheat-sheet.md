@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Makefile Cheat Sheet
 
 The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests, but there is a lot more functionality hidden in this humble file.

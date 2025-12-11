@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # EventBridge Event sent to Kinesis Stream
 
 This example sets up an EventBridge Rule with a Target and IAM Role & Policy

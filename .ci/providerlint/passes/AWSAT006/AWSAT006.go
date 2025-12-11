@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AWSAT006 defines an Analyzer that checks for
 // hardcoded AWS partition DNS suffixes
 package AWSAT006

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Terraform Plugin Migrations
 
 With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) there are now two options for creating resource/data-sources in the provider.

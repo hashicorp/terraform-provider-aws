@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # providerlint
 
 The `providerlint` tool is a Terraform Provider code linting tool, specifically tailored for the Terraform AWS Provider.

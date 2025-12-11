@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # EC2 Transit Gateway Cross-Account Peering Attachment
 
 This example demonstrates how to peer two Transit Gateways in different regions. The peer transit gateway can be in your account or a different AWS account. Refer to AWS documentation for supported regions.

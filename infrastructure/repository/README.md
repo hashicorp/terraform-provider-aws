@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # repository
 
 Public Terraform configuration for managing the `terraform-provider-aws` code repository, to enable community contributions.

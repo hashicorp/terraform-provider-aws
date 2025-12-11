@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Exclusive Relationship Management Resources
 
 **Summary:** A proposal describing the use case for "exclusive relationship management" resources and their function within the Terraform AWS provider.  

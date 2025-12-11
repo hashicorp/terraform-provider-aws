@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT006
 
 The AWSAT006 analyzer reports hardcoded AWS partition DNS suffixes. For tests

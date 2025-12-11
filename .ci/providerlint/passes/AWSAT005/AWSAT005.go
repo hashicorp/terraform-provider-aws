@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AWSAT005 defines an Analyzer that checks for
 // hardcoded AWS partitions in ARNs
 package AWSAT005

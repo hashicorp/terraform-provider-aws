@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT002
 
 The AWSAT002 analyzer reports hardcoded AMI IDs. AMI IDs are region dependent and tests will fail in any region or partition other than where the AMI was created.
