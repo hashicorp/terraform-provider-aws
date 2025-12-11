@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -125,7 +126,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	output, err := findResourcePolicyByWorkspaceID(ctx, conn, workspaceID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -248,7 +249,7 @@ func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.Descri
 	output, err := conn.DescribeResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -265,11 +266,11 @@ func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.Descri
 	return output, nil
 }
 
-func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID string) retry.StateRefreshFunc {
+func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResourcePolicyByWorkspaceID(ctx, conn, workspaceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -282,7 +283,7 @@ func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID str
 }
 
 func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeCreating),
 		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
@@ -299,7 +300,7 @@ func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceI
 }
 
 func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
@@ -316,7 +317,7 @@ func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceI
 }
 
 func waitResourcePolicyDeleted(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeDeleting, awstypes.WorkspacePolicyStatusCodeActive),
 		Target:  []string{},
 		Refresh: statusResourcePolicy(ctx, conn, workspaceID),

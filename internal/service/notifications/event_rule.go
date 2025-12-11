@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -29,6 +29,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,7 +141,7 @@ func (r *eventRuleResource) Read(ctx context.Context, request resource.ReadReque
 
 	output, err := findEventRuleByARN(ctx, conn, data.ARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -151,6 +152,10 @@ func (r *eventRuleResource) Read(ctx context.Context, request resource.ReadReque
 		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Event Rule (%s)", data.ARN.ValueString()), err.Error())
 
 		return
+	}
+
+	if aws.ToString(output.EventPattern) == "" {
+		output.EventPattern = nil
 	}
 
 	// Set attributes for import.
@@ -243,7 +248,7 @@ func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn str
 	output, err := conn.GetEventRule(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -260,11 +265,11 @@ func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn str
 	return output, nil
 }
 
-func statusEventRule(ctx context.Context, conn *notifications.Client, arn string) retry.StateRefreshFunc {
+func statusEventRule(ctx context.Context, conn *notifications.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEventRuleByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -299,7 +304,7 @@ func waitEventRuleCreated(ctx context.Context, conn *notifications.Client, arn s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
 		Refresh:                   statusEventRule(ctx, conn, arn),
@@ -320,7 +325,7 @@ func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		// If regions were added/removed then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating, awstypes.EventRuleStatusUpdating, awstypes.EventRuleStatusDeleting),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
@@ -342,7 +347,7 @@ func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EventRuleStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEventRule(ctx, conn, id),

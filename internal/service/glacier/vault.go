@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glacier
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -155,7 +156,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	output, err := findVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glacier Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,7 +172,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	accessPolicy, err := findVaultAccessPolicyByName(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("access_policy", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Glacier Vault (%s) access policy: %s", d.Id(), err)
@@ -186,7 +187,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	notificationConfig, err := findVaultNotificationsByName(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("notification", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Glacier Vault (%s) notifications: %s", d.Id(), err)
@@ -298,7 +299,7 @@ func findVaultByName(ctx context.Context, conn *glacier.Client, name string) (*g
 	output, err := conn.DescribeVault(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -323,7 +324,7 @@ func findVaultAccessPolicyByName(ctx context.Context, conn *glacier.Client, name
 	output, err := conn.GetVaultAccessPolicy(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -348,7 +349,7 @@ func findVaultNotificationsByName(ctx context.Context, conn *glacier.Client, nam
 	output, err := conn.GetVaultNotifications(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

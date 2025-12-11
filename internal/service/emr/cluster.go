@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -21,7 +21,7 @@ import (
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1072,7 +1073,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1203,7 +1204,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	autoTerminationPolicy, err := findAutoTerminationPolicyByClusterID(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("auto_termination_policy", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
@@ -1456,13 +1457,13 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
 	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.Status.State),
 			LastRequest: input,
 		}
@@ -1475,7 +1476,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1492,14 +1493,14 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	return output.Cluster, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *emr.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
 		}
 		output, err := findCluster(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1515,7 +1516,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
 		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1541,7 +1542,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
 		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1579,7 +1580,7 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1603,7 +1604,7 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1636,7 +1637,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") ||
 		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
 		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
