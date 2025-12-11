@@ -28,6 +28,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
+			Factory:  dataSourceAccount,
+			TypeName: "aws_organizations_account",
+			Name:     "Account",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrAccountID,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  dataSourceDelegatedAdministrators,
 			TypeName: "aws_organizations_delegated_administrators",
 			Name:     "Delegated Administrators",
