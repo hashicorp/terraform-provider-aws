@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appsync_resolver: Fix `caching_config.caching_keys` order preservation to prevent incorrect cache key generation
+```
