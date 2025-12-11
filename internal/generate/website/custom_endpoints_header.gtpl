@@ -21,6 +21,7 @@ This guide outlines how to get started with customizing endpoints, the available
 <!-- TOC depthFrom:2 -->
 
 - [Getting Started with Custom Endpoints](#getting-started-with-custom-endpoints)
+- [mTLS (Mutual TLS) Authentication](#mtls-mutual-tls-authentication)
 - [Available Endpoint Customizations](#available-endpoint-customizations)
 - [Connecting to Local AWS Compatible Solutions](#connecting-to-local-aws-compatible-solutions)
     - [DynamoDB Local](#dynamodb-local)
@@ -65,6 +66,60 @@ Endpoints are evaluated in the following order:
 1. Default service endpoint.
 
 If multiple, different Terraform AWS Provider configurations are required, see the [Terraform documentation on multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-instances) for additional information about the `alias` provider configuration and its usage.
+
+## mTLS (Mutual TLS) Authentication
+
+The Terraform AWS Provider supports mutual TLS (mTLS) authentication for secure communication with AWS services or AWS-compatible endpoints that require client certificate authentication.
+This is particularly useful in high-security environments, government clouds, or when connecting to on-premises AWS-compatible services.
+
+### Configuring mTLS
+
+mTLS can be configured using provider arguments or environment variables:
+
+```terraform
+provider "aws" {
+  client_certificate            = "/path/to/client-cert.pem"
+  client_private_key            = "/path/to/client-key.pem"
+  client_private_key_passphrase = "optional-passphrase"
+  custom_ca_bundle              = "/path/to/ca-bundle.pem"
+
+  # Custom endpoints that require mTLS
+  endpoints {
+    s3       = "https://s3.example.com"
+    dynamodb = "https://dynamodb.example.com"
+  }
+}
+```
+
+Alternatively, use environment variables:
+
+```bash
+export TF_AWS_CLIENT_CERTIFICATE_PATH="/path/to/client-cert.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PATH="/path/to/client-key.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE="optional-passphrase"
+export AWS_CA_BUNDLE="/path/to/ca-bundle.pem"
+```
+
+### mTLS Configuration Options
+
+* `client_certificate` - Path to the client certificate file in PEM format. Can also be set using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.
+* `client_private_key` - Path to the client private key file in PEM format. Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.
+* `client_private_key_passphrase` - (Optional) Passphrase for encrypted private key files. Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.
+* `custom_ca_bundle` - (Optional) Path to custom CA certificate bundle for verifying server certificates. Can also be set using the `AWS_CA_BUNDLE` environment variable.
+
+### Certificate Requirements
+
+* **Client Certificate**: Must be in PEM format and contain the full certificate chain if intermediate certificates are required.
+* **Private Key**: Must be in PEM format. Both encrypted (with passphrase) and unencrypted keys are supported.
+* **CA Bundle**: Should contain the root and intermediate certificates needed to verify the server's certificate chain.
+
+### Example Use Cases
+
+* **Government Clouds**: Connecting to AWS GovCloud or other government cloud environments that require mTLS.
+* **On-Premises AWS Services**: Connecting to AWS Outposts, AWS Snowball, or other on-premises AWS services.
+* **Custom AWS-Compatible Services**: Connecting to MinIO, LocalStack, or other services that implement AWS APIs with mTLS requirements.
+
+**NOTE:** mTLS configuration applies to all AWS service connections made by the provider. Ensure the certificates are valid for all endpoints the client plans to use.
 
 ## Available Endpoint Customizations
 
