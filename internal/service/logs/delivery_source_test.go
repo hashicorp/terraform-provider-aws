@@ -22,10 +22,6 @@ import (
 )
 
 func testAccDeliverySource_basic(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -37,13 +33,7 @@ func testAccDeliverySource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_basic(rName),
@@ -75,10 +65,6 @@ func testAccDeliverySource_basic(t *testing.T) {
 }
 
 func testAccDeliverySource_disappears(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -90,13 +76,7 @@ func testAccDeliverySource_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_basic(rName),
@@ -111,10 +91,6 @@ func testAccDeliverySource_disappears(t *testing.T) {
 }
 
 func testAccDeliverySource_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -126,13 +102,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -303,37 +273,36 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccDeliverySourceConfig_base(rName string) string {
-	foundationModel := "amazon.titan-embed-text-v1"
+	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, foundationModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseS3VectorsBase(rName), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   knowledge_base_configuration {
+    type = "VECTOR"
+
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
-    }
-    type = "VECTOR"
-  }
-
-  storage_configuration {
-    type = "RDS"
-    rds_configuration {
-      resource_arn           = aws_rds_cluster.test.arn
-      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
-      database_name          = aws_rds_cluster.test.database_name
-      table_name             = "bedrock_integration.bedrock_kb"
-      field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
       }
     }
   }
 
-  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+  storage_configuration {
+    type = "S3_VECTORS"
+
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.test.index_arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, foundationModel))
 }
