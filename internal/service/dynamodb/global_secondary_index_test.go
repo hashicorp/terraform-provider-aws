@@ -1859,6 +1859,79 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 	})
 }
 
+func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi1 awstypes.GlobalSecondaryIndexDescription
+	var gsi2 awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName1 := "aws_dynamodb_global_secondary_index.test1"
+	resourceName2 := "aws_dynamodb_global_secondary_index.test2"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expectTableGSINoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+				},
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_importblock(rNameTable, rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName1),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName2),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName1, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName2, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -2764,6 +2837,22 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, tableName, indexName1, indexName2)
+}
+
+func testAccGlobalSecondaryIndexConfig_migrate_multiple_importblock(tableName, indexName1, indexName2 string) string {
+	return acctest.ConfigCompose(
+		testAccGlobalSecondaryIndexConfig_migrate_multiple(tableName, indexName1, indexName2),
+		fmt.Sprintf(`
+import {
+  to = aws_dynamodb_global_secondary_index.test1
+  id = "${aws_dynamodb_table.test.arn}/index/%[1]s"
+}
+
+import {
+  to = aws_dynamodb_global_secondary_index.test2
+  id = "${aws_dynamodb_table.test.arn}/index/%[2]s"
+}
+`, indexName1, indexName2))
 }
 
 func testAccGlobalSecondaryIndexConfig_migrate_partial(tableName, indexName1, indexName2 string) string {
