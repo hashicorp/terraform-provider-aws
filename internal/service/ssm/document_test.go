@@ -554,6 +554,101 @@ mainSteps:
 	})
 }
 
+func TestAccSSMDocument_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocumentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDocumentConfig_tags1(rName, "key2", "value2updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMDocument_appConfigDocumentWithSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	schemaResourceName := "aws_ssm_document.test_schema"
+	configResourceName := "aws_ssm_document.test"
+	schemaName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	configName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentConfig_appConfigSchema(schemaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, schemaResourceName),
+					resource.TestCheckResourceAttr(schemaResourceName, "name", schemaName),
+					resource.TestCheckResourceAttr(schemaResourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(schemaResourceName, "document_type", "ApplicationConfigurationSchema"),
+					resource.TestCheckResourceAttr(schemaResourceName, "force_destroy", "true"),
+				),
+				Destroy: false,
+			},
+			{
+				ResourceName:            schemaResourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccDocumentConfig_appConfig(configName, schemaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, configResourceName),
+					resource.TestCheckResourceAttr(configResourceName, "name", configName),
+					resource.TestCheckResourceAttr(configResourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(configResourceName, "document_type", "ApplicationConfiguration"),
+					resource.TestCheckResourceAttr(configResourceName, "requires.#", "1"),
+				),
+			},
+			{
+				ResourceName:            configResourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"requires.#", "requires.0"},
+			},
+		},
+	})
+}
+
 func TestAccSSMDocument_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1208,4 +1303,75 @@ resource "aws_ssm_document" "test" {
 DOC
 }
 `, rName)
+}
+
+func testAccDocumentConfig_appConfigSchema(schemaName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test_schema" {
+  name          = %[1]q
+  document_type = "ApplicationConfigurationSchema"
+  force_destroy = true
+
+  content = <<DOC
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Example Schema",
+  "type": "object",
+  "required": [
+	"requiredProp"
+  ],
+  "properties": {
+	"requiredProp": {
+      "type": "boolean",
+	  "description": "Example boolean prop that is required."
+	},
+	"optionalStringProp": {
+	  "type": "string",
+	  "description": "Example string property that is optional."
+	},
+	"optionalObjectProp": {
+	  "type": "object",
+      "required": [
+        "subProp"
+      ],
+      "properties": {
+        "subProp": {
+          "type": "string",
+          "pattern": "present|absent",
+          "description": "A required property inside an optional object."
+        },
+        "subProp2": {
+          "type": "string",
+          "description": "An optional property inside an optional object."
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
+DOC
+}
+`, schemaName)
+}
+
+func testAccDocumentConfig_appConfig(configName, schemaName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "ApplicationConfiguration"
+
+  requires {
+	name = %[2]q
+    version = "$LATEST"
+  }
+
+  content = <<DOC
+{
+  "requiredProp": true,
+  "optionalObjectProp": {"subProp": "present"}
+}
+DOC
+}
+`, configName, schemaName)
 }
