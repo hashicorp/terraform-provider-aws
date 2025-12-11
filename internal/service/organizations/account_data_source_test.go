@@ -50,14 +50,15 @@ func testAccAccountDataSource_basic(t *testing.T) {
 func testAccAccountDataSourceConfig_basic(name string, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_account" "test" {
-  name  = %[1]q
-  email = %[2]q
+  name              = %[1]q
+  email             = %[2]q
   close_on_deletion = true
 }
 
 data "aws_organizations_account" "test" {
   account_id = aws_organizations_account.test.id
 }
+
 
 `, name, email)
 }
