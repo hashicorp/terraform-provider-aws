@@ -14,12 +14,12 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"KnowledgeBase": {
-			"RDS":                        testAccKnowledgeBase_RDS_update,
-			acctest.CtDisappears:         testAccKnowledgeBase_disappears,
-			"tags":                       testAccKnowledgeBase_tags,
-			"OpenSearchServerlessBasic":  testAccKnowledgeBase_OpenSearchServerless_basic,
-			"OpenSearchServerlessUpdate": testAccKnowledgeBase_OpenSearchServerless_update,
-			"OpenSearchServerlessSupplementalDataStorage": testAccKnowledgeBase_OpenSearchServerless_supplementalDataStorage,
+			"RDS":                                    testAccKnowledgeBase_RDS_update,
+			acctest.CtDisappears:                     testAccKnowledgeBase_disappears,
+			"tags":                                   testAccKnowledgeBase_tags,
+			"update":                                 testAccKnowledgeBase_update,
+			"SupplementalDataStorage":                testAccKnowledgeBase_supplementalDataStorage,
+			"OpenSearchServerlessBasic":              testAccKnowledgeBase_OpenSearchServerless_basic,
 			"KendraBasic":                            testAccKnowledgeBase_Kendra_basic,
 			"OpenSearchManagedClusterBasic":          testAccKnowledgeBase_OpenSearchManagedCluster_basic,
 			"S3Vectors":                              testAccKnowledgeBase_S3Vectors_update,
