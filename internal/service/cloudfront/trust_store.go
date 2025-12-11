@@ -182,21 +182,14 @@ func (r *resourceTrustStore) Create(ctx context.Context, request resource.Create
 	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	_, err = waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
+	output, err := waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
-	// Fetch the created trust store and populate the resource model
-	findOutput, findErr := findTrustStoreByID(ctx, conn, data.ID.ValueString())
-	if findErr != nil {
-		smerr.AddError(ctx, &response.Diagnostics, findErr, smerr.ID, data.ID.String())
-		return
-	}
-
 	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, findOutput.TrustStore, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -291,21 +284,14 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	output, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
 
-	// Fetch the updated trust store and populate the resource model
-	findOutput, findErr := findTrustStoreByID(ctx, conn, plan.ID.ValueString())
-	if findErr != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, findErr, smerr.ID, plan.ID.String())
-		return
-	}
-
 	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, findOutput.TrustStore, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
