@@ -6,7 +6,6 @@ package redshift
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -23,23 +22,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_redshift_idc_application", name="IDC Application")
+// @Tags(identifierAttribute="redshift_idc_application_arn")
 func newResourceIDCApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIDCApplication{}
 
@@ -57,6 +53,11 @@ type resourceIDCApplication struct {
 func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"application_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ApplicationType](),
+				Optional:   true,
+				Computed:   true,
+			},
 			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -82,6 +83,11 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.LengthBetween(1, 127),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
 				},
+			},
+			"redshift_idc_application_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				Optional:   true,
 			},
 			"redshift_idc_application_name": schema.StringAttribute{
 				Required: true,
@@ -109,8 +115,8 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 							Optional:    true,
 						},
 						"trusted_token_issuer_arn": schema.StringAttribute{
-							Optional:   true,
 							CustomType: fwtypes.ARNType,
+							Optional:   true,
 						},
 					},
 				},
@@ -145,6 +151,7 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 														Attributes: map[string]schema.Attribute{
 															"authorization": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+																Required:   true,
 															},
 														},
 													},
@@ -171,6 +178,7 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 											Attributes: map[string]schema.Attribute{
 												"authorization": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+													Required:   true,
 												},
 											},
 										},
@@ -194,6 +202,7 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 											Attributes: map[string]schema.Attribute{
 												"authorization": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+													Required:   true,
 												},
 											},
 										},
@@ -218,6 +227,7 @@ func (r *resourceIDCApplication) Create(ctx context.Context, req resource.Create
 	}
 
 	var input redshift.CreateRedshiftIdcApplicationInput
+	input.Tags = getTagsIn(ctx)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -250,16 +260,18 @@ func (r *resourceIDCApplication) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := findIDCApplicationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findIDCApplicationByID(ctx, conn, state.RedshiftIDCApplicationARN.ValueString())
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RedshiftIDCApplicationName.String())
 		return
 	}
+
+	setTagsOut(ctx, out.Tags)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
@@ -286,19 +298,19 @@ func (r *resourceIDCApplication) Update(ctx context.Context, req resource.Update
 	}
 
 	if diff.HasChanges() {
-		var input redshift.UpdateIDCApplicationInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		var input redshift.ModifyRedshiftIdcApplicationInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateIDCApplication(ctx, &input)
+		out, err := conn.ModifyRedshiftIdcApplication(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RedshiftIDCApplicationName.String())
 			return
 		}
-		if out == nil || out.IDCApplication == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+		if out == nil || out.RedshiftIdcApplication == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RedshiftIDCApplicationARN.String())
 			return
 		}
 
@@ -306,13 +318,6 @@ func (r *resourceIDCApplication) Update(ctx context.Context, req resource.Update
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitIDCApplicationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -327,24 +332,17 @@ func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	input := redshift.DeleteIDCApplicationInput{
-		IDCApplicationId: state.ID.ValueStringPointer(),
+	input := redshift.DeleteRedshiftIdcApplicationInput{
+		RedshiftIdcApplicationArn: state.RedshiftIDCApplicationARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteIDCApplication(ctx, &input)
+	_, err := conn.DeleteRedshiftIdcApplication(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitIDCApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RedshiftIDCApplicationName.String())
 		return
 	}
 }
@@ -362,8 +360,7 @@ func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id strin
 	if err != nil {
 		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+				LastError: err,
 			})
 		}
 
@@ -379,14 +376,14 @@ func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id strin
 
 type resourceIDCApplicationModel struct {
 	framework.WithRegionModel
-	ApplicationType	fwtypes.StringEnum[awstypes.ApplicationType] `tfsdk:"application_type"`
+	ApplicationType            fwtypes.StringEnum[awstypes.ApplicationType]                    `tfsdk:"application_type"`
 	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerListModel] `tfsdk:"authorized_token_issuer_list"`
 	IAMRoleARN                 fwtypes.ARN                                                     `tfsdk:"iam_role_arn"`
 	IDCDisplayName             types.String                                                    `tfsdk:"idc_display_name"`
 	IDCInstanceARN             fwtypes.ARN                                                     `tfsdk:"idc_instance_arn"`
-	IDCManagedApplicationARN fwtypes.ARN `tfsdk:"idc_managed_application_arn"`
+	IDCManagedApplicationARN   fwtypes.ARN                                                     `tfsdk:"idc_managed_application_arn"`
 	IdentityNamespace          types.String                                                    `tfsdk:"identity_namespace"`
-	RedshiftIDCApplicationARN fwtypes.ARN `tfsdk:"redshift_idc_application_arn"`
+	RedshiftIDCApplicationARN  fwtypes.ARN                                                     `tfsdk:"redshift_idc_application_arn"`
 	RedshiftIDCApplicationName types.String                                                    `tfsdk:"redshift_idc_application_name"`
 	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]       `tfsdk:"service_integrations"`
 	Tags                       tftags.Map                                                      `tfsdk:"tags"`

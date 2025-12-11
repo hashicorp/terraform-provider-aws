@@ -27,12 +27,12 @@ func TestAccRedshiftIdcApplication_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdcApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdcApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idc_display_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "idc_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
@@ -58,13 +58,13 @@ func TestAccRedshiftIdcApplication_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdcApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdcApplicationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceIdcApplication(), resourceName),
+					testAccCheckIDCApplicationExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceIdcApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,12 +81,12 @@ func TestAccRedshiftIdcApplication_authorizedTokenIssuerList(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdcApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_authorizedTokenIssuerList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdcApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer_list.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
@@ -112,12 +112,12 @@ func TestAccRedshiftIdcApplication_serviceIntegrations(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdcApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_serviceIntegrations(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdcApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "service_integrations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.lake_formation.#", "1"),
@@ -133,9 +133,9 @@ func TestAccRedshiftIdcApplication_serviceIntegrations(t *testing.T) {
 	})
 }
 
-func testAccCheckIdcApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIDCApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_idc_application" {
@@ -158,7 +158,7 @@ func testAccCheckIdcApplicationDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckIdcApplicationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckIDCApplicationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -169,7 +169,7 @@ func testAccCheckIdcApplicationExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Redshift IDC Application is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, rs.Primary.ID)
 
