@@ -318,7 +318,7 @@ func testAccKnowledgeBase_update(t *testing.T) {
 	})
 }
 
-func testAccKnowledgeBase_supplementalDataStorage(t *testing.T) {
+func testAccKnowledgeBase_OpenSearchServerless_supplementalDataStorage(t *testing.T) {
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var knowledgebase awstypes.KnowledgeBase
@@ -327,9 +327,7 @@ func testAccKnowledgeBase_supplementalDataStorage(t *testing.T) {
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
@@ -338,28 +336,47 @@ func testAccKnowledgeBase_supplementalDataStorage(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_supplementalDataStorage(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.embedding_model_configuration.0.bedrock_embedding_model_configuration.0.dimensions", "1024"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.embedding_model_configuration.0.bedrock_embedding_model_configuration.0.embedding_data_type", "FLOAT32"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.supplemental_data_storage_configuration.0.storage_location.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.0.supplemental_data_storage_configuration.0.storage_location.0.s3_location.0.uri", fmt.Sprintf("s3://%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"supplemental_data_storage_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"storage_location": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"s3_location": knownvalue.ListExact([]knownvalue.Check{
+														knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"s3_location":  knownvalue.ListSizeExact(1),
+															names.AttrType: tfknownvalue.StringExact(awstypes.SupplementalDataStorageLocationTypeS3),
+														}),
+													}),
+												}),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
