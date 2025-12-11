@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -57,13 +57,9 @@ type resourceIDCApplication struct {
 func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-			},
 			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				Required:   true,
 			},
 			"idc_display_name": schema.StringAttribute{
 				Required: true,
@@ -242,7 +238,6 @@ func (r *resourceIDCApplication) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -355,7 +350,7 @@ func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceIDCApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("redshift_idc_application_arn"), req, resp)
 }
 
 func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.RedshiftIdcApplication, error) {
@@ -384,13 +379,14 @@ func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id strin
 
 type resourceIDCApplicationModel struct {
 	framework.WithRegionModel
-	ARN                        fwtypes.ARN                                                     `tfsdk:"arn"`
+	ApplicationType	fwtypes.StringEnum[awstypes.ApplicationType] `tfsdk:"application_type"`
 	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerListModel] `tfsdk:"authorized_token_issuer_list"`
-	Description                types.String                                                    `tfsdk:"description"`
 	IAMRoleARN                 fwtypes.ARN                                                     `tfsdk:"iam_role_arn"`
 	IDCDisplayName             types.String                                                    `tfsdk:"idc_display_name"`
 	IDCInstanceARN             fwtypes.ARN                                                     `tfsdk:"idc_instance_arn"`
+	IDCManagedApplicationARN fwtypes.ARN `tfsdk:"idc_managed_application_arn"`
 	IdentityNamespace          types.String                                                    `tfsdk:"identity_namespace"`
+	RedshiftIDCApplicationARN fwtypes.ARN `tfsdk:"redshift_idc_application_arn"`
 	RedshiftIDCApplicationName types.String                                                    `tfsdk:"redshift_idc_application_name"`
 	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]       `tfsdk:"service_integrations"`
 	Tags                       tftags.Map                                                      `tfsdk:"tags"`
@@ -408,6 +404,11 @@ type serviceIntegrationsModel struct {
 	S3AccessGrants fwtypes.ListNestedObjectValueOf[s3AccessGrantsModel] `tfsdk:"s3_access_grants"`
 }
 
+var (
+	_ flex.Expander  = serviceIntegrationsModel{}
+	_ flex.Flattener = &serviceIntegrationsModel{}
+)
+
 func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.LakeFormation.IsNull():
@@ -424,7 +425,7 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 		}
 
 		return &r, diags
-	
+
 	case !m.Redshift.IsNull():
 		redshiftData, d := m.Redshift.ToPtr(ctx)
 		diags.Append(d...)
@@ -463,8 +464,32 @@ func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diag
 	var diags diag.Diagnostics
 
 	switch t := v.(type) {
-		case awstypes.
+	case awstypes.ServiceIntegrationsUnionMemberLakeFormation:
+		var data lakeFormationModel
+		diags.Append(flex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.LakeFormation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.ServiceIntegrationsUnionMemberRedshift:
+		var data redshiftModel
+		diags.Append(flex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Redshift = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	case awstypes.ServiceIntegrationsUnionMemberS3AccessGrants:
+		var data s3AccessGrantsModel
+		diags.Append(flex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.S3AccessGrants = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	}
+
+	return diags
 }
 
 type lakeFormationModel struct {
