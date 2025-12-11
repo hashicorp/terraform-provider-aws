@@ -61,7 +61,8 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
 		inputID             string
 		inputRegion         string
 		useSchemaWithID     bool
@@ -71,43 +72,43 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"Attr_DefaultRegion": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    region,
-			expectedRegion: region,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      region,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 		"Attr_RegionOverride": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    anotherRegion,
-			expectedRegion: anotherRegion,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      anotherRegion,
+			expectedRegion:   anotherRegion,
+			expectError:      false,
 		},
 		"Attr_NoIdentity": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    region,
-			noIdentity:     true,
-			expectedRegion: region,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      region,
+			noIdentity:       true,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 
 		"ID_DefaultRegion": {
-			attrName:        "id",
-			inputID:         "a_name",
-			inputRegion:     region,
-			useSchemaWithID: true,
-			expectedRegion:  region,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			inputRegion:      region,
+			useSchemaWithID:  true,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 		"ID_RegionOverride": {
-			attrName:        "id",
-			inputID:         "a_name",
-			inputRegion:     anotherRegion,
-			useSchemaWithID: true,
-			expectedRegion:  anotherRegion,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			inputRegion:      anotherRegion,
+			useSchemaWithID:  true,
+			expectedRegion:   anotherRegion,
+			expectError:      false,
 		},
 	}
 
@@ -125,7 +126,12 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				"region": tc.inputRegion,
 			}
 
-			identitySpec := regionalSingleParameterIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = regionalSingleParameterIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = regionalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
@@ -192,8 +198,8 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
 						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
 					}
-					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.attrName)); e != a {
-						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.identityAttrName)); e != a {
+						t.Errorf("expected Identity `%s` to be %q, got %q", tc.identityAttrName, e, a)
 					}
 				}
 			}
