@@ -755,6 +755,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 	testCases := map[string]struct {
 		inputID               string
 		inputRegion           string
+		identitySpec          inttypes.Identity
 		useSchemaWithID       bool
 		noIdentity            bool
 		expectedResourceAttrs map[string]string
@@ -764,8 +765,9 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 		expectError           bool
 	}{
 		"DefaultRegion": {
-			inputID:     "a_name,a_type",
-			inputRegion: region,
+			inputID:      "a_name,a_type",
+			inputRegion:  region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -778,8 +780,9 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectError:    false,
 		},
 		"RegionOverride": {
-			inputID:     "a_name,a_type",
-			inputRegion: anotherRegion,
+			inputID:      "a_name,a_type",
+			inputRegion:  anotherRegion,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -803,14 +806,16 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectError:    false,
 		},
 		"Invalid": {
-			inputID:     "invalid",
-			inputRegion: region,
-			expectError: true,
+			inputID:      "invalid",
+			inputRegion:  region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectError:  true,
 		},
 
 		"WithIDAttr_DefaultRegion": {
 			inputID:         "a_name,a_type",
 			inputRegion:     region,
+			identitySpec:    regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
@@ -827,6 +832,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 		"WithIDAttr_TrimmedID": {
 			inputID:         "trim:a_name,a_type",
 			inputRegion:     region,
+			identitySpec:    regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
@@ -856,11 +862,9 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				"region": tc.inputRegion,
 			}
 
-			identitySpec := regionalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
 			}
 
 			schema := regionalMultipleParameterizedSchema
@@ -876,7 +880,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				importSpec.SetIDAttr = true
 			}
 
-			response := importByIDWithState(ctx, importer.MultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			response := importByIDWithState(ctx, importer.MultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, tc.identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
