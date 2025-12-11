@@ -9,10 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -920,16 +922,26 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				if identity := response.Identity; identity == nil {
 					t.Error("Identity should be set")
 				} else {
-					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
-						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					expectedIdentityAttrs := tc.expectedIdentityAttrs
+					expectedIdentityAttrs["account_id"] = accountID
+					expectedIdentityAttrs["region"] = tc.expectedRegion
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
 					}
-					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
-						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
-					}
-					for name, expectedAttr := range tc.expectedIdentityAttrs {
-						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
-							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
 						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
