@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -152,10 +153,10 @@ func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexN
 }
 
 func waitAllGSIActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
 		Target:  enum.Slice(awstypes.IndexStatusActive),
-		Refresh: statusAllGSI(ctx, conn, tableName),
+		Refresh: statusAllGSI(conn, tableName),
 		Timeout: max(createTableTimeout, timeout),
 	}
 

@@ -133,8 +133,8 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
-func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAllGSI(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
 		if retry.NotFound(err) {
