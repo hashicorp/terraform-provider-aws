@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOp=ListTags -ListTagsOpPaginated -ListTagsInIDElem=ResourceIdList -ListTagsInIDNeedValueSlice -ListTagsOutTagsElem=ResourceTagList[0].TagsList -ServiceTagsSlice -TagOp=AddTags -TagInIDElem=ResourceId -TagInTagsElem=TagsList -UntagOp=RemoveTags -UntagInNeedTagType -UntagInTagsElem=TagsList -UpdateTags

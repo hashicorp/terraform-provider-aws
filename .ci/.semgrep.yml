@@ -207,7 +207,7 @@ rules:
 
   - id: is-not-found-error
     languages: [go]
-    message: Check for retry.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with retry.NotFound()
     paths:
       include:
         - "/internal"

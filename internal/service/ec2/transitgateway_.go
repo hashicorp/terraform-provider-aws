@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -217,7 +218,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	transitGateway, err := findTransitGatewayByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,14 +236,18 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
-	var encryptionSupport string
-	encryptionState := transitGateway.Options.EncryptionSupport.EncryptionState
-	if encryptionState == awstypes.EncryptionStateValueEnabled || encryptionState == awstypes.EncryptionStateValueEnabling {
-		encryptionSupport = string(awstypes.EncryptionSupportOptionValueEnable)
-	} else {
-		encryptionSupport = string(awstypes.EncryptionSupportOptionValueDisable)
+
+	if transitGateway.Options.EncryptionSupport != nil {
+		var encryptionSupport string
+		encryptionState := transitGateway.Options.EncryptionSupport.EncryptionState
+		if encryptionState == awstypes.EncryptionStateValueEnabled || encryptionState == awstypes.EncryptionStateValueEnabling {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueEnable)
+		} else {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueDisable)
+		}
+		d.Set("encryption_support", encryptionSupport)
 	}
-	d.Set("encryption_support", encryptionSupport)
+
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)

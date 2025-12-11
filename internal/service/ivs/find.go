@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -20,7 +20,7 @@ func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.Client, id string) (
 	}
 	out, err := conn.GetPlaybackKeyPair(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -43,7 +43,7 @@ func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.Client, id st
 	}
 	out, err := conn.GetRecordingConfiguration(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -67,7 +67,7 @@ func FindChannelByID(ctx context.Context, conn *ivs.Client, arn string) (*awstyp
 	out, err := conn.GetChannel(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -89,7 +89,7 @@ func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.Client, channelArn 
 	}
 	out, err := conn.ListStreamKeys(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -100,7 +100,7 @@ func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.Client, channelArn 
 	}
 
 	if len(out.StreamKeys) < 1 {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: in,
 		}
 	}
@@ -116,7 +116,7 @@ func findStreamKeyByID(ctx context.Context, conn *ivs.Client, id string) (*awsty
 	}
 	out, err := conn.GetStreamKey(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

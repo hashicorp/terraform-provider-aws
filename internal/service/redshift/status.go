@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -8,15 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -28,11 +28,11 @@ func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id st
 	}
 }
 
-func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -44,11 +44,11 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 	}
 }
 
-func statusCluster(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -60,11 +60,11 @@ func statusCluster(ctx context.Context, conn *redshift.Client, id string) retry.
 	}
 }
 
-func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -76,11 +76,11 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) re
 	}
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) retry.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -92,11 +92,11 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name strin
 	}
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -108,11 +108,11 @@ func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string
 	}
 }
 
-func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) retry.StateRefreshFunc {
+func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

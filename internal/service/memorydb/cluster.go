@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -397,7 +398,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -631,7 +632,7 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -647,11 +648,11 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -663,11 +664,11 @@ func statusCluster(ctx context.Context, conn *memorydb.Client, name string) retr
 	}
 }
 
-func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -679,11 +680,11 @@ func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, nam
 	}
 }
 
-func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -704,7 +705,7 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, nam
 }
 
 func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:  []string{clusterStatusAvailable},
 		Refresh: statusCluster(ctx, conn, name),
@@ -721,7 +722,7 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 }
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      []string{clusterStatusDeleting},
 		Target:       []string{},
 		Refresh:      statusCluster(ctx, conn, name),
@@ -743,7 +744,7 @@ func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterParameterGroupStatusApplying},
 		Target:  []string{clusterParameterGroupStatusInSync},
 		Refresh: statusClusterParameterGroup(ctx, conn, name),
@@ -763,7 +764,7 @@ func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterSecurityGroupStatusModifying},
 		Target:  []string{clusterSecurityGroupStatusActive},
 		Refresh: statusClusterSecurityGroups(ctx, conn, name),

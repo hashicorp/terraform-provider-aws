@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,7 +174,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -279,7 +280,7 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	output, err := conn.GetDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -296,11 +297,11 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	return output.DomainAssociation, nil
 }
 
-func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
+func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -316,7 +317,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusCreating,
 			types.DomainStatusInProgress,
@@ -350,7 +351,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
@@ -383,7 +384,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
