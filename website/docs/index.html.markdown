@@ -309,28 +309,25 @@ There are three ways to provide additional User-Agent information.
 1. The `TF_APPEND_USER_AGENT` environment variable.
 1. The [`provider_meta`](https://developer.hashicorp.com/terraform/internals/provider-meta) `user_agent` argument.
 
-The first two options will apply the additional information to all resources, while `provider_meta` will be scoped only to the module in which it is configured.
+-> The first two options will apply to all resources managed by the provider instance, while the `provider_meta` configuration applies only to resources in the module in which it is configured.
 
 ### `user_agent` Provider Argument
 
-When using the `user_agent` provider argument, the items will be appended to the User-Agent header in order.
-
-For example,
-
-~> The [`user_agent`](./functions/user_agent.html.markdown) provider-defined function can be used to format the name, version, and comment components.
+When using the `user_agent` provider argument, the items will be appended to the `User-Agent` header in order.
+The [`user_agent` provider-defined function](./functions/user_agent.html.markdown) can be used to format the name, version, and comment components.
 
 ```terraform
 provider "aws" {
   user_agent = [
     provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+    "other-demo/0.0.2 (other comment)",
   ]
 }
 ```
 
 ### `TF_APPEND_USER_AGENT` Environment Variable
 
-When using the environment variable, the provided value will be directly appended to the User-Agent header.
-For example,
+When using the environment variable, the provided value will be directly appended to the `User-Agent` header.
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
@@ -341,9 +338,7 @@ For example,
 The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
 This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
 
-For example,
-
-~> In a module, `provider_meta` is defined within the `terraform` block.
+-> In a module, `provider_meta` is defined within the `terraform` block.
 The `provider` block is inherited from the root module.
 
 ```terraform
@@ -358,6 +353,7 @@ terraform {
   provider_meta "aws" {
     user_agent = [
       provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+      "other-demo/0.0.2 (other comment)",
     ]
   }
 }
