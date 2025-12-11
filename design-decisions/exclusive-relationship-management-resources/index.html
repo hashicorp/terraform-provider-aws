@@ -1,0 +1,1362 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Exclusive Relationship Management Resources - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#exclusive-relationship-management-resources" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Exclusive Relationship Management Resources
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        ARN-Based Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Parameterized Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+    <nav class="md-nav" aria-label="Background">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#existing-resources" class="md-nav__link">
+    Existing Resources
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposal" class="md-nav__link">
+    Proposal
+  </a>
+  
+    <nav class="md-nav" aria-label="Proposal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#potential-resources" class="md-nav__link">
+    Potential Resources
+  </a>
+  
+    <nav class="md-nav" aria-label="Potential Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inline-iam-policies-to-role" class="md-nav__link">
+    Inline IAM policies to role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inline-iam-policies-to-user" class="md-nav__link">
+    Inline IAM policies to user
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inline-iam-policies-to-group" class="md-nav__link">
+    Inline IAM policies to group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer-managed-iam-policies-to-role" class="md-nav__link">
+    Customer managed IAM policies to role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer-managed-iam-policies-to-user" class="md-nav__link">
+    Customer managed IAM policies to user
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer-managed-iam-policies-to-group" class="md-nav__link">
+    Customer managed IAM policies to group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ec2-security-groups-to-network-interface" class="md-nav__link">
+    EC2 security groups to network interface
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vpc-security-group-rules-to-security-group" class="md-nav__link">
+    VPC security group rules to security group
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternate-naming-conventions" class="md-nav__link">
+    Alternate Naming Conventions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    Next Steps
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="exclusive-relationship-management-resources">Exclusive Relationship Management Resources<a class="headerlink" href="#exclusive-relationship-management-resources" title="Permanent link">#</a></h1>
+<p><strong>Summary:</strong> A proposal describing the use case for "exclusive relationship management" resources and their function within the Terraform AWS provider.<br />
+<strong>Created</strong>: 2024-09-06<br />
+<strong>Author</strong>: <a href="https://github.com/jar-b">@jar-b</a>  </p>
+<hr />
+<p>Within AWS there are several resource types which have direct relationships or dependencies on one another. These can be either "one-to-one", where a single entity is linked to another, or "one-to-many", where a single parent entity can be linked to multiple children. As the Terraform AWS provider has matured, the patterns for modeling these relationships have evolved, most notably in the "one-to-many" style relationships.</p>
+<p>This RFC will cover a brief history of "one-to-many" resource relationships and their representation in the Terraform AWS provider, followed by a proposal for enabling exclusive management of these relationships via a standalone resource. For an in-depth review of all relationship resources in the Terraform AWS provider, refer to the <a href="../relationship-resource-design-standards/">relationship resource design standards</a> design decision.</p>
+<h2 id="background">Background<a class="headerlink" href="#background" title="Permanent link">#</a></h2>
+<p>During early development of the Terraform AWS provider, resources sometimes represented "one-to-many" relationships as arguments on the parent resource. For example, the <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role#inline_policy"><code>inline_policy</code></a> argument on the <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role"><code>aws_iam_role</code></a> resource allows inline policies to be created as part of the role resource lifecycle.</p>
+<div class="highlight"><pre><span></span><code><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleRole&quot;</span>
+<span class="w">  </span><span class="na">assume_role_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.instance_assume_role_policy.json</span>
+
+<span class="w">  </span><span class="nb">inline_policy</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="na">name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleInlinePolicy&quot;</span>
+<span class="w">    </span><span class="na">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.inline_policy.json</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>While simplifying the syntax for practitioners, this approach introduces complexity within the provider implementation; a single resource now manages the lifecycle of several different remote resources. This can leave the resource in a partially provisioned state if creation of one of the child resources fails. One benefit to this design is that it enables the parent resource to retain "exclusive" control of the relationships. That is, if the parent resource includes a relationship with a child entity that is not explicitly configured, the provider can remove it.</p>
+<p>Due to the complexity of the design described above, the Terraform AWS provider has moved toward representing "one-to-many" relationships via standalone resources. These resources are typically added alongside the argument-based method to preserve backward compatibility. Continuing with the example above, inline policies can now be managed distinctly from the assigned role via the <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role_policy"><code>aws_iam_role_policy</code></a> resource.</p>
+<div class="highlight"><pre><span></span><code><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleRole&quot;</span>
+<span class="w">  </span><span class="na">assume_role_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.instance_assume_role_policy.json</span>
+<span class="p">}</span>
+
+<span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role_policy&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleInlinePolicy&quot;</span>
+<span class="w">  </span><span class="na">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_iam_role.test_role.id</span>
+
+<span class="w">  </span><span class="na">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.inline_policy.json</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>While this separates the lifecycle of distinct resource types to more closely align with the underlying AWS APIs, this approach alone does not provide a mechanism for exclusive management of all relationships to the parent. The absence of this benefit is often <a href="https://github.com/hashicorp/terraform-provider-aws/issues/22336#issuecomment-1586581208">cited by the community</a> as a reason not to move away from the argument-based definitions to standalone resources. The lack of parity has also prevented maintainers from formally deprecating and removing arguments on the parent resource for configuring relationships.</p>
+<h3 id="existing-resources">Existing Resources<a class="headerlink" href="#existing-resources" title="Permanent link">#</a></h3>
+<p>There is some precedent in the Terraform AWS provider for a resource which handles only exclusive relationship management in <a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy_attachment"><code>aws_iam_policy_attachment</code></a>. However, the scope of responsibility in this resource (managing attachments to roles, users, and groups simultaneously), is broader than what this RFC proposes, and cannot be replicated widely due to the unique nature of customer managed IAM policies which can be associated with multiple distinct parent resource types.</p>
+<h2 id="proposal">Proposal<a class="headerlink" href="#proposal" title="Permanent link">#</a></h2>
+<p>To provide practitioners with a consistent and maintainable mechanism for exclusive management of "one-to-many" relationships, the Terraform AWS provider will introduce a new pattern for developing "exclusive relationship management" resources. Resources with this function will end in the suffix <code>_exclusive</code>, with the purpose of reconciling the relationships present in AWS against what is configured in Terraform, adding and removing relationships as necessary.</p>
+<p>In general, exclusive relationship management resources should have the following characteristics:</p>
+<ol>
+<li>A required argument (typically <code>TypeString</code>) storing the parent resource identifier.</li>
+<li>A required argument (typically <code>TypeSet</code> with <code>TypeString</code> elements) storing identifiers of all child resources. An empty set should remove all relationships.</li>
+<li>The ability to read the current state of relationships in AWS and add or remove them as necessary.</li>
+<li>The ability to "inherit" exclusive ownership of existing relationship definitions without destructive action. Adding this resource to a configuration should <strong>not</strong> result in a destroy/re-create relationship workflow.</li>
+</ol>
+<p>As an example, the implementation for inline IAM policies would be named <code>aws_iam_role_policies_exclusive</code>, and used as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleRole&quot;</span>
+<span class="w">  </span><span class="na">assume_role_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.instance_assume_role_policy.json</span>
+<span class="p">}</span>
+
+<span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role_policy&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;exampleInlinePolicy&quot;</span>
+<span class="w">  </span><span class="na">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_iam_role.example.id</span>
+
+<span class="w">  </span><span class="na">policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_iam_policy_document.inline_policy.json</span>
+<span class="p">}</span>
+
+<span class="c1"># This resource ensures that only `exampleInlinePolicy` is assigned</span>
+<span class="c1"># to this role. Any other inline policies will be removed.</span>
+<span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;aws_iam_role_policies_exclusive&quot;</span><span class="w"> </span><span class="nv">&quot;example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">role_name</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_iam_role.example.name</span>
+<span class="w">  </span><span class="na">policy_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">aws_iam_role_policy.example.name</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>A working implementation can be found on <a href="https://github.com/hashicorp/terraform-provider-aws/tree/f-iam_role_policies_lock">this branch</a>. The <code>_exclusive</code> resource will detect any additional inline policies assigned to the role during <code>plan</code> operations and remove them during <code>apply</code>. This behavior provides parity with the <code>inline_policy</code> argument on the <code>aws_iam_role</code> resource, allowing maintainers to formally deprecate this argument and suggest practitioners migrate to the standalone inline policy resource, optionally including an <code>_exclusive</code> resource when exclusive management of assignments is desired.</p>
+<h3 id="potential-resources">Potential Resources<a class="headerlink" href="#potential-resources" title="Permanent link">#</a></h3>
+<p>In addition to the IAM inline policy example used throughout this document, there are several other resources with "one-to-many" relationships that could benefit from exclusive management of relationships.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to the popularity of the resources in this section, argument deprecations are likely to be "soft" deprecations where removal will not happen for several major releases, or until tooling is available to limit the amount of manual changes required to migrate to the preferred pattern. Despite this long removal window, a soft deprecation is still helpful for maintainers to reference when making best practice recommendations to the community.</p>
+</div>
+<h4 id="inline-iam-policies-to-role">Inline IAM policies to role<a class="headerlink" href="#inline-iam-policies-to-role" title="Permanent link">#</a></h4>
+<p>Manage inline IAM policies assigned to a role. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role"><code>aws_iam_role</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role_policy"><code>aws_iam_role_policy</code></a></li>
+</ul>
+<p>Deprecate <code>aws_iam_role.inline_policy</code>.</p>
+<h4 id="inline-iam-policies-to-user">Inline IAM policies to user<a class="headerlink" href="#inline-iam-policies-to-user" title="Permanent link">#</a></h4>
+<p>Manage inline IAM policies assigned to a user. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_user"><code>aws_iam_user</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_user_policy"><code>aws_iam_user_policy</code></a></li>
+</ul>
+<p>There are no arguments to deprecate on <code>aws_iam_user</code>. This may lower the relative priority.</p>
+<h4 id="inline-iam-policies-to-group">Inline IAM policies to group<a class="headerlink" href="#inline-iam-policies-to-group" title="Permanent link">#</a></h4>
+<p>Manage inline IAM policies assigned to a group. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_group"><code>aws_iam_group</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_group_policy"><code>aws_iam_group_policy</code></a></li>
+</ul>
+<p>There are no arguments to deprecate on <code>aws_iam_group</code>. This may lower the relative priority.</p>
+<h4 id="customer-managed-iam-policies-to-role">Customer managed IAM policies to role<a class="headerlink" href="#customer-managed-iam-policies-to-role" title="Permanent link">#</a></h4>
+<p>Manage customer managed IAM policies attached to a role. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role"><code>aws_iam_role</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy"><code>aws_iam_policy</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_role_policy_attachment"><code>aws_iam_role_policy_attachment</code></a></li>
+</ul>
+<p>Deprecate <code>aws_iam_role.managed_policy_arns</code> .</p>
+<h4 id="customer-managed-iam-policies-to-user">Customer managed IAM policies to user<a class="headerlink" href="#customer-managed-iam-policies-to-user" title="Permanent link">#</a></h4>
+<p>Manage customer managed IAM policies attached to a user. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_user"><code>aws_iam_user</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy"><code>aws_iam_policy</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_user_policy_attachment"><code>aws_iam_user_policy_attachment</code></a></li>
+</ul>
+<p>There are no arguments to deprecate on <code>aws_iam_user</code>. This may lower the relative priority.</p>
+<h4 id="customer-managed-iam-policies-to-group">Customer managed IAM policies to group<a class="headerlink" href="#customer-managed-iam-policies-to-group" title="Permanent link">#</a></h4>
+<p>Manage customer managed IAM policies attached to a group. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_group"><code>aws_iam_group</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_policy"><code>aws_iam_policy</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/iam_group_policy_attachment"><code>aws_iam_group_policy_attachment</code></a></li>
+</ul>
+<p>There are no arguments to deprecate on <code>aws_iam_group</code>. This may lower the relative priority.</p>
+<h4 id="ec2-security-groups-to-network-interface">EC2 security groups to network interface<a class="headerlink" href="#ec2-security-groups-to-network-interface" title="Permanent link">#</a></h4>
+<p>Manage EC2 security group attachments to network interfaces. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/instance"><code>aws_instance</code></a></li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_interface"><code>aws_network_interface</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/security_group"><code>aws_security_group</code></a></li>
+<li><a href="https://registry.terraform.io/providers/-/aws/latest/docs/resources/network_interface_sg_attachment"><code>aws_ec2_network_interface_sg_attachment</code></a></li>
+</ul>
+<p>Deprecate <code>aws_instance.security_groups</code>, <code>aws_instance.vpc_security_group_ids</code>, and <code>aws_network_interface.security_groups</code>.</p>
+<h4 id="vpc-security-group-rules-to-security-group">VPC security group rules to security group<a class="headerlink" href="#vpc-security-group-rules-to-security-group" title="Permanent link">#</a></h4>
+<p>Manage ingress and egress rules assigned to a VPC security group. Related resources:</p>
+<ul>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group"><code>aws_security_group</code></a></li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule"><code>aws_security_group_rule</code></a></li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule"><code>aws_vpc_security_group_egress_rule</code></a></li>
+<li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule"><code>aws_vpc_security_group_ingress_rule</code></a></li>
+</ul>
+<p>Deprecate <code>aws_security_group.ingress</code> and <code>aws_security_group.egress</code>. Consider deprecating <code>aws_security_group_rule</code> entirely.</p>
+<h3 id="alternate-naming-conventions">Alternate Naming Conventions<a class="headerlink" href="#alternate-naming-conventions" title="Permanent link">#</a></h3>
+<p>Ideally all resources providing the "exclusive relationship management" function should utilize the same suffix. While there are several options to describe this behavior, <code>_exclusive</code> seemed the most concise. The options considered were:</p>
+<table>
+<thead>
+<tr>
+<th>Suffix</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_exclusive</code> <em>(selected)</em></td>
+<td><code>aws_iam_role_policies_exclusive</code></td>
+</tr>
+<tr>
+<td><code>_management</code></td>
+<td><code>aws_iam_role_policies_management</code></td>
+</tr>
+<tr>
+<td><code>_lock</code></td>
+<td><code>aws_iam_role_policies_lock</code></td>
+</tr>
+<tr>
+<td><code>_exclusive_lock</code></td>
+<td><code>aws_iam_role_policies_exclusive_lock</code></td>
+</tr>
+<tr>
+<td><code>_exclusive_management</code></td>
+<td><code>aws_iam_role_policies_exclusive_management</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
+<p>If this design decision is approved, a meta-issue will be opened to track all resources listed in the <a href="#potential-resources">Potential Resources</a> section, with linked issues for each individual implementation.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
