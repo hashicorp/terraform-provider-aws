@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fis
@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -117,7 +118,7 @@ func (r *resourceTargetAccountConfiguration) Read(ctx context.Context, req resou
 	}
 
 	out, err := findTargetAccountConfigurationByID(ctx, conn, state.AccountId.ValueStringPointer(), state.ExperimentTemplateId.ValueStringPointer())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -220,7 +221,7 @@ func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, a
 	out, err := conn.GetTargetAccountConfiguration(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			})

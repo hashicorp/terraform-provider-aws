@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -29,6 +29,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -165,7 +166,7 @@ func (r *botVersionResource) Read(ctx context.Context, request resource.ReadRequ
 	botID, botVersion := parts[0], parts[1]
 	output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -236,7 +237,7 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	output, err := conn.DescribeBotVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -253,11 +254,11 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	return output, nil
 }
 
-func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) retry.StateRefreshFunc {
+func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -270,7 +271,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botV
 }
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusCreating, awstypes.BotStatusVersioning),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBotVersion(ctx, conn, botID, botVersion),
@@ -290,7 +291,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID,
 }
 
 func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusBotVersion(ctx, conn, botID, botVersion),

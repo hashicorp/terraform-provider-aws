@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -9,16 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	retryinternal "github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -30,11 +29,11 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 	}
 }
 
-func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -50,11 +49,11 @@ func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, table
 	}
 }
 
-func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
+func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -70,11 +69,11 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 	}
 }
 
-func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -92,11 +91,11 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, 
 	}
 }
 
-func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -114,11 +113,11 @@ func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, 
 	}
 }
 
-func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -134,11 +133,11 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
-func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if retryinternal.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -160,11 +159,11 @@ func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) 
 	}
 }
 
-func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -180,11 +179,11 @@ func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableNa
 	}
 }
 
-func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -200,11 +199,11 @@ func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, op
 	}
 }
 
-func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTTLByTableName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -220,11 +219,11 @@ func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) ret
 	}
 }
 
-func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

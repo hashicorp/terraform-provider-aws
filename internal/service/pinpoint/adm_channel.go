@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -91,7 +92,7 @@ func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findADMChannelByApplicationId(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Pinpoint ADM Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -134,7 +135,7 @@ func findADMChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, a
 
 	output, err := conn.GetAdmChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

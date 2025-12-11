@@ -914,12 +914,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *tes
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -986,16 +986,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rSortKey),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rSortKey),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -1075,12 +1075,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey1),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey1),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -1120,12 +1120,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey2),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey2),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -1212,16 +1212,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey1),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey1),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rSortKey1),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rSortKey1),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -1266,16 +1266,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rNameTable),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rNameTable),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rHashKey2),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rHashKey2),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"name": knownvalue.StringExact(rSortKey2),
-								"type": knownvalue.StringExact("S"),
+								names.AttrName: knownvalue.StringExact(rSortKey2),
+								names.AttrType: knownvalue.StringExact("S"),
 							}),
 						})),
 					},
@@ -1844,6 +1844,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:   testAccGlobalSecondaryIndexConfig_migrate_multiple(rNameTable, rName1, rName2),
 				PlanOnly: true,

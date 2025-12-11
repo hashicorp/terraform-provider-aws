@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -956,7 +957,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findDistributionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1109,18 +1110,18 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		err := disableContinuousDeploymentPolicy(ctx, conn, v)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return sdkdiag.AppendFromErr(diags, err)
 		default:
-			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
+			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !retry.NotFound(err) {
 				return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
 			}
 		}
 	}
 
 	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -1134,7 +1135,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	err := deleteDistribution(ctx, conn, d.Id())
 
-	if err == nil || tfresource.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return diags
 	}
 
@@ -1143,7 +1144,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return diags
 			}
 
@@ -1169,7 +1170,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return diags
 			}
 
@@ -1278,7 +1279,7 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	output, err := conn.GetDistribution(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1295,11 +1296,11 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1316,7 +1317,7 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 }
 
 func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
 		Refresh:    statusDistribution(ctx, conn, id),
@@ -1335,7 +1336,7 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 }
 
 func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusDistribution(ctx, conn, id),
