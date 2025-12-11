@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -788,8 +787,8 @@ func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 		}
 
 		for _, v := range page.TrustStoreList {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newTrustStoreResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id)),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTrustStoreResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
 			))
 		}
 	}
