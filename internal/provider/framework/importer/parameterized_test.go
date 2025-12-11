@@ -871,10 +871,10 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectError:    false,
 		},
 		"NoIdentity": {
-			inputID:     "a_name,a_type",
-			inputRegion: region,
+			inputID:      "a_name,a_type",
+			inputRegion:  region,
 			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			noIdentity:  true,
+			noIdentity:   true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -1346,10 +1346,26 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			},
 			expectError: false,
 		},
+		"name mapped": {
+			inputID: "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			expectError: false,
+		},
 		"NoIdentity": {
-			inputID:    "a_name,a_type",
+			inputID:      "a_name,a_type",
 			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
-			noIdentity: true,
+			noIdentity:   true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -1464,6 +1480,27 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
 							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
 						}
+					}
+
+					expectedIdentityAttrs := tc.expectedIdentityAttrs
+					expectedIdentityAttrs["account_id"] = accountID
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
+					}
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
+						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
