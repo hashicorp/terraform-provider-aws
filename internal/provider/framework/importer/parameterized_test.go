@@ -796,6 +796,24 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectedRegion: anotherRegion,
 			expectError:    false,
 		},
+		"name mapped": {
+			inputID:     "a_name,a_type",
+			inputRegion: anotherRegion,
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			expectedRegion: anotherRegion,
+			expectError:    false,
+		},
 		"NoIdentity": {
 			inputID:     "a_name,a_type",
 			inputRegion: region,
