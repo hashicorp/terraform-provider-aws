@@ -25,6 +25,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"S3Vectors":                              testAccKnowledgeBase_S3Vectors_update,
 			"StructuredDataStoreRedshiftProvisioned": testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned,
 			"StructuredDataStoreRedshiftServerless":  testAccKnowledgeBase_StructuredDataStore_redshiftServerless,
+			"NeptuneAnalytics":                       testAccKnowledgeBase_NeptuneAnalytics_basic,
 		},
 		"DataSource": {
 			acctest.CtBasic:        testAccDataSource_basic,

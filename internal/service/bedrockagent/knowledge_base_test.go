@@ -470,7 +470,7 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 							"pinecone_configuration":                   knownvalue.ListSizeExact(0),
 							"rds_configuration":                        knownvalue.ListSizeExact(0),
 							"redis_enterprise_cloud_configuration":     knownvalue.ListSizeExact(0),
-							"s3_vectors":                               knownvalue.ListSizeExact(0),
+							"s3_vectors_configuration":                 knownvalue.ListSizeExact(0),
 						}),
 					})),
 				},
@@ -673,6 +673,56 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftServerless(t *testing.T) {
 							}),
 							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeSql),
 							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var knowledgebase awstypes.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_NeptuneAnalytics_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),
+							"neptune_analytics_configuration":          knownvalue.ListSizeExact(1),
+							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(0),
+							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(0),
+							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeNeptuneAnalytics),
+							"pinecone_configuration":                   knownvalue.ListSizeExact(0),
+							"rds_configuration":                        knownvalue.ListSizeExact(0),
+							"redis_enterprise_cloud_configuration":     knownvalue.ListSizeExact(0),
+							"s3_vectors_configuration":                 knownvalue.ListSizeExact(0),
 						}),
 					})),
 				},
@@ -2069,7 +2119,6 @@ resource "aws_iam_role" "test" {
   })
 }
 
-# Redshift Serverless
 resource "aws_iam_role_policy" "test" {
   name = "%[1]s-bedrock"
   role = aws_iam_role.test.id
@@ -2150,6 +2199,114 @@ resource "aws_bedrockagent_knowledge_base" "test" {
             }
           }
         }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName)
+}
+
+func testAccKnowledgeBaseConfig_NeptuneAnalytics_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "bedrock.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "%[1]s-bedrock"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowAllPermissionsForRDS"
+        Effect = "Allow"
+        Action = [
+          "rds:*"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "AllowDataAccessForNeptune"
+        Effect = "Allow"
+        Action = [
+          "neptune-db:*"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "AllowAllPermissionsForNeptuneGraph"
+        Effect = "Allow"
+        Action = [
+          "neptune-graph:*"
+        ]
+        Resource = ["*"]
+      }
+    ]
+  })
+}
+
+resource "aws_neptunegraph_graph" "test" {
+  graph_name          = %[1]q
+  provisioned_memory  = 16
+  public_connectivity = false
+  replica_count       = 0
+  deletion_protection = false
+
+  vector_search_configuration {
+    vector_search_dimension = 1024
+  }
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    type = "VECTOR"
+
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/cohere.embed-english-v3"
+    }
+  }
+
+  storage_configuration {
+    type = "NEPTUNE_ANALYTICS"
+
+    neptune_analytics_configuration {
+      graph_arn = aws_neptunegraph_graph.test.arn
+
+      field_mapping {
+        metadata_field = "metadata"
+        text_field     = "text"
       }
     }
   }
