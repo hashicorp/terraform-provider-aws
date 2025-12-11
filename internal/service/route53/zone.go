@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -195,7 +196,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findHostedZoneByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Hosted Zone %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -332,6 +333,11 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func updateEnableAcceleratedRecovery(ctx context.Context, conn *route53.Client, zoneID string, enabled bool, timeout time.Duration) error {
+	const zoneMutexKey = "aws_route53_zone_accelerated_recovery"
+
+	conns.GlobalMutexKV.Lock(zoneMutexKey)
+	defer conns.GlobalMutexKV.Unlock(zoneMutexKey)
+
 	input := route53.UpdateHostedZoneFeaturesInput{
 		HostedZoneId:              aws.String(zoneID),
 		EnableAcceleratedRecovery: aws.Bool(enabled),
@@ -355,7 +361,7 @@ func findHostedZoneByID(ctx context.Context, conn *route53.Client, id string) (*
 	output, err := conn.GetHostedZone(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -381,7 +387,7 @@ func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, h
 		hostedZoneDNSSEC, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
 		switch {
-		case tfresource.NotFound(err),
+		case retry.NotFound(err),
 			errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "Operation is unsupported for private"),
 			tfawserr.ErrMessageContains(err, errCodeAccessDenied, "The operation GetDNSSEC is not available for the current AWS account"):
 		case err != nil:
@@ -432,7 +438,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 		return true
 	})
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 

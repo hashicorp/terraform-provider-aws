@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -23,12 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -201,7 +202,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	output, err := findDomainByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -308,7 +309,7 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 	output, err := conn.GetDomain(ctx, &input)
 
 	if isResourceMissing(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -325,11 +326,11 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 	return output, nil
 }
 
-func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.StateRefreshFunc {
+func statusDomain(ctx context.Context, conn *datazone.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDomainByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -342,7 +343,7 @@ func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.S
 }
 
 func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusCreating),
 		Target:  enum.Slice(awstypes.DomainStatusAvailable),
 		Refresh: statusDomain(ctx, conn, id),
@@ -359,7 +360,7 @@ func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, ti
 }
 
 func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusAvailable, awstypes.DomainStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDomain(ctx, conn, id),

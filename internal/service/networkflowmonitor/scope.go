@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkflowmonitor
@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -30,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -177,7 +178,7 @@ func (r *scopeResource) Read(ctx context.Context, request resource.ReadRequest, 
 	scopeID := fwflex.StringValueFromFramework(ctx, data.ScopeID)
 	output, err := findScopeByID(ctx, conn, scopeID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -302,7 +303,7 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	output, err := conn.GetScope(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -318,11 +319,11 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	return output, nil
 }
 
-func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) retry.StateRefreshFunc {
+func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findScopeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -335,7 +336,7 @@ func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string
 }
 
 func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
 		Refresh: statusScope(ctx, conn, id),
@@ -352,7 +353,7 @@ func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
 		Refresh: statusScope(ctx, conn, id),
@@ -369,7 +370,7 @@ func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeDeleted(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusDeactivating),
 		Target:  []string{},
 		Refresh: statusScope(ctx, conn, id),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package listresource
@@ -25,6 +25,8 @@ import (
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
+
+type When = when
 
 const (
 	Before  when = 1 << iota // Interceptor is invoked before call to method in schema

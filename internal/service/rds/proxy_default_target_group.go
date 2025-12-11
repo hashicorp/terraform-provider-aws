@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -144,7 +145,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 
 	tg, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy Default Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +197,7 @@ func findDBProxyTargetGroups(ctx context.Context, conn *rds.Client, input *rds.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBProxyNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -216,11 +217,11 @@ func findDBProxyTargetGroups(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbProxyName string) retry.StateRefreshFunc {
+func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbProxyName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, dbProxyName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -233,7 +234,7 @@ func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbPr
 }
 
 func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Client, dbProxyName string, timeout time.Duration) (*types.DBProxyTargetGroup, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusModifying),
 		Target:  enum.Slice(types.DBProxyStatusAvailable),
 		Refresh: statusDefaultDBProxyTargetGroup(ctx, conn, dbProxyName),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,7 +148,7 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 
 	transitGatewayRouteTableAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -221,7 +222,7 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	output, err := conn.GetTransitGatewayRouteTableAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -238,11 +239,11 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	return output.TransitGatewayRouteTableAttachment, nil
 }
 
-func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -255,7 +256,7 @@ func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *network
 }
 
 func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout:                   timeout,
@@ -295,7 +296,7 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 }
 
 func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,

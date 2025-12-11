@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -346,7 +347,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	filecache, err := findFileCacheByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -468,7 +469,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileCacheNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -488,11 +489,11 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 	return output, nil
 }
 
-func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusFileCache(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileCacheByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -505,7 +506,7 @@ func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.Sta
 }
 
 func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
 		Refresh: statusFileCache(ctx, conn, id),
@@ -526,7 +527,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 }
 
 func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
 		Refresh: statusFileCache(ctx, conn, id),
@@ -548,7 +549,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 }
 
 func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleAvailable, awstypes.FileCacheLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusFileCache(ctx, conn, id),

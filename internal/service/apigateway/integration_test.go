@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -623,15 +623,21 @@ func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
 				),
 			},
 			{
-				// Switch back to Stream
-				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				// Switch back to Stream, with timeout specified
+				Config: testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "900000"),
 				),
+			},
+			{
+				// Invalid: Stream with timeout > 900000
+				Config:      testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900001),
+				ExpectError: regexache.MustCompile(`timeout_milliseconds must be at most 900000 when response_transfer_mode is STREAM`),
 			},
 		},
 	})
@@ -693,7 +699,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1417,6 +1423,39 @@ resource "aws_api_gateway_integration" "test" {
   response_transfer_mode = %[2]q
 }
 `, rName, responseTransferMode)
+}
+
+func testAccIntegrationConfig_responseTransferModeWithTimeout(rName, responseTransferMode string, timeoutMilliseconds int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+  timeout_milliseconds   = %[3]d
+}
+`, rName, responseTransferMode, timeoutMilliseconds)
 }
 
 func testAccIntegrationConfig_vpcLinkV2ALB(rName string) string {
