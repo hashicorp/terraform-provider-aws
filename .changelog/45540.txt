@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_verifiedpermissions_identity_source: Fixes error when updating resource
+```
+
+```release-note:bug
+resource/aws_verifiedpermissions_identity_source: Removes AutoFlex error log messages
+```
+
+```release-note:bug
+resource/aws_verifiedpermissions_identity_source: Prevents eventual consistency error with associated Policy Store
+```

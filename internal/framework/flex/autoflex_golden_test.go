@@ -13,7 +13,6 @@ package flex
 //   go test -v -update-golden .
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/google/go-cmp/cmp"
 )
 
 var updateGolden = flag.Bool("update-golden", false, "update golden files")
@@ -106,13 +106,10 @@ func compareWithGolden(t *testing.T, goldenPath string, got any) {
 
 	// Read and compare with existing golden file
 	want := readGolden(t, goldenPath)
-	if bytes.Equal(bytes.TrimSpace(want), bytes.TrimSpace(data)) {
-		return // Files match, test passes
-	}
 
-	// Files differ, fail the test with detailed output
-	t.Fatalf("comparison failed for golden file %s\nExpected content from: %s\nActual content:\n%s",
-		goldenPath, goldenPath, string(data))
+	if diff := cmp.Diff(data, want); diff != "" {
+		t.Fatalf("comparison failed for golden file %s\n%s", goldenPath, diff)
+	}
 }
 
 // autoGenerateGoldenPath creates a golden file path from test name and case description.
