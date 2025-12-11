@@ -58,7 +58,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newResourceTrustStore,
+			Factory:  newTrustStoreResource,
 			TypeName: "aws_cloudfront_trust_store",
 			Name:     "Trust Store",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),

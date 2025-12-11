@@ -19,7 +19,7 @@ var (
 	ResourcePublicKey                   = resourcePublicKey
 	ResourceRealtimeLogConfig           = resourceRealtimeLogConfig
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
-	ResourceTrustStore                  = newResourceTrustStore
+	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
 	FindCachePolicyByID                        = findCachePolicyByID
@@ -38,5 +38,6 @@ var (
 	FindResponseHeadersPolicyByID              = findResponseHeadersPolicyByID
 	FindTrustStoreByID                         = findTrustStoreByID
 	FindVPCOriginByID                          = findVPCOriginByID
-	WaitDistributionDeployed                   = waitDistributionDeployed
+
+	WaitDistributionDeployed = waitDistributionDeployed
 )

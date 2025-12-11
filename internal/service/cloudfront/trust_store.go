@@ -8,13 +8,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -31,15 +29,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_trust_store", name="Trust Store")
-func newResourceTrustStore(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceTrustStore{}
+func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &trustStoreResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -48,17 +44,13 @@ func newResourceTrustStore(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameTrustStore = "Trust Store"
-)
-
-type resourceTrustStore struct {
+type trustStoreResource struct {
 	framework.ResourceWithModel[trustStoreResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *trustStoreResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -66,10 +58,6 @@ func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -77,9 +65,6 @@ func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"number_of_ca_certificates": schema.Int32Attribute{
-				Computed: true,
-			},
-			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -93,7 +78,7 @@ func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"ca_certificates_bundle_s3_location": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[caCertificatesBundleS3LocationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.IsRequired(),
@@ -127,103 +112,78 @@ func (r *resourceTrustStore) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceTrustStore) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *trustStoreResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data trustStoreResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := cloudfront.CreateTrustStoreInput{
-		Name: fwflex.StringFromFramework(ctx, data.Name),
-	}
-
-	// Add CA certificates bundle source if provided
-	if !data.CACertificatesBundleSource.IsNull() {
-		bundleSourceList, d := data.CACertificatesBundleSource.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if len(bundleSourceList) > 0 {
-			bundleSource := bundleSourceList[0]
-			if !bundleSource.CACertificatesBundleS3Location.IsNull() {
-				s3LocationList, d := bundleSource.CACertificatesBundleS3Location.ToSlice(ctx)
-				smerr.AddEnrich(ctx, &response.Diagnostics, d)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				if len(s3LocationList) > 0 {
-					s3Location := s3LocationList[0]
-					input.CaCertificatesBundleSource = &awstypes.CaCertificatesBundleSourceMemberCaCertificatesBundleS3Location{
-						Value: awstypes.CaCertificatesBundleS3Location{
-							Bucket:  s3Location.Bucket.ValueStringPointer(),
-							Key:     s3Location.Key.ValueStringPointer(),
-							Region:  s3Location.Region.ValueStringPointer(),
-							Version: s3Location.Version.ValueStringPointer(),
-						},
-					}
-				}
-			}
-		}
-	}
-
-	out, err := conn.CreateTrustStore(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input cloudfront.CreateTrustStoreInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.ID = fwflex.StringToFramework(ctx, out.TrustStore.Id)
-	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
-
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	output, err := waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
+	outCTS, err := conn.CreateTrustStore(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	// Set values for unknowns.
+	data.ARN = fwflex.StringToFramework(ctx, outCTS.TrustStore.Arn)
+	id := aws.ToString(outCTS.TrustStore.Id)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	outGTS, err := waitTrustStoreActive(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		return
+	}
+
+	// Set values for unknowns.
+	data.Etag = fwflex.StringToFramework(ctx, outGTS.ETag)
+	data.NumberOfCACertificates = fwflex.Int32ToFramework(ctx, outGTS.TrustStore.NumberOfCaCertificates)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
 
-func (r *resourceTrustStore) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
-
+func (r *trustStoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state trustStoreResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findTrustStoreByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
+	out, err := findTrustStoreByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	// Use fwflex.Flatten to populate the resource model
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.TrustStore, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
-
+func (r *trustStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state trustStoreResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -231,122 +191,96 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.CACertificatesBundleSource.Equal(state.CACertificatesBundleSource) {
-		input := cloudfront.UpdateTrustStoreInput{
-			Id:      fwflex.StringFromFramework(ctx, state.ID),
-			IfMatch: fwflex.StringFromFramework(ctx, state.Etag),
-		}
+	conn := r.Meta().CloudFrontClient(ctx)
 
-		// Add CA certificates bundle source from plan
-		if !plan.CACertificatesBundleSource.IsNull() {
-			bundleSourceList, d := plan.CACertificatesBundleSource.ToSlice(ctx)
-			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			if len(bundleSourceList) > 0 {
-				bundleSource := bundleSourceList[0]
-				if !bundleSource.CACertificatesBundleS3Location.IsNull() {
-					s3LocationList, d := bundleSource.CACertificatesBundleS3Location.ToSlice(ctx)
-					smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-					if resp.Diagnostics.HasError() {
-						return
-					}
-
-					if len(s3LocationList) > 0 {
-						s3Location := s3LocationList[0]
-						input.CaCertificatesBundleSource = &awstypes.CaCertificatesBundleSourceMemberCaCertificatesBundleS3Location{
-							Value: awstypes.CaCertificatesBundleS3Location{
-								Bucket:  s3Location.Bucket.ValueStringPointer(),
-								Key:     s3Location.Key.ValueStringPointer(),
-								Region:  s3Location.Region.ValueStringPointer(),
-								Version: s3Location.Version.ValueStringPointer(),
-							},
-						}
-					}
-				}
-			}
-		}
-
-		out, err := conn.UpdateTrustStore(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.TrustStore == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-
-		plan.Etag = fwflex.StringToFramework(ctx, out.ETag)
-		plan.Status = fwflex.StringValueToFramework(ctx, out.TrustStore.Status)
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	output, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
+	if diff.HasChanges() {
+		id, etag := fwflex.StringValueFromFramework(ctx, plan.ID), fwflex.StringValueFromFramework(ctx, state.Etag)
+		var input cloudfront.UpdateTrustStoreInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Additional fields.
+		input.IfMatch = aws.String(etag)
+
+		_, err := conn.UpdateTrustStore(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+			return
+		}
+
+		outGTS, err := waitTrustStoreActive(ctx, conn, id, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+			return
+		}
+
+		// Set values for unknowns.
+		plan.Etag = fwflex.StringToFramework(ctx, outGTS.ETag)
+		plan.NumberOfCACertificates = fwflex.Int32ToFramework(ctx, outGTS.TrustStore.NumberOfCaCertificates)
+	} else {
+		plan.Etag = state.Etag
+		plan.NumberOfCACertificates = state.NumberOfCACertificates
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceTrustStore) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
-
+func (r *trustStoreResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state trustStoreResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	id, etag := fwflex.StringValueFromFramework(ctx, state.ID), fwflex.StringValueFromFramework(ctx, state.Etag)
 	input := cloudfront.DeleteTrustStoreInput{
-		Id:      state.ID.ValueStringPointer(),
-		IfMatch: state.Etag.ValueStringPointer(),
+		Id:      aws.String(id),
+		IfMatch: aws.String(etag),
 	}
-
 	_, err := conn.DeleteTrustStore(ctx, &input)
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFound](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTrustStoreDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+	if _, err := waitTrustStoreDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
 
-func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.TrustStore, error) {
+func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetTrustStoreOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.TrustStoreStatusActive),
 		Refresh:                   statusTrustStore(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TrustStore); ok {
-		return out, smarterr.NewError(err)
+	if out, ok := outputRaw.(*cloudfront.GetTrustStoreOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.TrustStore, error) {
+func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetTrustStoreOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TrustStoreStatusActive),
 		Target:  []string{},
@@ -355,11 +289,12 @@ func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TrustStore); ok {
-		return out, smarterr.NewError(err)
+	if out, ok := outputRaw.(*cloudfront.GetTrustStoreOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
 func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
@@ -370,10 +305,10 @@ func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) s
 		}
 
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
 
-		return out.TrustStore, string(out.TrustStore.Status), nil
+		return out, string(out.TrustStore.Status), nil
 	}
 }
 
@@ -382,20 +317,25 @@ func findTrustStoreByID(ctx context.Context, conn *cloudfront.Client, id string)
 		Identifier: aws.String(id),
 	}
 
-	out, err := conn.GetTrustStore(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFound](err) {
-			return nil, smarterr.NewError(&sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
+	return findTrustStore(ctx, conn, &input)
+}
 
-		return nil, smarterr.NewError(err)
+func findTrustStore(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetTrustStoreInput) (*cloudfront.GetTrustStoreOutput, error) {
+	out, err := conn.GetTrustStore(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if out == nil || out.TrustStore == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return out, nil
@@ -406,42 +346,41 @@ type trustStoreResourceModel struct {
 	CACertificatesBundleSource fwtypes.ListNestedObjectValueOf[caCertificatesBundleSourceModel] `tfsdk:"ca_certificates_bundle_source"`
 	Etag                       types.String                                                     `tfsdk:"etag"`
 	ID                         types.String                                                     `tfsdk:"id"`
-	LastModifiedTime           timetypes.RFC3339                                                `tfsdk:"last_modified_time"`
 	Name                       types.String                                                     `tfsdk:"name"`
-	NumberOfCaCertificates     types.Int32                                                      `tfsdk:"number_of_ca_certificates"`
-	Status                     types.String                                                     `tfsdk:"status"`
+	NumberOfCACertificates     types.Int32                                                      `tfsdk:"number_of_ca_certificates"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 
 type caCertificatesBundleSourceModel struct {
-	CACertificatesBundleS3Location fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"ca_certificates_bundle_s3_location"`
+	CACertificatesBundleS3Location fwtypes.ListNestedObjectValueOf[caCertificatesBundleS3LocationModel] `tfsdk:"ca_certificates_bundle_s3_location"`
 }
 
-type s3LocationModel struct {
+type caCertificatesBundleS3LocationModel struct {
 	Bucket  types.String `tfsdk:"bucket"`
 	Key     types.String `tfsdk:"key"`
 	Region  types.String `tfsdk:"region"`
 	Version types.String `tfsdk:"version"`
 }
 
-func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := cloudfront.ListTrustStoresInput{}
-	conn := client.CloudFrontClient(ctx)
-	var sweepResources []sweep.Sweepable
+var (
+	_ fwflex.Expander = caCertificatesBundleSourceModel{}
+)
 
-	pages := cloudfront.NewListTrustStoresPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
+func (m caCertificatesBundleSourceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.CACertificatesBundleS3Location.IsNull():
+		data, d := m.CACertificatesBundleS3Location.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
 		}
-
-		for _, v := range page.TrustStoreList {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTrustStore, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id)),
-			))
+		var r awstypes.CaCertificatesBundleSourceMemberCaCertificatesBundleS3Location
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
 		}
+		return &r, diags
 	}
-
-	return sweepResources, nil
+	return nil, diags
 }

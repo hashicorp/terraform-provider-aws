@@ -4,6 +4,7 @@
 package cloudfront
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -12,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,13 +102,7 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_trust_store", &resource.Sweeper{
-		Name: "aws_cloudfront_trust_store",
-		F:    sweepTrustStoresWrapper,
-		Dependencies: []string{
-			"aws_cloudfront_distribution",
-		},
-	})
+	awsv2.Register("aws_cloudfront_trust_store", sweepTrustStores, "aws_cloudfront_distribution")
 
 	resource.AddTestSweepers("aws_cloudfront_vpc_origin", &resource.Sweeper{
 		Name: "aws_cloudfront_vpc_origin",
@@ -778,34 +775,26 @@ func sweepOriginAccessControls(region string) error {
 	return nil
 }
 
-func sweepTrustStoresWrapper(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
+func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudfront.ListTrustStoresInput{}
+	conn := client.CloudFrontClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudfront.NewListTrustStoresPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.TrustStoreList {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newTrustStoreResource, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id)),
+			))
+		}
 	}
 
-	sweepResources, err := sweepTrustStores(ctx, client)
-	if err != nil {
-		return err
-	}
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Trust Store sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing CloudFront Trust Stores (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Trust Stores (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepVPCOrigins(region string) error {

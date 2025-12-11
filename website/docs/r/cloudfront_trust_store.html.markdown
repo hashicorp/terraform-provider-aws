@@ -70,9 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trust store.
 * `etag` - ETag of the trust store.
 * `id` - ID of the trust store.
-* `last_modified_time` - Date and time when the trust store was last modified.
 * `number_of_ca_certificates` - Number of CA certificates in the trust store.
-* `status` - Status of the trust store.
 
 ## Timeouts
 
