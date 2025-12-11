@@ -10,10 +10,10 @@ resource "aws_cleanrooms_collaboration" "test" {
   analytics_engine         = "SPARK"
 
   data_encryption_metadata {
-    allow_clear_text = true
-    allow_duplicates = true
+    allow_clear_text                            = true
+    allow_duplicates                            = true
     allow_joins_on_columns_with_different_names = true
-    preserve_nulls = false
+    preserve_nulls                              = false
   }
 
   tags = {
