@@ -168,9 +168,9 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	in := &lakeformation.CreateDataCellsFilterInput{}
+	in := lakeformation.CreateDataCellsFilterInput{}
 
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +182,7 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	_, err := conn.CreateDataCellsFilter(ctx, in)
+	_, err := conn.CreateDataCellsFilter(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, planTD.Name.String(), err),
@@ -281,15 +281,15 @@ func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	if !plan.TableData.Equal(state.TableData) {
-		in := &lakeformation.UpdateDataCellsFilterInput{}
+		in := lakeformation.UpdateDataCellsFilterInput{}
 
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateDataCellsFilter(ctx, in)
+		_, err := conn.UpdateDataCellsFilter(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
