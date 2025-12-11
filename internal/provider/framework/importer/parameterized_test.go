@@ -9,10 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -59,7 +61,8 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
 		inputID             string
 		inputRegion         string
 		useSchemaWithID     bool
@@ -69,43 +72,51 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"Attr_DefaultRegion": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    region,
-			expectedRegion: region,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      region,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 		"Attr_RegionOverride": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    anotherRegion,
-			expectedRegion: anotherRegion,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      anotherRegion,
+			expectedRegion:   anotherRegion,
+			expectError:      false,
 		},
 		"Attr_NoIdentity": {
-			attrName:       "name",
-			inputID:        "a_name",
-			inputRegion:    region,
-			noIdentity:     true,
-			expectedRegion: region,
-			expectError:    false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      region,
+			noIdentity:       true,
+			expectedRegion:   region,
+			expectError:      false,
+		},
+		"Attr_NameMapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			inputID:          "a_name",
+			inputRegion:      region,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 
 		"ID_DefaultRegion": {
-			attrName:        "id",
-			inputID:         "a_name",
-			inputRegion:     region,
-			useSchemaWithID: true,
-			expectedRegion:  region,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			inputRegion:      region,
+			useSchemaWithID:  true,
+			expectedRegion:   region,
+			expectError:      false,
 		},
 		"ID_RegionOverride": {
-			attrName:        "id",
-			inputID:         "a_name",
-			inputRegion:     anotherRegion,
-			useSchemaWithID: true,
-			expectedRegion:  anotherRegion,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			inputRegion:      anotherRegion,
+			useSchemaWithID:  true,
+			expectedRegion:   anotherRegion,
+			expectError:      false,
 		},
 	}
 
@@ -123,7 +134,12 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				"region": tc.inputRegion,
 			}
 
-			identitySpec := regionalSingleParameterIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = regionalSingleParameterIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = regionalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
@@ -184,14 +200,28 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				if identity := response.Identity; identity == nil {
 					t.Error("Identity should be set")
 				} else {
-					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
-						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					expectedIdentityAttrs := map[string]string{
+						"account_id":        accountID,
+						"region":            tc.expectedRegion,
+						tc.identityAttrName: tc.inputID,
 					}
-					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
-						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
 					}
-					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.attrName)); e != a {
-						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
+						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
@@ -440,7 +470,8 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	region := "a-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
 		inputID             string
 		useSchemaWithID     bool
 		noIdentity          bool
@@ -448,22 +479,28 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"Attr_Basic": {
-			attrName:    "name",
-			inputID:     "a_name",
-			expectError: false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			expectError:      false,
 		},
 		"Attr_NoIdentity": {
-			attrName:    "name",
-			inputID:     "a_name",
-			noIdentity:  true,
-			expectError: false,
+			identityAttrName: "name",
+			inputID:          "a_name",
+			noIdentity:       true,
+			expectError:      false,
+		},
+		"Attr_NameMapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			inputID:          "a_name",
+			expectError:      false,
 		},
 
 		"ID_Basic": {
-			attrName:        "id",
-			inputID:         "a_name",
-			useSchemaWithID: true,
-			expectError:     false,
+			identityAttrName: "id",
+			inputID:          "a_name",
+			useSchemaWithID:  true,
+			expectError:      false,
 		},
 	}
 
@@ -479,7 +516,12 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 
 			stateAttrs := map[string]string{}
 
-			identitySpec := globalSingleParameterIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == "" || tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = globalSingleParameterIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = globalSingleParameterIdentitySpecNameMapped(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
@@ -535,11 +577,27 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 				if identity := response.Identity; identity == nil {
 					t.Error("Identity should be set")
 				} else {
-					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
-						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					expectedIdentityAttrs := map[string]string{
+						"account_id":        accountID,
+						tc.identityAttrName: tc.inputID,
 					}
-					if e, a := tc.inputID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.attrName)); e != a {
-						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
+					}
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
+						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
@@ -753,19 +811,26 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		inputID         string
-		inputRegion     string
-		useSchemaWithID bool
-		noIdentity      bool
-		expectedAttrs   map[string]string
-		expectedRegion  string
-		expectedID      string
-		expectError     bool
+		inputID               string
+		inputRegion           string
+		identitySpec          inttypes.Identity
+		useSchemaWithID       bool
+		noIdentity            bool
+		expectedResourceAttrs map[string]string
+		expectedIdentityAttrs map[string]string
+		expectedRegion        string
+		expectedID            string
+		expectError           bool
 	}{
 		"DefaultRegion": {
-			inputID:     "a_name,a_type",
-			inputRegion: region,
-			expectedAttrs: map[string]string{
+			inputID:      "a_name,a_type",
+			inputRegion:  region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -773,20 +838,44 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectError:    false,
 		},
 		"RegionOverride": {
-			inputID:     "a_name,a_type",
-			inputRegion: anotherRegion,
-			expectedAttrs: map[string]string{
+			inputID:      "a_name,a_type",
+			inputRegion:  anotherRegion,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
 			expectedRegion: anotherRegion,
 			expectError:    false,
 		},
-		"NoIdentity": {
+		"name mapped": {
 			inputID:     "a_name,a_type",
-			inputRegion: region,
-			noIdentity:  true,
-			expectedAttrs: map[string]string{
+			inputRegion: anotherRegion,
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			expectedRegion: anotherRegion,
+			expectError:    false,
+		},
+		"NoIdentity": {
+			inputID:      "a_name,a_type",
+			inputRegion:  region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			noIdentity:   true,
+			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -794,16 +883,22 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			expectError:    false,
 		},
 		"Invalid": {
-			inputID:     "invalid",
-			inputRegion: region,
-			expectError: true,
+			inputID:      "invalid",
+			inputRegion:  region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectError:  true,
 		},
 
 		"WithIDAttr_DefaultRegion": {
 			inputID:         "a_name,a_type",
 			inputRegion:     region,
+			identitySpec:    regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -814,8 +909,13 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 		"WithIDAttr_TrimmedID": {
 			inputID:         "trim:a_name,a_type",
 			inputRegion:     region,
+			identitySpec:    regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -839,11 +939,9 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				"region": tc.inputRegion,
 			}
 
-			identitySpec := regionalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
 			}
 
 			schema := regionalMultipleParameterizedSchema
@@ -859,7 +957,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				importSpec.SetIDAttr = true
 			}
 
-			response := importByIDWithState(ctx, importer.MultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			response := importByIDWithState(ctx, importer.MultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, tc.identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -877,7 +975,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			}
 
 			// Check attr values
-			for name, expectedAttr := range tc.expectedAttrs {
+			for name, expectedAttr := range tc.expectedResourceAttrs {
 				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
 					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
 				}
@@ -899,16 +997,26 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				if identity := response.Identity; identity == nil {
 					t.Error("Identity should be set")
 				} else {
-					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
-						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					expectedIdentityAttrs := tc.expectedIdentityAttrs
+					expectedIdentityAttrs["account_id"] = accountID
+					expectedIdentityAttrs["region"] = tc.expectedRegion
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
 					}
-					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
-						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
-					}
-					for name, expectedAttr := range tc.expectedAttrs {
-						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
-							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
 						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
@@ -1215,26 +1323,50 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	accountID := "123456789012"
 
 	testCases := map[string]struct {
-		inputID             string
-		useSchemaWithID     bool
-		noIdentity          bool
-		expectedAttrs       map[string]string
-		expectedID          string
-		expectError         bool
-		expectedErrorPrefix string
+		inputID               string
+		identitySpec          inttypes.Identity
+		useSchemaWithID       bool
+		noIdentity            bool
+		expectedResourceAttrs map[string]string
+		expectedIdentityAttrs map[string]string
+		expectedID            string
+		expectError           bool
+		expectedErrorPrefix   string
 	}{
 		"Basic": {
-			inputID: "a_name,a_type",
-			expectedAttrs: map[string]string{
+			inputID:      "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
 			expectError: false,
 		},
+		"name mapped": {
+			inputID: "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			expectError: false,
+		},
 		"NoIdentity": {
-			inputID:    "a_name,a_type",
-			noIdentity: true,
-			expectedAttrs: map[string]string{
+			inputID:      "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			noIdentity:   true,
+			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1244,8 +1376,13 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 		"WithIDAttr": {
 			inputID:         "a_name,a_type",
+			identitySpec:    globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1254,8 +1391,13 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		},
 		"WithIDAttr_TrimmedID": {
 			inputID:         "trim:a_name,a_type",
+			identitySpec:    globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
-			expectedAttrs: map[string]string{
+			expectedResourceAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1275,11 +1417,14 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 			stateAttrs := map[string]string{}
 
-			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
+			}
+
+			schema := globalMultipleParameterizedSchema
+			if tc.useSchemaWithID {
+				schema = globalMultipleParameterizedWithIDSchema
 			}
 
 			importSpec := inttypes.FrameworkImport{
@@ -1290,12 +1435,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 				importSpec.SetIDAttr = true
 			}
 
-			schema := globalMultipleParameterizedSchema
-			if tc.useSchemaWithID {
-				schema = globalMultipleParameterizedWithIDSchema
-			}
-
-			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, tc.identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -1311,7 +1451,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			}
 
 			// Check attr values
-			for name, expectedAttr := range tc.expectedAttrs {
+			for name, expectedAttr := range tc.expectedResourceAttrs {
 				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
 					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
 				}
@@ -1336,10 +1476,31 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
 						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
 					}
-					for name, expectedAttr := range tc.expectedAttrs {
+					for name, expectedAttr := range tc.expectedIdentityAttrs {
 						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
 							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
 						}
+					}
+
+					expectedIdentityAttrs := tc.expectedIdentityAttrs
+					expectedIdentityAttrs["account_id"] = accountID
+
+					var obj types.Object
+					if diags := identity.Get(ctx, &obj); diags.HasError() {
+						t.Fatalf("Unexpected error getting identity attributes: %s", fwdiag.DiagnosticsError(diags))
+					}
+
+					actualIdentityAttrs := make(map[string]string)
+					for attrName, attrValue := range obj.Attributes() {
+						if v, ok := attrValue.(types.String); !ok {
+							t.Fatalf("expected string attribute, had %T", attrValue)
+						} else {
+							actualIdentityAttrs[attrName] = v.ValueString()
+						}
+					}
+
+					if diff := cmp.Diff(actualIdentityAttrs, expectedIdentityAttrs); diff != "" {
+						t.Fatalf("Unexpected identity attributes (-want +got):\n%s", diff)
 					}
 				}
 			}
