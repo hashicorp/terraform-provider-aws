@@ -1296,8 +1296,8 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[any, string] {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1317,10 +1317,10 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 }
 
 func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      30 * time.Second,
@@ -1339,7 +1339,7 @@ func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
