@@ -186,7 +186,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 			},
 		},
-		Version: 0,
 	}
 
 	response.Schema = s
