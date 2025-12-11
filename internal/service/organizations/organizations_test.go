@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -77,6 +77,8 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_SecurityHub":       testAccPolicy_type_SecurityHub,
 			"Type_Inspector":         testAccPolicy_type_Inspector,
 			"Type_UpgradeRollout":    testAccPolicy_type_UpgradeRollout,
+			"Type_S3":                testAccPolicy_type_S3,
+			"Type_Bedrock":           testAccPolicy_type_Bedrock,
 			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
 			"Identity":               testAccOrganizationsPolicy_IdentitySerial,
 		},

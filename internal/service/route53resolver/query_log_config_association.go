@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,7 +80,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 
 	queryLogConfigAssociation, err := findResolverQueryLogConfigAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +129,7 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	output, err := conn.GetResolverQueryLogConfigAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -145,11 +146,11 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResolverQueryLogConfigAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -167,7 +168,7 @@ const (
 )
 
 func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusActive),
 		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
@@ -188,7 +189,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 }
 
 func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),

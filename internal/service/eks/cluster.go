@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -606,7 +607,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -985,7 +986,7 @@ func findCluster(ctx context.Context, conn *eks.Client, input *eks.DescribeClust
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
 	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.ClientException](err, "No cluster found for name:") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1044,7 +1045,7 @@ func updateClusterVPCConfig(ctx context.Context, conn *eks.Client, name string, 
 	return nil
 }
 
-func findUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
+func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
 	input := eks.DescribeUpdateInput{
 		Name:     aws.String(name),
 		UpdateId: aws.String(id),
@@ -1057,7 +1058,7 @@ func findUpdate(ctx context.Context, conn *eks.Client, input *eks.DescribeUpdate
 	output, err := conn.DescribeUpdate(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1074,11 +1075,11 @@ func findUpdate(ctx context.Context, conn *eks.Client, input *eks.DescribeUpdate
 	return output.Update, nil
 }
 
-func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *eks.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1090,11 +1091,11 @@ func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.Sta
 	}
 }
 
-func statusUpdate(ctx context.Context, conn *eks.Client, name, id string) retry.StateRefreshFunc {
+func statusUpdate(ctx context.Context, conn *eks.Client, name, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findUpdateByTwoPartKey(ctx, conn, name, id)
+		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1107,7 +1108,7 @@ func statusUpdate(ctx context.Context, conn *eks.Client, name, id string) retry.
 }
 
 func waitClusterCreated(ctx context.Context, conn *eks.Client, name string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStatusPending, types.ClusterStatusCreating),
 		Target:  enum.Slice(types.ClusterStatusActive),
 		Refresh: statusCluster(ctx, conn, name),
@@ -1124,7 +1125,7 @@ func waitClusterCreated(ctx context.Context, conn *eks.Client, name string, time
 }
 
 func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStatusActive, types.ClusterStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusCluster(ctx, conn, name),
@@ -1145,7 +1146,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, time
 }
 
 func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
 		Refresh: statusUpdate(ctx, conn, name, id),

@@ -27,6 +27,7 @@ variable "service_labels" {
     "appstream",
     "appsync",
     "arcregionswitch",
+    "arczonalshift",
     "athena",
     "auditmanager",
     "autoscaling",

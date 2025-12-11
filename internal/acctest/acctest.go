@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -63,6 +63,7 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -1164,7 +1165,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -1200,7 +1201,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 
 	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 
@@ -1340,7 +1341,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
@@ -2079,7 +2080,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	}
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, t *testing.T, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2090,7 +2091,7 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
@@ -2180,12 +2181,7 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 // The variable's value is returned.
 func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	t.Helper()
-
-	v := os.Getenv(key)
-	if v == "" {
-		t.Skipf("Environment variable %s is not set, skipping test", key)
-	}
-	return v
+	return envvar.SkipIfEmpty(t, key, "")
 }
 
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
