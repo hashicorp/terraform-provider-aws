@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -182,21 +182,21 @@ func (r *resourceTrustStore) Create(ctx context.Context, request resource.Create
 	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	output, error := waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
-	if error != nil {
-		smerr.AddError(ctx, &response.Diagnostics, error, smerr.ID, data.ID.String())
+	_, err = waitTrustStoreActive(ctx, conn, data.ID.ValueString(), createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
 
 	// Fetch the created trust store and populate the resource model
-	/* output, err := findTrustStoreByID(ctx, conn, data.ID.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+	findOutput, findErr := findTrustStoreByID(ctx, conn, data.ID.ValueString())
+	if findErr != nil {
+		smerr.AddError(ctx, &response.Diagnostics, findErr, smerr.ID, data.ID.String())
 		return
-	}*/
+	}
 
 	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, findOutput.TrustStore, &data))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -211,7 +211,7 @@ func (r *resourceTrustStore) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	out, err := findTrustStoreByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -291,21 +291,21 @@ func (r *resourceTrustStore) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	output, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitTrustStoreActive(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
 
 	// Fetch the updated trust store and populate the resource model
-	/* output, err := findTrustStoreByID(ctx, conn, plan.ID.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+	findOutput, findErr := findTrustStoreByID(ctx, conn, plan.ID.ValueString())
+	if findErr != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, findErr, smerr.ID, plan.ID.String())
 		return
-	} */
+	}
 
 	// Use fwflex.Flatten to populate the resource model
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, findOutput.TrustStore, &plan))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -340,10 +340,6 @@ func (r *resourceTrustStore) Delete(ctx context.Context, req resource.DeleteRequ
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
-}
-
-func (r *resourceTrustStore) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.TrustStore, error) {
@@ -383,7 +379,7 @@ func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id stri
 func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findTrustStoreByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
