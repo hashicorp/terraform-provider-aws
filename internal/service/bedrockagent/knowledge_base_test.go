@@ -6,7 +6,6 @@ package bedrockagent_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -158,7 +157,7 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_RDS_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 				),
@@ -209,9 +208,7 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
@@ -220,19 +217,35 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),
+							"neptune_analytics_configuration":          knownvalue.ListSizeExact(0),
+							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(0),
+							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(1),
+							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeOpensearchServerless),
+							"pinecone_configuration":                   knownvalue.ListSizeExact(0),
+							"rds_configuration":                        knownvalue.ListSizeExact(0),
+							"redis_enterprise_cloud_configuration":     knownvalue.ListSizeExact(0),
+							"s3_vectors_configuration":                 knownvalue.ListSizeExact(0),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -791,14 +804,7 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *awstypes.
 // environment variable below.
 func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 	t.Helper()
-
-	v := os.Getenv("TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
-	if v == "" {
-		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
-			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
-			"where the vector index is configured.")
-	}
-	return v
+	return acctest.SkipIfEnvVarNotSet(t, "TF_AWS_BEDROCK_OSS_COLLECTION_NAME")
 }
 
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
@@ -1087,7 +1093,7 @@ resource "null_resource" "db_setup" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_basicRDS(rName, model string) string {
+func testAccKnowledgeBaseConfig_RDS_basic(rName, model string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseRDS(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
