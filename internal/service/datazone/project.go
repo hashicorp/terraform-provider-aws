@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -26,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -208,7 +209,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -324,7 +325,7 @@ func (r *projectResource) ImportState(ctx context.Context, req resource.ImportSt
 }
 
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ProjectStatusActive),
 		Refresh:                   statusProject(ctx, conn, domain, identifier),
@@ -342,7 +343,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:       []string{},
 		Refresh:      statusProject(ctx, conn, domain, identifier),
@@ -359,10 +360,10 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
+func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -390,7 +391,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	out, err := conn.GetProject(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

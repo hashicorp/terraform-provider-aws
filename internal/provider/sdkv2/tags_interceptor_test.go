@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -86,9 +86,9 @@ func TestTagsResourceInterceptor(t *testing.T) {
 	}))
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		ctx = conns.NewResourceContext(ctx, "Test", "aws_test", "")
+		ctx = conns.NewResourceContext(ctx, "Test", "test", "aws_test", "")
 		if v, ok := meta.(*conns.AWSClient); ok {
-			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
+			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx), v.TagPolicyConfig(ctx))
 		}
 
 		return ctx

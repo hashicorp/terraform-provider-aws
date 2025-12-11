@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +33,6 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Integration")
 // @Testing(preIdentityVersion="6.19.0")
-// @Testing(importStateIdAttribute="arn")
 func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -157,7 +156,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findIntegrationByARN(ctx, conn, data.IntegrationARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

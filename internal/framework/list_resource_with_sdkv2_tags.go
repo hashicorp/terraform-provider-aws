@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -23,7 +23,7 @@ func (r *ListResourceWithSDKv2Tags) SetTagsSpec(tags unique.Handle[inttypes.Serv
 }
 
 func (r *ListResourceWithSDKv2Tags) SetTags(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
-	sp, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, client)
+	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, client)
 	if !ok {
 		return nil
 	}

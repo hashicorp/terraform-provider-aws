@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,7 +24,7 @@ func TestAccELBV2TrustStore_Identity_Basic(t *testing.T) {
 
 	var v types.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -117,7 +116,7 @@ func TestAccELBV2TrustStore_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -251,7 +250,7 @@ func TestAccELBV2TrustStore_Identity_ExistingResource(t *testing.T) {
 
 	var v types.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -307,7 +306,7 @@ func TestAccELBV2TrustStore_Identity_ExistingResource_NoRefresh_NoChange(t *test
 
 	var v types.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

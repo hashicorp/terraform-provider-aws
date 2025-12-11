@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package resourcegroups
@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -121,7 +122,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	resourceARN := parts[1]
 
 	output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -177,7 +178,7 @@ func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -197,11 +198,11 @@ func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) retry.StateRefreshFunc {
+func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -218,7 +219,7 @@ func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, 
 }
 
 func waitResourceCreated(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{""},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),
@@ -235,7 +236,7 @@ func waitResourceCreated(ctx context.Context, conn *resourcegroups.Client, group
 }
 
 func waitResourceDeleted(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),

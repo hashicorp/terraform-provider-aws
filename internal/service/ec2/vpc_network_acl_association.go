@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,7 +69,7 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return findNetworkACLAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network ACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -96,7 +97,7 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 
 	nacl, err := findNetworkACL(ctx, conn, input)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -150,7 +151,7 @@ func networkACLAssociationsCreate(ctx context.Context, conn *ec2.Client, naclID 
 		subnetID := v.(string)
 		_, err := networkACLAssociationCreate(ctx, conn, naclID, subnetID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Subnet has been deleted.
 			continue
 		}
@@ -198,7 +199,7 @@ func networkACLAssociationsDelete(ctx context.Context, conn *ec2.Client, vpcID s
 		subnetID := v.(string)
 		association, err := findNetworkACLAssociationBySubnetID(ctx, conn, subnetID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Subnet has been deleted.
 			continue
 		}

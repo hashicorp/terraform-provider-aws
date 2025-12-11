@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications
@@ -16,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,7 +98,7 @@ func (r *channelAssociationResource) Read(ctx context.Context, request resource.
 	notificationConfigurationARN, arn := fwflex.StringValueFromFramework(ctx, data.NotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ARN)
 	err := findChannelAssociationByTwoPartKey(ctx, conn, notificationConfigurationARN, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -168,7 +168,7 @@ func findChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
+			return &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -183,7 +183,7 @@ func findChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications
 		}
 	}
 
-	return &retry.NotFoundError{
+	return &sdkretry.NotFoundError{
 		LastRequest: &input,
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -104,12 +104,107 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// If code_configuration was set in the previous configuration and container_configuration is set in the planned configuration, a replacement is required — and vice versa.
+							var prev, plan agentRuntimeArtifactModel
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, path.Root("agent_runtime_artifact").AtListIndex(0), &prev))
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, path.Root("agent_runtime_artifact").AtListIndex(0), &plan))
+							if response.Diagnostics.HasError() {
+								return
+							}
+							if (!prev.ContainerConfiguration.IsNull() && !plan.CodeConfiguration.IsNull()) ||
+								(!prev.CodeConfiguration.IsNull() && !plan.ContainerConfiguration.IsNull()) {
+								response.RequiresReplace = true
+							}
+						},
+						"Artifact type change between code_configuration and container_configuration requires replacement",
+						"",
+					),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
+						"code_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("container_configuration"),
+									path.MatchRelative().AtParent().AtName("code_configuration"),
+								),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"entry_point": schema.ListAttribute{
+										CustomType: fwtypes.ListOfStringType,
+										Required:   true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(2),
+											listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 128)),
+										},
+										ElementType: types.StringType,
+									},
+									"runtime": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.AgentManagedRuntimeType](),
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"code": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigurationCodeModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3CodeConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+														listvalidator.ExactlyOneOf(
+															// If another member is added to the union, this will need to be updated.
+															path.MatchRelative().AtParent().AtName("s3"),
+														),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrBucket: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
+																},
+															},
+															names.AttrPrefix: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 1024),
+																},
+															},
+															"version_id": schema.StringAttribute{
+																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(3, 1024),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"container_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[containerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("container_configuration"),
+									path.MatchRelative().AtParent().AtName("code_configuration"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -519,6 +614,7 @@ type agentRuntimeResourceModel struct {
 }
 
 type agentRuntimeArtifactModel struct {
+	CodeConfiguration      fwtypes.ListNestedObjectValueOf[codeConfigurationModel]      `tfsdk:"code_configuration"`
 	ContainerConfiguration fwtypes.ListNestedObjectValueOf[containerConfigurationModel] `tfsdk:"container_configuration"`
 }
 
@@ -530,6 +626,13 @@ var (
 func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
+	case awstypes.AgentRuntimeArtifactMemberCodeConfiguration:
+		var data codeConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.CodeConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.AgentRuntimeArtifactMemberContainerConfiguration:
 		var data containerConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
@@ -550,6 +653,18 @@ func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) diag.Dia
 func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
+	case !m.CodeConfiguration.IsNull():
+		data, d := m.CodeConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.AgentRuntimeArtifactMemberCodeConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	case !m.ContainerConfiguration.IsNull():
 		data, d := m.ContainerConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -557,6 +672,66 @@ func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagno
 			return nil, diags
 		}
 		var r awstypes.AgentRuntimeArtifactMemberContainerConfiguration
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type codeConfigurationModel struct {
+	Code       fwtypes.ListNestedObjectValueOf[codeConfigurationCodeModel] `tfsdk:"code"`
+	EntryPoint fwtypes.ListOfString                                        `tfsdk:"entry_point"`
+	Runtime    fwtypes.StringEnum[awstypes.AgentManagedRuntimeType]        `tfsdk:"runtime"`
+}
+
+type codeConfigurationCodeModel struct {
+	S3 fwtypes.ListNestedObjectValueOf[s3CodeConfigurationModel] `tfsdk:"s3"`
+}
+
+type s3CodeConfigurationModel struct {
+	Bucket    types.String `tfsdk:"bucket"`
+	Prefix    types.String `tfsdk:"prefix"`
+	VersionID types.String `tfsdk:"version_id"`
+}
+
+var (
+	_ fwflex.Expander  = codeConfigurationCodeModel{}
+	_ fwflex.Flattener = &codeConfigurationCodeModel{}
+)
+
+func (m *codeConfigurationCodeModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.CodeMemberS3:
+		var data s3CodeConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("code configuration code flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m codeConfigurationCodeModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.S3.IsNull():
+		data, d := m.S3.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.CodeMemberS3
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags

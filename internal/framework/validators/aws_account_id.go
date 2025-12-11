@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package validators
@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // awsAccountIDValidator validates that a string Attribute's value is a valid AWS account ID.
@@ -31,7 +31,7 @@ func (validator awsAccountIDValidator) ValidateString(ctx context.Context, reque
 	}
 
 	// https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-identifiers.html.
-	if !itypes.IsAWSAccountID(request.ConfigValue.ValueString()) {
+	if !inttypes.IsAWSAccountID(request.ConfigValue.ValueString()) {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),

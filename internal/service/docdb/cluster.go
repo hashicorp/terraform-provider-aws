@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,10 +26,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -234,6 +236,12 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			names.AttrPort: {
 				Type:         schema.TypeInt,
@@ -492,6 +500,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -561,6 +573,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -655,6 +671,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -721,7 +741,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	dbc, err := findDBClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -733,7 +753,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.ToString(dbc.DBClusterArn)); tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+	if globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.ToString(dbc.DBClusterArn)); retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
 		d.Set("global_cluster_identifier", "")
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Global Cluster information for DocumentDB Cluster (%s): %s", d.Id(), err)
@@ -774,6 +794,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("master_user_secret", nil)
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
@@ -842,6 +863,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if masterPasswordWO != "" {
 				input.MasterUserPassword = aws.String(masterPasswordWO)
 			}
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
 		if d.HasChange("preferred_backup_window") {
@@ -1084,7 +1109,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1118,7 +1143,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1129,7 +1154,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !itypes.IsZero(&v) && filter(&v) {
+			if !inttypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -1138,11 +1163,11 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1155,7 +1180,7 @@ func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.S
 }
 
 func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusCreating,
 			clusterStatusBackingUp,
@@ -1182,7 +1207,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, 
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusDeleting,

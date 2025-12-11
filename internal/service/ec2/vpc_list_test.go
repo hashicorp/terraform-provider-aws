@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -38,7 +38,7 @@ func TestAccVPC_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -102,7 +102,7 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -176,7 +176,7 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -305,7 +305,7 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -375,7 +375,7 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -450,7 +450,7 @@ func TestAccVPC_List_Filtered_IsDefault(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

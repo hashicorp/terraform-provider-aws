@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
@@ -148,6 +149,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
@@ -210,6 +212,7 @@ func registerSweepers() {
 	bcmdataexports.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
 	bedrockagentcore.RegisterSweepers()
+	billing.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
 	cleanrooms.RegisterSweepers()
@@ -330,6 +333,7 @@ func registerSweepers() {
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
 	s3tables.RegisterSweepers()
+	s3vectors.RegisterSweepers()
 	sagemaker.RegisterSweepers()
 	scheduler.RegisterSweepers()
 	schemas.RegisterSweepers()

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -30,9 +30,10 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
@@ -171,7 +172,7 @@ func resourceSubnet() *schema.Resource {
 }
 
 // @SDKListResource("aws_subnet")
-func subnetResourceAsListResource() itypes.ListResourceForSDK {
+func subnetResourceAsListResource() inttypes.ListResourceForSDK {
 	l := subnetListResource{}
 	l.SetResourceSchema(resourceSubnet())
 
@@ -254,7 +255,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

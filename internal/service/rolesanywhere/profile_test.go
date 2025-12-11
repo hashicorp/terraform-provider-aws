@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rolesanywhere_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrolesanywhere "github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -200,6 +200,48 @@ func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_acceptRoleSessionName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient(ctx)
@@ -211,7 +253,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfrolesanywhere.FindProfileByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -226,27 +268,18 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProfileExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Profile is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 		_, err := tfrolesanywhere.FindProfileByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("Error describing Profile: %s", err.Error())
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -331,4 +364,16 @@ resource "aws_rolesanywhere_profile" "test" {
   enabled   = %[2]t
 }
 `, rName, enabled))
+}
+
+func testAccProfileConfig_acceptRoleSessionName(rName, roleName string, acceptRoleSessionName bool) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name                     = %[1]q
+  role_arns                = [aws_iam_role.test.arn]
+  accept_role_session_name = %[2]t
+}
+`, rName, acceptRoleSessionName))
 }

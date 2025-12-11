@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -45,9 +45,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -876,7 +877,7 @@ func resourceInstance() *schema.Resource {
 							return sdkdiag.AppendErrorf(diags, "expected type to be string")
 						}
 
-						if _, err := itypes.Base64Decode(v); err == nil {
+						if _, err := inttypes.Base64Decode(v); err == nil {
 							// value is a base46 encoded string
 							return diag.Diagnostics{
 								diag.Diagnostic{
@@ -1071,7 +1072,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 }
 
 // @SDKListResource("aws_instance")
-func instanceResourceAsListResource() itypes.ListResourceForSDK {
+func instanceResourceAsListResource() inttypes.ListResourceForSDK {
 	l := instanceListResource{}
 	l.SetResourceSchema(resourceInstance())
 
@@ -1238,7 +1239,7 @@ func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any
 
 	instance, err := findInstanceByID(ctx, conn, rd.Id())
 
-	if !rd.IsNewResource() && tfresource.NotFound(err) {
+	if !rd.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Instance %s not found, removing from state", rd.Id())
 		rd.SetId("")
 		return diags
@@ -1581,7 +1582,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange("user_data") {
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data").(string))
 			}
@@ -1601,7 +1602,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChange("user_data_base64") {
 			// Schema validation technically ensures the data is Base64 encoded.
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data_base64").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data_base64").(string))
 			}
@@ -3013,7 +3014,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}
@@ -3378,7 +3379,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			if b64 {
 				rd.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				data, err := inttypes.Base64Decode(aws.ToString(attr.UserData.Value))
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
 				}
@@ -3894,7 +3895,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 
 	name, defaultVersion, latestVersion, err := findLaunchTemplateNameAndVersions(ctx, conn, launchTemplateID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil, nil
 	}
 
@@ -3915,7 +3916,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 
 	_, err = findLaunchTemplateVersionByTwoPartKey(ctx, conn, launchTemplateID, currentLaunchTemplateVersion)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return []any{tfMap}, nil
 	}
 

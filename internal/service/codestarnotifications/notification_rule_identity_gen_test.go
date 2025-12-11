@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -108,7 +107,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_RegionOverride(t *tes
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -228,7 +227,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -306,7 +305,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource_NoRe
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
