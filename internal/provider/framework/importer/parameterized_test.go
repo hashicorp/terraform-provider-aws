@@ -873,6 +873,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 		"NoIdentity": {
 			inputID:     "a_name,a_type",
 			inputRegion: region,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			noIdentity:  true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
@@ -1323,6 +1324,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 	testCases := map[string]struct {
 		inputID               string
+		identitySpec          inttypes.Identity
 		useSchemaWithID       bool
 		noIdentity            bool
 		expectedResourceAttrs map[string]string
@@ -1332,7 +1334,8 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		expectedErrorPrefix   string
 	}{
 		"Basic": {
-			inputID: "a_name,a_type",
+			inputID:      "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -1345,12 +1348,9 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		},
 		"NoIdentity": {
 			inputID:    "a_name,a_type",
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			noIdentity: true,
 			expectedResourceAttrs: map[string]string{
-				"name": "a_name",
-				"type": "a_type",
-			},
-			expectedIdentityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
@@ -1360,6 +1360,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 		"WithIDAttr": {
 			inputID:         "a_name,a_type",
+			identitySpec:    globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
@@ -1374,6 +1375,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 		},
 		"WithIDAttr_TrimmedID": {
 			inputID:         "trim:a_name,a_type",
+			identitySpec:    globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			useSchemaWithID: true,
 			expectedResourceAttrs: map[string]string{
 				"name": "a_name",
@@ -1399,11 +1401,14 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 
 			stateAttrs := map[string]string{}
 
-			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+				identitySchema = ptr(identity.NewIdentitySchema(tc.identitySpec))
+			}
+
+			schema := globalMultipleParameterizedSchema
+			if tc.useSchemaWithID {
+				schema = globalMultipleParameterizedWithIDSchema
 			}
 
 			importSpec := inttypes.FrameworkImport{
@@ -1414,12 +1419,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 				importSpec.SetIDAttr = true
 			}
 
-			schema := globalMultipleParameterizedSchema
-			if tc.useSchemaWithID {
-				schema = globalMultipleParameterizedWithIDSchema
-			}
-
-			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, tc.identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
