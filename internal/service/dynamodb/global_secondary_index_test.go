@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1668,6 +1669,132 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expectTableGSINoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+				},
+			},
+			{
+				Config:       testAccGlobalSecondaryIndexConfig_migrate_single(rNameTable, rName),
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName), nil
+				},
+				ImportStatePersist: true,
+				ImportStateVerify:  false,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_single(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expectTableGSINoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+				},
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_migrate_single_importblock(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name": knownvalue.StringExact(rName),
+							"attribute_type": knownvalue.StringExact("S"),
+							"key_type":       knownvalue.StringExact("HASH"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceNameTable, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -2486,6 +2613,73 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, tableName, indexName1, indexName2)
+}
+
+func testAccGlobalSecondaryIndexConfig_migrate_single_setup(tableName, indexName1 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  global_secondary_index {
+    name            = %[2]q
+    projection_type = "ALL"
+    hash_key        = %[2]q
+    read_capacity   = 1
+    write_capacity  = 1
+  }
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+  attribute {
+    name = %[2]q
+    type = "S"
+  }
+}
+`, tableName, indexName1)
+}
+
+func testAccGlobalSecondaryIndexConfig_migrate_single(tableName, indexName1 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection_type = "ALL"
+
+  key_schema {
+    attribute_name = %[2]q
+    attribute_type = "S"
+    key_type = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName1)
+}
+
+func testAccGlobalSecondaryIndexConfig_migrate_single_importblock(tableName, indexName1 string) string {
+	return acctest.ConfigCompose(
+		testAccGlobalSecondaryIndexConfig_migrate_single(tableName, indexName1),
+		fmt.Sprintf(`
+import {
+  to = aws_dynamodb_global_secondary_index.test
+  id = "${aws_dynamodb_table.test.arn}/index/%[1]s"
+}
+`, indexName1))
 }
 
 func testAccGlobalSecondaryIndexConfig_migrate_allOld(tableName, indexName1, indexName2 string) string {
