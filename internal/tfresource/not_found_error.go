@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
@@ -35,12 +36,12 @@ func (e *EmptyResultError) Is(err error) bool {
 }
 
 func (e *EmptyResultError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -72,12 +73,12 @@ func (e *TooManyResultsError) Is(err error) bool {
 }
 
 func (e *TooManyResultsError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -87,11 +88,11 @@ func (e *TooManyResultsError) As(target any) bool {
 
 // SingularDataSourceFindError returns a standard error message for a singular data source's non-nil resource find error.
 func SingularDataSourceFindError(resourceType string, err error) error {
-	if NotFound(err) {
-		if errors.Is(err, &TooManyResultsError{}) {
-			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
-		}
+	if errors.Is(err, &TooManyResultsError{}) {
+		return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
+	}
 
+	if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors
@@ -11,18 +11,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -74,6 +79,10 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[indexEncryptionConfigurationModel](ctx, 1, nil,
+				listplanmodifier.UseStateForUnknown(),
+				listplanmodifier.RequiresReplace(),
+			),
 			"index_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -92,6 +101,31 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"metadata_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[indexMetadataConfigurationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"non_filterable_metadata_keys": schema.SetAttribute{
+							Required:    true,
+							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 10),
+							},
+						},
+					},
 				},
 			},
 		},
@@ -154,7 +188,7 @@ func (r *indexResource) Read(ctx context.Context, request resource.ReadRequest, 
 	arn := fwflex.StringValueFromFramework(ctx, data.IndexARN)
 	output, err := findIndexByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -230,8 +264,7 @@ func findIndex(ctx context.Context, conn *s3vectors.Client, input *s3vectors.Get
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -248,13 +281,24 @@ func findIndex(ctx context.Context, conn *s3vectors.Client, input *s3vectors.Get
 
 type indexResourceModel struct {
 	framework.WithRegionModel
-	CreationTime     timetypes.RFC3339                           `tfsdk:"creation_time"`
-	DataType         fwtypes.StringEnum[awstypes.DataType]       `tfsdk:"data_type"`
-	Dimension        types.Int32                                 `tfsdk:"dimension"`
-	DistanceMetric   fwtypes.StringEnum[awstypes.DistanceMetric] `tfsdk:"distance_metric"`
-	IndexARN         types.String                                `tfsdk:"index_arn"`
-	IndexName        types.String                                `tfsdk:"index_name"`
-	Tags             tftags.Map                                  `tfsdk:"tags"`
-	TagsAll          tftags.Map                                  `tfsdk:"tags_all"`
-	VectorBucketName types.String                                `tfsdk:"vector_bucket_name"`
+	CreationTime            timetypes.RFC3339                                                  `tfsdk:"creation_time"`
+	DataType                fwtypes.StringEnum[awstypes.DataType]                              `tfsdk:"data_type"`
+	Dimension               types.Int32                                                        `tfsdk:"dimension"`
+	DistanceMetric          fwtypes.StringEnum[awstypes.DistanceMetric]                        `tfsdk:"distance_metric"`
+	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[indexEncryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	IndexARN                types.String                                                       `tfsdk:"index_arn"`
+	IndexName               types.String                                                       `tfsdk:"index_name"`
+	MetadataConfiguration   fwtypes.ListNestedObjectValueOf[indexMetadataConfigurationModel]   `tfsdk:"metadata_configuration"`
+	Tags                    tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                         `tfsdk:"tags_all"`
+	VectorBucketName        types.String                                                       `tfsdk:"vector_bucket_name"`
+}
+
+type indexEncryptionConfigurationModel struct {
+	KMSKeyARN fwtypes.ARN                          `tfsdk:"kms_key_arn"`
+	SseType   fwtypes.StringEnum[awstypes.SseType] `tfsdk:"sse_type"`
+}
+
+type indexMetadataConfigurationModel struct {
+	NonFilterableMetadataKeys fwtypes.SetOfString `tfsdk:"non_filterable_metadata_keys"`
 }

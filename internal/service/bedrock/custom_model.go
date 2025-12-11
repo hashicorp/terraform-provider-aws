@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -37,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -328,7 +329,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 	jobARN := data.JobARN.ValueString()
 	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -369,7 +370,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		customModelARN := aws.ToString(outputGJ.OutputModelArn)
 		outputGM, err := findCustomModelByID(ctx, conn, customModelARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 
@@ -477,7 +478,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	output, err := conn.GetCustomModel(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -506,7 +507,7 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 	}
 
 	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -519,7 +520,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	output, err := conn.GetModelCustomizationJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -536,14 +537,14 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	return output, nil
 }
 
-func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
+func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}
 		output, err := findModelCustomizationJob(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -556,7 +557,7 @@ func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetModelCustomizationJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusInProgress),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusCompleted),
 		Refresh: statusModelCustomizationJob(ctx, conn, id),
@@ -575,7 +576,7 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 }
 
 func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetModelCustomizationJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusStopping),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusStopped),
 		Refresh: statusModelCustomizationJob(ctx, conn, id),

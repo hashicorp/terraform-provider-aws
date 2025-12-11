@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,7 +148,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	ws, err := findWorkspaceByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Prometheus Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -165,7 +166,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	loggingConfiguration, err := findLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		d.Set(names.AttrLoggingConfiguration, nil)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
@@ -297,7 +298,7 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	output, err := conn.DescribeWorkspace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -314,11 +315,11 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	return output.Workspace, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
+func statusWorkspace(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -334,7 +335,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeCreating),
 		Target:  enum.Slice(types.WorkspaceStatusCodeActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -354,7 +355,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeUpdating),
 		Target:  enum.Slice(types.WorkspaceStatusCodeActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -374,7 +375,7 @@ func waitWorkspaceDeleted(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -398,7 +399,7 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	output, err := conn.DescribeLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -415,11 +416,11 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	return output.LoggingConfiguration, nil
 }
 
-func statusLoggingConfiguration(ctx context.Context, conn *amp.Client, workspaceID string) retry.StateRefreshFunc {
+func statusLoggingConfiguration(ctx context.Context, conn *amp.Client, workspaceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLoggingConfigurationByWorkspaceID(ctx, conn, workspaceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -435,7 +436,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeCreating),
 		Target:  enum.Slice(types.LoggingConfigurationStatusCodeActive),
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
@@ -459,7 +460,7 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(types.LoggingConfigurationStatusCodeActive),
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
@@ -483,7 +484,7 @@ func waitLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -144,7 +145,7 @@ func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, re
 	resourceARN := data.ID.ValueString()
 	output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -257,7 +258,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	}
 
 	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: arn,
 		}
@@ -266,11 +267,11 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	return output.ApplicationLayerAutomaticResponseConfiguration, nil
 }
 
-func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
+func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -283,7 +284,7 @@ func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.C
 }
 
 func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
@@ -302,7 +303,7 @@ func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shi
 }
 
 func waitApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Target:  []string{},
 		Refresh: statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),

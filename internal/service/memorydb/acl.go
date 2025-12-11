@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -113,7 +114,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	acl, err := findACLByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -241,7 +242,7 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ACLNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -257,11 +258,11 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 	return output, nil
 }
 
-func statusACL(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
+func statusACL(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findACLByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -277,7 +278,7 @@ func waitACLActive(ctx context.Context, conn *memorydb.Client, name string) (*aw
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{aclStatusCreating, aclStatusModifying},
 		Target:  []string{aclStatusActive},
 		Refresh: statusACL(ctx, conn, name),
@@ -297,7 +298,7 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, name string) (*a
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      []string{aclStatusDeleting},
 		Target:       []string{},
 		Refresh:      statusACL(ctx, conn, name),
