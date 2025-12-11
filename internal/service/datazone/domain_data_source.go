@@ -137,10 +137,12 @@ func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Pred
 	if err != nil {
 		return nil, err
 	}
+
 	output, err := findDomainByID(ctx, conn, aws.ToString(domain1.Id))
 	if err != nil {
 		return nil, err
 	}
+
 	return output, nil
 }
 

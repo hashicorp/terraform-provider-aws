@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,38 +170,36 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	const (
 		timeout = 30 * time.Second
 	)
-	output, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func(ctx context.Context) (*datazone.CreateDomainOutput, error) {
+	out, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func(ctx context.Context) (*datazone.CreateDomainOutput, error) {
 		return conn.CreateDomain(ctx, &input)
 	}, errCodeAccessDenied)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
-
 		return
 	}
 
-	// Set values for unknowns.
-	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
-	data.ID = fwflex.StringToFramework(ctx, output.Id)
-	data.PortalURL = fwflex.StringToFramework(ctx, output.PortalUrl)
-	data.DomainVersion = fwtypes.StringEnumValue[awstypes.DomainVersion](output.DomainVersion)
+	data.ID = fwflex.StringToFramework(ctx, out.Id)
 
-	if _, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	output, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	// CreateDomain does not return root_domain_unit_id.
-	// It must be retrieved via GetDomain.
-	domain, err := findDomainByID(ctx, conn, data.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+	// Do not set single sign on in state if it was null and response is DISABLED as this is equivalent.
+	if output != nil {
+		if output.SingleSignOn.Type == awstypes.AuthTypeDisabled && data.SingleSignOn.IsNull() {
+			output.SingleSignOn = nil
+		}
+	}
 
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	data.RootDomainUnitId = fwflex.StringToFramework(ctx, domain.RootDomainUnitId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -217,7 +215,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	output, err := findDomainByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -256,10 +254,13 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	conn := r.Meta().DataZoneClient(ctx)
 
-	if !new.Description.Equal(old.Description) ||
-		!new.DomainExecutionRole.Equal(old.DomainExecutionRole) ||
-		!new.Name.Equal(old.Name) ||
-		!new.SingleSignOn.Equal(old.SingleSignOn) {
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		var input datazone.UpdateDomainInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -325,8 +326,7 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 
 	if isResourceMissing(err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -341,11 +341,11 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 	return output, nil
 }
 
-func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomain(conn *datazone.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -361,7 +361,7 @@ func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusCreating),
 		Target:  enum.Slice(awstypes.DomainStatusAvailable),
-		Refresh: statusDomain(ctx, conn, id),
+		Refresh: statusDomain(conn, id),
 		Timeout: timeout,
 	}
 
@@ -378,7 +378,7 @@ func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusAvailable, awstypes.DomainStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDomain(ctx, conn, id),
+		Refresh: statusDomain(conn, id),
 		Timeout: timeout,
 	}
 
