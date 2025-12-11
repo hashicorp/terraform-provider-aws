@@ -234,33 +234,6 @@ provider "aws" {
 credential_process = custom-process --username jdoe
 ```
 
-### Module-scoped User-Agent Information with `provider_meta`
-
-The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
-This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
-
-For example, the following `terraform` block can be used to append additional User-Agent details.
-
-```terraform
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
-    }
-  }
-
-  provider_meta "aws" {
-    user_agent = [
-      "example-demo/0.0.1 (a demo module)"
-    ]
-  }
-}
-```
-
-Note that `provider_meta` is defined within the `terraform` block.
-The `provider` block is inherited from the root module.
-
 ## AWS Configuration Reference
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
@@ -329,16 +302,66 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 ## Custom User-Agent Information
 
 By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
-To provide additional information in the User-Agent headers, set the `TF_APPEND_USER_AGENT` environment variable, or use the `user_agent` block.
 
-When using the environment variable, the value will be directly appended to the User-Agent header.
+There are three ways to provide additional User-Agent information.
+
+1. The `user_agent` provider argument.
+1. The `TF_APPEND_USER_AGENT` environment variable.
+1. The [`provider_meta`](https://developer.hashicorp.com/terraform/internals/provider-meta) `user_agent` argument.
+
+The first two options will apply the additional information to all resources, while `provider_meta` will be scoped only to the module in which it is configured.
+
+### `user_agent` Provider Argument
+
+When using the `user_agent` provider argument, the items will be appended to the User-Agent header in order.
+
+For example,
+
+~> The [`user_agent`](./functions/user_agent.html.markdown) provider-defined function can be used to format the name, version, and comment components.
+
+```terraform
+provider "aws" {
+  user_agent = [
+    provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+  ]
+}
+```
+
+### `TF_APPEND_USER_AGENT` Environment Variable
+
+When using the environment variable, the provided value will be directly appended to the User-Agent header.
 For example,
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
 ```
 
-When using the `user_agent` list attribute, the items will be appended to the User-Agent in order.
+### `provider_meta` `user_agent` Argument
+
+The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
+This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
+
+For example,
+
+~> In a module, `provider_meta` is defined within the `terraform` block.
+The `provider` block is inherited from the root module.
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  provider_meta "aws" {
+    user_agent = [
+      provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+    ]
+  }
+}
+```
 
 ## Argument Reference
 
