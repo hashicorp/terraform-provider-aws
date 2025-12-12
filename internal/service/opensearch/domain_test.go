@@ -4360,7 +4360,7 @@ func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool
 data "aws_partition" "current" {}
 
 data "aws_service_principal" "opensearch" {
-  service_name = "opensearch"
+  service_name = "es"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -4418,6 +4418,7 @@ resource "aws_opensearch_domain" "test" {
 
   depends_on = [
     aws_cognito_user_pool_domain.test,
+    aws_iam_role_policy_attachment.test,
     aws_iam_role_policy_attachment.test,
   ]
 }
