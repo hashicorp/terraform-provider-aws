@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.46.4
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.87.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.16
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.2
@@ -191,7 +191,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/odb v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.49.2
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.57.10
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.26.7
@@ -204,7 +204,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.17
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.98.3
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.18
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.113.1
@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.19
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.31.5
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.16
@@ -233,8 +233,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.17
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.7
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.40.5
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.1
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.8
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.7
@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.21
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.33.12
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.17
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.16
 	github.com/aws/aws-sdk-go-v2/service/signer v1.32.0
