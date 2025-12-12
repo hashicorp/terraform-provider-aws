@@ -379,7 +379,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
 		}
 
-		if new.UserGroupID.IsNull() {
+		if !new.UserGroupID.Equal(old.UserGroupID) && new.UserGroupID.IsNull() {
 			input.RemoveUserGroup = aws.Bool(true)
 		}
 
