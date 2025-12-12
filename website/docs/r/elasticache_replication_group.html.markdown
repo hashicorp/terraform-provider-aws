@@ -233,6 +233,8 @@ The following arguments are optional:
   When `engine` is `valkey`, default is `true`.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Required if `auth_token` is set.
+* `auth_token_wo` - (Optional, Write-Only) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
+* `auth_token_wo_version` - (Optional) Used together with auth_token_wo to trigger an update. Increment this value when an update to auth_token_wo is required.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
   Defaults to `true`.
