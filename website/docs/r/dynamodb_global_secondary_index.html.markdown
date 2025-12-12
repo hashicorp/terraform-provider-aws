@@ -94,7 +94,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `attribute_type` - (Required) Type of the attribute in the index; Valid values are `S` (string), `N` (number), `B` (binary).
 * `key_type` - (Required) Key type. Valid values are `HASH`, `RANGE`.
 
-
 ## Migrating
 
 For each block `global_secondary_index` create a new `aws_dynamodb_global_secondary_index` resource with the same configuration as the block you're replacing and add the following line into the new resource:
