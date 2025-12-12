@@ -3143,7 +3143,6 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Config: testAccReplicationGroupConfig_dataTiering(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
-
 					testCheckEngineVersionLatest(ctx, t, "valkey", "7.2", &version),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 					func(s *terraform.State) error {
