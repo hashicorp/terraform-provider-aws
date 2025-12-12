@@ -579,9 +579,32 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 				input.EngineVersion = aws.String(engineDefaultVersions[engineName])
 			}
 		} else {
-			input.Engine = aws.String(engineValkey)
 			if !engineVersionSet {
+				input.Engine = aws.String(engineValkey)
 				input.EngineVersion = aws.String(engineDefaultVersions[engineValkey])
+			} else {
+				// Determine engine based on version
+				// Versions < 7.2 are Redis, >= 7.2 are Valkey
+				version := d.Get(names.AttrEngineVersion).(string)
+
+				// Normalize version for comparison (handles "6.x", "7.x" patterns)
+				normalizedVersion, err := normalizeEngineVersion(version)
+				if err != nil {
+					// If normalization fails, fall back to string comparison
+					if semver.LessThan(version, "7.2.0") {
+						input.Engine = aws.String(engineRedis)
+					} else {
+						input.Engine = aws.String(engineValkey)
+					}
+				} else {
+					// Compare normalized version with 7.2.0
+					versionThreshold, _ := normalizeEngineVersion("7.2.0")
+					if normalizedVersion.LessThan(versionThreshold) {
+						input.Engine = aws.String(engineRedis)
+					} else {
+						input.Engine = aws.String(engineValkey)
+					}
+				}
 			}
 		}
 	}

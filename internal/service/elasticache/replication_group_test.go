@@ -2706,7 +2706,7 @@ func TestAccElastiCacheReplicationGroup_TagWithOtherModification_version(t *test
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "redis", "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
@@ -2716,7 +2716,7 @@ func TestAccElastiCacheReplicationGroup_TagWithOtherModification_version(t *test
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_tagAndVersion(rName, "redis", "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
@@ -3143,8 +3143,8 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Config: testAccReplicationGroupConfig_dataTiering(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
-					testCheckEngineVersionLatest(ctx, t, "redis", "", &version),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					testCheckEngineVersionLatest(ctx, t, "valkey", "7.2", &version),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 					},
@@ -4107,6 +4107,7 @@ resource "aws_elasticache_replication_group" "test" {
   replicas_per_node_group    = 1
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
+  engine                     = "redis"
   automatic_failover_enabled = true
   subnet_group_name          = aws_elasticache_subnet_group.test.name
   ip_discovery               = %[2]q
@@ -4147,6 +4148,7 @@ resource "aws_elasticache_replication_group" "test" {
   replicas_per_node_group    = 1
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
+  engine                     = "redis"
   automatic_failover_enabled = true
   subnet_group_name          = aws_elasticache_subnet_group.test.name
   ip_discovery               = %[2]q
@@ -4203,6 +4205,7 @@ resource "aws_elasticache_replication_group" "test" {
   replicas_per_node_group    = 1
   num_node_groups            = 2
   num_cache_clusters         = 3
+  engine                     = "redis"
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -4292,6 +4295,7 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled = true
   num_node_groups            = %[2]d
   replicas_per_node_group    = %[3]d
+  engine                     = "redis"
 
   tags = {
     key = "value"
@@ -4769,7 +4773,7 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_tagAndVersion(rName, version, tagKey1, tagValue1 string) string {
+func testAccReplicationGroupConfig_tagAndVersion(rName, engine, version, tagKey1, tagValue1 string) string {
 	const numCacheClusters = 2
 	return acctest.ConfigCompose(
 		testAccReplicationGroupClusterData(numCacheClusters),
@@ -4780,13 +4784,14 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t3.small"
   num_cache_clusters   = %[2]d
   apply_immediately    = true
-  engine_version       = %[3]q
+  engine               = %[3]q
+  engine_version       = %[4]q
 
   tags = {
-    %[4]q = %[5]q
+    %[5]q = %[6]q
   }
 }
-`, rName, numCacheClusters, version, tagKey1, tagValue1),
+`, rName, numCacheClusters, engine, version, tagKey1, tagValue1),
 	)
 }
 
@@ -5222,6 +5227,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                  = "cache.t2.micro"
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
+  engine                     = "redis"
   automatic_failover_enabled = true
   num_node_groups            = 2
 
@@ -5250,6 +5256,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                  = "cache.t2.micro"
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
+  engine                     = "redis"
   automatic_failover_enabled = true
   num_node_groups            = 2
 
