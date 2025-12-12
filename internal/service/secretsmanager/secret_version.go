@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -204,7 +205,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if hasWriteOnly {
 		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -224,7 +225,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -376,7 +377,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
-			return nil, &retry.NotFoundError{}
+			return nil, &sdkretry.NotFoundError{}
 		}
 
 		return output, nil
@@ -404,8 +405,7 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 			errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
 			errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 			return nil, nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -427,8 +427,7 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 	}
 
 	return nil, nil, &retry.NotFoundError{
-		LastError:   tfresource.NewEmptyResultError(input),
-		LastRequest: input,
+		LastError: tfresource.NewEmptyResultError(input),
 	}
 }
 
@@ -438,7 +437,7 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

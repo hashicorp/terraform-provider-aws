@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dax
@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -282,7 +282,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(strings.ToLower(*resp.Cluster.ClusterName))
 
 	pending := []string{"creating", "modifying"}
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -451,7 +451,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if awaitUpdate {
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
 		pending := []string{"modifying"}
-		stateConf := &retry.StateChangeConf{
+		stateConf := &sdkretry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -517,7 +517,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
@@ -534,7 +534,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
+func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := dax.DescribeClustersInput{
 			ClusterNames: []string{clusterID},
