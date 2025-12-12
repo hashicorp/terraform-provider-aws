@@ -158,7 +158,7 @@ func ValidCatalogID(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
 	if !ok {
 		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-		return
+		return ws, errors
 	}
 	parts := strings.Split(value, ":")
 
@@ -173,7 +173,7 @@ func ValidCatalogID(v any, k string) (ws []string, errors []error) {
 		return
 	case len(parts) > 2:
 		errors = append(errors, fmt.Errorf("%q is not a valid catalog ID: %q", k, value))
-		return
+		return ws, errors
 	}
 
 	catalogParts := strings.Split(parts[1], "/")
@@ -183,17 +183,17 @@ func ValidCatalogID(v any, k string) (ws []string, errors []error) {
 
 	switch len(catalogParts) {
 	case 1:
-		return
+		return ws, errors
 	case 2:
 		if !s3TablesBucketNameRegexp.MatchString(catalogParts[1]) {
 			errors = append(errors, fmt.Errorf("%q is not a valid S3 table bucket name: %q", k, value))
 		}
 	default:
 		errors = append(errors, fmt.Errorf("%q is not a valid catalog ID: %q", k, value))
-		return
+		return ws, errors
 	}
 
-	return
+	return ws, errors
 }
 
 func ValidBase64String(v any, k string) (ws []string, errors []error) {
@@ -205,7 +205,7 @@ func ValidBase64String(v any, k string) (ws []string, errors []error) {
 			k, value))
 	}
 
-	return
+	return 
 }
 
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
