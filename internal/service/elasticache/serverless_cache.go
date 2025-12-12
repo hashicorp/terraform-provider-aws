@@ -379,6 +379,10 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
 		}
 
+		if new.UserGroupID.IsNull() {
+			input.RemoveUserGroup = aws.Bool(true)
+		}
+
 		if _, err := conn.ModifyServerlessCache(ctx, &input); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
 			return
