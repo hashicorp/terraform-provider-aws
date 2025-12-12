@@ -1284,12 +1284,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null", "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "123"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioned_poller_config.0.minimum_pollers"),
+					resource.TestCheckResourceAttrSet(resourceName, "provisioned_poller_config.0.poller_group_name"),
 				),
 			},
 			{
@@ -1299,12 +1300,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15", "group-name-123"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "150"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "15"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.poller_group_name", "group-name-123"),
 				),
 			},
 			{
@@ -2839,8 +2841,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 1
+    maximum_pollers   = 100
+    minimum_pollers   = 1
+    poller_group_name = "test-group"
   }
 
   amazon_managed_kafka_event_source_config {
@@ -2898,8 +2901,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 1
+    maximum_pollers   = 100
+    minimum_pollers   = 1
+    poller_group_name = "test-group"
   }
 
   amazon_managed_kafka_event_source_config {
@@ -3010,8 +3014,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 1
+    maximum_pollers   = 100
+    minimum_pollers   = 1
+    poller_group_name = "test-group"
   }
 
   self_managed_kafka_event_source_config {
@@ -3066,8 +3071,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   provisioned_poller_config {
-    maximum_pollers = 100
-    minimum_pollers = 1
+    maximum_pollers   = 100
+    minimum_pollers   = 1
+	poller_group_name = "test-group"
   }
 
   self_managed_kafka_event_source_config {
@@ -3106,7 +3112,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers string) string {
+func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName string) string {
 	if batchSize == "" {
 		batchSize = "null"
 	}
@@ -3115,6 +3121,9 @@ func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig
 	}
 	if minPollers == "" {
 		minPollers = "null"
+	}
+	if pollerGroupName == "" {
+		pollerGroupName = "null"
 	}
 
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
@@ -3145,11 +3154,12 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   provisioned_poller_config {
-    maximum_pollers = %[4]s
-    minimum_pollers = %[5]s
+    maximum_pollers   = %[4]s
+    minimum_pollers   = %[5]s
+    poller_group_name = %[6]s
   }
 }
-`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers))
+`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName))
 }
 
 func testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, batchSize string) string {
