@@ -2608,10 +2608,11 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	for _, g := range gsi {
 		gsi := make(map[string]any)
 
+		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
 
 		for _, attribute := range g.KeySchema {
