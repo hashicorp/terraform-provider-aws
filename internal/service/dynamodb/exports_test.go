@@ -14,6 +14,7 @@ var (
 	ResourceTableReplica                = resourceTableReplica
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
+	ResourceGlobalSecondaryIndex        = newResourceGlobalSecondaryIndex
 
 	ARNForNewRegion                              = arnForNewRegion
 	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID

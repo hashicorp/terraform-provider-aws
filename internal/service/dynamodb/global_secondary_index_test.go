@@ -78,6 +78,76 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceGlobalSecondaryIndex, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceNameTable),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription

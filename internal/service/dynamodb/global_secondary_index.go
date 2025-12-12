@@ -665,6 +665,10 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 			return
 		}
 
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
 		// exit if error says the table is being deleted
 		if err, ok := errs.As[*awstypes.ResourceInUseException](err); ok && err != nil && strings.Contains(err.Error(), "Table is being deleted") {
 			return
