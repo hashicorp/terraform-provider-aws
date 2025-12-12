@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -1669,6 +1669,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -1737,6 +1738,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 	})
 }
 
+// lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -1795,6 +1797,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 	})
 }
 
+// lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -1860,6 +1863,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 	})
 }
 
+// lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -2044,7 +2048,7 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   key_schema {
     attribute_name = %[1]q
     attribute_type = "S"
-    key_type = "HASH"
+    key_type       = "HASH"
   }
 }
 
@@ -2729,7 +2733,7 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   key_schema {
     attribute_name = %[2]q
     attribute_type = "S"
-    key_type = "HASH"
+    key_type       = "HASH"
   }
 }
 
