@@ -2196,8 +2196,8 @@ func SkipIfExeNotOnPath(t *testing.T, file string) string {
 	return v
 }
 
-// SkipIfNotAcceptanceTest skips the current test if it's not an acceptance test (TF_ACC is set in the environment).
-func SkipIfNotAcceptanceTest(t *testing.T) {
+// SkipIfNotRunningAcceptanceTests skips the current test if it's not an acceptance test (TF_ACC is set in the environment).
+func SkipIfNotRunningAcceptanceTests(t *testing.T) {
 	t.Helper()
 	SkipIfEnvVarNotSet(t, resource.EnvTfAcc)
 }
@@ -2205,7 +2205,7 @@ func SkipIfNotAcceptanceTest(t *testing.T) {
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
-	SkipIfNotAcceptanceTest(t)
+	SkipIfNotRunningAcceptanceTests(t)
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
