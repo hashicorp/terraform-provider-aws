@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +40,7 @@ func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, os.Getenv("SAGEMAKER_IAM_ROLE_ARN")),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/", os.Getenv("SAGEMAKER_S3_BUCKET"))),
-					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexp.MustCompile(`^arn:aws:sagemaker:eu-west-1:471112720504:mlflow-app/app-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`mlflow-app/app-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
