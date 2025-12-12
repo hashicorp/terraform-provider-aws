@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRedshiftIdcApplication_basic(t *testing.T) {
+func TestAccRedshiftIDCApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -49,7 +49,7 @@ func TestAccRedshiftIdcApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIdcApplication_disappears(t *testing.T) {
+func TestAccRedshiftIDCApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +72,7 @@ func TestAccRedshiftIdcApplication_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIdcApplication_authorizedTokenIssuerList(t *testing.T) {
+func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,7 +103,7 @@ func TestAccRedshiftIdcApplication_authorizedTokenIssuerList(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIdcApplication_serviceIntegrations(t *testing.T) {
+func TestAccRedshiftIDCApplication_serviceIntegrations(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -76,6 +76,10 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"idc_managed_application_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
 			"identity_namespace": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
