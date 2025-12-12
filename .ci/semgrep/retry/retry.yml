@@ -1,0 +1,9 @@
+rules:
+  - id: internal-retry-notfound
+    languages: [go]
+    message: "Prefer retry.NotFound to tfresource.NotFound"
+    pattern: |
+      tfresource.NotFound($ERR)
+    fix: |
+      retry.NotFound($ERR)
+    severity: ERROR

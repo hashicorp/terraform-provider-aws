@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta any
 		name := tfMap[names.AttrName].(string)
 
 		// base64 decode the payload
-		payload, err := itypes.Base64Decode(tfMap["payload"].(string))
+		payload, err := inttypes.Base64Decode(tfMap["payload"].(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "invalid base64 value for secret (%s): %s", name, err)
 		}

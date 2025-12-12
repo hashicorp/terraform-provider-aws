@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -43,7 +43,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 func testAccConfigurationDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.1.0"]
+  kafka_versions = ["3.8.x"]
   name           = %[1]q
 
   server_properties = <<PROPERTIES

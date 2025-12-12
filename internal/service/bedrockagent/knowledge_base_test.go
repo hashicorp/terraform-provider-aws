@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,6 +77,7 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.custom_metadata_field", "custom_metadata"),
 				),
 			},
 			{
@@ -108,6 +109,7 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.custom_metadata_field", "custom_metadata"),
 				),
 			},
 		},
@@ -413,7 +415,7 @@ func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfbedrockagent.FindKnowledgeBaseByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -515,10 +517,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -551,10 +554,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -585,10 +589,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -623,10 +628,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }

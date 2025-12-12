@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -416,6 +416,47 @@ func TestAccECSCapacityProvider_updateManagedInstancesProvider(t *testing.T) {
 	})
 }
 
+func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructureOptimization(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "300"),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "0"),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, -1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "-1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
@@ -427,7 +468,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
@@ -705,6 +746,22 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -771,7 +828,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
     }
   }
@@ -793,7 +851,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       instance_requirements {
@@ -831,7 +890,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       storage_configuration {
@@ -867,7 +927,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       instance_requirements {
@@ -883,4 +944,41 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName string, scaleInAfter int) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+    propagate_tags          = "NONE"
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+
+    infrastructure_optimization {
+      scale_in_after = %[2]d
+    }
+  }
+}
+`, rName, scaleInAfter))
 }

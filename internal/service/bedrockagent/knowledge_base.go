@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -26,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -336,6 +337,12 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"custom_metadata_field": schema.StringAttribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
 												"metadata_field": schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
@@ -581,7 +588,7 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 
 	kb, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -686,7 +693,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 }
 
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -705,7 +712,7 @@ func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -724,7 +731,7 @@ func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusDeleting),
 		Target:  []string{},
 		Refresh: statusKnowledgeBase(ctx, conn, id),
@@ -742,11 +749,11 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 	return nil, err
 }
 
-func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -766,7 +773,7 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 	output, err := conn.GetKnowledgeBase(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -870,10 +877,11 @@ type rdsConfigurationModel struct {
 }
 
 type rdsFieldMappingModel struct {
-	MetadataField   types.String `tfsdk:"metadata_field"`
-	PrimaryKeyField types.String `tfsdk:"primary_key_field"`
-	TextField       types.String `tfsdk:"text_field"`
-	VectorField     types.String `tfsdk:"vector_field"`
+	CustomMetadataField types.String `tfsdk:"custom_metadata_field"`
+	MetadataField       types.String `tfsdk:"metadata_field"`
+	PrimaryKeyField     types.String `tfsdk:"primary_key_field"`
+	TextField           types.String `tfsdk:"text_field"`
+	VectorField         types.String `tfsdk:"vector_field"`
 }
 
 type redisEnterpriseCloudConfigurationModel struct {

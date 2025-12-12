@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -25,6 +25,7 @@ type awsClient interface {
 	IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig
 	Partition(context.Context) string
 	ServicePackage(_ context.Context, name string) conns.ServicePackage
+	TagPolicyConfig(context.Context) *tftags.TagPolicyConfig
 	ValidateInContextRegionInPartition(ctx context.Context) error
 	AwsConfig(context.Context) aws.Config
 }

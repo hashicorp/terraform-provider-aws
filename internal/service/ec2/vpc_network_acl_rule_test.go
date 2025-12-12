@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -249,7 +249,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 			{
 				Config: testAccVPCNetworkACLRuleConfig_ipv6NotAssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &v),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &v),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
 				),
@@ -257,7 +257,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 			{
 				Config: testAccVPCNetworkACLRuleConfig_ipv6AssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &v),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &v),
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -406,7 +406,7 @@ func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err = tfec2.FindNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
