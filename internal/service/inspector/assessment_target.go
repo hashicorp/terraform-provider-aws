@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -81,7 +81,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	assessmentTarget, err := FindAssessmentTargetByID(ctx, conn, d.Id())
-	if errs.IsA[*retry.NotFoundError](err) {
+	if errs.IsA[*sdkretry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -165,7 +165,7 @@ func FindAssessmentTargetByID(ctx context.Context, conn *inspector.Client, arn s
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastRequest: input,
 	}
 }

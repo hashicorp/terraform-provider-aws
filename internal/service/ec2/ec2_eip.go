@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -214,7 +215,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -259,7 +260,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	switch {
 	case err == nil:
 		d.Set("ptr_record", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("ptr_record", nil)
 	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"):
 		d.Set("ptr_record", nil)
@@ -383,7 +384,7 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 			return findEIPByAssociationID(ctx, conn, aws.ToString(output.AssociationId))
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 

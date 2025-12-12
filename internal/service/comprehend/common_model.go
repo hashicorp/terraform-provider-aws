@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package comprehend
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -62,7 +62,7 @@ func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups
 }
 
 func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2types.NetworkInterface, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{},
 		Target:     enum.Slice(ec2types.NetworkInterfaceStatusInUse),
 		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
@@ -80,7 +80,7 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 	return nil, err
 }
 
-func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
+func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findNetworkInterfaces(ctx, conn, securityGroups, subnets)
 		if err != nil {

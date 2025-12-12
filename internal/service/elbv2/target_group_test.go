@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2708,6 +2708,50 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_albTargetControlPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumInstance), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumInstance)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumIp), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumIp)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 	t.Parallel()
 
@@ -4394,7 +4438,7 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -5181,6 +5225,32 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, protocol, interval)
+}
+
+func testAccTargetGroupConfig_albTargetControlPort(rName, targetType string, targetControlPort int) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  target_type = %[2]q
+
+  target_control_port = %[3]d
+
+  tags = {
+    TestName = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, targetType, targetControlPort)
 }
 
 func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {

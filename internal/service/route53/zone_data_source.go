@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -37,6 +37,10 @@ func dataSourceZone() *schema.Resource {
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"enable_accelerated_recovery": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"linked_service_description": {
 				Type:     schema.TypeString,
@@ -201,6 +205,11 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", hostedZone.CallerReference)
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
+	if v := hostedZone.Features; v != nil {
+		d.Set("enable_accelerated_recovery", v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled)
+	} else {
+		d.Set("enable_accelerated_recovery", false)
+	}
 	if hostedZone.LinkedService != nil {
 		d.Set("linked_service_description", hostedZone.LinkedService.Description)
 		d.Set("linked_service_principal", hostedZone.LinkedService.ServicePrincipal)
