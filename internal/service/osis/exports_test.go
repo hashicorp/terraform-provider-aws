@@ -8,4 +8,10 @@ var (
 	ResourcePipeline = newPipelineResource
 
 	FindPipelineByName = findPipelineByName
+
+	FindPipelineEndpointByID = findPipelineEndpointByID
+
+	ResourcePipelineEndpoint = newPipelineEndpointResource
+
+	ResourcePipelineResourcePolicy = newPipelineResourcePolicyResource
 )
