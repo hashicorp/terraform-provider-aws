@@ -595,26 +595,22 @@ func (autonomousVMClusterResourceTest) autonomousVmClusterByARN() (string, strin
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetworkDisplayName)
+	domain := acctest.RandomDomainName()
+	emailAddress := acctest.RandomEmailAddress(domain)
+	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
+	odbNetRes := autonomousVMClusterResourceTestEntity.oracleDBNetwork(odbNetworkDisplayName)
 	noTag := fmt.Sprintf(`
-
-
-
-
 %s
 
 %s
-
-
 
 data "aws_odb_db_servers" "test" {
-  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.arn
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.arn
-  odb_network_id                        = aws_odb_network.test.arn
+  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.id
+  odb_network_id                        = aws_odb_network.test.id
   display_name                          = %[3]q
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
@@ -629,25 +625,23 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   }
 
 }
-`, exaInfra, odbNet, avmcDisplayName)
 
+
+
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
 	withTag := fmt.Sprintf(`
-
-
 %s
 
 %s
-
-
-
 
 data "aws_odb_db_servers" "test" {
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.arn
-  odb_network_id                        = aws_odb_network.test.arn
+  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.id
+  odb_network_id                        = aws_odb_network.test.id
   display_name                          = %[3]q
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
@@ -665,7 +659,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   }
 
 }
-`, exaInfra, odbNet, avmcDisplayName)
+
+
+
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
 
 	return noTag, withTag
 }

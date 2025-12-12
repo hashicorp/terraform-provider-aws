@@ -76,9 +76,11 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
 			},
@@ -305,9 +307,11 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.",
 			},
 			"odb_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force terraform to create new resource.",
 			},
@@ -603,6 +607,8 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	}
 	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, createdAVMC.CloudExadataInfrastructureId)
 	plan.OdbNetworkId = flex.StringToFramework(ctx, createdAVMC.OdbNetworkId)
+	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, createdAVMC.CloudExadataInfrastructureArn)
+	plan.OdbNetworkArn = flex.StringToFramework(ctx, createdAVMC.OdbNetworkArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdAVMC, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
