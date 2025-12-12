@@ -82,16 +82,7 @@ func resourceClusterCapacityProviders() *schema.Resource {
 
 func waitCapacityProvidersActive(ctx context.Context, conn *ecs.Client, capacityProviders []string, timeout time.Duration) error {
 
-	seen := make(map[string]struct{}, len(capacityProviders))
-
 	for _, cp := range capacityProviders {
-		if cp == "" {
-			continue
-		}
-		if _, ok := seen[cp]; ok {
-			continue
-		}
-		seen[cp] = struct{}{}
 
 		if _, err := waitCapacityProviderActive(ctx, conn, cp, timeout); err != nil {
 			return fmt.Errorf("waiting for ECS Capacity Provider (%s) to become ACTIVE: %w", cp, err)
