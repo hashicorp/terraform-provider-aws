@@ -809,6 +809,23 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn stri
 	return nil, err
 }
 
+func waitCapacityProviderActive(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CapacityProviderStatusInactive, awstypes.CapacityProviderStatusProvisioning),
+		Target:  []string{awstypes.CapacityProviderStatusActive},
+		Refresh: statusCapacityProvider(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func expandAutoScalingGroupProviderCreate(configured any) *awstypes.AutoScalingGroupProvider {
 	if configured == nil {
 		return nil
@@ -1550,3 +1567,4 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 
 	return []map[string]any{tfMap}
 }
+
