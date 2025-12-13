@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.53.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.9.4 // indirect
@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.62.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.8 // indirect
@@ -205,8 +205,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/odb v1.6.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.55.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/odb v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.28.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.49.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.9 // indirect
@@ -262,7 +262,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signer v1.31.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signer v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.20 // indirect
