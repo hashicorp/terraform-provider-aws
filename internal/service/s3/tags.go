@@ -175,10 +175,15 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	switch resourceType {
 	case "Bucket":
-		// Attempt ListTagsForResource first, fall back to GetBucketTagging
-		tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), c.AccountID(ctx))
-		if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") {
+		accountId := c.AccountID(ctx)
+		if accountId == "" {
 			tags, err = bucketListTags(ctx, conn, identifier)
+		} else {
+			// Attempt ListTagsForResource first, fall back to GetBucketTagging
+			tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountId)
+			if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") {
+				tags, err = bucketListTags(ctx, conn, identifier)
+			}
 		}
 
 	case "DirectoryBucket":
