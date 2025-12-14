@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix slowness caused by o(n^2) logic relating to number of tasks in a flow
+```
