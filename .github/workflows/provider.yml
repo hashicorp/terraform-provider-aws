@@ -91,6 +91,33 @@ jobs:
 
       - name: go build
         run: make go-build
+      
+      # Aggressively clean cache before saving to prevent extraction failures
+      # Large caches (>5GB) can fail silently during tar extraction
+      - name: Cleanup Build Cache Before Save
+        if: always()
+        run: |
+          if [ -d "$GOCACHE" ]; then
+            echo "Cache size before cleanup:"
+            du -sh $GOCACHE
+            
+            # Remove test binaries
+            find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
+            
+            # Remove entries older than 1 day (aggressive)
+            find $GOCACHE -type f -mtime +1 -delete 2>/dev/null || true
+            find $GOCACHE -type d -empty -delete 2>/dev/null || true
+            
+            # If still >4GB, use go clean
+            cache_size=$(du -sm $GOCACHE | cut -f1)
+            if [ $cache_size -gt 4096 ]; then
+              echo "Cache too large ($cache_size MB), running go clean..."
+              go clean -cache
+            fi
+            
+            echo "Cache size after cleanup:"
+            du -sh $GOCACHE
+          fi
 
       # Save build cache for reuse by go_test and future runs
       - name: Save Go Build Cache
@@ -187,10 +214,9 @@ jobs:
       - name: Go Test Shard ${{ matrix.shard }}
         run: make test-shard SHARD=${{ matrix.shard }} TOTAL_SHARDS=${{ matrix.total-shards }}
 
-      # Clean test artifacts to prevent cache bloat
-      # Test binaries are huge and rarely reused across runs
+      # Only shard 0 needs cleanup since it's the only one that saves cache
       - name: Cleanup Test Artifacts
-        if: always()
+        if: always() && matrix.shard == 0
         run: |
           if [ -d "$GOCACHE" ]; then
             echo "Cache size before cleanup:"
@@ -199,8 +225,8 @@ jobs:
             # Remove test binaries (*.test files) - they're huge and rarely reused
             find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
 
-            # Remove entries older than 2 days
-            find $GOCACHE -type f -mtime +2 -delete 2>/dev/null || true
+            # Remove entries older than 1 day
+            find $GOCACHE -type f -mtime +1 -delete 2>/dev/null || true
             find $GOCACHE -type d -empty -delete 2>/dev/null || true
 
             echo "Cache size after cleanup:"
