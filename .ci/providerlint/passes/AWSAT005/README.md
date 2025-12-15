@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT005
 
 The AWSAT005 analyzer reports hardcoded AWS partitions in ARNs. For tests to

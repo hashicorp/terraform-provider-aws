@@ -1,4 +1,3 @@
-## 6.27.0 (Unreleased)
 
 FEATURES:
 
@@ -18,12 +17,16 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.opensearch_managed_cluster_configuration` argument ([#44060](https://github.com/hashicorp/terraform-provider-aws/issues/44060))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.s3_vectors_configuration` block ([#45468](https://github.com/hashicorp/terraform-provider-aws/issues/45468))
 * resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
+* resource/aws_codebuild_project: Add `cache.cache_namespace` argument ([#45584](https://github.com/hashicorp/terraform-provider-aws/issues/45584))
 * resource/aws_datazone_domain: Add `root_domain_unit_id` argument ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
 
 BUG FIXES:
 
 * resource/aws_bedrockagent_knowledge_base: Mark `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` as `ForceNew` ([#45465](https://github.com/hashicorp/terraform-provider-aws/issues/45465))
 * resource/aws_lakeformation_data_cells_filter: Fix `excluded_column_names` ordering causing "Provider produced inconsistent result after apply" errors ([#45453](https://github.com/hashicorp/terraform-provider-aws/issues/45453))
+* resource/aws_verifiedpermissions_identity_source: Fixes error when updating resource ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
+* resource/aws_verifiedpermissions_identity_source: Prevents eventual consistency error with associated Policy Store ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
+* resource/aws_verifiedpermissions_identity_source: Removes AutoFlex error log messages ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
 
 ## 6.26.0 (December 10, 2025)
 

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # skaff
 
 `skaff` is a Terraform AWS Provider scaffolding command line tool. It generates resource/data source files and accompanying test files which adhere to the latest best practice. These files are heavily commented with instructions so serve as the best way to get started with provider development.

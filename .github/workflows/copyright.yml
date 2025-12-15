@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Copyright Checks
 
 on:
@@ -21,7 +24,7 @@ on:
 
 jobs:
   copyplop:
-    name: add headers check
+    name: headers check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
@@ -47,7 +50,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/YakDriver/copyplop@v0.2.0
+      - run: go install github.com/YakDriver/copyplop@latest
       - run: copyplop check
       - name: Check for Git Differences
         run: |

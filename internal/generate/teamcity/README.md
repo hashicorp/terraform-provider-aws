@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # TeamCity Acceptance Test Configuration Generator
 
 This generator generates the configuration for the default TeamCity service acceptance test list,

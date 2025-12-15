@@ -175,9 +175,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	switch resourceType {
 	case "Bucket":
-		// Attempt ListTagsForResource first, fall back to GetBucketTagging
-		tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), c.AccountID(ctx))
-		if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") {
+		if accountID := c.AccountID(ctx); accountID != "" {
+			// Attempt ListTagsForResource first, fall back to GetBucketTagging.
+			tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID)
+			if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") {
+				tags, err = bucketListTags(ctx, conn, identifier)
+			}
+		} else {
 			tags, err = bucketListTags(ctx, conn, identifier)
 		}
 
@@ -226,10 +230,15 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 
 	switch resourceType {
 	case "Bucket":
-		// Attempt Tag/UntagResource first, fall back to Put/DeleteBucketTagging
-		err := tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), c.AccountID(ctx), oldTags, newTags)
-		if errs.Contains(err, "is not authorized to perform: s3:TagResource") || errs.Contains(err, "is not authorized to perform: s3:UntagResource") {
-			return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+		var err error
+		if accountID := c.AccountID(ctx); accountID != "" {
+			// Attempt Tag/UntagResource first, fall back to Put/DeleteBucketTagging.
+			err = tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID, oldTags, newTags)
+			if errs.Contains(err, "is not authorized to perform: s3:TagResource") || errs.Contains(err, "is not authorized to perform: s3:UntagResource") {
+				return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+			}
+		} else {
+			err = bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
 		}
 		return err
 

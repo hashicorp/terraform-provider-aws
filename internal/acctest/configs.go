@@ -209,6 +209,16 @@ provider "aws" {
 `, severity, key1, value1)
 }
 
+func ConfigSkipCredentialsValidationAndRequestingAccountID() string {
+	//lintignore:AT004
+	return `
+provider "aws" {
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+}
+`
+}
+
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
