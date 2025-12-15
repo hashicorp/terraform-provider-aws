@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -198,6 +197,34 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrBucket, "tf-test-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, "tf-test-"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/45520.
+func TestAccS3Bucket_Basic_skipCredentialsValidationAndRequestingAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(acctest.ConfigSkipCredentialsValidationAndRequestingAccountID(), testAccBucketConfig_basic(rName)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
 				),
 			},
 			{
@@ -2689,54 +2716,6 @@ func TestBucketRegionalDomainName(t *testing.T) {
 			t.Fatalf("expected %q, received %q", tc.ExpectedOutput, output)
 		}
 	}
-}
-
-func TestAccS3Bucket_import(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test-bucket-import")
-	resourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccS3BucketConfig(rName),
-				Check:  testAccCheckBucketExists(ctx, resourceName),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-		},
-	})
-}
-
-func testAccS3BucketConfig(bucketName string) string {
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		region = "us-west-2"
-	}
-
-	return fmt.Sprintf(`
-provider "aws" {
-  region                     = "%[2]s"
-  skip_metadata_api_check     = true
-  skip_region_validation      = true
-  skip_credentials_validation = true
-  skip_requesting_account_id  = true
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-`, bucketName, region)
 }
 
 func TestWebsiteEndpoint(t *testing.T) {
