@@ -2712,7 +2712,7 @@ func TestAccS3Bucket_import(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "acl"},
 			},
 		},
 	})
