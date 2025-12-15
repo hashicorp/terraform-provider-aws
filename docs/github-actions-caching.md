@@ -39,6 +39,7 @@ key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}
 ```
 
 **Problems:**
+
 - AWS SDK updates 30-50 packages/week
 - Each update changes `go.sum` → new cache key → full recompile
 - Wastes the 90% of packages that didn't change
@@ -58,6 +59,7 @@ restore-keys: |
 Where `CACHE_DATE=$(date +%Y-%m-%d)`
 
 **Why this works:**
+
 - **One cache per day** (not per PR or per commit)
 - **All PRs share the same cache** on a given day
 - **Daily rotation** prevents unbounded growth
@@ -121,6 +123,7 @@ Where `CACHE_DATE=$(date +%Y-%m-%d)`
 ```
 
 **Benefits:**
+
 - Prevents race conditions
 - Ensures consistency
 - Reduces cache save time
@@ -150,7 +153,7 @@ The `go_test` job includes cleanup to prevent test artifacts from bloating the c
     if [ -d "$GOCACHE" ]; then
       # Remove test binaries - huge and rarely reused
       find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
-      
+
       # Remove entries older than 2 days
       find $GOCACHE -type f -mtime +2 -delete 2>/dev/null || true
       find $GOCACHE -type d -empty -delete 2>/dev/null || true
@@ -169,6 +172,7 @@ The `go/pkg/mod` cache uses a different strategy since dependencies are stable:
 ```
 
 This cache:
+
 - **Does** use `go.sum` in the key (dependencies change infrequently)
 - Is shared across all workflows
 - Typically ~2GB
@@ -188,16 +192,19 @@ This cache:
 ### Daily Workflow
 
 **First run of the day:**
+
 - Cold cache (or restores yesterday's)
 - Full compilation: ~10 minutes
 - Saves new cache for the day
 
 **Subsequent PRs same day:**
+
 - Warm cache hit
 - Incremental compilation: ~2-3 minutes
 - No cache save (already exists)
 
 **Next day:**
+
 - New cache key (new date)
 - Fresh start prevents unbounded growth
 - Old cache auto-expires after 7 days
@@ -226,6 +233,7 @@ Monitor cache effectiveness in GitHub Actions:
 3. **Cache size**: Should stay around 8-10GB total
 
 If cache hit rates drop below 70%, investigate:
+
 - Are multiple workflows saving cache? (should only be `go_build`)
 - Is cache size approaching 10GB limit?
 - Are there new workflows not following the pattern?
