@@ -22,6 +22,9 @@ Continuous integration (CI) plays a pivotal role in maintaining the health and q
 
 Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, CI tests serve as a safeguard, bolstering the reliability and maintainability of the project while fostering a collaborative and iterative development environment.
 
+!!! note "GitHub Actions Caching"
+    The provider uses a specialized caching strategy to handle the unique challenges of a massive codebase with 500+ active PRs. If you're working on GitHub Actions workflows or experiencing slow CI builds, see [GitHub Actions Caching Strategy](github-actions-caching.md) for details.
+
 ## Using `make` to Run Specific Tests Locally
 
 **NOTE:** We've made a great effort to ensure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
