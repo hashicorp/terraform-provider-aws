@@ -162,6 +162,23 @@ clean-go: prereq-go ## Clean up Go cache
 	go clean -modcache -testcache -cache -i -r
 	@echo "make: Go caches cleaned"
 
+clean-go-cache-trim: prereq-go ## Trim Go build cache to manageable size (keeps recent entries)
+	@echo "make: Trimming Go build cache..."
+	@cache_dir=$$(go env GOCACHE) ; \
+	if [ -d "$$cache_dir" ]; then \
+		echo "make: Current cache size: $$(du -sh $$cache_dir | cut -f1)" ; \
+		echo "make: Removing cache entries older than 7 days..." ; \
+		find "$$cache_dir" -type f -atime +7 -delete 2>/dev/null || true ; \
+		find "$$cache_dir" -type d -empty -delete 2>/dev/null || true ; \
+		echo "make: Cache size after trim: $$(du -sh $$cache_dir | cut -f1)" ; \
+		cache_size_mb=$$(du -sm "$$cache_dir" | cut -f1) ; \
+		if [ $$cache_size_mb -gt 51200 ]; then \
+			echo "make: WARNING: Cache still large ($$cache_size_mb MB). Consider 'make clean-go' for full cleanup." ; \
+		fi ; \
+	else \
+		echo "make: No cache directory found at $$cache_dir" ; \
+	fi
+
 clean-make-tests: ## Clean up artifacts from make tests
 	@echo "make: Cleaning up artifacts from make tests..."
 	@rm -rf sweeper-bin
@@ -671,7 +688,13 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 test: prereq-go fmt-check ## Run unit tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
+	@# Use Go's native parallelism for efficient shared dependency compilation
+	@# Override via: make test TEST_P=8 TEST_PARALLEL=16
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4); \
+	test_p=$${TEST_P:-4}; \
+	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
+	printf "make: Using -p %s (package build parallelism) and -parallel %s (test parallelism)...\n" "$$test_p" "$$test_parallel"; \
+	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -p $$test_p -parallel $$test_parallel -run '^Test[^A]|^TestA[^c]|^TestAc[^c]' $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -680,6 +703,61 @@ test-compile: prereq-go ## Test package compilation
 		exit 1; \
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
+
+test-fast: prereq-go ## Run unit tests with maximum speed optimizations (skip fmt-check)
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
+ifneq ($(PKG)$(K),)
+	@$(MAKE) test-fast-service
+else
+	@$(MAKE) test-fast-full
+endif
+
+test-fast-service: ## Ultra-fast unit tests for single service (internal target)
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
+		mkdir -p "$$build_dir/cache"; \
+		export GOCACHE="$$build_dir/cache"; \
+		export GOTMPDIR="$$build_dir"; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
+	test_parallel=$${TEST_PARALLEL:-$$cores}; \
+	printf "make: Ultra-fast service mode for $(or $(PKG),$(K)) - cores: %s, -parallel %s\n" "$$cores" "$$test_parallel"; \
+	$(GO_VER) test $(TEST) \
+		-v \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 30m \
+		-vet=off \
+		-buildvcs=false \
+		-trimpath \
+		-ldflags="-s -w" \
+		-count=1; \
+	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
+
+test-fast-full: ## Full codebase unit tests with optimizations (internal target)
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		build_dir="/tmp/terraform-aws-build-$$$$"; \
+		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
+		export GOCACHE="$$build_dir/cache"; \
+		export GOTMPDIR="$$build_dir/tmp"; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	test_p=$${TEST_P:-6}; \
+	test_parallel=$${TEST_PARALLEL:-$$cores}; \
+	printf "make: Full codebase mode - cores: %s, -p %s, -parallel %s\n" "$$cores" "$$test_p" "$$test_parallel"; \
+	$(GO_VER) test $(TEST) \
+		-p $$test_p \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 60m \
+		-vet=off \
+		-buildvcs=false \
+		-trimpath \
+		-ldflags="-s -w"; \
+	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
