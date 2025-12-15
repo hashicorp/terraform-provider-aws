@@ -86,17 +86,17 @@ Where `CACHE_DATE=$(date +%Y-%m-%d)`
          ▼
 ┌────────────────────────────────┐
 │ All other jobs restore cache:  │
-│ - go_generate                   │
-│ - go_test                       │
-│ - import-lint                   │
-│ - validate_sweepers             │
-│ - copyright                     │
-│ - dependencies                  │
-│ - modern_go                     │
-│ - providerlint                  │
-│ - pull_request_target           │
-│ - skaff                         │
-│ - smarterr                      │
+│ - go_generate                  │
+│ - go_test                      │
+│ - import-lint                  │
+│ - validate_sweepers            │
+│ - copyright                    │
+│ - dependencies                 │
+│ - modern_go                    │
+│ - providerlint                 │
+│ - pull_request_target          │
+│ - skaff                        │
+│ - smarterr                     │
 └────────────────────────────────┘
 ```
 
