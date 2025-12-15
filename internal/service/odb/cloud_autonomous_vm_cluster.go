@@ -636,6 +636,11 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 		)
 		return
 	}
+	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, out.CloudExadataInfrastructureArn)
+	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, out.CloudExadataInfrastructureId)
+	state.OdbNetworkArn = flex.StringToFramework(ctx, out.OdbNetworkArn)
+	state.OdbNetworkId = flex.StringToFramework(ctx, out.OdbNetworkId)
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
