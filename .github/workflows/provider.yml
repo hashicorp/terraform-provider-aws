@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      
+
       # Restore build cache with daily rotation to prevent unbounded growth
       # Falls back to yesterday's cache if today's doesn't exist
       - name: Restore Go Build Cache
@@ -78,17 +78,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
-      
+
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      
+
       - name: go build
         run: make go-build
-      
+
       # Save build cache for reuse by go_test and future runs
       - name: Save Go Build Cache
         uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
@@ -112,7 +112,7 @@ jobs:
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      
+
       # Reuse build cache from go_build
       - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
@@ -123,7 +123,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
-      
+
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
@@ -155,7 +155,7 @@ jobs:
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      
+
       # Reuse build cache from go_build job to avoid recompilation
       # This is the key optimization - tests reuse production build artifacts
       - name: Restore Go Build Cache
@@ -169,17 +169,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
-      
+
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      
+
       - name: Go Test
         run: make test-fast
-      
+
       # Clean test artifacts to prevent cache bloat
       # Test binaries are huge and rarely reused across runs
       - name: Cleanup Test Artifacts
@@ -188,18 +188,18 @@ jobs:
           if [ -d "$GOCACHE" ]; then
             echo "Cache size before cleanup:"
             du -sh $GOCACHE
-            
+
             # Remove test binaries (*.test files) - they're huge and rarely reused
             find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
-            
+
             # Remove entries older than 2 days
             find $GOCACHE -type f -mtime +2 -delete 2>/dev/null || true
             find $GOCACHE -type d -empty -delete 2>/dev/null || true
-            
+
             echo "Cache size after cleanup:"
             du -sh $GOCACHE
           fi
-      
+
       # Save updated cache with test compilation (but cleaned)
       # Only save if we didn't get a cache hit (avoid redundant saves)
       - name: Save Go Build Cache
@@ -219,16 +219,18 @@ jobs:
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
@@ -252,16 +254,18 @@ jobs:
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
