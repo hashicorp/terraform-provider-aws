@@ -842,7 +842,7 @@ func (l *keyListResource) List(ctx context.Context, request list.ListRequest, st
 					// Log and continue.
 					tflog.Error(ctx, "Reading KMS key", map[string]any{
 						names.AttrID: id,
-						"error":      sdkdiag.DiagnosticsString(diags),
+						"diags":      sdkdiag.DiagnosticsString(diags),
 					})
 					continue
 				}
