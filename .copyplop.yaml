@@ -15,8 +15,6 @@ license:
 
 # see breakdown of file types below
 files:
-  include_paths:
-    #- "internal/**"
   exclude_paths:
     - "**/when_string_test.go" # standard library generated files
     - "CHANGELOG.md"

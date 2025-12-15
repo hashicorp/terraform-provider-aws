@@ -91,7 +91,7 @@ jobs:
 
       - name: go build
         run: make go-build
-      
+
       # Aggressively clean cache before saving to prevent extraction failures
       # Large caches (>5GB) can fail silently during tar extraction
       - name: Cleanup Build Cache Before Save
@@ -100,21 +100,21 @@ jobs:
           if [ -d "$GOCACHE" ]; then
             echo "Cache size before cleanup:"
             du -sh $GOCACHE
-            
+
             # Remove test binaries
             find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
-            
+
             # Remove entries older than 1 day (aggressive)
             find $GOCACHE -type f -mtime +1 -delete 2>/dev/null || true
             find $GOCACHE -type d -empty -delete 2>/dev/null || true
-            
+
             # If still >4GB, use go clean
             cache_size=$(du -sm $GOCACHE | cut -f1)
             if [ $cache_size -gt 4096 ]; then
               echo "Cache too large ($cache_size MB), running go clean..."
               go clean -cache
             fi
-            
+
             echo "Cache size after cleanup:"
             du -sh $GOCACHE
           fi
