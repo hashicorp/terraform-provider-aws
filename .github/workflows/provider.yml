@@ -142,9 +142,14 @@ jobs:
             (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
   go_test:
-    name: go test
+    name: go test (shard ${{ matrix.shard }})
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-xl
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+        total-shards: [4]
     env:
       GOMAXPROCS: 8
     steps:
@@ -179,8 +184,8 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
-      - name: Go Test
-        run: make test-fast
+      - name: Go Test Shard ${{ matrix.shard }}
+        run: make test-shard SHARD=${{ matrix.shard }} TOTAL_SHARDS=${{ matrix.total-shards }}
 
       # Clean test artifacts to prevent cache bloat
       # Test binaries are huge and rarely reused across runs
@@ -203,10 +208,10 @@ jobs:
           fi
 
       # Save updated cache with test compilation (but cleaned)
-      # Only save if we didn't get a cache hit (avoid redundant saves)
+      # Only shard 0 saves to avoid race conditions
       - name: Save Go Build Cache
         uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        if: always() && steps.cache-go-build.outputs.cache-hit != 'true'
+        if: always() && matrix.shard == 0 && steps.cache-go-build.outputs.cache-hit != 'true'
         continue-on-error: true
         timeout-minutes: 5
         with:

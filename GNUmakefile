@@ -759,6 +759,39 @@ test-fast-full: ## Full codebase unit tests with optimizations (internal target)
 		-ldflags="-s -w"; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
+test-shard: prereq-go ## Run unit tests for a specific shard (use SHARD=0 TOTAL_SHARDS=4)
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
+		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
+		echo "Example: make test-shard SHARD=0 TOTAL_SHARDS=4"; \
+		exit 1; \
+	fi
+	@echo "Running shard $(SHARD) of $(TOTAL_SHARDS)..."
+	@packages=$$($(GO_VER) list ./... | grep -v '/vendor/' | sort); \
+	count=0; \
+	shard_packages=""; \
+	for pkg in $$packages; do \
+		if [ $$((count % $(TOTAL_SHARDS))) -eq $(SHARD) ]; then \
+			shard_packages="$$shard_packages $$pkg"; \
+		fi; \
+		count=$$((count + 1)); \
+	done; \
+	if [ -z "$$shard_packages" ]; then \
+		echo "No packages assigned to shard $(SHARD)"; \
+		exit 0; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	test_p=$${TEST_P:-$$cores}; \
+	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
+	echo "Testing $$( echo $$shard_packages | wc -w | xargs ) packages with -p $$test_p -parallel $$test_parallel"; \
+	$(GO_VER) test $$shard_packages \
+		-p $$test_p \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 60m \
+		-vet=off \
+		-buildvcs=false
+
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
