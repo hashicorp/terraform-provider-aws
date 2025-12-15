@@ -4,6 +4,7 @@
 package cloudfront
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -98,6 +100,8 @@ func RegisterSweepers() {
 			"aws_cloudfront_distribution",
 		},
 	})
+
+	awsv2.Register("aws_cloudfront_trust_store", sweepTrustStores, "aws_cloudfront_distribution")
 
 	resource.AddTestSweepers("aws_cloudfront_vpc_origin", &resource.Sweeper{
 		Name: "aws_cloudfront_vpc_origin",
@@ -768,6 +772,28 @@ func sweepOriginAccessControls(region string) error {
 	}
 
 	return nil
+}
+
+func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudfront.ListTrustStoresInput{}
+	conn := client.CloudFrontClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudfront.NewListTrustStoresPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.TrustStoreList {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTrustStoreResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepVPCOrigins(region string) error {
