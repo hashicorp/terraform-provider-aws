@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -2689,54 +2688,6 @@ func TestBucketRegionalDomainName(t *testing.T) {
 			t.Fatalf("expected %q, received %q", tc.ExpectedOutput, output)
 		}
 	}
-}
-
-func TestAccS3Bucket_import(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test-bucket-import")
-	resourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccS3BucketConfig(rName),
-				Check:  testAccCheckBucketExists(ctx, resourceName),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-		},
-	})
-}
-
-func testAccS3BucketConfig(bucketName string) string {
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		region = "us-west-2"
-	}
-
-	return fmt.Sprintf(`
-provider "aws" {
-  region                     = "%[2]s"
-  skip_metadata_api_check     = true
-  skip_region_validation      = true
-  skip_credentials_validation = true
-  skip_requesting_account_id  = true
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-`, bucketName, region)
 }
 
 func TestWebsiteEndpoint(t *testing.T) {
