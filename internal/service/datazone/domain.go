@@ -191,7 +191,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 	// Do not set single sign on in state if it was null and response is DISABLED as this is equivalent.
 	if output != nil {
-		if output.SingleSignOn.Type == awstypes.AuthTypeDisabled && data.SingleSignOn.IsNull() {
+		if output.SingleSignOn != nil && output.SingleSignOn.Type == awstypes.AuthTypeDisabled && data.SingleSignOn.IsNull() {
 			output.SingleSignOn = nil
 		}
 	}
