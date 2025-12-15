@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # GitHub Actions Caching Strategy
 
 This document explains the caching strategy used in the Terraform AWS Provider's GitHub Actions workflows and why it's designed this way.
