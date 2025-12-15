@@ -133,7 +133,7 @@ resource "aws_ecs_cluster" "test" {
 
   configuration {
     managed_storage_configuration {
-      fargate_ephemeral_storage_kms_key_id = aws_kms_key.example.id
+      fargate_ephemeral_storage_kms_key_id = aws_kms_key.example.arn
     }
   }
   depends_on = [
