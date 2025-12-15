@@ -7,3 +7,12 @@ rules:
     fix: |
       retry.NotFound($ERR)
     severity: ERROR
+
+  - id: internal-retry-timedout
+    languages: [go]
+    message: "Prefer retry.TimedOut to tfresource.TimedOut"
+    pattern: |
+      tfresource.TimedOut($ERR)
+    fix: |
+      retry.TimedOut($ERR)
+    severity: ERROR
