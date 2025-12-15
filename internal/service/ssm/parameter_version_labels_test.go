@@ -147,7 +147,7 @@ func testAccParameterVersionLabelsConfig_basic(rName, version string) string {
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
   type  = "String"
-  value = "test value"
+  value = "test value %[2]s"
 }
 
 resource "aws_ssm_parameter_version_labels" "test" {
