@@ -2704,7 +2704,7 @@ func TestAccS3Bucket_TagsWithClientWithoutAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWithClientWithoutAccount(rName),
+				Config: testAccS3BucketConfig(rName),
 				Check:  testAccCheckBucketExists(ctx, resourceName),
 			},
 			{
@@ -2717,7 +2717,7 @@ func TestAccS3Bucket_TagsWithClientWithoutAccount(t *testing.T) {
 	})
 }
 
-func testAccBucketWithClientWithoutAccount(bucketName string) string {
+func testAccS3BucketConfig(bucketName string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
