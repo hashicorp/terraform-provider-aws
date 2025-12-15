@@ -185,8 +185,8 @@ The `log_configuration` configuration block supports the following arguments:
 
 The `managed_storage_configuration` configuration block supports the following arguments:
 
-* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ID for the Fargate ephemeral storage.
-* `kms_key_id` - (Optional) AWS Key Management Service key ID to encrypt the managed storage.
+* `fargate_ephemeral_storage_kms_key_id` - (Optional) AWS Key Management Service key ARN for the Fargate ephemeral storage.
+* `kms_key_id` - (Optional) AWS Key Management Service key ARN to encrypt the managed storage.
 
 ### `service_connect_defaults` Block
 
