@@ -23,9 +23,16 @@ import (
 
 // @SDKDataSource("aws_networkmanager_core_network_policy_document", name="Core Network Policy Document")
 func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
-	setOfString := &schema.Schema{
+	setOfStringOptional := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+	setOfStringRequired := &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -36,6 +43,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 		// Order attributes to match model structures and documentation:
 		// https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html.
+		// Conciously NOT sorted alphabetically.
 		Schema: map[string]*schema.Schema{
 			names.AttrVersion: {
 				Type:     schema.TypeString,
@@ -51,20 +59,8 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"asn_ranges": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"inside_cidr_blocks": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
+						"asn_ranges":         setOfStringRequired,
+						"inside_cidr_blocks": setOfStringOptional,
 						"vpn_ecmp_support": {
 							Type:     schema.TypeBool,
 							Default:  true,
@@ -163,124 +159,6 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			"routing_policies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"routing_policy_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
-									"must contain only alphanumeric characters"),
-							),
-						},
-						"routing_policy_description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"routing_policy_direction": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"inbound",
-								"outbound",
-							}, false),
-						},
-						"routing_policy_number": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 9999),
-						},
-						"routing_policy_rules": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"rule_number": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 9999),
-									},
-									"rule_definition": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"condition_logic": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"and",
-														"or",
-													}, false),
-												},
-												"match_conditions": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	"prefix-equals",
-																	"prefix-in-cidr",
-																	"prefix-in-prefix-list",
-																	"asn-in-as-path",
-																	"community-in-list",
-																	"med-equals",
-																}, false),
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												names.AttrAction: {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrType: {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	"drop",
-																	"allow",
-																	"summarize",
-																	"prepend-asn-list",
-																	"remove-asn-list",
-																	"replace-asn-list",
-																	"add-community",
-																	"remove-community",
-																	"set-med",
-																	"set-local-preference",
-																}, false),
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"network_function_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -332,8 +210,8 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"dual-hop",
 							}, false),
 						},
-						"share_with":        setOfString,
-						"share_with_except": setOfString,
+						"share_with":        setOfStringOptional,
+						"share_with_except": setOfStringOptional,
 						"destination_cidr_blocks": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -369,7 +247,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"segments": setOfString,
+									"segments": setOfStringOptional,
 								},
 							},
 						},
@@ -379,7 +257,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"network_function_groups": setOfString,
+									"network_function_groups": setOfStringOptional,
 									"with_edge_override": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -426,13 +304,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidRegionName,
 									},
-									"routing_policy_names": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
+									"routing_policy_names": setOfStringRequired,
 								},
 							},
 						},
@@ -589,11 +461,123 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"associate_routing_policies": {
-										Type:     schema.TypeSet,
+									"associate_routing_policies": setOfStringRequired,
+								},
+							},
+						},
+					},
+				},
+			},
+			"routing_policies": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"routing_policy_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
+									"must contain only alphanumeric characters"),
+							),
+						},
+						"routing_policy_description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"routing_policy_direction": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"inbound",
+								"outbound",
+							}, false),
+						},
+						"routing_policy_number": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 9999),
+						},
+						"routing_policy_rules": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 9999),
+									},
+									"rule_definition": {
+										Type:     schema.TypeList,
 										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"match_conditions": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrType: {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	"prefix-equals",
+																	"prefix-in-cidr",
+																	"prefix-in-prefix-list",
+																	"asn-in-as-path",
+																	"community-in-list",
+																	"med-equals",
+																}, false),
+															},
+															names.AttrValue: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"condition_logic": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"and",
+														"or",
+													}, false),
+												},
+												names.AttrAction: {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrType: {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	"drop",
+																	"allow",
+																	"summarize",
+																	"prepend-asn-list",
+																	"remove-asn-list",
+																	"replace-asn-list",
+																	"add-community",
+																	"remove-community",
+																	"set-med",
+																	"set-local-preference",
+																}, false),
+															},
+															names.AttrValue: {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
