@@ -142,8 +142,8 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 
 	conn := r.Meta().NetworkManagerClient(ctx)
 
-	input := &networkmanager.CreateDirectConnectGatewayAttachmentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input networkmanager.CreateDirectConnectGatewayAttachmentInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -152,7 +152,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateDirectConnectGatewayAttachment(ctx, input)
+	output, err := conn.CreateDirectConnectGatewayAttachment(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Network Manager Direct Connect Gateway Attachment", err.Error())
@@ -161,13 +161,14 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	}
 
 	// Set values for unknowns.
-	data.ID = fwflex.StringToFramework(ctx, output.DirectConnectGatewayAttachment.Attachment.AttachmentId)
+	id := aws.ToString(output.DirectConnectGatewayAttachment.Attachment.AttachmentId)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	dxgwAttachment, err := waitDirectConnectGatewayAttachmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	dxgwAttachment, err := waitDirectConnectGatewayAttachmentCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) create", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) create", id), err.Error())
 
 		return
 	}
@@ -178,7 +179,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 		return
 	}
 
-	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
+	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), id))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -192,7 +193,8 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	conn := r.Meta().NetworkManagerClient(ctx)
 
-	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -202,7 +204,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", id), err.Error())
 
 		return
 	}
@@ -213,13 +215,13 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 		return
 	}
 
-	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
+	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), id))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
 
-	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
-	routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), data.ID.ValueString())
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API.
+	routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id)
 	if err != nil && !tfresource.NotFound(err) {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", id), err.Error())
 		return
 	}
 	data.RoutingPolicyLabel = fwflex.StringToFramework(ctx, routingPolicyLabel)
@@ -245,23 +247,24 @@ func (r *directConnectGatewayAttachmentResource) Update(ctx context.Context, req
 	// Attachment must be in an Available state to be modified
 	// Only edge locations can be modified
 	if !new.EdgeLocations.Equal(old.EdgeLocations) {
-		input := &networkmanager.UpdateDirectConnectGatewayAttachmentInput{
-			AttachmentId:  new.ID.ValueStringPointer(),
+		id := fwflex.StringValueFromFramework(ctx, new.ID)
+		input := networkmanager.UpdateDirectConnectGatewayAttachmentInput{
+			AttachmentId:  aws.String(id),
 			EdgeLocations: fwflex.ExpandFrameworkStringValueList(ctx, new.EdgeLocations),
 		}
 
-		_, err := conn.UpdateDirectConnectGatewayAttachment(ctx, input)
+		_, err := conn.UpdateDirectConnectGatewayAttachment(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Network Manager Direct Connect Gateway Attachment (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Network Manager Direct Connect Gateway Attachment (%s)", id), err.Error())
 
 			return
 		}
 
-		dxgwAttachment, err := waitDirectConnectGatewayAttachmentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		dxgwAttachment, err := waitDirectConnectGatewayAttachmentUpdated(ctx, conn, id, r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) update", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) update", id), err.Error())
 
 			return
 		}
@@ -284,61 +287,67 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 
 	conn := r.Meta().NetworkManagerClient(ctx)
 
-	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", id), err.Error())
 
 		return
 	}
 
 	// If attachment state is pending acceptance, reject the attachment before deleting.
 	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance {
-		input := &networkmanager.RejectAttachmentInput{
-			AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
+		input := networkmanager.RejectAttachmentInput{
+			AttachmentId: aws.String(id),
 		}
 
-		_, err := conn.RejectAttachment(ctx, input)
+		_, err := conn.RejectAttachment(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("rejecting Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("rejecting Network Manager Direct Connect Gateway Attachment (%s)", id), err.Error())
 
 			return
 		}
 
-		if _, err := waitDirectConnectGatewayAttachmentRejected(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) reject", data.ID.ValueString()), err.Error())
+		if _, err := waitDirectConnectGatewayAttachmentRejected(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) reject", id), err.Error())
 
 			return
 		}
 	}
 
-	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
-		AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	input := networkmanager.DeleteAttachmentInput{
+		AttachmentId: aws.String(id),
+	}
+	_, err = conn.DeleteAttachment(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Network Manager Direct Connect Gateway Attachment (%s)", id), err.Error())
 
 		return
 	}
 
-	if _, err := waitDirectConnectGatewayAttachmentDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitDirectConnectGatewayAttachmentDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) delete", id), err.Error())
 
 		return
 	}
 }
 
 func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
-	input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
+	input := networkmanager.GetDirectConnectGatewayAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findDirectConnectGatewayAttachment(ctx, conn, &input)
+}
+
+func findDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetDirectConnectGatewayAttachmentInput) (*awstypes.DirectConnectGatewayAttachment, error) {
 	output, err := conn.GetDirectConnectGatewayAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

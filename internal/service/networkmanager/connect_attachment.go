@@ -297,10 +297,14 @@ func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findConnectAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.ConnectAttachment, error) {
-	input := &networkmanager.GetConnectAttachmentInput{
+	input := networkmanager.GetConnectAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findConnectAttachment(ctx, conn, &input)
+}
+
+func findConnectAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetConnectAttachmentInput) (*awstypes.ConnectAttachment, error) {
 	output, err := conn.GetConnectAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

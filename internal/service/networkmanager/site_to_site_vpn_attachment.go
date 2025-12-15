@@ -225,10 +225,14 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 }
 
 func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.SiteToSiteVpnAttachment, error) {
-	input := &networkmanager.GetSiteToSiteVpnAttachmentInput{
+	input := networkmanager.GetSiteToSiteVpnAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findSiteToSiteVPNAttachment(ctx, conn, &input)
+}
+
+func findSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetSiteToSiteVpnAttachmentInput) (*awstypes.SiteToSiteVpnAttachment, error) {
 	output, err := conn.GetSiteToSiteVpnAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

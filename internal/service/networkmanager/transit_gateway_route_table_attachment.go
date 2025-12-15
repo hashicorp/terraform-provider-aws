@@ -212,10 +212,14 @@ func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *sc
 }
 
 func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.TransitGatewayRouteTableAttachment, error) {
-	input := &networkmanager.GetTransitGatewayRouteTableAttachmentInput{
+	input := networkmanager.GetTransitGatewayRouteTableAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findTransitGatewayRouteTableAttachment(ctx, conn, &input)
+}
+
+func findTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetTransitGatewayRouteTableAttachmentInput) (*awstypes.TransitGatewayRouteTableAttachment, error) {
 	output, err := conn.GetTransitGatewayRouteTableAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
