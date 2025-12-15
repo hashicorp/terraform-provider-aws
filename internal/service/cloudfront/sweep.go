@@ -30,6 +30,11 @@ func RegisterSweepers() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_cloudfront_connection_function", &resource.Sweeper{
+		Name: "aws_cloudfront_connection_function",
+		F:    sweepConnectionFunctionsWrapper,
+	})
+
 	// DO NOT add a continuous deployment policy sweeper as these are swept as part of the distribution sweeper
 	// resource.AddTestSweepers("aws_cloudfront_continuous_deployment_policy", &resource.Sweeper{
 	//	Name: "aws_cloudfront_continuous_deployment_policy",
@@ -832,6 +837,35 @@ func sweepVPCOrigins(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront VPC Origins (%s): %w", region, err)
+	}
+
+	return nil
+}
+func sweepConnectionFunctionsWrapper(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	sweepResources, err := sweepConnectionFunctions(ctx, client)
+	if err != nil {
+		return err
+	}
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Connection Function sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Connection Functions (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Connection Functions (%s): %w", region, err)
 	}
 
 	return nil
