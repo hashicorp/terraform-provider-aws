@@ -27,14 +27,14 @@ TEST_COUNT                   ?= 1
 # Service-specific variables (interchangeable for user convenience):
 #   PKG=<service>     - Service name (e.g., ses, lambda, s3) - traditional usage
 #   K=<service>       - Service name (e.g., ses, lambda, s3) - shorter alias
-# 
+#
 # Test-specific variables:
 #   T=<pattern>       - Test name pattern (e.g., TestAccLambda) - preferred
 #   TESTS=<pattern>   - Test name pattern - legacy alias for T
 #
 # Derived variables (set automatically based on above):
 #   PKG_NAME          - Full package path (e.g., internal/service/ses)
-#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)  
+#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)
 #   TEST              - Test path pattern (e.g., ./internal/service/ses/...)
 #
 # Examples:
@@ -43,7 +43,7 @@ TEST_COUNT                   ?= 1
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
 
 # Variable consolidation for backward compatibility and user convenience:
-# - PKG and K both refer to service names (e.g., 'ses', 'lambda')  
+# - PKG and K both refer to service names (e.g., 'ses', 'lambda')
 # - If one is provided, automatically set the other for consistency
 # - This allows 'make quick-fix PKG=ses' and 'make quick-fix K=ses' to work identically
 ifneq ($(origin PKG), undefined)
@@ -439,7 +439,7 @@ quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -704,16 +704,20 @@ test-compile: prereq-go ## Test package compilation
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
 
-test-fast: prereq-go ## Run unit tests with maximum speed optimizations (skip fmt-check)
+test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-ifneq ($(PKG)$(K),)
-	@$(MAKE) test-fast-service
-else
-	@$(MAKE) test-fast-full
-endif
+	@# Auto-detect: single service or full codebase
+	@if [ -n "$(PKG)$(K)" ]; then \
+		echo "Testing single service: $(or $(PKG),$(K))"; \
+		$(MAKE) test-single-service; \
+	else \
+		echo "Testing full codebase"; \
+		$(MAKE) test-full; \
+	fi
 
-test-fast-service: ## Ultra-fast unit tests for single service (internal target)
+test-single-service: ## Internal: test single service
+	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
 		mkdir -p "$$build_dir/cache"; \
@@ -722,21 +726,19 @@ test-fast-service: ## Ultra-fast unit tests for single service (internal target)
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
 	test_parallel=$${TEST_PARALLEL:-$$cores}; \
-	printf "make: Ultra-fast service mode for $(or $(PKG),$(K)) - cores: %s, -parallel %s\n" "$$cores" "$$test_parallel"; \
+	printf "Testing with -parallel %s\n" "$$test_parallel"; \
 	$(GO_VER) test $(TEST) \
-		-v \
 		-parallel $$test_parallel \
 		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
 		$(RUNARGS) $(TESTARGS) \
 		-timeout 30m \
 		-vet=off \
 		-buildvcs=false \
-		-trimpath \
-		-ldflags="-s -w" \
 		-count=1; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
-test-fast-full: ## Full codebase unit tests with optimizations (internal target)
+test-full: ## Internal: test full codebase
+	@# macOS: use temp cache to avoid CrowdStrike scanning
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		build_dir="/tmp/terraform-aws-build-$$$$"; \
 		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
@@ -746,7 +748,7 @@ test-fast-full: ## Full codebase unit tests with optimizations (internal target)
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	test_p=$${TEST_P:-$$cores}; \
 	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
-	printf "make: Full codebase mode - cores: %s, -p %s, -parallel %s\n" "$$cores" "$$test_p" "$$test_parallel"; \
+	printf "Testing with -p %s -parallel %s\n" "$$test_p" "$$test_parallel"; \
 	$(GO_VER) test $(TEST) \
 		-p $$test_p \
 		-parallel $$test_parallel \
@@ -754,12 +756,10 @@ test-fast-full: ## Full codebase unit tests with optimizations (internal target)
 		$(RUNARGS) $(TESTARGS) \
 		-timeout 60m \
 		-vet=off \
-		-buildvcs=false \
-		-trimpath \
-		-ldflags="-s -w"; \
+		-buildvcs=false; \
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
-test-shard: prereq-go ## Run unit tests for a specific shard (use SHARD=0 TOTAL_SHARDS=4)
+test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 TOTAL_SHARDS=4)
 	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
 		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
 		echo "Example: make test-shard SHARD=0 TOTAL_SHARDS=4"; \
@@ -1123,6 +1123,9 @@ yamllint: ## [CI] YAML Linting / yamllint
 	t \
 	test \
 	test-compile \
+	test-full \
+	test-shard \
+	test-single-service \
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \

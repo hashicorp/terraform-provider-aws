@@ -72,6 +72,24 @@ Use the `clean-make-tests` target to clean up artifacts left behind by `make` te
 make clean-make-tests
 ```
 
+### Quick Fixes
+
+Before running CI tests, you can automatically fix many common issues that would cause CI failures.
+
+Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, and website Terraform formatting):
+
+```console
+make quick-fix
+```
+
+You can limit fixes to a specific service package with the `PKG` environment variable:
+
+```console
+PKG=rds make quick-fix
+```
+
+This is particularly useful before committing changes or submitting a pull request to catch and fix issues early.
+
 ### Acceptance Test Linting
 
 Acceptance test linting involves thoroughly testing the Terraform configuration associated with acceptance tests. Currently, this process extracts configuration embedded as strings in Go files. However, as we move testing configurations to `.tf` files, linting will involve testing those files for correctness.
@@ -312,7 +330,7 @@ make gen
 
 `go_test` compiles the code and runs all tests except the [acceptance tests](running-and-writing-acceptance-tests.md). This check may also find higher level code errors than building alone finds.
 
-Use the `test` target to run this test:
+Use the `test` target to run unit tests. The target automatically detects whether you're testing a single service or the full codebase and optimizes accordingly (including macOS/CrowdStrike optimizations):
 
 ```console
 make test
@@ -325,6 +343,16 @@ PKG=rds make test
 ```
 
 **NOTE:** `test` and `golangci-lint2` are generally the longest running checks and, depending on your computer, may take considerable time to finish.
+
+#### test-shard (CI only)
+
+In CI, unit tests are distributed across multiple parallel jobs using round-robin sharding. This is handled automatically by GitHub Actions and is not typically needed for local development.
+
+If you need to test a specific shard locally (e.g., for debugging CI failures), use the `test-shard` target:
+
+```console
+make test-shard SHARD=0 TOTAL_SHARDS=4
+```
 
 #### import-lint
 
