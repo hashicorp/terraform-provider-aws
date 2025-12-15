@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -343,9 +342,8 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 	output, err := conn.GetDirectConnectGatewayAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -360,8 +358,8 @@ func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkma
 	return output.DirectConnectGatewayAttachment, nil
 }
 
-func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectConnectGatewayAttachment(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -377,10 +375,10 @@ func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmana
 }
 
 func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
-		Refresh:                   statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Refresh:                   statusDirectConnectGatewayAttachment(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -397,10 +395,10 @@ func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networ
 }
 
 func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
-		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Refresh: statusDirectConnectGatewayAttachment(conn, id),
 		Timeout: timeout,
 	}
 
@@ -419,7 +417,7 @@ func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networ
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
-		Refresh:        statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Refresh:        statusDirectConnectGatewayAttachment(conn, id),
 		Timeout:        timeout,
 		Delay:          2 * time.Minute,
 		PollInterval:   10 * time.Second,
@@ -438,10 +436,10 @@ func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networ
 }
 
 func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
-		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Refresh: statusDirectConnectGatewayAttachment(conn, id),
 		Timeout: timeout,
 	}
 
@@ -457,10 +455,10 @@ func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *netw
 }
 
 func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateAvailable),
 		Target:  enum.Slice(awstypes.AttachmentStateRejected),
-		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Refresh: statusDirectConnectGatewayAttachment(conn, id),
 		Timeout: timeout,
 	}
 

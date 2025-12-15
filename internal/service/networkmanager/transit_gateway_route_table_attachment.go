@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -222,9 +221,8 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	output, err := conn.GetTransitGatewayRouteTableAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -239,8 +237,8 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	return output.TransitGatewayRouteTableAttachment, nil
 }
 
-func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTransitGatewayRouteTableAttachment(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -256,11 +254,11 @@ func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *network
 }
 
 func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout:                   timeout,
-		Refresh:                   statusTransitGatewayRouteTableAttachment(ctx, conn, id),
+		Refresh:                   statusTransitGatewayRouteTableAttachment(conn, id),
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -280,7 +278,7 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusTransitGatewayRouteTableAttachment(ctx, conn, id),
+		Refresh:        statusTransitGatewayRouteTableAttachment(conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -296,11 +294,11 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 }
 
 func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRouteTableAttachment(ctx, conn, id),
+		Refresh: statusTransitGatewayRouteTableAttachment(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

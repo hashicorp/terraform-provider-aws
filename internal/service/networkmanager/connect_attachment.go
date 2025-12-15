@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -307,9 +306,8 @@ func findConnectAttachmentByID(ctx context.Context, conn *networkmanager.Client,
 	output, err := conn.GetConnectAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -324,8 +322,8 @@ func findConnectAttachmentByID(ctx context.Context, conn *networkmanager.Client,
 	return output.ConnectAttachment, nil
 }
 
-func statusConnectAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnectAttachment(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectAttachmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -341,11 +339,11 @@ func statusConnectAttachment(ctx context.Context, conn *networkmanager.Client, i
 }
 
 func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.ConnectAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout:                   timeout,
-		Refresh:                   statusConnectAttachment(ctx, conn, id),
+		Refresh:                   statusConnectAttachment(conn, id),
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -365,7 +363,7 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusConnectAttachment(ctx, conn, id),
+		Refresh:        statusConnectAttachment(conn, id),
 		Delay:          2 * time.Minute,
 		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
@@ -383,11 +381,11 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 }
 
 func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.ConnectAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusConnectAttachment(ctx, conn, id),
+		Refresh: statusConnectAttachment(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
