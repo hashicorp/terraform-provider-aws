@@ -73,7 +73,7 @@ func TestAccSSMParameterVersionLabels_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterVersionLabelsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterVersionLabelsConfig_basic(rName, "2"),
+				Config: testAccParameterVersionLabelsConfig_basic(rName, "1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckParameterVersionLabelsExists(ctx, resourceName, &parameterversionlabels),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceParameterVersionLabels(), resourceName),
@@ -147,7 +147,7 @@ func testAccParameterVersionLabelsConfig_basic(rName, version string) string {
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
   type  = "String"
-  value = "test value"
+  value = "test value %[2]s"
 }
 
 resource "aws_ssm_parameter_version_labels" "test" {
