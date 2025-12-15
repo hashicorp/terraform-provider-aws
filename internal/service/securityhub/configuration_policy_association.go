@@ -192,7 +192,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.TimedOut(err) {
+	if retry.TimedOut(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) still in PENDING state. It can take up to 24 hours for the status to change from PENDING to SUCCESS or FAILURE", id)
 		// We try to wait until SUCCESS state is reached but don't error if still in PENDING state.
 		// We must attempt to wait/retry in order for Policy Disassociations to take effect
