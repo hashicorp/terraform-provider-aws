@@ -1,5 +1,13 @@
 ## 6.27.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_organizations_account` ([#45543](https://github.com/hashicorp/terraform-provider-aws/issues/45543))
+
+BUG FIXES:
+
+* resource/aws_lakeformation_data_cells_filter: Fix `excluded_column_names` ordering causing "Provider produced inconsistent result after apply" errors ([#45453](https://github.com/hashicorp/terraform-provider-aws/issues/45453))
+
 ## 6.26.0 (December 10, 2025)
 
 FEATURES:
