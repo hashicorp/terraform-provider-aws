@@ -23,5 +23,5 @@ resource/aws_networkmanager_connect_attachment: Add `routing_policy_label` argum
 ```
 
 ```release-note:enhancement
-resource/aws_networkmanager_connect_peer: Add 4byte ASN support
+resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `bgp_options.peer_asn`
 ```
