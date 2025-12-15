@@ -587,6 +587,9 @@ func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfigurati
 	tfMap := tfList[0].(map[string]any)
 	apiObject := awstypes.NetworkAccessConfiguration{}
 
+	apiObject.PrefixListIds = []string{}
+	apiObject.VpceIds = []string{}
+
 	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.PrefixListIds = flex.ExpandStringValueSet(v)
 	}
@@ -603,9 +606,21 @@ func flattenNetworkAccessControl(apiObject *awstypes.NetworkAccessConfiguration)
 		return []any{}
 	}
 
+	if len(apiObject.PrefixListIds) == 0 && len(apiObject.VpceIds) == 0 {
+		return []any{}
+	}
+
 	tfMap := make(map[string]any)
-	tfMap["prefix_list_ids"] = apiObject.PrefixListIds
-	tfMap["vpce_ids"] = apiObject.VpceIds
+	if apiObject.PrefixListIds != nil {
+		tfMap["prefix_list_ids"] = apiObject.PrefixListIds
+	} else {
+		tfMap["prefix_list_ids"] = []string{}
+	}
+	if apiObject.VpceIds != nil {
+		tfMap["vpce_ids"] = apiObject.VpceIds
+	} else {
+		tfMap["vpce_ids"] = []string{}
+	}
 
 	return []any{tfMap}
 }
