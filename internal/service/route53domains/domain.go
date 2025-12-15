@@ -616,7 +616,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 	// Delete the associated Route 53 hosted zone.
 	if hostedZoneID := fwflex.StringValueFromFramework(ctx, data.HostedZoneID); hostedZoneID != "" {
-		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, domainName, true, timeout); err != nil {
+		if err := tfroute53.DeleteHostedZone(ctx, r.Meta().Route53Client(ctx), hostedZoneID, true, timeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Hosted Zone (%s)", hostedZoneID), err.Error())
 
 			return

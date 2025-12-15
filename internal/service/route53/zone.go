@@ -325,7 +325,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 
-	if err := deleteHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrForceDestroy).(bool), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteHostedZone(ctx, conn, d.Id(), d.Get(names.AttrForceDestroy).(bool), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -378,8 +378,16 @@ func findHostedZoneByID(ctx context.Context, conn *route53.Client, id string) (*
 	return output, nil
 }
 
-func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID, hostedZoneName string, force bool, timeout time.Duration) error {
+func deleteHostedZone(ctx context.Context, conn *route53.Client, hostedZoneID string, force bool, timeout time.Duration) error {
 	if force {
+		// Get the actual zone name from AWS instead of relying on the Terraform state
+		// which might contain the new zone name during a ForceNew operation
+		zoneOutput, err := findHostedZoneByID(ctx, conn, hostedZoneID)
+		if err != nil {
+			return fmt.Errorf("reading Route 53 Hosted Zone (%s) for deletion: %w", hostedZoneID, err)
+		}
+
+		hostedZoneName := aws.ToString(zoneOutput.HostedZone.Name)
 		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, hostedZoneID, hostedZoneName, timeout); err != nil {
 			return err
 		}
