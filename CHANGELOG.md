@@ -3,17 +3,22 @@
 FEATURES:
 
 * **New Data Source:** `aws_organizations_account` ([#45543](https://github.com/hashicorp/terraform-provider-aws/issues/45543))
+* **New Function:** `user_agent` ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
 * **New List Resource:** `aws_kms_key` ([#45514](https://github.com/hashicorp/terraform-provider-aws/issues/45514))
 * **New Resource:** `aws_cloudfront_trust_store` ([#45534](https://github.com/hashicorp/terraform-provider-aws/issues/45534))
 
 ENHANCEMENTS:
 
+* data-source/aws_datazone_domain: Add `root_domain_unit_id` attribute ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
+* provider: Add `user_agent` argument ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
+* provider: The [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta) is now supported. The `user_agent` argument enables module authors to include additional product information in the `User-Agent` header sent during all AWS API requests made during Create, Read, Update, and Delete operations. ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
 * resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.kendra_knowledge_base_configuration` argument ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
 * resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.sql_knowledge_base_configuration` and `storage_configuration.neptune_analytics_configuration` arguments ([#45465](https://github.com/hashicorp/terraform-provider-aws/issues/45465))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.mongo_db_atlas_configuration` argument ([#37220](https://github.com/hashicorp/terraform-provider-aws/issues/37220))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.opensearch_managed_cluster_configuration` argument ([#44060](https://github.com/hashicorp/terraform-provider-aws/issues/44060))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.s3_vectors_configuration` block ([#45468](https://github.com/hashicorp/terraform-provider-aws/issues/45468))
 * resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
+* resource/aws_datazone_domain: Add `root_domain_unit_id` argument ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
 
 BUG FIXES:
 
