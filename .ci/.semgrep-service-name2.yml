@@ -2170,6 +2170,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Mgn"
     severity: WARNING
+  - id: mpa-in-func-name
+    languages:
+      - go
+    message: Do not use "MPA" in func name inside mpa package
+    paths:
+      include:
+        - "/internal/service/mpa"
+      exclude:
+        - "/internal/service/mpa/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MPA"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: mpa-in-test-name
+    languages:
+      - go
+    message: Include "MPA" in test name
+    paths:
+      include:
+        - "/internal/service/mpa/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMPA"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mpa-in-const-name
+    languages:
+      - go
+    message: Do not use "MPA" in const name inside mpa package
+    paths:
+      include:
+        - "/internal/service/mpa"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MPA"
+    severity: WARNING
+  - id: mpa-in-var-name
+    languages:
+      - go
+    message: Do not use "MPA" in var name inside mpa package
+    paths:
+      include:
+        - "/internal/service/mpa"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MPA"
+    severity: WARNING
   - id: mq-in-func-name
     languages:
       - go
@@ -4480,6 +4541,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)RDSData"
     severity: WARNING
+<<<<<<< HEAD
   - id: rdsdataservice-in-func-name
     languages:
       - go
@@ -4544,3 +4606,5 @@ rules:
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
+=======
+>>>>>>> 7f679ddf772 (chore(mpa): make gen)

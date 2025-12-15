@@ -158,6 +158,7 @@ val services = mapOf(
     "mediastore" to ServiceSpec("Elemental MediaStore"),
     "memorydb" to ServiceSpec("MemoryDB"),
     "mgn" to ServiceSpec("Application Migration (Mgn)"),
+    "mpa" to ServiceSpec("Multi-party Approval"),
     "mq" to ServiceSpec("MQ", vpcLock = true),
     "mwaa" to ServiceSpec("MWAA (Managed Workflows for Apache Airflow)", vpcLock = true),
     "mwaaserverless" to ServiceSpec("MWAA (Managed Workflows for Apache Airflow) Serverless"),
