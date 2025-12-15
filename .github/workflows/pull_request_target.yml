@@ -27,7 +27,7 @@ on:
 jobs:
   checks:
     name: pr-target-check
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     permissions:
       contents: read
     steps:

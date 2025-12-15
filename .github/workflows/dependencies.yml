@@ -35,7 +35,7 @@ on:
 jobs:
   checks:
     name: go mod
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     permissions:
       contents: read
     steps:
