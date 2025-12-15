@@ -854,18 +854,13 @@ func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, i
 		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
 	}
 
-	// Step 1: Wait for DNS configuration to be valid (15 minutes max)
-	if err := waitForDNSConfiguration(ctx, conn, dtOutput); err != nil {
-		return fmt.Errorf("CloudFront Distribution Tenant (%s) DNS configuration failed: %w", id, err)
-	}
-
-	// Step 2: Wait for managed certificate to be issued (3 hours max)
+	// Step 1: Wait for managed certificate to be issued (3 hours max)
 	mcOutput, err := waitForManagedCertificateIssued(ctx, conn, id)
 	if err != nil {
 		return fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate issuance failed: %w", id, err)
 	}
 
-	// Step 3: Update distribution tenant with the issued certificate
+	// Step 2: Update distribution tenant with the issued certificate
 	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput)
 }
 
@@ -883,20 +878,6 @@ func waitForDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Cli
 
 		time.Sleep(30 * time.Second)
 	}
-}
-
-func waitForDNSConfiguration(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput) error {
-	timeout := 15 * time.Minute
-	deadline := time.Now().Add(timeout)
-
-	for time.Now().Before(deadline) {
-		if err := verifyDNSConfiguration(ctx, conn, dtOutput); err == nil {
-			return nil // DNS is valid
-		}
-		time.Sleep(30 * time.Second)
-	}
-
-	return fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 15 minutes waiting for expected DNS configuration", aws.ToString(dtOutput.DistributionTenant.Id))
 }
 
 func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
