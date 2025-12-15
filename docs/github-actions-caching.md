@@ -24,7 +24,7 @@ key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal
 
 ```
 8 workflows × 500 PRs × 8GB cache = 32,000 GB demand
-GitHub limit: 10 GB
+GitHub limit: 10 GB (per repo)
 Result: 0.03% cache hit rate (constant misses)
 ```
 
@@ -63,7 +63,7 @@ Where `CACHE_DATE=$(date +%Y-%m-%d)`
 - **One cache per day** (not per PR or per commit)
 - **All PRs share the same cache** on a given day
 - **Daily rotation** prevents unbounded growth
-- **Restore-keys** provide fallback to yesterday's cache
+- **Restore-keys** provide fallback to yesterday's cache (`restore-keys` is prefix, i.e., `${{ runner.os }}-go-build-*`, GitHub returns most recent match)
 - **Go's internal cache** handles incremental compilation
 
 ### Cache Architecture

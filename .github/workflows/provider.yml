@@ -97,7 +97,7 @@ jobs:
         timeout-minutes: 5
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-${{ env.CACHE_DATE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
 
   go_generate:
     name: go generate
@@ -165,9 +165,8 @@ jobs:
         timeout-minutes: 3
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-${{ env.CACHE_DATE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
-            ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
             ${{ runner.os }}-go-build-
 
       - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
@@ -209,7 +208,7 @@ jobs:
         timeout-minutes: 5
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-${{ env.CACHE_DATE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
 
   import-lint:
     needs: [go_build]
