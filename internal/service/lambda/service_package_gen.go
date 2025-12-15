@@ -80,7 +80,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  capacityProviderResourceAsListResource,
+			Factory:  newCapacityProviderResourceAsListResource,
 			TypeName: "aws_lambda_capacity_provider",
 			Name:     "Capacity Provider",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

@@ -364,11 +364,11 @@ misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] 
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -test $(TEST)
 
 modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
 	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -fix -test $(TEST)
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
