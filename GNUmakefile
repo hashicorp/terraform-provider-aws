@@ -744,8 +744,8 @@ test-fast-full: ## Full codebase unit tests with optimizations (internal target)
 		export GOTMPDIR="$$build_dir/tmp"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
-	test_p=$${TEST_P:-6}; \
-	test_parallel=$${TEST_PARALLEL:-$$cores}; \
+	test_p=$${TEST_P:-$$cores}; \
+	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
 	printf "make: Full codebase mode - cores: %s, -p %s, -parallel %s\n" "$$cores" "$$test_p" "$$test_parallel"; \
 	$(GO_VER) test $(TEST) \
 		-p $$test_p \
