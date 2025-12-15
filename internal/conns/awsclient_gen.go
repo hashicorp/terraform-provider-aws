@@ -166,6 +166,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
+	"github.com/aws/aws-sdk-go-v2/service/mpa"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/aws-sdk-go-v2/service/mwaaserverless"
@@ -864,6 +865,10 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
 
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {
 	return errs.Must(client[*m2.Client](ctx, c, names.M2, make(map[string]any)))
+}
+
+func (c *AWSClient) MPAClient(ctx context.Context) *mpa.Client {
+	return errs.Must(client[*mpa.Client](ctx, c, names.MPA, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq.Client {

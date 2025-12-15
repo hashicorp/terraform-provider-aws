@@ -5847,7 +5847,6 @@ service "mpa" {
   provider_package_correct = "mpa"
   doc_prefix               = ["mpa_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mq" {
