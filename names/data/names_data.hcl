@@ -5835,6 +5835,9 @@ service "mpa" {
 
   endpoint_info {
     endpoint_api_call = "ListApprovalTeams"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
