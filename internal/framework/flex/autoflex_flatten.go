@@ -2023,6 +2023,9 @@ func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag
 	)
 }
 
+// Future error diagnostic for interfaceToNestedObject
+// Currently just logging an error because some existing resource types may have this error and
+// returning an error diagnostic would be a breaking change.
 // func diagFlatteningTargetDoesNotImplementFlexFlattener(targetType reflect.Type) diag.ErrorDiagnostic {
 // 	return diag.NewErrorDiagnostic(
 // 		"Incompatible Types",
