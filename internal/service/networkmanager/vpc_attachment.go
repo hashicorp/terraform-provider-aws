@@ -264,7 +264,8 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("attachment_policy_rule_number", attachment.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", attachment.AttachmentType)
 	d.Set("core_network_arn", attachment.CoreNetworkArn)
-	d.Set("core_network_id", attachment.CoreNetworkId)
+	coreNetworkID := aws.ToString(attachment.CoreNetworkId)
+	d.Set("core_network_id", coreNetworkID)
 	d.Set("edge_location", attachment.EdgeLocation)
 	if vpcAttachment.Options != nil {
 		if err := d.Set("options", []any{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
@@ -275,14 +276,11 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-
-	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
-	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id())
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
 	}
 	d.Set("routing_policy_label", routingPolicyLabel)
-
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("subnet_arns", vpcAttachment.SubnetArns)
@@ -396,10 +394,14 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.VpcAttachment, error) {
-	input := &networkmanager.GetVpcAttachmentInput{
+	input := networkmanager.GetVpcAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findVPCAttachment(ctx, conn, &input)
+}
+
+func findVPCAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetVpcAttachmentInput) (*awstypes.VpcAttachment, error) {
 	output, err := conn.GetVpcAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -419,30 +421,51 @@ func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id 
 	return output.VpcAttachment, nil
 }
 
-func findRoutingPolicyLabelByAttachmentID(ctx context.Context, conn *networkmanager.Client, id string, coreNetworkId string) (*string, error) {
-	input := &networkmanager.ListAttachmentRoutingPolicyAssociationsInput{
-		AttachmentId:  aws.String(id),
-		CoreNetworkId: aws.String(coreNetworkId),
+func findRoutingPolicyLabelByTwoPartKey(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string) (*string, error) {
+	input := networkmanager.ListAttachmentRoutingPolicyAssociationsInput{
+		AttachmentId:  aws.String(attachmentID),
+		CoreNetworkId: aws.String(coreNetworkID),
 	}
-
-	output, err := conn.ListAttachmentRoutingPolicyAssociations(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
+	output, err := findRoutingPolicyAssociation(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.AttachmentRoutingPolicyAssociations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	return output.RoutingPolicyLabel, nil
+}
+
+func findRoutingPolicyAssociation(ctx context.Context, conn *networkmanager.Client, input *networkmanager.ListAttachmentRoutingPolicyAssociationsInput) (*awstypes.AttachmentRoutingPolicyAssociationSummary, error) {
+	output, err := findRoutingPolicyAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	// Return the routing policy label from the first association
-	return output.AttachmentRoutingPolicyAssociations[0].RoutingPolicyLabel, nil
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRoutingPolicyAssociations(ctx context.Context, conn *networkmanager.Client, input *networkmanager.ListAttachmentRoutingPolicyAssociationsInput) ([]awstypes.AttachmentRoutingPolicyAssociationSummary, error) {
+	var output []awstypes.AttachmentRoutingPolicyAssociationSummary
+
+	pages := networkmanager.NewListAttachmentRoutingPolicyAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.AttachmentRoutingPolicyAssociations...)
+	}
+
+	return output, nil
 }
 
 func statusVPCAttachment(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
