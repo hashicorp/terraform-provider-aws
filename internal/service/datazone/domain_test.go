@@ -44,6 +44,7 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrSet(resourceName, "root_domain_unit_id"),
 				),
 			},
 			{
@@ -51,6 +52,20 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
+			},
+			{
+				Config: testAccDomainConfig_description(rName, "test_description"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "portal_url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrSet(resourceName, "root_domain_unit_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test_description"),
+				),
 			},
 		},
 	})
