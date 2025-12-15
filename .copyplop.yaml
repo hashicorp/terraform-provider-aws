@@ -19,6 +19,7 @@ files:
     #- "internal/**"
   exclude_paths:
     - "**/when_string_test.go" # standard library generated files
+    - "CHANGELOG.md"
   extensions:
     - ".go"
     - ".yml"

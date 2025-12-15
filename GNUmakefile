@@ -191,8 +191,8 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-copyright: ## [CI] Copyright Checks / add headers check
-	@echo "make: Copyright Checks / add headers check..."
+copyright: ## [CI] Copyright Checks / headers check
+	@echo "make: Copyright Checks / headers check..."
 	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop
 	@copyplop check
 

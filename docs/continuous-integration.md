@@ -131,7 +131,7 @@ To run `tflint` only against embedded configurations, use the `testacc-tflint-em
 make testacc-tflint-embedded
 ```
 
-### Copyright Checks / add headers check
+### Copyright Checks / headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
 
