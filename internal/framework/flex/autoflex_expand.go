@@ -21,11 +21,6 @@ import (
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
-const (
-	xmlWrapperFieldItems    = "Items"
-	xmlWrapperFieldQuantity = "Quantity"
-)
-
 var (
 	// xmlWrapperCache caches XML wrapper struct detection results
 	xmlWrapperCache      = make(map[reflect.Type]bool)
@@ -195,7 +190,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		// Special case: if target is XML wrapper struct and no omitempty, create zero-value
 		if vTo.Kind() == reflect.Ptr && !fieldOpts.omitempty {
 			targetType := vTo.Type().Elem()
-			if targetType.Kind() == reflect.Struct && isXMLWrapperStruct(targetType) {
+			if targetType.Kind() == reflect.Struct && potentialXMLWrapperStruct(targetType) {
 				tflog.SubsystemDebug(ctx, subsystemName, "Source is null but target is XML wrapper without omitempty - creating zero-value struct")
 				zeroStruct := reflect.New(targetType)
 				// Initialize Items slice and Quantity
@@ -1703,6 +1698,16 @@ func diagExpandingIncompatibleTypes(sourceType, targetType reflect.Type) diag.Er
 	)
 }
 
+// XML wrapper status:
+// - frankly this is a mess
+// - there are patterns and bolt-ons all over the place
+// - we need to eventually refactor this into a coherent whole
+// - for now, we just try to contain the complexity from here down
+
+const (
+	xmlWrapperFieldQuantity = "Quantity"
+)
+
 // xmlWrapper handles expansion from TF collection types to AWS XML wrapper structs
 // that follow the pattern: {Items: []T, Quantity: *int32}
 func (expander *autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, wrapperField string) diag.Diagnostics {
@@ -1875,9 +1880,9 @@ func setXMLWrapperQuantity(vStruct reflect.Value, itemsFieldName string) {
 	}
 }
 
-// isXMLWrapperStruct detects AWS SDK types that follow the XML wrapper pattern
+// potentialXMLWrapperStruct detects AWS SDK types that follow the XML wrapper pattern
 // with Items slice and Quantity pointer fields
-func isXMLWrapperStruct(t reflect.Type) bool {
+func potentialXMLWrapperStruct(t reflect.Type) bool {
 	// Check cache first with read lock
 	xmlWrapperCacheMutex.RLock()
 	result, cached := xmlWrapperCache[t]
@@ -1887,7 +1892,7 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 		return result
 	}
 
-	result = isXMLWrapperStructUncached(t)
+	result = potentialXMLWrapperStructUncached(t)
 
 	// Cache result with write lock
 	xmlWrapperCacheMutex.Lock()
@@ -1897,8 +1902,8 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 	return result
 }
 
-// isXMLWrapperStructUncached performs the actual XML wrapper detection
-func isXMLWrapperStructUncached(t reflect.Type) bool {
+// potentialXMLWrapperStructUncached performs the actual XML wrapper detection
+func potentialXMLWrapperStructUncached(t reflect.Type) bool {
 	if t.Kind() != reflect.Struct {
 		return false
 	}
@@ -2365,10 +2370,10 @@ func (expander autoExpander) shouldConvertToXMLWrapper(sourceFieldVal, targetFie
 		// Target should be a pointer to struct or struct with XML wrapper pattern
 		targetType := targetFieldVal.Type()
 		if targetType.Kind() == reflect.Pointer && targetType.Elem().Kind() == reflect.Struct {
-			return isXMLWrapperStruct(targetType.Elem())
+			return potentialXMLWrapperStruct(targetType.Elem())
 		}
 		if targetType.Kind() == reflect.Struct {
-			return isXMLWrapperStruct(targetType)
+			return potentialXMLWrapperStruct(targetType)
 		}
 	}
 

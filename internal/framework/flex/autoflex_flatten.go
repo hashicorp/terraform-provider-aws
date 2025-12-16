@@ -113,7 +113,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 
 			// Special case: Check if source is XML wrapper struct and target has xmlwrapper fields
-			if isXMLWrapperStruct(typFrom) {
+			if potentialXMLWrapperStruct(typFrom) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct", map[string]any{
 					"source_type": typFrom.String(),
 				})
@@ -1263,7 +1263,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	}
 
 	// Check if source is a Rule 2 XML wrapper struct with all zero values and omitempty
-	if isXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
+	if potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		wrapperFieldName := getXMLWrapperSliceFieldName(vFrom.Type())
 		itemsField := vFrom.FieldByName(wrapperFieldName)
 
@@ -1304,7 +1304,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	}
 
 	// Check if source is a regular struct with all zero values and omitempty
-	if !isXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
+	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		allFieldsZero := true
 		for i := 0; i < vFrom.NumField(); i++ {
 			sourceField := vFrom.Field(i)
@@ -2267,7 +2267,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
 
 			// Handle direct XML wrapper struct
-			if isXMLWrapperStruct(fromFieldVal.Type()) {
+			if potentialXMLWrapperStruct(fromFieldVal.Type()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
 					logAttrKeySourceFieldname: fromFieldName,
 					logAttrKeyTargetFieldname: toFieldName,
@@ -2293,7 +2293,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			}
 
 			// Handle pointer to XML wrapper struct
-			if fromFieldVal.Kind() == reflect.Pointer && !fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			if fromFieldVal.Kind() == reflect.Pointer && !fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting pointer to XML wrapper struct to collection via wrapper tag", map[string]any{
 					logAttrKeySourceFieldname: fromFieldName,
 					logAttrKeyTargetFieldname: toFieldName,
@@ -2326,7 +2326,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			}
 
 			// Handle nil pointer to XML wrapper struct
-			if fromFieldVal.Kind() == reflect.Pointer && fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			if fromFieldVal.Kind() == reflect.Pointer && fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting nil pointer to XML wrapper struct to null collection", map[string]any{
 					logAttrKeySourceFieldname: fromFieldName,
 					logAttrKeyTargetFieldname: toFieldName,
@@ -2379,7 +2379,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		// Handle pointer to XML wrapper struct
 		// Only auto-detect if target has explicit wrapper tag
 		if fromFieldVal.Kind() == reflect.Pointer {
-			if toOpts.XMLWrapperField() != "" && !fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			if toOpts.XMLWrapperField() != "" && !fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Check if target is a collection type (Set, List, or NestedObjectCollection)
 				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 					targetType := valTo.Type(ctx)
@@ -2439,7 +2439,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 						// If flexer is not autoFlattener, fall through to normal field matching
 					}
 				}
-			} else if toOpts.XMLWrapperField() != "" && fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			} else if toOpts.XMLWrapperField() != "" && fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Handle nil pointer to XML wrapper struct - should result in null collection
 				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 					switch tTo := valTo.Type(ctx).(type) {
@@ -2482,7 +2482,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					}
 				}
 			}
-		} else if toOpts.XMLWrapperField() != "" && isXMLWrapperStruct(fromFieldVal.Type()) {
+		} else if toOpts.XMLWrapperField() != "" && potentialXMLWrapperStruct(fromFieldVal.Type()) {
 			// Handle direct XML wrapper struct (non-pointer)
 			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 				switch valTo.Type(ctx).(type) {
@@ -2510,7 +2510,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		// Check for Rule 2: Source is XML wrapper, target is NestedObjectCollection
 		// Only apply if target field has xmlwrapper tag
 		fromFieldVal2 := valFrom.FieldByIndex(fromField.Index)
-		if toFieldOpts.XMLWrapperField() != "" && fromFieldVal2.Kind() == reflect.Pointer && !fromFieldVal2.IsNil() && isXMLWrapperStruct(fromFieldVal2.Type().Elem()) {
+		if toFieldOpts.XMLWrapperField() != "" && fromFieldVal2.Kind() == reflect.Pointer && !fromFieldVal2.IsNil() && potentialXMLWrapperStruct(fromFieldVal2.Type().Elem()) {
 			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 				if nestedObjType, ok := valTo.Type(ctx).(fwtypes.NestedObjectCollectionType); ok {
 					sourceStructType := fromFieldVal2.Type().Elem()
@@ -3124,7 +3124,7 @@ func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Co
 	var diags diag.Diagnostics
 
 	// Check if source is an XML wrapper struct (has slice field + Quantity)
-	if sourceFieldVal.Kind() == reflect.Struct && isXMLWrapperStruct(sourceFieldVal.Type()) {
+	if sourceFieldVal.Kind() == reflect.Struct && potentialXMLWrapperStruct(sourceFieldVal.Type()) {
 		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type())
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
 			"source_type":   sourceFieldVal.Type().String(),
@@ -3138,7 +3138,7 @@ func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Co
 				return diags
 			}
 		}
-	} else if sourceFieldVal.Kind() == reflect.Pointer && !sourceFieldVal.IsNil() && isXMLWrapperStruct(sourceFieldVal.Type().Elem()) {
+	} else if sourceFieldVal.Kind() == reflect.Pointer && !sourceFieldVal.IsNil() && potentialXMLWrapperStruct(sourceFieldVal.Type().Elem()) {
 		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type().Elem())
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting pointer to XML wrapper struct to collection", map[string]any{
 			"source_type":   sourceFieldVal.Type().String(),
