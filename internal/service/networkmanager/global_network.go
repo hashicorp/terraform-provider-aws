@@ -248,9 +248,10 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Clie
 func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkmanager.Client, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	output, err := findTransitGatewayConnectPeerAssociations(ctx, conn, &networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
+	input := networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
-	})
+	}
+	output, err := findTransitGatewayConnectPeerAssociations(ctx, conn, &input)
 
 	if retry.NotFound(err) {
 		err = nil

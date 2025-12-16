@@ -165,11 +165,11 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("edge_location", attachment.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id())
-	if err != nil && !tfresource.NotFound(err) {
+	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
+	} else {
+		d.Set("routing_policy_label", routingPolicyLabel)
 	}
-	d.Set("routing_policy_label", routingPolicyLabel)
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("vpn_connection_arn", attachment.ResourceArn)
