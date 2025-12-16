@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fixed, ability to remove user_group_id from aws_elasticache_serverless_cache while performing modification.
+```
