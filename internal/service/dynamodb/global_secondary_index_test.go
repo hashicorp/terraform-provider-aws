@@ -44,7 +44,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -103,7 +103,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceGlobalSecondaryIndex, resourceName),
 				),
@@ -138,7 +138,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceNameTable),
 				),
@@ -173,7 +173,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -215,7 +215,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -262,7 +262,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -288,7 +288,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -335,7 +335,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -361,7 +361,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -408,7 +408,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -437,7 +437,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -487,7 +487,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -516,7 +516,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -566,7 +566,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -592,7 +592,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -639,7 +639,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -665,7 +665,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -712,7 +712,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -791,7 +791,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -817,7 +817,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -864,7 +864,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -890,7 +890,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -939,7 +939,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *tes
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1006,7 +1006,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey, rSortKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1082,7 +1082,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1100,7 +1100,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1145,7 +1145,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1214,7 +1214,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1232,7 +1232,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey1, rSortKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1286,7 +1286,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey2, rSortKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1359,7 +1359,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T)
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{"test1", "test2"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1401,7 +1401,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1419,7 +1419,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{"test1", "test2"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1464,7 +1464,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
 					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
@@ -1530,7 +1530,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_update(rNameTable, rName1, rName2, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
 					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
@@ -1581,7 +1581,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_update(rNameTable, rName1, rName2, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
 					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
@@ -1656,7 +1656,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
 					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
@@ -1698,7 +1698,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_tableOnly(rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSINotExists(ctx, t, resourceName1),
 					testAccCheckGSINotExists(ctx, t, resourceName2),
 				),
@@ -1728,7 +1728,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_tableOnly(rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSINotExists(ctx, t, resourceName1),
 					testAccCheckGSINotExists(ctx, t, resourceName2),
 				),
@@ -1764,7 +1764,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -1783,7 +1783,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1833,7 +1833,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -1842,7 +1842,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_importblock(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1893,7 +1893,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -1961,7 +1961,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -1970,7 +1970,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_importblock(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
 					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 				),
@@ -2029,7 +2029,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 
 					resource.TestCheckResourceAttr(resourceNameTable, "global_secondary_index.#", "2"),
 					resource.TestCheckResourceAttr(resourceNameTable, "attribute.#", "3"),
@@ -2050,7 +2050,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 				Config:   testAccGlobalSecondaryIndexConfig_migrate_partial(rNameTable, rName1, rName2),
 				PlanOnly: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 
 					resource.TestCheckResourceAttr(resourceNameTable, "global_secondary_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameTable, "attribute.#", "2"),
