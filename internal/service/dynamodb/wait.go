@@ -11,7 +11,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -30,7 +29,7 @@ const (
 )
 
 func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
 		Target:                    enum.Slice(awstypes.TableStatusActive),
 		Refresh:                   statusTable(conn, tableName),
@@ -49,7 +48,7 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 }
 
 func waitTableWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
 		Target:  enum.Slice(awstypes.TableStatusActive),
 		Refresh: statusTableWarmThroughput(conn, tableName),
@@ -62,7 +61,7 @@ func waitTableWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, t
 }
 
 func waitTableDeleted(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TableStatusActive, awstypes.TableStatusDeleting),
 		Target:  []string{},
 		Refresh: statusTable(conn, tableName),
@@ -79,7 +78,7 @@ func waitTableDeleted(ctx context.Context, conn *dynamodb.Client, tableName stri
 }
 
 func waitImportComplete(ctx context.Context, conn *dynamodb.Client, importARN string, timeout time.Duration) (*awstypes.ImportTableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImportStatusInProgress),
 		Target:  enum.Slice(awstypes.ImportStatusCompleted),
 		Refresh: statusImport(conn, importARN),
@@ -96,7 +95,7 @@ func waitImportComplete(ctx context.Context, conn *dynamodb.Client, importARN st
 }
 
 func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, delay time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Delay:   delay,
 		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
 		Target:  enum.Slice(awstypes.ReplicaStatusActive),
@@ -114,7 +113,7 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 }
 
 func waitReplicaDeleted(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ReplicaStatusCreating,
 			awstypes.ReplicaStatusUpdating,
@@ -136,7 +135,7 @@ func waitReplicaDeleted(ctx context.Context, conn *dynamodb.Client, tableName, r
 }
 
 func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
 		Target:  enum.Slice(awstypes.IndexStatusActive),
 		Refresh: statusGSI(conn, tableName, indexName),
@@ -170,7 +169,7 @@ func waitAllGSIActive(ctx context.Context, conn *dynamodb.Client, tableName stri
 }
 
 func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) error { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
 		Target:  enum.Slice(awstypes.IndexStatusActive),
 		Refresh: statusGSIWarmThroughput(conn, tableName, indexName),
@@ -183,7 +182,7 @@ func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tab
 }
 
 func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusActive, awstypes.IndexStatusDeleting, awstypes.IndexStatusUpdating),
 		Target:  []string{},
 		Refresh: statusGSI(conn, tableName, indexName),
@@ -211,7 +210,7 @@ func waitPITRUpdated(ctx context.Context, conn *dynamodb.Client, tableName strin
 		target = enum.Slice(awstypes.PointInTimeRecoveryStatusEnabled)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
 		Refresh:    statusPITR(conn, tableName, optFns...),
@@ -237,7 +236,7 @@ func waitTTLUpdated(ctx context.Context, conn *dynamodb.Client, tableName string
 		target = enum.Slice(awstypes.TimeToLiveStatusEnabled)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: pending,
 		Target:  target,
 		Timeout: max(ttlUpdateTimeout, timeout),
@@ -254,7 +253,7 @@ func waitTTLUpdated(ctx context.Context, conn *dynamodb.Client, tableName string
 }
 
 func waitSSEUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.SSEStatusDisabling, awstypes.SSEStatusEnabling, awstypes.SSEStatusUpdating),
 		Target:                    enum.Slice(awstypes.SSEStatusDisabled, awstypes.SSEStatusEnabled),
 		Refresh:                   statusSSE(conn, tableName),
@@ -273,7 +272,7 @@ func waitSSEUpdated(ctx context.Context, conn *dynamodb.Client, tableName string
 }
 
 func waitReplicaSSEUpdated(ctx context.Context, conn *dynamodb.Client, region, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SSEStatusDisabling, awstypes.SSEStatusEnabling, awstypes.SSEStatusUpdating),
 		Target:  enum.Slice(awstypes.SSEStatusDisabled, awstypes.SSEStatusEnabled),
 		Refresh: statusSSE(conn, tableName, func(o *dynamodb.Options) {

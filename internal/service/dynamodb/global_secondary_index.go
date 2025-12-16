@@ -32,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -329,7 +328,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		gsiPT = *v
 
 		var provisionedThroughput awstypes.ProvisionedThroughput
-		response.Diagnostics.Append(flex.Expand(ctx, gsiPT, &provisionedThroughput)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, gsiPT, &provisionedThroughput)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -570,7 +569,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 				if response.Diagnostics.HasError() {
 					return
 				}
-				flex.Expand(ctx, ptM, &pt)
+				fwflex.Expand(ctx, ptM, &pt)
 				action.ProvisionedThroughput = &pt
 			}
 		}
