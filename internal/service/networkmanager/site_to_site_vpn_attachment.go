@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,6 +82,12 @@ func resourceSiteToSiteVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_policy_label": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -109,13 +114,17 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
-	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
+	input := networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
 		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
 	}
 
-	output, err := conn.CreateSiteToSiteVpnAttachment(ctx, input)
+	if v, ok := d.GetOk("routing_policy_label"); ok {
+		input.RoutingPolicyLabel = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateSiteToSiteVpnAttachment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Site To Site VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
@@ -151,10 +160,16 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("attachment_policy_rule_number", attachment.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", attachment.AttachmentType)
 	d.Set("core_network_arn", attachment.CoreNetworkArn)
-	d.Set("core_network_id", attachment.CoreNetworkId)
+	coreNetworkID := aws.ToString(attachment.CoreNetworkId)
+	d.Set("core_network_id", coreNetworkID)
 	d.Set("edge_location", attachment.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
+	} else {
+		d.Set("routing_policy_label", routingPolicyLabel)
+	}
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("vpn_connection_arn", attachment.ResourceArn)
@@ -190,9 +205,10 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Site To Site VPN Attachment: %s", d.Id())
-	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+	input := networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteAttachment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -210,16 +226,19 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 }
 
 func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.SiteToSiteVpnAttachment, error) {
-	input := &networkmanager.GetSiteToSiteVpnAttachmentInput{
+	input := networkmanager.GetSiteToSiteVpnAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
 
+	return findSiteToSiteVPNAttachment(ctx, conn, &input)
+}
+
+func findSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetSiteToSiteVpnAttachmentInput) (*awstypes.SiteToSiteVpnAttachment, error) {
 	output, err := conn.GetSiteToSiteVpnAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -234,8 +253,8 @@ func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.C
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSiteToSiteVPNAttachment(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSiteToSiteVPNAttachmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -251,11 +270,11 @@ func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Cli
 }
 
 func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout:                   timeout,
-		Refresh:                   statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Refresh:                   statusSiteToSiteVPNAttachment(conn, id),
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -271,11 +290,11 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Refresh:        statusSiteToSiteVPNAttachment(conn, id),
 		Delay:          4 * time.Minute,
 		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
@@ -293,11 +312,11 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Refresh: statusSiteToSiteVPNAttachment(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
