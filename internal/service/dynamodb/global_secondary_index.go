@@ -482,97 +482,21 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		return
 	}
 
-	action := &awstypes.UpdateGlobalSecondaryIndexAction{
-		IndexName: new.IndexName.ValueStringPointer(),
-	}
-
-	billingMode := awstypes.BillingModeProvisioned
-	if table.BillingModeSummary != nil {
-		billingMode = table.BillingModeSummary.BillingMode
-	}
-
-	hasUpdate := false
-
-	if billingMode == awstypes.BillingModeProvisioned {
-		g, err := findGSIFromTable(table, old.IndexName.ValueString())
-		if err != nil || g == nil {
-			response.Diagnostics.AddError(
-				"Unable to find remote GSI to update",
-				fmt.Sprintf(
-					`GSI with name "%s" (arn: "%s") was not found in table "%s"`,
-					new.IndexName.ValueString(),
-					new.ARN.ValueString(),
-					new.TableName.ValueString(),
-				),
-			)
-
-			return
-		}
-
-		var tablePT provisionedThroughputModel
-		d := fwflex.Flatten(ctx, g.ProvisionedThroughput, &tablePT)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		gsiPT, d := new.ProvisionedThroughput.ToPtr(ctx)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if gsiPT.Equal(tablePT) {
-			tflog.Debug(ctx, "GSI provisioned throughput matches table provisioned throughput", map[string]any{
-				"table_name": new.TableName.ValueString(),
-				"index_name": new.IndexName.ValueString(),
-			})
-		} else {
-			if !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput) {
-				hasUpdate = true
-				var pt awstypes.ProvisionedThroughput
-				ptM, d := new.ProvisionedThroughput.ToPtr(ctx)
-				response.Diagnostics.Append(d...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-				fwflex.Expand(ctx, ptM, &pt)
-				action.ProvisionedThroughput = &pt
-			}
-		}
-	} else {
-		var odts []onDemandThroughputModel
-		response.Diagnostics.Append(new.OnDemandThroughputs.ElementsAs(ctx, &odts, false)...)
-
-		if len(odts) > 0 {
-			v := map[string]any{
-				"max_read_request_units":  int(odts[0].MaxReadRequestUnits.ValueInt64()),
-				"max_write_request_units": int(odts[0].MaxWriteRequestUnits.ValueInt64()),
-			}
-			action.OnDemandThroughput = expandOnDemandThroughput(v)
-		}
-
-		hasUpdate = !new.OnDemandThroughputs.Equal(old.OnDemandThroughputs)
-	}
-
-	var wts []warmThroughputModel
-	response.Diagnostics.Append(new.WarmThroughputs.ElementsAs(ctx, &wts, false)...)
+	var action awstypes.UpdateGlobalSecondaryIndexAction
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &action)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if len(wts) > 0 {
-		action.WarmThroughput = expandWarmThroughput(map[string]any{
-			"read_units_per_second":  int(wts[0].ReadUnitsPerSecond.ValueInt64()),
-			"write_units_per_second": int(wts[0].WriteUnitsPerSecond.ValueInt64()),
-		})
-		hasUpdate = hasUpdate || new.WarmThroughputs.Equal(old.WarmThroughputs)
-	}
+
+	hasUpdate := !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput) ||
+		!new.OnDemandThroughputs.Equal(old.OnDemandThroughputs) ||
+		!new.WarmThroughputs.Equal(old.WarmThroughputs)
 
 	input := dynamodb.UpdateTableInput{
 		TableName: new.TableName.ValueStringPointer(),
 		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
-				Update: action,
+				Update: &action,
 			},
 		},
 	}
