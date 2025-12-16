@@ -1792,7 +1792,7 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 	switch tTo := tTo.(type) {
 	case basetypes.ListTypable:
 		// Items []T -> types.List
-		if itemsField.IsNil() || (itemsField.Len() == 0 && opts.OmitEmpty()) {
+		if itemsField.IsNil() {
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper with ListNull")
 			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
 			diags.Append(d...)
