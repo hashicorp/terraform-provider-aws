@@ -92,6 +92,12 @@ jobs:
       - name: go build
         run: make go-build
 
+      - name: Upload provider binary
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v6.0.0
+        with:
+          name: terraform-plugin-dir
+          path: terraform-plugin-dir/
+
       # Aggressively clean cache before saving to prevent extraction failures
       # Large caches (>5GB) can fail silently during tar extraction
       - name: Cleanup Build Cache Before Save
@@ -343,11 +349,13 @@ jobs:
           path: terraform-providers-schema
           key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        timeout-minutes: 2
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
+          name: terraform-plugin-dir
           path: terraform-plugin-dir
-          key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+        name: Make provider binary executable
+        run: chmod +x terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/*/terraform-provider-aws
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
