@@ -17,6 +17,7 @@ import (
 
 // Test to capture trace logs for Rule 2 expansion
 func TestTraceRule2Expansion(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	// AWS types (Rule 2: Items + Quantity + Flying)

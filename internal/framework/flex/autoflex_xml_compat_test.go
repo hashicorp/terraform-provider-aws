@@ -34,7 +34,7 @@ type FunctionAssociationTF struct {
 }
 
 type DistributionConfigTF struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
+	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=Items"`
 }
 
 type DistributionConfigAWS struct {
@@ -299,11 +299,11 @@ type awsHeadersForFlatten struct {
 
 // TF model types with wrapper tags (for flattening - AWS to TF)
 type tfStatusCodesModelForFlatten struct {
-	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",xmlwrapper=items"`
+	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",xmlwrapper=Items"`
 }
 
 type tfHeadersModelForFlatten struct {
-	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",xmlwrapper=items"`
+	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",xmlwrapper=Items"`
 }
 
 func TestFlattenXMLWrapper(t *testing.T) {
