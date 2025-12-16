@@ -1445,7 +1445,7 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/13243
-func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
+func TestAccDynamoDBTable_provisioned_gsiUpdateCapacity_SameAsTable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
@@ -1461,23 +1461,29 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "1",
-						"write_capacity": "1",
-						names.AttrName:   "att1-index",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "1",
-						"write_capacity": "1",
-						names.AttrName:   "att2-index",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "1",
-						"write_capacity": "1",
-						names.AttrName:   "att3-index",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att1-index"),
+							"read_capacity":  knownvalue.Int64Exact(1),
+							"write_capacity": knownvalue.Int64Exact(1),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att2-index"),
+							"read_capacity":  knownvalue.Int64Exact(1),
+							"write_capacity": knownvalue.Int64Exact(1),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att3-index"),
+							"read_capacity":  knownvalue.Int64Exact(1),
+							"write_capacity": knownvalue.Int64Exact(1),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1488,23 +1494,110 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdatedCapacity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
-						names.AttrName:   "att1-index",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
-						names.AttrName:   "att2-index",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
-						names.AttrName:   "att3-index",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att1-index"),
+							"read_capacity":  knownvalue.Int64Exact(2),
+							"write_capacity": knownvalue.Int64Exact(2),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att2-index"),
+							"read_capacity":  knownvalue.Int64Exact(2),
+							"write_capacity": knownvalue.Int64Exact(2),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att3-index"),
+							"read_capacity":  knownvalue.Int64Exact(2),
+							"write_capacity": knownvalue.Int64Exact(2),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_provisioned_gsiUpdateCapacity_DifferentFromTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_gsiUpdateCapacity_DifferentFromTable_setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att1-index"),
+							"read_capacity":  knownvalue.Int64Exact(3),
+							"write_capacity": knownvalue.Int64Exact(3),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att2-index"),
+							"read_capacity":  knownvalue.Int64Exact(2),
+							"write_capacity": knownvalue.Int64Exact(2),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att3-index"),
+							"read_capacity":  knownvalue.Int64Exact(3),
+							"write_capacity": knownvalue.Int64Exact(3),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_gsiUpdatedCapacity_DifferentFromTable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att1-index"),
+							"read_capacity":  knownvalue.Int64Exact(5),
+							"write_capacity": knownvalue.Int64Exact(5),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att2-index"),
+							"read_capacity":  knownvalue.Int64Exact(2),
+							"write_capacity": knownvalue.Int64Exact(2),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:   knownvalue.StringExact("att3-index"),
+							"read_capacity":  knownvalue.Int64Exact(3),
+							"write_capacity": knownvalue.Int64Exact(3),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -6629,6 +6722,122 @@ resource "aws_dynamodb_table" "test" {
     hash_key        = "att3"
     write_capacity  = var.capacity
     read_capacity   = var.capacity
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_gsiUpdateCapacity_DifferentFromTable_setup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  # Different and never same
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    write_capacity  = 3
+    read_capacity   = 3
+    projection_type = "ALL"
+  }
+
+  # Will be same on update
+  global_secondary_index {
+    name            = "att2-index"
+    hash_key        = "att2"
+    write_capacity  = 2
+    read_capacity   = 2
+    projection_type = "ALL"
+  }
+
+  # No change
+  global_secondary_index {
+    name            = "att3-index"
+    hash_key        = "att3"
+    write_capacity  = 3
+    read_capacity   = 3
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_gsiUpdatedCapacity_DifferentFromTable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  # Different and never same
+  global_secondary_index {
+    name            = "att1-index"
+    hash_key        = "att1"
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
+  }
+
+  # Will be same on update
+  global_secondary_index {
+    name            = "att2-index"
+    hash_key        = "att2"
+    write_capacity  = 2
+    read_capacity   = 2
+    projection_type = "ALL"
+  }
+
+  # No change
+  global_secondary_index {
+    name            = "att3-index"
+    hash_key        = "att3"
+    write_capacity  = 3
+    read_capacity   = 3
     projection_type = "ALL"
   }
 }

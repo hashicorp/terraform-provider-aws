@@ -1148,36 +1148,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		input.BillingMode = newBillingMode
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, newBillingMode, oldBillingMode)
-
-		table, err := findTableByName(ctx, conn, aws.ToString(input.TableName))
-		if err == nil && table != nil {
-			for _, g := range table.GlobalSecondaryIndexes {
-				found := false
-
-				for _, gsiUpdate := range gsiUpdates {
-					if gsiUpdate.Update == nil {
-						continue
-					}
-
-					if aws.ToString(gsiUpdate.Update.IndexName) != aws.ToString(g.IndexName) {
-						continue
-					}
-
-					found = true
-
-					gsiUpdate.Update.ProvisionedThroughput = input.ProvisionedThroughput
-				}
-
-				if !found {
-					gsiUpdates = append(gsiUpdates, awstypes.GlobalSecondaryIndexUpdate{
-						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-							IndexName:             g.IndexName,
-							ProvisionedThroughput: input.ProvisionedThroughput,
-						},
-					})
-				}
-			}
-		}
 	}
 
 	if d.HasChange("deletion_protection_enabled") {
