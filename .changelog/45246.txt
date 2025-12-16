@@ -2,6 +2,10 @@
 data-source/aws_networkmanager_core_network_policy_document: Add `routing_policies` and `attachment_routing_policy_rules` arguments
 ```
 
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Correct plan-time validation of `attachment_policies.conditions.type` to allow `account` instead of `account-id`
+```
+
 ```release-note:enhancement
 resource/aws_networkmanager_vpc_attachment: Add `routing_policy_label` argument
 ```
