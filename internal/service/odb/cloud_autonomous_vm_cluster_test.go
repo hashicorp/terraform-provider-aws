@@ -574,7 +574,7 @@ variable odb_network_id {
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   cloud_exadata_infrastructure_id       = var.cloud_exadata_infrastructure_id
   odb_network_id                        = var.odb_network_id
-  display_name                          = %[3]q
+  display_name                          = %[1]q
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
   total_container_databases             = 1
