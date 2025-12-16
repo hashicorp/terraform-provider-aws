@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Terraform AWS Provider Core Services
 
 Core Services are AWS services we have identified as critical for a large majority of our users. Our goal is to continually increase the depth of coverage for these services. We will work to prioritize features and enhancements to these services in each weekly release, even if they are not necessarily highlighted in our quarterly roadmap.

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Continuous Integration
 
 Continuous integration (CI) includes processes that run when you submit a pull request (PR). These processes can be divided into two broad categories: enrichment and testing.
@@ -128,7 +131,7 @@ To run `tflint` only against embedded configurations, use the `testacc-tflint-em
 make testacc-tflint-embedded
 ```
 
-### Copyright Checks / add headers check
+### Copyright Checks / headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
 

@@ -1,4 +1,33 @@
-## 6.27.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_organizations_account` ([#45543](https://github.com/hashicorp/terraform-provider-aws/issues/45543))
+* **New Function:** `user_agent` ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
+* **New List Resource:** `aws_kms_key` ([#45514](https://github.com/hashicorp/terraform-provider-aws/issues/45514))
+* **New Resource:** `aws_cloudfront_trust_store` ([#45534](https://github.com/hashicorp/terraform-provider-aws/issues/45534))
+
+ENHANCEMENTS:
+
+* data-source/aws_datazone_domain: Add `root_domain_unit_id` attribute ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
+* provider: Add `user_agent` argument ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
+* provider: The [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta) is now supported. The `user_agent` argument enables module authors to include additional product information in the `User-Agent` header sent during all AWS API requests made during Create, Read, Update, and Delete operations. ([#45464](https://github.com/hashicorp/terraform-provider-aws/issues/45464))
+* resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.kendra_knowledge_base_configuration` argument ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
+* resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.sql_knowledge_base_configuration` and `storage_configuration.neptune_analytics_configuration` arguments ([#45465](https://github.com/hashicorp/terraform-provider-aws/issues/45465))
+* resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.mongo_db_atlas_configuration` argument ([#37220](https://github.com/hashicorp/terraform-provider-aws/issues/37220))
+* resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.opensearch_managed_cluster_configuration` argument ([#44060](https://github.com/hashicorp/terraform-provider-aws/issues/44060))
+* resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.s3_vectors_configuration` block ([#45468](https://github.com/hashicorp/terraform-provider-aws/issues/45468))
+* resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
+* resource/aws_codebuild_project: Add `cache.cache_namespace` argument ([#45584](https://github.com/hashicorp/terraform-provider-aws/issues/45584))
+* resource/aws_datazone_domain: Add `root_domain_unit_id` argument ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
+
+BUG FIXES:
+
+* resource/aws_bedrockagent_knowledge_base: Mark `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` as `ForceNew` ([#45465](https://github.com/hashicorp/terraform-provider-aws/issues/45465))
+* resource/aws_lakeformation_data_cells_filter: Fix `excluded_column_names` ordering causing "Provider produced inconsistent result after apply" errors ([#45453](https://github.com/hashicorp/terraform-provider-aws/issues/45453))
+* resource/aws_s3_bucket: Fix `endpoint rule error, AccountId must only contain a-z, A-Z, 0-9 and `-`` errors when the provider is configured with [`skip_requesting_account_id = true`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id-1). This fixes a regression introduced in [v6.23.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6230-november-26-2025) ([#45576](https://github.com/hashicorp/terraform-provider-aws/issues/45576))
+* resource/aws_verifiedpermissions_identity_source: Fixes error when updating resource ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
+* resource/aws_verifiedpermissions_identity_source: Prevents eventual consistency error with associated Policy Store ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
+* resource/aws_verifiedpermissions_identity_source: Removes AutoFlex error log messages ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
 
 ## 6.26.0 (December 10, 2025)
 

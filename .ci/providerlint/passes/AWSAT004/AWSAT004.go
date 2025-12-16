@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AWSAT004 defines an Analyzer that checks for
 // TestCheckResourceAttr() calls with hardcoded TypeSet state hashes
 package AWSAT004

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Community Check
 
 Check a username to see if it's in one of our community lists. We use this to help automate tasks within the repository.

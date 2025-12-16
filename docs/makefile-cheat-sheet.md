@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Makefile Cheat Sheet
 
 The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests, but there is a lot more functionality hidden in this humble file.
@@ -98,7 +101,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `clean-go`<sup>D</sup> | Clean up Go cache |  |  | `GO_VER` |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
 | `clean-tidy`<sup>D</sup> | Clean up tidy |  |  | `GO_VER` |
-| `copyright` | Copyright Checks / add headers check | ✔️ |  |  |
+| `copyright` | Copyright Checks / headers check | ✔️ |  |  |
 | _default_ | = `build` |  |  | `GO_VER` |
 | `deps-check`<sup>D</sup> | Dependency Checks / go_mod | ✔️ |  | `GO_VER` |
 | `docs`<sup>M</sup> | Run all CI documentation checks | ✔️ |  |  |

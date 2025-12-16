@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 # provider-release is a convenient way to request a promotion of artifacts to
 # the staging or production release channel via Common Release Tooling (CRT).
 #

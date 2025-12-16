@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Making Small Changes to Existing Resources
 
 Most contributions to the provider will take the form of small additions or bug-fixes on existing resources/data sources. In this case the existing resource will give you the best guidance on how the change should be structured, but we require the following to allow the change to be merged:

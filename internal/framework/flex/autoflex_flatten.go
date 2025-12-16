@@ -1388,10 +1388,8 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
-			"from": vFrom.Kind(),
-			"to":   tTo,
-		})
+		tflog.SubsystemError(ctx, subsystemName, "Source does not implement flex.Flattener")
+		// diags.Append(diagFlatteningTargetDoesNotImplementFlexFlattener(reflect.TypeOf(vTo.Interface())))
 		return diags
 	}
 
@@ -2899,6 +2897,19 @@ func diagFlatteningTargetDoesNotImplementAttrValue(targetType reflect.Type) diag
 			fmt.Sprintf("Target type %q does not implement attr.Value", fullTypeName(targetType)),
 	)
 }
+
+// Future error diagnostic for interfaceToNestedObject
+// Currently just logging an error because some existing resource types may have this error and
+// returning an error diagnostic would be a breaking change.
+// func diagFlatteningTargetDoesNotImplementFlexFlattener(targetType reflect.Type) diag.ErrorDiagnostic {
+// 	return diag.NewErrorDiagnostic(
+// 		"Incompatible Types",
+// 		"An unexpected error occurred while flattening configuration. "+
+// 			"This is always an error in the provider. "+
+// 			"Please report the following to the provider developer:\n\n"+
+// 			fmt.Sprintf("Target type %q does not implement flex.Flattener", fullTypeName(targetType)),
+// 	)
+// }
 
 func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
