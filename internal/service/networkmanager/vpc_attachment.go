@@ -213,7 +213,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpcARN := d.Get("vpc_arn").(string)
-	input := &networkmanager.CreateVpcAttachmentInput{
+	input := networkmanager.CreateVpcAttachmentInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 		SubnetArns:    flex.ExpandStringValueSet(d.Get("subnet_arns").(*schema.Set)),
 		Tags:          getTagsIn(ctx),
@@ -228,7 +228,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpcAttachment(ctx, input)
+	output, err := conn.CreateVpcAttachment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
@@ -296,7 +296,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &networkmanager.UpdateVpcAttachmentInput{
+		input := networkmanager.UpdateVpcAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		}
 
@@ -319,7 +319,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err := conn.UpdateVpcAttachment(ctx, input)
+		_, err := conn.UpdateVpcAttachment(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
@@ -353,11 +353,11 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrState, output.Attachment.State)
 
 	if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
-		input := &networkmanager.RejectAttachmentInput{
+		input := networkmanager.RejectAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		}
 
-		_, err := conn.RejectAttachment(ctx, input)
+		_, err := conn.RejectAttachment(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rejecting Network Manager VPC Attachment (%s): %s", d.Id(), err)
@@ -370,12 +370,14 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
 	const (
-		timeout = 5 * time.Minute
+		// Match at least the default value of aws_networkmanager_connect_attachment's Delete timeout.
+		timeout = 10 * time.Minute
 	)
+	input := networkmanager.DeleteAttachmentInput{
+		AttachmentId: aws.String(d.Id()),
+	}
 	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
-			AttachmentId: aws.String(d.Id()),
-		})
+		return conn.DeleteAttachment(ctx, &input)
 	}, "cannot be deleted due to existing Connect attachment")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

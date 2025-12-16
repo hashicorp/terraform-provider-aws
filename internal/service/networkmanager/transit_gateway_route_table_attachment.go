@@ -116,7 +116,7 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 
 	peeringID := d.Get("peering_id").(string)
 	transitGatewayRouteTableARN := d.Get("transit_gateway_route_table_arn").(string)
-	input := &networkmanager.CreateTransitGatewayRouteTableAttachmentInput{
+	input := networkmanager.CreateTransitGatewayRouteTableAttachmentInput{
 		PeeringId:                   aws.String(peeringID),
 		Tags:                        getTagsIn(ctx),
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
@@ -126,7 +126,7 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateTransitGatewayRouteTableAttachment(ctx, input)
+	output, err := conn.CreateTransitGatewayRouteTableAttachment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway (%s) Route Table (%s) Attachment: %s", peeringID, transitGatewayRouteTableARN, err)
@@ -192,9 +192,10 @@ func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *sc
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Route Table Attachment: %s", d.Id())
-	_, err := conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+	input := networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAttachment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

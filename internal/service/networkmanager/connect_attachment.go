@@ -149,7 +149,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		options = expandConnectAttachmentOptions(v.([]any)[0].(map[string]any))
 	}
 
-	input := &networkmanager.CreateConnectAttachmentInput{
+	input := networkmanager.CreateConnectAttachmentInput{
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
 		Options:               options,
@@ -163,7 +163,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func(ctx context.Context) (any, error) {
-			return conn.CreateConnectAttachment(ctx, input)
+			return conn.CreateConnectAttachment(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			// Connect attachment doesn't have direct dependency to VPC attachment state when using Attachment Accepter.
@@ -277,9 +277,10 @@ func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Attachment: %s", d.Id())
-	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+	input := networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteAttachment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

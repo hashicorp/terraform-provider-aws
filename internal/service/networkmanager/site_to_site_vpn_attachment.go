@@ -114,7 +114,7 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
-	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
+	input := networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
 		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
@@ -124,7 +124,7 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateSiteToSiteVpnAttachment(ctx, input)
+	output, err := conn.CreateSiteToSiteVpnAttachment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Site To Site VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
@@ -205,9 +205,10 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Site To Site VPN Attachment: %s", d.Id())
-	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+	input := networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.DeleteAttachment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
