@@ -41,18 +41,11 @@ func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, op
 
 func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
 	table, err := findTableByName(ctx, conn, tableName)
-
 	if err != nil {
 		return nil, err
 	}
 
-	for _, v := range table.GlobalSecondaryIndexes {
-		if aws.ToString(v.IndexName) == indexName {
-			return &v, nil
-		}
-	}
-
-	return nil, &sdkretry.NotFoundError{}
+	return findGSIFromTable(table, indexName)
 }
 
 func findGSIFromTable(table *awstypes.TableDescription, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
