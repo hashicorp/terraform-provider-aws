@@ -94,6 +94,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | --- | --- | --- | --- | --- |
 | `acctest-lint`<sup>M</sup> | Run all CI acceptance test checks | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
+| `cache-info` | Display Go cache and GitHub Actions cache information |  |  |  |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
 | `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
 | `ci-quick`<sup>M</sup> | Run quicker CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
@@ -138,6 +139,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
@@ -162,8 +164,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `sweeper-linked` | Provider Checks / Sweeper Functions Linked | ✔️ |  |  |
 | `sweeper-unlinked`<sup>D</sup> | Provider Checks / Sweeper Functions Not Linked | ✔️ |  |  |
 | `t`<sup>D</sup> | Run acceptance tests  (similar to `testacc`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
-| `test`<sup>D</sup> | Run unit tests |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS` |
+| `test`<sup>D</sup> | Run unit tests (auto-detects single service or full codebase, optimizes for macOS/CrowdStrike) |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS`, `TEST_P`, `TEST_PARALLEL` |
 | `test-compile`<sup>D</sup> | Test package compilation |  |  | `GO_VER`, `K`, `PKG`, `PKG_NAME`, `TEST`, `TESTARGS` |
+| `test-shard`<sup>D</sup> | Run unit tests for a specific shard (CI only) |  |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS`, `TEST_P`, `TEST_PARALLEL` |
 | `testacc`<sup>D</sup> | Run acceptance tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-lint` | Acceptance Test Linting / terrafmt | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |

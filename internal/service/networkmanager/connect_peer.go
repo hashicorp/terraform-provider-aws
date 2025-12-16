@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -64,7 +63,7 @@ func resourceConnectPeer() *schema.Resource {
 						"peer_asn": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 2147483647),
+							ValidateFunc: validation.IntBetween(1, 4294967295),
 						},
 					},
 				},
@@ -340,16 +339,19 @@ func expandPeerOptions(o map[string]any) *awstypes.BgpOptions {
 }
 
 func findConnectPeerByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.ConnectPeer, error) {
-	input := &networkmanager.GetConnectPeerInput{
+	input := networkmanager.GetConnectPeerInput{
 		ConnectPeerId: aws.String(id),
 	}
 
+	return findConnectPeer(ctx, conn, &input)
+}
+
+func findConnectPeer(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetConnectPeerInput) (*awstypes.ConnectPeer, error) {
 	output, err := conn.GetConnectPeer(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -407,8 +409,8 @@ func flattenPeerConfiguration(apiObject *awstypes.ConnectPeerConfiguration) map[
 	return confMap
 }
 
-func statusConnectPeerState(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnectPeerState(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectPeerByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -424,11 +426,11 @@ func statusConnectPeerState(ctx context.Context, conn *networkmanager.Client, id
 }
 
 func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.ConnectPeer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectPeerStateCreating),
 		Target:  enum.Slice(awstypes.ConnectPeerStateAvailable),
 		Timeout: timeout,
-		Refresh: statusConnectPeerState(ctx, conn, id),
+		Refresh: statusConnectPeerState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -443,11 +445,11 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id
 }
 
 func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.ConnectPeer, error) {
-	stateconf := &sdkretry.StateChangeConf{
+	stateconf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.ConnectPeerStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusConnectPeerState(ctx, conn, id),
+		Refresh:        statusConnectPeerState(conn, id),
 		Delay:          2 * time.Minute,
 		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
