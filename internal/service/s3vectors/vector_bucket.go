@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -249,38 +250,54 @@ func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		var data vectorBucketResourceModel
 
 		conn := r.Meta().S3VectorsClient(ctx)
 
-		arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
-		output, err := findVectorBucketByARN(ctx, conn, arn)
-		if err != nil {
-			result.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Vector Bucket (%s)", arn), err.Error())
-			result = list.ListResult{Diagnostics: result.Diagnostics}
-			yield(result)
-			return
-		}
+		var input s3vectors.ListVectorBucketsInput
+		for v, err := range listVectorBuckets(ctx, conn, &input) {
+			if err != nil {
+				result = list.ListResult{
+					Diagnostics: diag.Diagnostics{
+						diag.NewErrorDiagnostic(
+							"listing S3 Vectors Vector Bucket",
+							err.Error(),
+						),
+					},
+				}
+				yield(result)
+				return
+			}
 
-		if diags := fwflex.Flatten(ctx, output, &data); diags.HasError() {
-			result.Diagnostics.Append(diags...)
-		}
+			arn := aws.ToString(v.VectorBucketArn)
+			output, err := findVectorBucketByARN(ctx, conn, arn)
+			if err != nil {
+				result.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Vector Bucket (%s)", arn), err.Error())
+				result = list.ListResult{Diagnostics: result.Diagnostics}
+				yield(result)
+				return
+			}
 
-		if diags := result.Resource.Set(ctx, &data); diags.HasError() {
-			result.Diagnostics.Append(diags...)
-			return
-		}
+			var data vectorBucketResourceModel
+			if diags := fwflex.Flatten(ctx, output, &data); diags.HasError() {
+				result.Diagnostics.Append(diags...)
+			}
 
-		result.DisplayName = arn
+			if diags := result.Resource.Set(ctx, &data); diags.HasError() {
+				result.Diagnostics.Append(diags...)
+				return
+			}
 
-		if result.Diagnostics.HasError() {
-			result = list.ListResult{Diagnostics: result.Diagnostics}
-			yield(result)
-			return
-		}
+			result.DisplayName = arn
 
-		if !yield(result) {
-			return
+			if result.Diagnostics.HasError() {
+				result = list.ListResult{Diagnostics: result.Diagnostics}
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
 		}
 	}
 }
