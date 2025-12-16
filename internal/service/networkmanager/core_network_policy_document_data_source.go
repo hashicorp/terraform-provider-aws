@@ -43,7 +43,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 		// Order attributes to match model structures and documentation:
 		// https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html.
-		// Conciously NOT sorted alphabetically.
+		// Consciously NOT sorted alphabetically.
 		Schema: map[string]*schema.Schema{
 			names.AttrVersion: {
 				Type:     schema.TypeString,
