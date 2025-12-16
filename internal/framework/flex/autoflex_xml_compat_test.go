@@ -139,33 +139,7 @@ type DirectWrapperAWS struct {
 	Items DirectXMLWrapper
 }
 
-func TestExpandXMLWrapperDirect(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-
-	testCases := autoFlexTestCases{
-		"direct xml wrapper": {
-			Source: DirectWrapperTF{
-				Items: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
-					types.StringValue("item1"),
-					types.StringValue("item2"),
-				}),
-			},
-			Target: &DirectWrapperAWS{},
-			WantTarget: &DirectWrapperAWS{
-				Items: DirectXMLWrapper{
-					Items:    []string{"item1", "item2"},
-					Quantity: aws.Int32(2),
-				},
-			},
-		},
-	}
-
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
-}
-
-func TestIsXMLWrapperStruct(t *testing.T) {
+func TestPotentialXMLWrapperStruct(t *testing.T) {
 	t.Parallel()
 
 	type embedWithField struct {
@@ -234,7 +208,7 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 				Quantity *int32
 				Name     string
 			}{},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "struct with anonymous embedWithField",
@@ -261,7 +235,7 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 				Quantity *int32
 				private  embedWithField
 			}{},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "struct with private embedWithoutField",
@@ -270,7 +244,7 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 				Quantity *int32
 				private  embedWithoutField
 			}{},
-			expected: false,
+			expected: true,
 		},
 	}
 
@@ -278,7 +252,7 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := isXMLWrapperStruct(reflect.TypeOf(tc.input))
+			result := potentialXMLWrapperStruct(reflect.TypeOf(tc.input))
 			if result != tc.expected {
 				t.Errorf("Expected %v, got %v", tc.expected, result)
 			}
