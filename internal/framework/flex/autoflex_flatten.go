@@ -111,7 +111,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
 			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
-			
+
 			// Special case: Check if source is XML wrapper struct and target has xmlwrapper fields
 			if isXMLWrapperStruct(typFrom) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct", map[string]any{
@@ -123,7 +123,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					if toOpts.XMLWrapperField() != "" {
 						// Found xmlwrapper tag, handle direct XML wrapper conversion
 						tflog.SubsystemTrace(ctx, subsystemName, "Direct XML wrapper struct conversion", map[string]any{
-							"target_field": toField.Name,
+							"target_field":   toField.Name,
 							"xmlwrapper_tag": toOpts.XMLWrapperField(),
 						})
 						diags.Append(handleDirectXMLWrapperStruct(ctx, valFrom, valTo, typFrom, typTo, flexer)...)
@@ -136,7 +136,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					"source_type": typFrom.String(),
 				})
 			}
-			
+
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
@@ -2818,20 +2818,20 @@ func handleDirectXMLWrapperStruct(ctx context.Context, valFrom, valTo reflect.Va
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
 		"wrapper_field_name": wrapperFieldName,
-		"source_type": typeFrom.String(),
-		"target_type": typeTo.String(),
+		"source_type":        typeFrom.String(),
+		"target_type":        typeTo.String(),
 	})
 
 	// Find target fields with matching xmlwrapper tags and map the source Items field to them
 	for toField := range tfreflect.ExportedStructFields(typeTo) {
 		toFieldName := toField.Name
 		_, toOpts := autoflexTags(toField)
-		
+
 		tflog.SubsystemTrace(ctx, subsystemName, "Checking target field", map[string]any{
-			"target_field": toFieldName,
+			"target_field":   toFieldName,
 			"xmlwrapper_tag": toOpts.XMLWrapperField(),
 		})
-		
+
 		// Check if this target field expects the wrapper field from source
 		if toOpts.XMLWrapperField() == wrapperFieldName {
 			toFieldVal := valTo.FieldByName(toFieldName)
