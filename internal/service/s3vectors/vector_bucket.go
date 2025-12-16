@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
@@ -30,7 +31,9 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -248,10 +251,13 @@ func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest
 		}
 	}
 
+	resultInterceptors := r.ResultInterceptors()
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		conn := r.Meta().S3VectorsClient(ctx)
+		awsClient := r.Meta()
+		conn := awsClient.S3VectorsClient(ctx)
 
 		var input s3vectors.ListVectorBucketsInput
 		for v, err := range listVectorBuckets(ctx, conn, &input) {
@@ -277,13 +283,31 @@ func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest
 				return
 			}
 
+			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
+
 			var data vectorBucketResourceModel
+			data.Tags = tftags.Null
+			data.TagsAll = tftags.Null
+
+			params := listresource.InterceptorParams{
+				C:      awsClient,
+				Result: &result,
+			}
+
+			params.When = listresource.Before
+			for interceptor := range slices.Values(resultInterceptors) {
+				d := interceptor.Read(ctx, params) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
+				result.Diagnostics.Append(d...)
+				if d.HasError() {
+					result = list.ListResult{Diagnostics: result.Diagnostics}
+					yield(result)
+					return
+				}
+			}
+
 			if diags := fwflex.Flatten(ctx, output, &data); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 			}
-
-			data.Tags = tftags.Null
-			data.TagsAll = tftags.Null
 
 			if diags := result.Resource.Set(ctx, &data); diags.HasError() {
 				result.Diagnostics.Append(diags...)
@@ -291,6 +315,17 @@ func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest
 			}
 
 			result.DisplayName = arn
+
+			params.When = listresource.After
+			for interceptor := range tfslices.BackwardValues(resultInterceptors) {
+				d := interceptor.Read(ctx, params) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
+				result.Diagnostics.Append(d...)
+				if d.HasError() {
+					result = list.ListResult{Diagnostics: result.Diagnostics}
+					yield(result)
+					return
+				}
+			}
 
 			if result.Diagnostics.HasError() {
 				result = list.ListResult{Diagnostics: result.Diagnostics}
