@@ -315,57 +315,15 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		})
 	}
 
-	var projection awstypes.Projection
-	response.Diagnostics.Append(fwflex.Expand(ctx, data.Projection, &projection)...)
+	var action awstypes.CreateGlobalSecondaryIndexAction
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &action)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	action := &awstypes.CreateGlobalSecondaryIndexAction{
-		IndexName:  data.IndexName.ValueStringPointer(),
-		KeySchema:  keySchema,
-		Projection: &projection,
-	}
-
-	if billingMode == awstypes.BillingModeProvisioned {
-		var gsiPT provisionedThroughputModel
-		v, d := data.ProvisionedThroughput.ToPtr(ctx)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		gsiPT = *v
-
-		var provisionedThroughput awstypes.ProvisionedThroughput
-		response.Diagnostics.Append(fwflex.Expand(ctx, gsiPT, &provisionedThroughput)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		action.ProvisionedThroughput = &provisionedThroughput
-	} else if !data.OnDemandThroughputs.IsNull() && !data.OnDemandThroughputs.IsUnknown() {
-		var odts []onDemandThroughputModel
-		response.Diagnostics.Append(data.OnDemandThroughputs.ElementsAs(ctx, &odts, false)...)
-		if len(odts) > 0 {
-			v := map[string]any{
-				"max_read_request_units":  int(odts[0].MaxReadRequestUnits.ValueInt64()),
-				"max_write_request_units": int(odts[0].MaxWriteRequestUnits.ValueInt64()),
-			}
-			action.OnDemandThroughput = expandOnDemandThroughput(v)
-		}
-	}
-
-	var wts []warmThroughputModel
-	response.Diagnostics.Append(data.WarmThroughputs.ElementsAs(ctx, &wts, false)...)
-	if len(wts) > 0 {
-		action.WarmThroughput = expandWarmThroughput(map[string]any{
-			"read_units_per_second":  int(wts[0].ReadUnitsPerSecond.ValueInt64()),
-			"write_units_per_second": int(wts[0].WriteUnitsPerSecond.ValueInt64()),
-		})
-	}
-
 	input.GlobalSecondaryIndexUpdates = []awstypes.GlobalSecondaryIndexUpdate{
 		{
-			Create: action,
+			Create: &action,
 		},
 	}
 
