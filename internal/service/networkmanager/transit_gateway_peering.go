@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -180,16 +179,19 @@ func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.Resource
 }
 
 func findTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.TransitGatewayPeering, error) {
-	input := &networkmanager.GetTransitGatewayPeeringInput{
+	input := networkmanager.GetTransitGatewayPeeringInput{
 		PeeringId: aws.String(id),
 	}
 
+	return findTransitGatewayPeering(ctx, conn, &input)
+}
+
+func findTransitGatewayPeering(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetTransitGatewayPeeringInput) (*awstypes.TransitGatewayPeering, error) {
 	output, err := conn.GetTransitGatewayPeering(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -204,8 +206,8 @@ func findTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Cli
 	return output.TransitGatewayPeering, nil
 }
 
-func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTransitGatewayPeeringState(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayPeeringByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -221,13 +223,13 @@ func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PeeringStateCreating),
 		Target:     enum.Slice(awstypes.PeeringStateAvailable),
 		Timeout:    timeout,
 		Delay:      5 * time.Minute,
 		MinTimeout: 10 * time.Second,
-		Refresh:    statusTransitGatewayPeeringState(ctx, conn, id),
+		Refresh:    statusTransitGatewayPeeringState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -242,13 +244,13 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PeeringStateDeleting),
 		Target:     []string{},
 		Timeout:    timeout,
 		Delay:      3 * time.Minute,
 		MinTimeout: 10 * time.Second,
-		Refresh:    statusTransitGatewayPeeringState(ctx, conn, id),
+		Refresh:    statusTransitGatewayPeeringState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
