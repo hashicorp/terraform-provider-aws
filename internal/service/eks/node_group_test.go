@@ -1115,52 +1115,6 @@ func TestAccEKSNodeGroup_updateStrategy(t *testing.T) {
 	})
 }
 
-func TestAccEKSNodeGroup_updateStrategy(t *testing.T) {
-	ctx := acctest.Context(t)
-	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_eks_node_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNodeGroupConfig_update1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
-					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
-				),
-			},
-			{
-				Config: testAccNodeGroupConfig_updateStrategy(rName, "DEFAULT"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "DEFAULT"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccNodeGroupConfig_updateStrategy(rName, "MINIMAL"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "MINIMAL"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEKSNodeGroup_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
