@@ -37,7 +37,7 @@
   },
   {
     "@level": "trace",
-    "@message": "Flattening with EmptyValue (for nested object collection)",
+    "@message": "Flattening with NullValue (for nested object collection)",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
