@@ -1603,15 +1603,8 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 		}
 	} else {
 		if vFrom.IsNil() {
-			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with EmptyValue (for nested object collection)")
-			// For nested object collections, create empty instead of null to match Terraform's planned values
-			to, d := tTo.NewObjectSlice(ctx, 0, 0)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			val, d := tTo.ValueFromObjectSlice(ctx, to)
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NullValue (for nested object collection)")
+			val, d := tTo.NullValue(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
@@ -2766,74 +2759,6 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q cannot be flattened to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
-}
-
-// handleDirectXMLWrapperToStruct handles the case where the source is an XML wrapper struct
-// and the target is a struct with fields that have xmlwrapper tags
-func handleDirectXMLWrapperToStruct(ctx context.Context, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, flexer autoFlexer) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Check if source is an XML wrapper struct
-	if !isXMLWrapperStruct(typeFrom) {
-		return false, diags
-	}
-
-	// Check if target has any fields with xmlwrapper tags
-	hasXMLWrapperFields := false
-	for toField := range tfreflect.ExportedStructFields(typeTo) {
-		_, toOpts := autoflexTags(toField)
-		if toOpts.XMLWrapperField() != "" {
-			hasXMLWrapperFields = true
-			break
-		}
-	}
-
-	if !hasXMLWrapperFields {
-		return false, diags
-	}
-
-	tflog.SubsystemTrace(ctx, subsystemName, "Handling direct XML wrapper struct to target with xmlwrapper tags", map[string]any{
-		"source_type": typeFrom.String(),
-		"target_type": typeTo.String(),
-	})
-
-	// Get the wrapper field name from source (e.g., "Items")
-	wrapperFieldName := getXMLWrapperSliceFieldName(typeFrom)
-	sourceItemsField := valFrom.FieldByName(wrapperFieldName)
-	if !sourceItemsField.IsValid() {
-		return false, diags
-	}
-
-	// Find target fields with matching xmlwrapper tags and map the source Items field to them
-	for toField := range tfreflect.ExportedStructFields(typeTo) {
-		toFieldName := toField.Name
-		_, toOpts := autoflexTags(toField)
-
-		// Check if this target field expects the wrapper field from source
-		if toOpts.XMLWrapperField() == wrapperFieldName {
-			toFieldVal := valTo.FieldByName(toFieldName)
-			if !toFieldVal.IsValid() || !toFieldVal.CanSet() {
-				continue
-			}
-
-			tflog.SubsystemTrace(ctx, subsystemName, "Mapping XML wrapper Items field to target field", map[string]any{
-				"source_field": wrapperFieldName,
-				"target_field": toFieldName,
-			})
-
-			// Get the target field as attr.Value for XML wrapper flattening
-			if toAttr, ok := toFieldVal.Interface().(attr.Value); ok {
-				if f, ok := flexer.(*autoFlattener); ok {
-					// Use XML wrapper flattening to convert the source Items field to the target collection
-					diags.Append(f.xmlWrapperFlatten(ctx, valFrom, toAttr.Type(ctx), toFieldVal, toOpts)...)
-				} else {
-					diags.Append(DiagFlatteningIncompatibleTypes(typeFrom, toField.Type))
-				}
-			}
-		}
-	}
-
-	return true, diags
 }
 
 // This takes complex AWS structures with XML wrapper patterns and splits them into multiple TF fields.
