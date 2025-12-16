@@ -24,9 +24,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
 	originalSegmentValue := "segmentValue1"
-	expectedJSONOriginal := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)
+	expectedJSONOriginal := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)
 	updatedSegmentValue := "segmentValue2"
-	expectedJSONUpdated := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)
+	expectedJSONUpdated := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -65,6 +65,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
 	segmentValue := "segmentValue"
+	expectedJSON := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -75,7 +76,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 			{
 				// Step 1: Create core network, policy, and VPC attachment (no create-route yet)
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep1(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
@@ -84,7 +85,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 			{
 				// Step 2: Update policy to add create-route with VPC attachment destination
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep2(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"action":"create-route"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"destinations":\["attachment-.+"\]`)),
@@ -99,12 +100,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 			},
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(segmentValue),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSON),
 				),
 			},
 		},
@@ -506,27 +504,7 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 
 // Step 1: Base policy with attachment_policies (no create-route) to create VPC attachment first
 func testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep1() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-networkmanager-core-network-policy-attachment"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-networkmanager-core-network-policy-attachment"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets("tf-acc-test-networkmanager-core-network-policy-attachment", 2), fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -577,27 +555,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 
 // Step 2: Update policy to add create-route with VPC attachment destination
 func testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentStep2() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-networkmanager-core-network-policy-attachment"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-networkmanager-core-network-policy-attachment"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets("tf-acc-test-networkmanager-core-network-policy-attachment", 2), fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -650,7 +608,7 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 }
 
 resource "aws_networkmanager_vpc_attachment" "test" {
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  core_network_id = aws_networkmanager_core_network.test.id
   subnet_arns     = aws_subnet.test[*].arn
   vpc_arn         = aws_vpc.test.arn
 }
