@@ -6,12 +6,15 @@ package s3vectors
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -29,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,9 +48,15 @@ func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
+// @FrameworkListResource("aws_s3vectors_vector_bucket")
+func vectorBucketResourceAsListResource() list.ListResourceWithConfigure {
+	return &vectorBucketResource{}
+}
+
 type vectorBucketResource struct {
 	framework.ResourceWithModel[vectorBucketResourceModel]
 	framework.WithImportByIdentity
+	framework.WithList
 }
 
 func (r *vectorBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -221,6 +231,60 @@ func (r *vectorBucketResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
+func (r vectorBucketResource) ListResourceConfigSchema(_ context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
+}
+
+func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	var query vectorBucketListModel
+
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		var data vectorBucketResourceModel
+
+		conn := r.Meta().S3VectorsClient(ctx)
+
+		arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
+		output, err := findVectorBucketByARN(ctx, conn, arn)
+		if err != nil {
+			result.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Vector Bucket (%s)", arn), err.Error())
+			result = list.ListResult{Diagnostics: result.Diagnostics}
+			yield(result)
+			return
+		}
+
+		if diags := fwflex.Flatten(ctx, output, &data); diags.HasError() {
+			result.Diagnostics.Append(diags...)
+		}
+
+		if diags := result.Resource.Set(ctx, &data); diags.HasError() {
+			result.Diagnostics.Append(diags...)
+			return
+		}
+
+		result.DisplayName = arn
+
+		if result.Diagnostics.HasError() {
+			result = list.ListResult{Diagnostics: result.Diagnostics}
+			yield(result)
+			return
+		}
+
+		if !yield(result) {
+			return
+		}
+	}
+}
+
 func findVectorBucketByARN(ctx context.Context, conn *s3vectors.Client, arn string) (*awstypes.VectorBucket, error) {
 	input := s3vectors.GetVectorBucketInput{
 		VectorBucketArn: aws.String(arn),
@@ -257,6 +321,25 @@ func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vect
 	return output.VectorBucket, nil
 }
 
+func listVectorBuckets(ctx context.Context, conn *s3vectors.Client, input *s3vectors.ListVectorBucketsInput) iter.Seq2[awstypes.VectorBucketSummary, error] {
+	return func(yield func(awstypes.VectorBucketSummary, error) bool) {
+		pages := s3vectors.NewListVectorBucketsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.VectorBucketSummary](), err)
+				return
+			}
+
+			for _, v := range page.VectorBuckets {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		}
+	}
+}
+
 type vectorBucketResourceModel struct {
 	framework.WithRegionModel
 	CreationTime            timetypes.RFC3339                                             `tfsdk:"creation_time"`
@@ -271,4 +354,8 @@ type vectorBucketResourceModel struct {
 type encryptionConfigurationModel struct {
 	KMSKeyARN fwtypes.ARN                          `tfsdk:"kms_key_arn"`
 	SSEType   fwtypes.StringEnum[awstypes.SseType] `tfsdk:"sse_type"`
+}
+
+type vectorBucketListModel struct {
+	framework.WithRegionModel
 }
