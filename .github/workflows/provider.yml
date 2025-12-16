@@ -395,7 +395,7 @@ jobs:
           make tfproviderdocs
 
   cache-info:
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -413,8 +413,21 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
             ${{ runner.os }}-go-build-
-      - name: Cache Info
+      - name: Local Cache Info
         run: make cache-info
+      - name: GitHub Actions Cache List
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo ""
+          echo "=== GitHub Actions Cache Entries ==="
+          gh cache list --limit 100 --json key,ref,sizeInBytes,createdAt,lastAccessedAt | \
+            jq -r '.[] | "\(.key) | \(.ref) | \(.sizeInBytes / 1024 / 1024 | floor)MB | Created: \(.createdAt) | Accessed: \(.lastAccessedAt)"' | \
+            column -t -s '|' || echo "Failed to list caches"
+          echo ""
+          echo "=== Cache Usage Summary ==="
+          gh cache list --limit 100 --json sizeInBytes | \
+            jq '[.[].sizeInBytes] | add / 1024 / 1024 / 1024 | "Total cache size: \(. | floor)GB"' -r || echo "Failed to calculate total"
 
   markdown-lint:
     runs-on: ubuntu-latest
