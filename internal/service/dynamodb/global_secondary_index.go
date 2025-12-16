@@ -239,13 +239,13 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	}
 
 	knownAttributes := map[string]awstypes.ScalarAttributeType{}
-	ut := &dynamodb.UpdateTableInput{
+	input := dynamodb.UpdateTableInput{
 		TableName:            data.TableName.ValueStringPointer(),
 		AttributeDefinitions: []awstypes.AttributeDefinition{},
 	}
 
 	for _, ad := range table.AttributeDefinitions {
-		ut.AttributeDefinitions = append(ut.AttributeDefinitions, ad)
+		input.AttributeDefinitions = append(input.AttributeDefinitions, ad)
 		knownAttributes[aws.ToString(ad.AttributeName)] = ad.AttributeType
 	}
 
@@ -266,7 +266,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 			continue
 		}
 
-		ut.AttributeDefinitions = append(ut.AttributeDefinitions, awstypes.AttributeDefinition{
+		input.AttributeDefinitions = append(input.AttributeDefinitions, awstypes.AttributeDefinition{
 			AttributeName: ks.AttributeName.ValueStringPointer(),
 			AttributeType: ks.AttributeType.ValueEnum(),
 		})
@@ -355,13 +355,13 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		})
 	}
 
-	ut.GlobalSecondaryIndexUpdates = []awstypes.GlobalSecondaryIndexUpdate{
+	input.GlobalSecondaryIndexUpdates = []awstypes.GlobalSecondaryIndexUpdate{
 		{
 			Create: action,
 		},
 	}
 
-	if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
+	if utRes, err := conn.UpdateTable(ctx, &input); err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Unable to create index "%s" on table "%s"`, data.IndexName.ValueString(), data.TableName.ValueString()),
 			err.Error(),
@@ -602,7 +602,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		hasUpdate = hasUpdate || new.WarmThroughputs.Equal(old.WarmThroughputs)
 	}
 
-	ut := &dynamodb.UpdateTableInput{
+	input := dynamodb.UpdateTableInput{
 		TableName: new.TableName.ValueStringPointer(),
 		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
@@ -612,7 +612,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	}
 
 	if hasUpdate {
-		if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
+		if utRes, err := conn.UpdateTable(ctx, &input); err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.IndexName.ValueString(), new.TableName.ValueString()),
 				err.Error(),
@@ -705,7 +705,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		return
 	}
 
-	ut := &dynamodb.UpdateTableInput{
+	input := dynamodb.UpdateTableInput{
 		TableName: data.TableName.ValueStringPointer(),
 		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
@@ -716,7 +716,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		},
 	}
 
-	if res, err := conn.UpdateTable(ctx, ut); err != nil {
+	if res, err := conn.UpdateTable(ctx, &input); err != nil {
 		// exit if owning table is already in deleting state
 		if res != nil && res.TableDescription != nil && res.TableDescription.TableStatus == awstypes.TableStatusDeleting {
 			return
