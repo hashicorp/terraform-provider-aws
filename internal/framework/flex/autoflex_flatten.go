@@ -78,7 +78,6 @@ func (flattener autoFlattener) getOptions() AutoFlexOptions {
 	return flattener.Options
 }
 
-
 // autoFlattenConvert converts `from` to `to` using the specified auto-flexer.
 func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -2143,8 +2142,6 @@ func handleXMLWrapperRule1(ctx context.Context, valFrom, valTo reflect.Value, ty
 	return false, diags
 }
 
-
-
 func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -2817,7 +2814,7 @@ func handleDirectXMLWrapperToStruct(ctx context.Context, valFrom, valTo reflect.
 	for toField := range tfreflect.ExportedStructFields(typeTo) {
 		toFieldName := toField.Name
 		_, toOpts := autoflexTags(toField)
-		
+
 		// Check if this target field expects the wrapper field from source
 		if toOpts.XMLWrapperField() == wrapperFieldName {
 			toFieldVal := valTo.FieldByName(toFieldName)
