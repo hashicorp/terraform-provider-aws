@@ -71,7 +71,6 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_all_params" {
 
 The following arguments are required:
 
-
 * `autonomous_data_storage_size_in_tbs` - (Required) The data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB. Changing this will force terraform to create new resource.
 * `cpu_core_count_per_node` - (Required) The number of CPU cores enabled per node in the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `db_servers` - (Required) The database servers in the Autonomous VM cluster. Changing this will force terraform to create new resource.
