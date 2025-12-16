@@ -1603,15 +1603,8 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 		}
 	} else {
 		if vFrom.IsNil() {
-			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with EmptyValue (for nested object collection)")
-			// For nested object collections, create empty instead of null to match Terraform's planned values
-			to, d := tTo.NewObjectSlice(ctx, 0, 0)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			val, d := tTo.ValueFromObjectSlice(ctx, to)
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NullValue (for nested object collection)")
+			val, d := tTo.NullValue(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
