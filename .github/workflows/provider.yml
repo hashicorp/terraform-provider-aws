@@ -401,6 +401,18 @@ jobs:
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
       - name: Cache Info
         run: make cache-info
 
