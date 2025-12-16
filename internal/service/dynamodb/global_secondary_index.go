@@ -233,6 +233,11 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
+	response.Diagnostics.Append(validateNewGSIAttributes(ctx, data, table)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	knownAttributes := map[string]awstypes.ScalarAttributeType{}
 	ut := &dynamodb.UpdateTableInput{
 		TableName:            data.TableName.ValueStringPointer(),
@@ -354,11 +359,6 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		{
 			Create: action,
 		},
-	}
-
-	response.Diagnostics.Append(validateNewGSIAttributes(ctx, data, *table)...)
-	if response.Diagnostics.HasError() {
-		return
 	}
 
 	if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
@@ -511,6 +511,11 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		return
 	}
 
+	response.Diagnostics.Append(validateNewGSIAttributes(ctx, new, table)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	action := &awstypes.UpdateGlobalSecondaryIndexAction{
 		IndexName: new.IndexName.ValueStringPointer(),
 	}
@@ -586,6 +591,9 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 	var wts []warmThroughputModel
 	response.Diagnostics.Append(new.WarmThroughputs.ElementsAs(ctx, &wts, false)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 	if len(wts) > 0 {
 		action.WarmThroughput = expandWarmThroughput(map[string]any{
 			"read_units_per_second":  int(wts[0].ReadUnitsPerSecond.ValueInt64()),
@@ -603,9 +611,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		},
 	}
 
-	response.Diagnostics.Append(validateNewGSIAttributes(ctx, new, *table)...)
-
-	if hasUpdate && !response.Diagnostics.HasError() {
+	if hasUpdate {
 		if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.IndexName.ValueString(), new.TableName.ValueString()),
@@ -898,7 +904,7 @@ type keySchemaModel struct {
 	KeyType       fwtypes.StringEnum[awstypes.KeyType]             `tfsdk:"key_type"`
 }
 
-func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryIndexModel, table awstypes.TableDescription) diag.Diagnostics {
+func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryIndexModel, table *awstypes.TableDescription) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	counts := map[string]int{}
