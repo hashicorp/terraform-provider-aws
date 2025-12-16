@@ -238,6 +238,37 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	}
 
 	knownAttributes := map[string]awstypes.ScalarAttributeType{}
+	billingMode := awstypes.BillingModeProvisioned
+	if table.BillingModeSummary != nil {
+		billingMode = table.BillingModeSummary.BillingMode
+	}
+
+	if billingMode == awstypes.BillingModeProvisioned {
+		if data.ProvisionedThroughput.IsNull() || data.ProvisionedThroughput.IsUnknown() {
+			response.Diagnostics.Append(
+				validatordiag.InvalidAttributeCombinationDiagnostic(
+					path.Root("provisioned_throughput"),
+					fmt.Sprintf("Attribute %q must be specified when the associated table's attribute \"billing_mode\" is %q.",
+						path.Root("provisioned_throughput").String(),
+						awstypes.BillingModeProvisioned,
+					),
+				),
+			)
+		}
+	} else {
+		if !data.ProvisionedThroughput.IsNull() && !data.ProvisionedThroughput.IsUnknown() {
+			response.Diagnostics.Append(
+				validatordiag.InvalidAttributeCombinationDiagnostic(
+					path.Root("provisioned_throughput"),
+					fmt.Sprintf("Attribute %q cannot be specified when the associated table's attribute \"billing_mode\" is %q.",
+						path.Root("provisioned_throughput").String(),
+						billingMode,
+					),
+				),
+			)
+		}
+	}
+
 	input := dynamodb.UpdateTableInput{
 		TableName:            data.TableName.ValueStringPointer(),
 		AttributeDefinitions: []awstypes.AttributeDefinition{},
