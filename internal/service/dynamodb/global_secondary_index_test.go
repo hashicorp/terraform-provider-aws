@@ -45,15 +45,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -64,6 +63,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(1),
+							"write_capacity_units": knownvalue.Int64Exact(1),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
@@ -148,7 +153,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -166,31 +171,17 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest(rNameTable, rName),
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -225,33 +216,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "1",
-						"max_write_request_units": "1",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(1),
+							"max_write_request_units": knownvalue.Int64Exact(1),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -265,7 +242,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -283,31 +260,22 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -318,31 +286,22 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rName, 4),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "4"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "4"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(4),
+							"write_capacity_units": knownvalue.Int64Exact(4),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -356,7 +315,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ignoreChanges(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChanges(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -374,31 +333,22 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacityAndIgnoreChanges(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -409,31 +359,180 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacityAndIgnoreChanges(rNameTable, rName, 4),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSameAsTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(rNameTable, rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(2)),
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("write_capacity"), knownvalue.Int64Exact(2)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(rNameTable, rName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(4)),
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("write_capacity"), knownvalue.Int64Exact(4)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(4),
+							"write_capacity_units": knownvalue.Int64Exact(4),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDifferentFromTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(rNameTable, rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(2)),
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("write_capacity"), knownvalue.Int64Exact(2)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(4),
+							"write_capacity_units": knownvalue.Int64Exact(4),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(rNameTable, rName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(4)),
+					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("write_capacity"), knownvalue.Int64Exact(4)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(6),
+							"write_capacity_units": knownvalue.Int64Exact(6),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -468,33 +567,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "2",
-						"max_write_request_units": "2",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -508,33 +593,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "4",
-						"max_write_request_units": "4",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(4),
+							"max_write_request_units": knownvalue.Int64Exact(4),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -569,33 +640,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "2",
-						"max_write_request_units": "2",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -609,33 +666,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "2",
-						"max_write_request_units": "2",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -670,31 +713,17 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "warm_throughput.*", map[string]string{
-						"read_units_per_second":  "15000",
-						"write_units_per_second": "5000",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_units_per_second":  knownvalue.Int64Exact(15000),
+							"write_units_per_second": knownvalue.Int64Exact(5000),
 						}),
 					})),
 				},
@@ -763,33 +792,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "on_demand_throughput.*", map[string]string{
-						"max_read_request_units":  "2",
-						"max_write_request_units": "2",
-					}),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -800,31 +815,22 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -856,31 +862,22 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -894,32 +891,19 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "2"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "2"),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rNameTable),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("HASH"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name": knownvalue.StringExact(rName),
-							"attribute_type": knownvalue.StringExact("S"),
-							"key_type":       knownvalue.StringExact("RANGE"),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Int64Exact(2),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
 			{
@@ -1560,9 +1544,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName1, "index_name", rName1),
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "1"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName2, "key_schema.#", "1"),
@@ -1574,14 +1556,25 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(1),
+							"write_capacity_units": knownvalue.Int64Exact(1),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(1),
+							"write_capacity_units": knownvalue.Int64Exact(1),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
@@ -1602,9 +1595,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName1, "index_name", rName1),
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "2"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName2, "key_schema.#", "1"),
@@ -1616,14 +1607,25 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_capacity_units":  knownvalue.Int64Exact(2),
+							"write_capacity_units": knownvalue.Int64Exact(2),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 				},
 			},
@@ -2142,6 +2144,11 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   index_name      = %[2]q
   projection_type = "ALL"
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[1]q
     attribute_type = "S"
@@ -2163,32 +2170,29 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName)
 }
 
-func testAccGlobalSecondaryIndexConfig_basic_withCapacity(tableName, indexName string, capacity int) string {
+func testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
-  read_capacity   = %[3]d
-  write_capacity  = %[3]d
+
+  provisioned_throughput {
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
 
   key_schema {
     attribute_name = %[1]q
     attribute_type = "S"
     key_type       = "HASH"
   }
-
-  key_schema {
-    attribute_name = %[2]q
-    attribute_type = "S"
-    key_type       = "RANGE"
-  }
 }
 
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
-  read_capacity  = %[3]d
-  write_capacity = %[3]d
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = %[1]q
 
   attribute {
@@ -2199,14 +2203,16 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName, capacity)
 }
 
-func testAccGlobalSecondaryIndexConfig_basic_withCapacityAndIgnoreChanges(tableName, indexName string, capacity int) string {
+func testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
-  read_capacity   = %[3]d
-  write_capacity  = %[3]d
+  provisioned_throughput {
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2222,8 +2228,7 @@ resource "aws_dynamodb_global_secondary_index" "test" {
 
   lifecycle {
     ignore_changes = [
-      read_capacity,
-      write_capacity
+      provisioned_throughput,
     ]
   }
 }
@@ -2242,14 +2247,80 @@ resource "aws_dynamodb_table" "test" {
   lifecycle {
     ignore_changes = [
       read_capacity,
-      write_capacity
+      write_capacity,
     ]
   }
 }
 `, tableName, indexName, capacity)
 }
 
-func testAccGlobalSecondaryIndexConfig_billingPayPerRequest(tableName, indexName string) string {
+func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(tableName, indexName string, capacity int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = %[3]d
+    write_capacity_units = %[3]d
+  }
+
+  key_schema {
+    attribute_name = %[1]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = %[3]d
+  write_capacity = %[3]d
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName, capacity)
+}
+
+func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(tableName, indexName string, capacity int) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = %[4]d
+    write_capacity_units = %[4]d
+  }
+
+  key_schema {
+    attribute_name = %[1]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = %[3]d
+  write_capacity = %[3]d
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName, capacity, capacity+2)
+}
+
+func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
@@ -2569,6 +2640,11 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   index_name      = %[2]q
   projection_type = %[3]q
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[1]q
     attribute_type = "S"
@@ -2599,6 +2675,11 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   index_name      = %[2]q
   projection_type = "ALL"
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[3]q
     attribute_type = "S"
@@ -2626,6 +2707,11 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[3]q
@@ -2660,6 +2746,11 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
   index_name      = %[2]q
   projection_type = "ALL"
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[2]q
     attribute_type = "S"
@@ -2671,6 +2762,11 @@ resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[3]q
@@ -2715,8 +2811,10 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
-  read_capacity   = %[4]d
-  write_capacity  = %[4]d
+  provisioned_throughput {
+    read_capacity_units  = %[4]d
+    write_capacity_units = %[4]d
+  }
 
   key_schema {
     attribute_name = %[2]q
@@ -2724,12 +2822,15 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
     key_type       = "HASH"
   }
 }
+
 resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
   projection_type = "ALL"
-  read_capacity   = %[4]d
-  write_capacity  = %[4]d
+  provisioned_throughput {
+    read_capacity_units  = %[4]d
+    write_capacity_units = %[4]d
+  }
 
   key_schema {
     attribute_name = %[3]q
@@ -2759,6 +2860,11 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
   index_name      = %[2]q
   projection_type = "ALL"
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[1]q
     attribute_type = "B"
@@ -2770,6 +2876,11 @@ resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2826,6 +2937,11 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[2]q
@@ -2908,6 +3024,11 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
   index_name      = %[2]q
   projection_type = "ALL"
 
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
   key_schema {
     attribute_name = %[2]q
     attribute_type = "S"
@@ -2919,6 +3040,11 @@ resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[3]q
@@ -2963,6 +3089,11 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
   projection_type = "ALL"
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
 
   key_schema {
     attribute_name = %[2]q

@@ -77,10 +77,16 @@ The following arguments are optional:
 
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
-* `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
+* `provisioned_throughput` - (Optional) Provisioned throughput for the index.
+  See [`provisioned_throughput` below](#provisioned_throughput).
+  Required if the table's `billing_mode` is `PROVISIONED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
-* `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+
+### `provisioned_throughput`
+
+* `read_capacity_units` - (Required) Number of read capacity units for this index.
+* `write_capacity_units` - (Required) Number of write capacity units for this index.
 
 ## Attribute Reference
 

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -27,9 +28,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -89,19 +92,11 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"read_capacity": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-			},
 			names.AttrTableName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"write_capacity": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -139,6 +134,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 			},
 			"on_demand_throughput": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[onDemandThroughputModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"max_read_request_units": schema.Int64Attribute{
@@ -151,7 +147,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 						},
 					},
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[onDemandThroughputModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -159,11 +154,27 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
+			"provisioned_throughput": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[provisionedThroughputModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"read_capacity_units": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+						},
+						"write_capacity_units": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"warm_throughput": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[warmThroughputModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -185,6 +196,11 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 
@@ -267,35 +283,52 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		Projection: projection,
 	}
 
-	if data.ReadCapacity.IsNull() || data.ReadCapacity.IsUnknown() {
-		data.ReadCapacity = types.Int64Value(0)
-	}
-
-	if data.WriteCapacity.IsNull() || data.WriteCapacity.IsUnknown() {
-		data.WriteCapacity = types.Int64Value(0)
-	}
-
 	billingMode := awstypes.BillingModeProvisioned
 	if table.BillingModeSummary != nil {
 		billingMode = table.BillingModeSummary.BillingMode
 	}
 
 	if billingMode == awstypes.BillingModeProvisioned {
-		rc := int(data.ReadCapacity.ValueInt64())
-		wc := int(data.WriteCapacity.ValueInt64())
+		if data.ProvisionedThroughput.IsNull() || data.ProvisionedThroughput.IsUnknown() {
+			response.Diagnostics.Append(
+				validatordiag.InvalidAttributeCombinationDiagnostic(
+					path.Root("provisioned_throughput"),
+					fmt.Sprintf("Attribute %q must be specified when the associated table's attribute \"billing_mode\" is %q.",
+						path.Root("provisioned_throughput").String(),
+						awstypes.BillingModeProvisioned,
+					),
+				),
+			)
+		}
+	} else {
+		if !data.ProvisionedThroughput.IsNull() && !data.ProvisionedThroughput.IsUnknown() {
+			response.Diagnostics.Append(
+				validatordiag.InvalidAttributeCombinationDiagnostic(
+					path.Root("provisioned_throughput"),
+					fmt.Sprintf("Attribute %q cannot be specified when the associated table's attribute \"billing_mode\" is %q.",
+						path.Root("provisioned_throughput").String(),
+						billingMode,
+					),
+				),
+			)
+		}
+	}
 
-		if rc == 0 && table.ProvisionedThroughput != nil {
-			rc = int(aws.ToInt64(table.ProvisionedThroughput.ReadCapacityUnits))
+	if billingMode == awstypes.BillingModeProvisioned {
+		var gsiPT provisionedThroughputModel
+		v, d := data.ProvisionedThroughput.ToPtr(ctx)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-		if wc == 0 && table.ProvisionedThroughput != nil {
-			wc = int(aws.ToInt64(table.ProvisionedThroughput.WriteCapacityUnits))
-		}
+		gsiPT = *v
 
-		provisionedThroughputData := map[string]any{
-			"read_capacity":  rc,
-			"write_capacity": wc,
+		var provisionedThroughput awstypes.ProvisionedThroughput
+		response.Diagnostics.Append(flex.Expand(ctx, gsiPT, &provisionedThroughput)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-		action.ProvisionedThroughput = expandProvisionedThroughput(provisionedThroughputData, billingMode)
+		action.ProvisionedThroughput = &provisionedThroughput
 	} else if !data.OnDemandThroughputs.IsNull() && !data.OnDemandThroughputs.IsUnknown() {
 		var odts []onDemandThroughputModel
 		response.Diagnostics.Append(data.OnDemandThroughputs.ElementsAs(ctx, &odts, false)...)
@@ -490,12 +523,6 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	hasUpdate := false
 
 	if billingMode == awstypes.BillingModeProvisioned {
-		provisionedThroughputData := map[string]any{
-			"read_capacity":  int(new.ReadCapacity.ValueInt64()),
-			"write_capacity": int(new.WriteCapacity.ValueInt64()),
-		}
-		newProvisionedThroughput := expandProvisionedThroughput(provisionedThroughputData, billingMode)
-
 		g, err := findGSIFromTable(table, old.IndexName.ValueString())
 		if err != nil || g == nil {
 			response.Diagnostics.AddError(
@@ -511,12 +538,36 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		}
 
-		if g.ProvisionedThroughput == nil {
-			action.ProvisionedThroughput = newProvisionedThroughput
-			hasUpdate = true
-		} else if aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits) != aws.ToInt64(newProvisionedThroughput.ReadCapacityUnits) || aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits) != aws.ToInt64(newProvisionedThroughput.WriteCapacityUnits) {
-			action.ProvisionedThroughput = newProvisionedThroughput
-			hasUpdate = true
+		var tablePT provisionedThroughputModel
+		d := fwflex.Flatten(ctx, g.ProvisionedThroughput, &tablePT)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		gsiPT, d := new.ProvisionedThroughput.ToPtr(ctx)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if gsiPT.Equal(tablePT) {
+			tflog.Debug(ctx, "GSI provisioned throughput matches table provisioned throughput", map[string]any{
+				"table_name": new.TableName.ValueString(),
+				"index_name": new.IndexName.ValueString(),
+			})
+		} else {
+			if !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput) {
+				hasUpdate = true
+				var pt awstypes.ProvisionedThroughput
+				ptM, d := new.ProvisionedThroughput.ToPtr(ctx)
+				response.Diagnostics.Append(d...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				flex.Expand(ctx, ptM, &pt)
+				action.ProvisionedThroughput = &pt
+			}
 		}
 	} else {
 		var odts []onDemandThroughputModel
@@ -700,16 +751,15 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 type resourceGlobalSecondaryIndexModel struct {
 	framework.WithRegionModel
 
-	ARN                 types.String                                             `tfsdk:"arn"`
-	IndexName           types.String                                             `tfsdk:"index_name"`
-	KeySchema           fwtypes.ListNestedObjectValueOf[keySchemaModel]          `tfsdk:"key_schema"`
-	NonKeyAttributes    fwtypes.SetOfString                                      `tfsdk:"non_key_attributes"`
-	ProjectionType      fwtypes.StringEnum[awstypes.ProjectionType]              `tfsdk:"projection_type"`
-	ReadCapacity        types.Int64                                              `tfsdk:"read_capacity"`
-	TableName           types.String                                             `tfsdk:"table_name"`
-	WriteCapacity       types.Int64                                              `tfsdk:"write_capacity"`
-	OnDemandThroughputs fwtypes.ListNestedObjectValueOf[onDemandThroughputModel] `tfsdk:"on_demand_throughput"`
-	WarmThroughputs     fwtypes.ListNestedObjectValueOf[warmThroughputModel]     `tfsdk:"warm_throughput"`
+	ARN                   types.String                                                `tfsdk:"arn"`
+	IndexName             types.String                                                `tfsdk:"index_name"`
+	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
+	NonKeyAttributes      fwtypes.SetOfString                                         `tfsdk:"non_key_attributes"`
+	ProjectionType        fwtypes.StringEnum[awstypes.ProjectionType]                 `tfsdk:"projection_type"`
+	TableName             types.String                                                `tfsdk:"table_name"`
+	OnDemandThroughputs   fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
+	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
+	WarmThroughputs       fwtypes.ListNestedObjectValueOf[warmThroughputModel]        `tfsdk:"warm_throughput"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
@@ -764,12 +814,20 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		data.NonKeyAttributes = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
 	}
 
-	if g.ProvisionedThroughput != nil {
-		data.ReadCapacity = types.Int64Value(aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits))
-		data.WriteCapacity = types.Int64Value(aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits))
+	if g.ProvisionedThroughput == nil {
+		data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfNull[provisionedThroughputModel](ctx)
 	} else {
-		data.ReadCapacity = types.Int64Value(0)
-		data.WriteCapacity = types.Int64Value(0)
+		var ptM provisionedThroughputModel
+		d := fwflex.Flatten(ctx, g.ProvisionedThroughput, &ptM)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		if ptM.IsZero() {
+			data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfNull[provisionedThroughputModel](ctx)
+		} else {
+			data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []provisionedThroughputModel{ptM})
+		}
 	}
 
 	if g.OnDemandThroughput != nil {
@@ -810,6 +868,23 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 type onDemandThroughputModel struct {
 	MaxReadRequestUnits  types.Int64 `tfsdk:"max_read_request_units"`
 	MaxWriteRequestUnits types.Int64 `tfsdk:"max_write_request_units"`
+}
+
+type provisionedThroughputModel struct {
+	ReadCapacityUnits  types.Int64 `tfsdk:"read_capacity_units"`
+	WriteCapacityUnits types.Int64 `tfsdk:"write_capacity_units"`
+}
+
+func (m provisionedThroughputModel) IsZero() bool {
+	return int64IsZero(m.ReadCapacityUnits) && int64IsZero(m.WriteCapacityUnits)
+}
+
+func int64IsZero(v types.Int64) bool {
+	return v.IsNull() || v.ValueInt64() == 0
+}
+
+func (m provisionedThroughputModel) Equal(o provisionedThroughputModel) bool {
+	return m.ReadCapacityUnits.Equal(o.ReadCapacityUnits) && m.WriteCapacityUnits.Equal(o.WriteCapacityUnits)
 }
 
 type warmThroughputModel struct {
