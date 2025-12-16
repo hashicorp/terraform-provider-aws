@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +24,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
 
 	originalSegmentValue := "segmentValue1"
+	expectedJSONOriginal := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)
 	updatedSegmentValue := "segmentValue2"
+	expectedJSONUpdated := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -35,11 +36,11 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(originalSegmentValue),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSONOriginal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
 				),
 			},
@@ -50,12 +51,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 			},
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(updatedSegmentValue),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+					acctest.CheckResourceAttrJSONNoDiff(resourceName, "policy_document", expectedJSONUpdated),
 				),
 			},
 		},
@@ -166,6 +164,300 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidAS
 	})
 }
 
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPolicies(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPolicies(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policies":`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"testpolicy"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRules(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRules(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"attachment-routing-policy-rules":`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-label"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorRoutingPoliciesWrongVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWrongVersion(),
+				ExpectError: regexache.MustCompile(`routing_policies requires version 2025.11`),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorAttachmentRoutingPolicyRulesWrongVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRulesWrongVersion(),
+				ExpectError: regexache.MustCompile(`attachment_routing_policy_rules requires version 2025.11`),
+			},
+		},
+	})
+}
+
+// Routing Policies - All Condition Types
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditionTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-equals"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-cidr"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"asn-in-as-path"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"community-in-list"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"med-equals"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - All Action Types
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllActionTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"drop"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prepend-asn-list"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-med"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-local-preference"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"add-community"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - Condition Logic AND
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicAnd(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"and"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - Condition Logic OR
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicOr(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"or"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - Multiple Policies
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesMultiplePolicies(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"inboundpolicy"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"outboundpolicy"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - Outbound Direction
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesOutbound(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-direction":"outbound"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - With Description
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-description":"Filter and control inbound routes"`)),
+				),
+			},
+		},
+	})
+}
+
+// Routing Policies - Error Duplicate Name
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRoutingPolicyName(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRoutingPolicyName(),
+				ExpectError: regexache.MustCompile(`duplicate routing_policy_name`),
+			},
+		},
+	})
+}
+
+// Routing Policies - Error Duplicate Rule Number
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRuleNumber(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRuleNumber(),
+				ExpectError: regexache.MustCompile(`duplicate rule_number`),
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -173,15 +465,11 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Core Network ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
-		// pass in latestPolicyVersionId to get the latest version id by default
-		const latestPolicyVersionId = -1
-		_, err := tfnetworkmanager.FindCoreNetworkPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, aws.Int32(latestPolicyVersionId))
+		// pass in latestPolicyVersionID to get the latest version id by default
+		const latestPolicyVersionID = -1
+		_, err := tfnetworkmanager.FindCoreNetworkPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, latestPolicyVersionID)
 
 		return err
 	}
@@ -566,100 +854,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 `, acctest.Region())
 }
 
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPolicies(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPolicies(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policies":`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"testpolicy"`)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRules(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRules(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"attachment-routing-policy-rules":`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-label"`)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorRoutingPoliciesWrongVersion(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWrongVersion(),
-				ExpectError: regexache.MustCompile(`routing_policies requires version 2025.11`),
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorAttachmentRoutingPolicyRulesWrongVersion(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRulesWrongVersion(),
-				ExpectError: regexache.MustCompile(`attachment_routing_policy_rules requires version 2025.11`),
-			},
-		},
-	})
-}
-
 func testAccCoreNetworkPolicyAttachmentConfig_routingPolicies() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
@@ -924,32 +1118,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 `, acctest.Region())
 }
 
-// Routing Policies - All Condition Types
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditionTypes(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-equals"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-cidr"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"asn-in-as-path"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"community-in-list"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"med-equals"`)),
-				),
-			},
-		},
-	})
-}
-
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
@@ -1054,33 +1222,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.Region())
-}
-
-// Routing Policies - All Action Types
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllActionTypes(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"drop"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"allow"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prepend-asn-list"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-med"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-local-preference"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"add-community"`)),
-				),
-			},
-		},
-	})
 }
 
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes() string {
@@ -1266,28 +1407,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 `, acctest.Region())
 }
 
-// Routing Policies - Condition Logic AND
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicAnd(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"and"`)),
-				),
-			},
-		},
-	})
-}
-
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
@@ -1342,28 +1461,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 `, acctest.Region())
 }
 
-// Routing Policies - Condition Logic OR
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicOr(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"or"`)),
-				),
-			},
-		},
-	})
-}
-
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
@@ -1416,29 +1513,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.Region())
-}
-
-// Routing Policies - Multiple Policies
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesMultiplePolicies(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"inboundpolicy"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"outboundpolicy"`)),
-				),
-			},
-		},
-	})
 }
 
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies() string {
@@ -1512,28 +1586,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 `, acctest.Region())
 }
 
-// Routing Policies - Outbound Direction
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesOutbound(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-direction":"outbound"`)),
-				),
-			},
-		},
-	})
-}
-
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
@@ -1581,28 +1633,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.Region())
-}
-
-// Routing Policies - With Description
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescription(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-description":"Filter and control inbound routes"`)),
-				),
-			},
-		},
-	})
 }
 
 func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription() string {
@@ -1653,24 +1683,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.Region())
-}
-
-// Routing Policies - Error Duplicate Name
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRoutingPolicyName(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRoutingPolicyName(),
-				ExpectError: regexache.MustCompile(`duplicate routing_policy_name`),
-			},
-		},
-	})
 }
 
 func testAccCoreNetworkPolicyAttachmentConfig_duplicateRoutingPolicyName() string {
@@ -1739,24 +1751,6 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.Region())
-}
-
-// Routing Policies - Error Duplicate Rule Number
-func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRuleNumber(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRuleNumber(),
-				ExpectError: regexache.MustCompile(`duplicate rule_number`),
-			},
-		},
-	})
 }
 
 func testAccCoreNetworkPolicyAttachmentConfig_duplicateRuleNumber() string {
