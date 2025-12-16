@@ -1780,7 +1780,7 @@ func (expander *autoExpander) convertElementToXMLWrapperItem(ctx context.Context
 	case basetypes.Int32Valuable:
 		return convertInt32ValueableToXMLItem(ctx, elemTyped, itemValue, targetElemType)
 	default:
-		return convertComplexValueToXMLItem(elem, itemValue, targetElemType)
+		return convertComplexValueToXMLItem(elem, itemValue)
 	}
 }
 
@@ -1841,7 +1841,7 @@ func convertInt32ValueableToXMLItem(ctx context.Context, elem basetypes.Int32Val
 }
 
 // convertComplexValueToXMLItem handles complex type conversions
-func convertComplexValueToXMLItem(elem attr.Value, itemValue reflect.Value, targetElemType reflect.Type) diag.Diagnostics {
+func convertComplexValueToXMLItem(elem attr.Value, itemValue reflect.Value) diag.Diagnostics {
 	if elem != nil && !elem.IsNull() && !elem.IsUnknown() {
 		if itemValue.Type().AssignableTo(reflect.TypeOf(elem)) {
 			itemValue.Set(reflect.ValueOf(elem))
@@ -2239,7 +2239,7 @@ func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type)
 }
 
 // convertCollectionToItemsQuantity converts a source collection to Items slice and Quantity fields
-func (expander autoExpander) convertCollectionToItemsQuantity(ctx context.Context, sourceFieldVal reflect.Value, targetPath path.Path, itemsField, quantityField reflect.Value) diag.Diagnostics {
+func (expander autoExpander) convertCollectionToItemsQuantity(ctx context.Context, sourceFieldVal reflect.Value, itemsField, quantityField reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
@@ -2381,7 +2381,7 @@ func (expander autoExpander) shouldConvertToXMLWrapper(sourceFieldVal, targetFie
 }
 
 // convertToXMLWrapper converts a source collection to an XML wrapper structure
-func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFieldVal reflect.Value, targetPath path.Path, targetFieldVal reflect.Value) diag.Diagnostics {
+func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourceFieldVal reflect.Value, targetFieldVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
@@ -2606,7 +2606,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 				if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 					// Convert the collection to wrapper slice and Quantity
-					diags.Append(expander.convertCollectionToItemsQuantity(ctx, sourceFieldVal, targetPath.AtName(wrapperFieldName), itemsField, quantityField)...)
+					diags.Append(expander.convertCollectionToItemsQuantity(ctx, sourceFieldVal, itemsField, quantityField)...)
 					if diags.HasError() {
 						return diags
 					}
@@ -2677,7 +2677,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 			// Check if we need special XML wrapper conversion
 			if expander.shouldConvertToXMLWrapper(sourceFieldVal, targetFieldVal) {
 				// Convert collection to XML wrapper structure
-				diags.Append(expander.convertToXMLWrapper(ctx, sourceFieldVal, targetPath.AtName(targetFieldName), targetFieldVal)...)
+				diags.Append(expander.convertToXMLWrapper(ctx, sourceFieldVal, targetFieldVal)...)
 				if diags.HasError() {
 					return diags
 				}

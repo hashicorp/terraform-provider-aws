@@ -111,7 +111,6 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
 			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
-
 			// Special case: Check if source is XML wrapper struct and target has xmlwrapper fields
 			if potentialXMLWrapperStruct(typFrom) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct", map[string]any{
@@ -1774,11 +1773,11 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom ref
 	}
 
 	// Rule 1: Flatten Items field directly to collection
-	return flattener.xmlWrapperFlattenRule1(ctx, vFrom, tTo, vTo, wrapperField, opts)
+	return flattener.xmlWrapperFlattenRule1(ctx, vFrom, tTo, vTo, opts)
 }
 
 // xmlWrapperFlattenRule1 handles Rule 1: flatten Items field directly to collection
-func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string, opts tagOptions) diag.Diagnostics {
+func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the Items field from the source wrapper struct
