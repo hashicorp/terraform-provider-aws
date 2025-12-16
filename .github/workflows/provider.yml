@@ -354,6 +354,9 @@ jobs:
           name: terraform-plugin-dir
           path: terraform-plugin-dir
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+        name: Make provider binary executable
+        run: chmod +x terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/*/terraform-provider-aws
+      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
