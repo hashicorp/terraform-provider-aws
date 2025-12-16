@@ -425,7 +425,7 @@ variable odb_network_id {
 
 resource "aws_odb_cloud_vm_cluster" "test" {
   display_name                    = %[1]q
-  cloud_exadata_infrastructure_id = "var.cloud_exadata_infrastructure_id"
+  cloud_exadata_infrastructure_id = var.cloud_exadata_infrastructure_id
   cpu_core_count                  = 6
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
@@ -447,23 +447,28 @@ resource "aws_odb_cloud_vm_cluster" "test" {
 `, rName)
 }
 func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisplayName, sshKey string) (string, string) {
-	//exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
-	//odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
-	//exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
-	//odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
 	vmcNoTag := fmt.Sprintf(`
+
+%s
+
+%s
+
 data "aws_odb_db_servers" "test" {
-  cloud_exadata_infrastructure_id = "arn:aws:odb:us-east-1:529088294447:cloud-exadata-infrastructure/exa_no76sr45tx"
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
 resource "aws_odb_cloud_vm_cluster" "test" {
-  display_name                    = %[1]q
-  cloud_exadata_infrastructure_arn = "arn:aws:odb:us-east-1:529088294447:cloud-exadata-infrastructure/exa_no76sr45tx"
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
   cpu_core_count                  = 16
   gi_version                      = "26.0.0.0"
   hostname_prefix                 = "apollo-12"
-  ssh_public_keys                 = ["%[2]s"]
-  odb_network_arn                  = "arn:aws:odb:us-east-1:529088294447:odb-network/odbnet_l2r34c1eic"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
@@ -478,22 +483,26 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   }
 
 }
-`, vmClusterDisplayName, sshKey)
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
 
 	vmcWithTag := fmt.Sprintf(`
 
+%s
+
+%s
+
 data "aws_odb_db_servers" "test" {
-  cloud_exadata_infrastructure_id = "arn:aws:odb:us-east-1:529088294447:cloud-exadata-infrastructure/exa_no76sr45tx"
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 
 resource "aws_odb_cloud_vm_cluster" "test" {
-  display_name                    = %[1]q
-  cloud_exadata_infrastructure_arn = "arn:aws:odb:us-east-1:529088294447:cloud-exadata-infrastructure/exa_no76sr45tx"
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
   cpu_core_count                  = 16
   gi_version                      = "26.0.0.0"
   hostname_prefix                 = "apollo-12"
-  ssh_public_keys                 = ["%[2]s"]
-  odb_network_arn                  = "arn:aws:odb:us-east-1:529088294447:odb-network/odbnet_l2r34c1eic"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
@@ -512,7 +521,7 @@ resource "aws_odb_cloud_vm_cluster" "test" {
   }
 
 }
-`, vmClusterDisplayName, sshKey)
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
 	return vmcNoTag, vmcWithTag
 }
 
