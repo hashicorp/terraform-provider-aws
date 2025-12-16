@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +64,7 @@ func resourceConnectPeer() *schema.Resource {
 						"peer_asn": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 4294967295),
+							ValidateFunc: verify.IntBetween64(1, 1<<32-1), // 4294967295
 						},
 					},
 				},
