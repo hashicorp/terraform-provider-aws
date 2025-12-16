@@ -179,6 +179,50 @@ clean-go-cache-trim: prereq-go ## Trim Go build cache to manageable size (keeps 
 		echo "make: No cache directory found at $$cache_dir" ; \
 	fi
 
+cache-info: prereq-go ## Display Go cache and GitHub Actions cache information
+	@echo "=== Go Cache Information ==="
+	@gocache=$$(go env GOCACHE) ; \
+	gomodcache=$$(go env GOMODCACHE) ; \
+	echo "GOCACHE:     $$gocache" ; \
+	echo "GOMODCACHE:  $$gomodcache" ; \
+	echo "" ; \
+	if [ -d "$$gocache" ]; then \
+		size=$$(du -sh "$$gocache" 2>/dev/null | cut -f1) ; \
+		files=$$(find "$$gocache" -type f 2>/dev/null | wc -l | xargs) ; \
+		echo "Build cache size:  $$size ($$files files)" ; \
+		recent=$$(find "$$gocache" -type f -mtime -1 2>/dev/null | wc -l | xargs) ; \
+		week=$$(find "$$gocache" -type f -mtime -7 2>/dev/null | wc -l | xargs) ; \
+		old=$$(find "$$gocache" -type f -mtime +7 2>/dev/null | wc -l | xargs) ; \
+		echo "  < 1 day old:  $$recent files" ; \
+		echo "  < 7 days old: $$week files" ; \
+		echo "  > 7 days old: $$old files" ; \
+	else \
+		echo "Build cache: not found" ; \
+	fi ; \
+	echo "" ; \
+	if [ -d "$$gomodcache" ]; then \
+		size=$$(du -sh "$$gomodcache" 2>/dev/null | cut -f1) ; \
+		echo "Module cache size: $$size" ; \
+	else \
+		echo "Module cache: not found" ; \
+	fi ; \
+	echo "" ; \
+	echo "=== GitHub Actions Cache (if in CI) ===" ; \
+	if [ -n "$$GITHUB_ACTIONS" ]; then \
+		echo "Running in GitHub Actions" ; \
+		echo "CACHE_DATE: $${CACHE_DATE:-not set}" ; \
+		echo "Runner OS:  $${RUNNER_OS:-not set}" ; \
+		if [ -n "$$ACTIONS_CACHE_URL" ]; then \
+			echo "Cache service: available" ; \
+		else \
+			echo "Cache service: not available" ; \
+		fi ; \
+	else \
+		echo "Not running in GitHub Actions" ; \
+		echo "To check GitHub cache usage, visit:" ; \
+		echo "  https://github.com/hashicorp/terraform-provider-aws/actions/caches" ; \
+	fi
+
 clean-make-tests: ## Clean up artifacts from make tests
 	@echo "make: Cleaning up artifacts from make tests..."
 	@rm -rf sweeper-bin
@@ -685,17 +729,6 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
 
-test: prereq-go fmt-check ## Run unit tests
-	@branch=$$(git rev-parse --abbrev-ref HEAD); \
-	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	@# Use Go's native parallelism for efficient shared dependency compilation
-	@# Override via: make test TEST_P=8 TEST_PARALLEL=16
-	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4); \
-	test_p=$${TEST_P:-4}; \
-	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
-	printf "make: Using -p %s (package build parallelism) and -parallel %s (test parallelism)...\n" "$$test_p" "$$test_parallel"; \
-	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -p $$test_p -parallel $$test_parallel -run '^Test[^A]|^TestA[^c]|^TestAc[^c]' $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
-
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
@@ -1050,11 +1083,13 @@ yamllint: ## [CI] YAML Linting / yamllint
 .PHONY: \
 	acctest-lint \
 	build \
+	cache-info \
 	changelog-misspell \
 	ci \
 	ci-quick \
 	clean \
 	clean-go \
+	clean-go-cache-trim \
 	clean-make-tests \
 	clean-tidy \
 	copyright \
