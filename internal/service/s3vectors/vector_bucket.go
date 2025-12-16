@@ -282,6 +282,9 @@ func (r vectorBucketResource) List(ctx context.Context, request list.ListRequest
 				result.Diagnostics.Append(diags...)
 			}
 
+			data.Tags = tftags.Null
+			data.TagsAll = tftags.Null
+
 			if diags := result.Resource.Set(ctx, &data); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				return
