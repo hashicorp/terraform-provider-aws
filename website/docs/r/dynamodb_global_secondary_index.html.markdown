@@ -16,10 +16,16 @@ The following **experimental** DynamoDB table description models the table and G
 resource "aws_dynamodb_global_secondary_index" "GameTitleIndex" {
   table              = aws_dynamodb_table.basic-dynamodb-table.name
   name               = "GameTitleIndex"
-  write_capacity     = 10
-  read_capacity      = 10
-  projection_type    = "INCLUDE"
-  non_key_attributes = ["UserId"]
+
+  projection {
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["UserId"]
+  }
+
+  provisioned_throughput {
+    write_capacity_units = 10
+    read_capacity_units  = 10
+  }
 
   key_schema {
     attribute_name = "GameTitle"
@@ -77,11 +83,20 @@ The following arguments are optional:
 
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
+* `projection` - (Required) Describes which attributes from the table are represented in the index.
+  See [`projection` below](#projection).
 * `provisioned_throughput` - (Optional) Provisioned throughput for the index.
   See [`provisioned_throughput` below](#provisioned_throughput).
   Required if the table's `billing_mode` is `PROVISIONED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
+
+### `projection`
+
+* `non_key_attributes` - (Optional) Specifies which additional attributes to include in the index.
+  Only valid when `projection_type` is `INCLUDE`.`
+* `projection_type` - (Required) The set of attributes represented in the index.
+  One of `ALL`, `INCLUDE`, or `KEYS_ONLY`.
 
 ### `provisioned_throughput`
 

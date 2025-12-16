@@ -50,8 +50,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -63,6 +61,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"read_capacity_units":  knownvalue.Int64Exact(1),
@@ -1363,11 +1367,15 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T)
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("test1"),
-						knownvalue.StringExact("test2"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type": knownvalue.StringExact("INCLUDE"),
+							"non_key_attributes": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("test1"),
+								knownvalue.StringExact("test2"),
+							}),
+						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("INCLUDE")),
 				},
 			},
 			{
@@ -1399,7 +1407,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{}),
+				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes_updateSetup(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
@@ -1407,6 +1415,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("ALL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 				},
 			},
 			{
@@ -1423,11 +1437,15 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("test1"),
-						knownvalue.StringExact("test2"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type": knownvalue.StringExact("INCLUDE"),
+							"non_key_attributes": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("test1"),
+								knownvalue.StringExact("test2"),
+							}),
+						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("INCLUDE")),
 				},
 			},
 			{
@@ -1554,12 +1572,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 						"key_type":       "HASH",
 					}),
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
-					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"read_capacity_units":  knownvalue.Int64Exact(1),
@@ -1569,6 +1591,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"read_capacity_units":  knownvalue.Int64Exact(1),
@@ -1593,8 +1621,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 						"key_type":       "HASH",
 					}),
 					resource.TestCheckResourceAttr(resourceName1, "index_name", rName1),
-					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
@@ -1605,12 +1631,16 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 						"key_type":       "HASH",
 					}),
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
-					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"read_capacity_units":  knownvalue.Int64Exact(2),
@@ -1620,6 +1650,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"projection_type":    knownvalue.StringExact("ALL"),
+							"non_key_attributes": knownvalue.Null(),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"read_capacity_units":  knownvalue.Int64Exact(2),
@@ -2142,7 +2178,9 @@ func testAccGlobalSecondaryIndexConfig_basic(tableName, indexName string) string
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2175,7 +2213,9 @@ func testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(tableName, index
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = %[3]d
@@ -2208,7 +2248,9 @@ func testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
   provisioned_throughput {
     read_capacity_units  = %[3]d
     write_capacity_units = %[3]d
@@ -2259,7 +2301,9 @@ func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(table
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = %[3]d
@@ -2292,7 +2336,9 @@ func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTabl
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = %[4]d
@@ -2325,7 +2371,9 @@ func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(tableName, ind
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2358,7 +2406,9 @@ func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput(t
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2401,7 +2451,9 @@ func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWi
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2444,7 +2496,9 @@ func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWi
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2499,7 +2553,9 @@ func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(table
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2537,7 +2593,9 @@ func testAccGlobalSecondaryIndexConfig_validateAttribute_missmatchedType(tableNa
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   key_schema {
     attribute_name = %[1]q
@@ -2593,7 +2651,9 @@ func testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(tabl
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   # hashes
   %[3]s
@@ -2627,18 +2687,18 @@ resource "aws_dynamodb_table" "test" {
 
 func testAccGlobalSecondaryIndexConfig_nonKeyAttributes(tableName, indexName string, nonKeyAttributes []string) string {
 	nka := ""
-	projectionType := "ALL"
 	if len(nonKeyAttributes) > 0 {
 		nka = strings.Join(nonKeyAttributes, `", "`)
-		nka = fmt.Sprintf(`non_key_attributes = ["%s"]`, nka)
-		projectionType = "INCLUDE"
 	}
 
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = %[3]q
+  projection {
+    projection_type = "INCLUDE"
+    non_key_attributes = ["%[3]s"]
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2651,7 +2711,6 @@ resource "aws_dynamodb_global_secondary_index" "test" {
     key_type       = "HASH"
   }
 
-  %[4]s
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2665,7 +2724,42 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 }
-`, tableName, indexName, projectionType, nka)
+`, tableName, indexName, nka)
+}
+
+func testAccGlobalSecondaryIndexConfig_nonKeyAttributes_updateSetup(tableName, indexName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection {
+    projection_type = "ALL"
+  }
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
+  key_schema {
+    attribute_name = %[1]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName)
 }
 
 func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(tableName, indexName, hashKey string) string {
@@ -2673,7 +2767,9 @@ func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(tableName, indexN
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2706,7 +2802,9 @@ func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(tableName, ind
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2744,7 +2842,9 @@ func testAccGlobalSecondaryIndexConfig_multipleGsi_create(tableName, indexName1,
 resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2761,7 +2861,9 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2810,7 +2912,9 @@ func testAccGlobalSecondaryIndexConfig_multipleGsi_update(tableName, indexName1,
 resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
   provisioned_throughput {
     read_capacity_units  = %[4]d
     write_capacity_units = %[4]d
@@ -2826,7 +2930,9 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
   provisioned_throughput {
     read_capacity_units  = %[4]d
     write_capacity_units = %[4]d
@@ -2858,7 +2964,9 @@ func testAccGlobalSecondaryIndexConfig_multipleGsi_badKeys(tableName, indexName1
 resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2875,7 +2983,9 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -2936,7 +3046,9 @@ func testAccGlobalSecondaryIndexConfig_migrate_single(tableName, indexName1 stri
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -3022,7 +3134,9 @@ func testAccGlobalSecondaryIndexConfig_migrate_multiple(tableName, indexName1, i
 resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -3039,7 +3153,9 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 resource "aws_dynamodb_global_secondary_index" "test2" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[3]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1
@@ -3088,7 +3204,9 @@ func testAccGlobalSecondaryIndexConfig_migrate_partial(tableName, indexName1, in
 resource "aws_dynamodb_global_secondary_index" "test1" {
   table_name      = aws_dynamodb_table.test.name
   index_name      = %[2]q
-  projection_type = "ALL"
+  projection {
+    projection_type = "ALL"
+  }
 
   provisioned_throughput {
     read_capacity_units  = 1

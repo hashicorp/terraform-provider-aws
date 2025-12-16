@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -71,22 +69,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"index_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"non_key_attributes": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-					setplanmodifier.RequiresReplace(),
-				},
-			},
-			"projection_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.ProjectionType](),
-				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -151,6 +133,36 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"projection": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[projectionModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"non_key_attributes": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.UseStateForUnknown(),
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+						"projection_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.ProjectionType](),
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplace(),
 				},
 			},
 			"provisioned_throughput": schema.ListNestedBlock{
@@ -237,7 +249,6 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	knownAttributes := map[string]awstypes.ScalarAttributeType{}
 	billingMode := awstypes.BillingModeProvisioned
 	if table.BillingModeSummary != nil {
 		billingMode = table.BillingModeSummary.BillingMode
@@ -274,6 +285,8 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		AttributeDefinitions: []awstypes.AttributeDefinition{},
 	}
 
+	knownAttributes := map[string]awstypes.ScalarAttributeType{}
+
 	for _, ad := range table.AttributeDefinitions {
 		input.AttributeDefinitions = append(input.AttributeDefinitions, ad)
 		knownAttributes[aws.ToString(ad.AttributeName)] = ad.AttributeType
@@ -302,51 +315,16 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		})
 	}
 
-	projection := &awstypes.Projection{
-		ProjectionType: data.ProjectionType.ValueEnum(),
-	}
-
-	if !data.NonKeyAttributes.IsNull() && !data.NonKeyAttributes.IsUnknown() {
-		response.Diagnostics.Append(
-			data.NonKeyAttributes.ElementsAs(ctx, &projection.NonKeyAttributes, false)...,
-		)
+	var projection awstypes.Projection
+	response.Diagnostics.Append(fwflex.Expand(ctx, data.Projection, &projection)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	action := &awstypes.CreateGlobalSecondaryIndexAction{
 		IndexName:  data.IndexName.ValueStringPointer(),
 		KeySchema:  keySchema,
-		Projection: projection,
-	}
-
-	billingMode := awstypes.BillingModeProvisioned
-	if table.BillingModeSummary != nil {
-		billingMode = table.BillingModeSummary.BillingMode
-	}
-
-	if billingMode == awstypes.BillingModeProvisioned {
-		if data.ProvisionedThroughput.IsNull() || data.ProvisionedThroughput.IsUnknown() {
-			response.Diagnostics.Append(
-				validatordiag.InvalidAttributeCombinationDiagnostic(
-					path.Root("provisioned_throughput"),
-					fmt.Sprintf("Attribute %q must be specified when the associated table's attribute \"billing_mode\" is %q.",
-						path.Root("provisioned_throughput").String(),
-						awstypes.BillingModeProvisioned,
-					),
-				),
-			)
-		}
-	} else {
-		if !data.ProvisionedThroughput.IsNull() && !data.ProvisionedThroughput.IsUnknown() {
-			response.Diagnostics.Append(
-				validatordiag.InvalidAttributeCombinationDiagnostic(
-					path.Root("provisioned_throughput"),
-					fmt.Sprintf("Attribute %q cannot be specified when the associated table's attribute \"billing_mode\" is %q.",
-						path.Root("provisioned_throughput").String(),
-						billingMode,
-					),
-				),
-			)
-		}
+		Projection: &projection,
 	}
 
 	if billingMode == awstypes.BillingModeProvisioned {
@@ -790,10 +768,9 @@ type resourceGlobalSecondaryIndexModel struct {
 	ARN                   types.String                                                `tfsdk:"arn"`
 	IndexName             types.String                                                `tfsdk:"index_name"`
 	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
-	NonKeyAttributes      fwtypes.SetOfString                                         `tfsdk:"non_key_attributes"`
-	ProjectionType        fwtypes.StringEnum[awstypes.ProjectionType]                 `tfsdk:"projection_type"`
 	TableName             types.String                                                `tfsdk:"table_name"`
 	OnDemandThroughputs   fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
+	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
 	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
 	WarmThroughputs       fwtypes.ListNestedObjectValueOf[warmThroughputModel]        `tfsdk:"warm_throughput"`
 
@@ -836,19 +813,13 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		data.KeySchema = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []keySchemaModel{})
 	}
 
-	var nkas []attr.Value
-	if g.Projection != nil {
-		data.ProjectionType = fwtypes.StringEnumValue(g.Projection.ProjectionType)
-		for _, n := range g.Projection.NonKeyAttributes {
-			nkas = append(nkas, types.StringValue(n))
-		}
+	var projection projectionModel
+	d := fwflex.Flatten(ctx, g.Projection, &projection)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
 	}
-
-	if len(nkas) > 0 {
-		data.NonKeyAttributes = fwtypes.NewSetValueOfMust[basetypes.StringValue](ctx, nkas)
-	} else {
-		data.NonKeyAttributes = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
-	}
+	data.Projection = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []projectionModel{projection})
 
 	if g.ProvisionedThroughput == nil {
 		data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfNull[provisionedThroughputModel](ctx)
@@ -904,6 +875,11 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 type onDemandThroughputModel struct {
 	MaxReadRequestUnits  types.Int64 `tfsdk:"max_read_request_units"`
 	MaxWriteRequestUnits types.Int64 `tfsdk:"max_write_request_units"`
+}
+
+type projectionModel struct {
+	NonKeyAttributes fwtypes.SetOfString                         `tfsdk:"non_key_attributes"`
+	ProjectionType   fwtypes.StringEnum[awstypes.ProjectionType] `tfsdk:"projection_type"`
 }
 
 type provisionedThroughputModel struct {
