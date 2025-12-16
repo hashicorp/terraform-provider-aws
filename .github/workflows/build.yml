@@ -123,7 +123,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        goos: [freebsd, windows, linux, darwin]
+        goos: [freebsd, windows, linux, darwin, openbsd]
         goarch: ["386", "amd64", "arm", "arm64"]
         exclude:
           - goos: freebsd
