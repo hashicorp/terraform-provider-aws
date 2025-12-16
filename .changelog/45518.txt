@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fixed, AUTH to RBAC migration. Earlier `auth_token_update_strategy` always required `auth_token` but it was breaking while migrating from AUTH to RBAC. After the current fix, auth_token_update_strategy will still be requiring auth_token except when auth_token_update_strategy is DELETE . This is handled with CustomizeDiff authTokenUpdateStrategyValidate()
+```
