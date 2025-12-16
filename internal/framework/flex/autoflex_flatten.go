@@ -2169,12 +2169,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		return diags
 	}
 
-	// Special handling: Check if source is XML wrapper struct and target has xmlwrapper tags
-	if handled, d := handleDirectXMLWrapperToStruct(ctx, valFrom, valTo, typeFrom, typeTo, flexer); handled {
-		diags.Append(d...)
-		return diags
-	}
-
 	// Handle XML wrapper split patterns where complex source fields
 	// need to be split into multiple target collection fields
 	processedFields := make(map[string]bool)
