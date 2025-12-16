@@ -625,11 +625,8 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   }
 
 }
-
-
-
-
 `, exaInfraRes, odbNetRes, avmcDisplayName)
+
 	withTag := fmt.Sprintf(`
 %s
 
@@ -659,10 +656,6 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   }
 
 }
-
-
-
-
 `, exaInfraRes, odbNetRes, avmcDisplayName)
 
 	return noTag, withTag
