@@ -44,25 +44,10 @@ func (r *resourceEndpointPrivateDNS) ImportState(ctx context.Context, req resour
 {
 	ResourceName:                         resourceName,
 	ImportState:                          true,
-	ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+	ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpc_endpoint_id"),
 	ImportStateVerify:                    true,
 	ImportStateVerifyIdentifierAttribute: "vpc_endpoint_id",
 },
-```
-
-`ImportStateIdFunc`:
-
-```go
-func testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["vpc_endpoint_id"], nil
-	}
-}
 ```
 
 ### Multi-part Identifier
@@ -93,23 +78,8 @@ func (r *resourceRuntimeManagementConfig) ImportState(ctx context.Context, req r
 {
 	ResourceName:                         resourceName,
 	ImportState:                          true,
-	ImportStateIdFunc:                    testAccRuntimeManagementConfigImportStateIdFunc(resourceName),
+	ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "function_name", "qualifier"),
 	ImportStateVerify:                    true,
 	ImportStateVerifyIdentifierAttribute: "function_name",
 },
-```
-
-`ImportStateIdFunc`:
-
-```go
-func testAccRuntimeManagementConfigImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["qualifier"]), nil
-	}
-}
 ```
