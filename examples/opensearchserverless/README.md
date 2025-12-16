@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Amazon OpenSearch Serverless Example
 
 This example creates an OpenSearch Serverless collection with an encryption, network, and data access policy along with an OpenSearch Serverless-managed VPC endpoint and its required VPC resources.

@@ -1,5 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
 
 rules:
   - id: use-acctest-test
@@ -218,18 +218,6 @@ rules:
       retry.NotFoundError {
         $...ARGS,
       }
-    paths:
-      include:
-        - "**/*.go"
-
-  - id: internal-retry-timedout
-    languages: [go]
-    message: "Use retry.TimedOut to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.TimedOut($ERR)
-    fix: |
-      retry.TimedOut($ERR)
     paths:
       include:
         - "**/*.go"

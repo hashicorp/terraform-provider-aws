@@ -184,3 +184,67 @@ func TestDiagnosticsError(t *testing.T) {
 		})
 	}
 }
+
+func TestDiagnosticsString(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName       string
+		diags          diag.Diagnostics
+		nonEmptyString bool
+	}{
+		{
+			testName: "nil Diagnostics",
+		},
+		{
+			testName: "zero length Diagnostics",
+			diags:    diag.Diagnostics{},
+		},
+		{
+			testName:       "single warning Diagnostics",
+			diags:          diag.Diagnostics{diag.Diagnostic{Severity: diag.Warning, Summary: "summary", Detail: "detail"}},
+			nonEmptyString: true,
+		},
+		{
+			testName:       "single error Diagnostics",
+			diags:          diag.Diagnostics{diag.Diagnostic{Severity: diag.Error, Summary: "summary", Detail: "detail"}},
+			nonEmptyString: true,
+		},
+		{
+			testName: "mixed warning and error Diagnostics",
+			diags: diag.Diagnostics{
+				diag.Diagnostic{Severity: diag.Warning, Summary: "summary1", Detail: "detail1"},
+				diag.Diagnostic{Severity: diag.Error, Summary: "summary2", Detail: "detail2"},
+			},
+			nonEmptyString: true,
+		},
+		{
+			testName: "multiple error Diagnostics",
+			diags: diag.Diagnostics{
+				diag.Diagnostic{Severity: diag.Error, Summary: "summary1", Detail: "detail1"},
+				diag.Diagnostic{Severity: diag.Error, Summary: "summary2", Detail: "detail2"},
+			},
+			nonEmptyString: true,
+		},
+		{
+			testName: "multiple warning Diagnostics",
+			diags: diag.Diagnostics{
+				diag.Diagnostic{Severity: diag.Warning, Summary: "summary1", Detail: "detail1"},
+				diag.Diagnostic{Severity: diag.Warning, Summary: "summary2", Detail: "detail2"},
+			},
+			nonEmptyString: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := sdkdiag.DiagnosticsString(testCase.diags)
+
+			if got, want := len(got) > 0, testCase.nonEmptyString; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
