@@ -1773,11 +1773,11 @@ func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom ref
 	}
 
 	// Rule 1: Flatten Items field directly to collection
-	return flattener.xmlWrapperFlattenRule1(ctx, vFrom, tTo, vTo, opts)
+	return flattener.xmlWrapperFlattenRule1(ctx, vFrom, tTo, vTo)
 }
 
 // xmlWrapperFlattenRule1 handles Rule 1: flatten Items field directly to collection
-func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
+func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the Items field from the source wrapper struct
