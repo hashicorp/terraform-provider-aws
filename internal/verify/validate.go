@@ -49,7 +49,7 @@ func StringIsInt32(v any, k string) (ws []string, errors []error) {
 // supporting int64 min/max values that may exceed the platform's int size.
 // This is useful for values like ASNs that can be up to 4294967295.
 func IntBetween64(min, max int64) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (warnings []string, errors []error) {
+	return func(i any, k string) (warnings []string, errors []error) {
 		v, ok := i.(int)
 		if !ok {
 			errors = append(errors, fmt.Errorf("expected type of %s to be int", k))
