@@ -6,6 +6,7 @@ package networkmanager
 import (
 	"context"
 	"log"
+	"math"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -64,7 +65,7 @@ func resourceConnectPeer() *schema.Resource {
 						"peer_asn": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: verify.IntBetween64(1, 1<<32-1), // 4294967295
+							ValidateFunc: verify.IntBetween64(1, math.MaxUint32),
 						},
 					},
 				},
