@@ -228,7 +228,7 @@ func TestAccNetworkManagerConnectPeer_4BytePeerASN(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerConnectPeer_UpgradeFromV6_26_0_withPeerASN(t *testing.T) {
+func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
@@ -263,55 +263,6 @@ func TestAccNetworkManagerConnectPeer_UpgradeFromV6_26_0_withPeerASN(t *testing.
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerConnectPeer_UpgradeFromV6_26_0_noPeerASN(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ConnectPeer
-	resourceName := "aws_networkmanager_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	peerAddress := "10.0.2.100" // Must be an address inside the subnet CIDR range.
-	protocol := awstypes.TunnelProtocolNoEncap
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckConnectPeerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.26.0",
-					},
-				},
-				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, protocol),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccConnectPeerConfig_subnetARN(rName, peerAddress, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
 				),

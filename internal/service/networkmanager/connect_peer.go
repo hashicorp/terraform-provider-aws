@@ -204,7 +204,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.BgpOptions = expandBGPOptions(v.([]any)[0].(map[string]any))
 	}
 
@@ -276,9 +276,13 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.Set(names.AttrARN, connectPeerARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	d.Set("bgp_options", []any{map[string]any{
-		"peer_asn": flex.Int64ToStringValue(connectPeer.Configuration.BgpConfigurations[0].PeerAsn),
-	}})
+	if len(connectPeer.Configuration.BgpConfigurations) > 0 {
+		d.Set("bgp_options", []any{map[string]any{
+			"peer_asn": flex.Int64ToStringValue(connectPeer.Configuration.BgpConfigurations[0].PeerAsn),
+		}})
+	} else {
+		d.Set("bgp_options", nil)
+	}
 	d.Set(names.AttrConfiguration, []any{flattenConnectPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
@@ -349,7 +353,7 @@ func findConnectPeer(ctx context.Context, conn *networkmanager.Client, input *ne
 		return nil, err
 	}
 
-	if output == nil || output.ConnectPeer == nil {
+	if output == nil || output.ConnectPeer == nil || output.ConnectPeer.Configuration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
