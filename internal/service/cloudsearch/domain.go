@@ -14,16 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -115,6 +118,13 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			}),
 			"endpoint_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointOptionsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					optionalComputedBlockModifier(),
+					listplanmodifier.UseStateForUnknown(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"enforce_https": schema.BoolAttribute{
@@ -201,6 +211,13 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			},
 			"scaling_parameters": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingParametersModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					optionalComputedBlockModifier(),
+					listplanmodifier.UseStateForUnknown(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"desired_instance_type": schema.StringAttribute{
@@ -422,7 +439,7 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 	}
 	data.MultiAZ = types.BoolValue(availabilityOptionStatus.Options)
 
-	// Read endpoint options
+	// Read endpoint options (always populated for drift detection)
 	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
 	if err != nil {
 		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
@@ -430,7 +447,7 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 	}
 	data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
 
-	// Read scaling parameters
+	// Read scaling parameters (always populated for drift detection)
 	scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
 	if err != nil {
 		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
@@ -1561,6 +1578,52 @@ func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldMod
 	}
 
 	return m, nil
+}
+
+// optionalComputedBlock is a plan modifier that implements Optional+Computed behavior
+// for ListNestedBlock. This emulates the SDKv2 behavior where a block can be both
+// optional (user can configure it) and computed (provider fills in defaults if not configured).
+//
+// When the block is not configured (null/empty in config):
+// - On Create: sets plan to unknown, allowing provider to return defaults
+// - On Update: preserves prior state value, keeping it stable
+//
+// This is necessary because Framework's ListNestedBlock doesn't have a Computed field
+// like ListAttribute does.
+type optionalComputedBlock struct{}
+
+var _ planmodifier.List = optionalComputedBlock{}
+
+func optionalComputedBlockModifier() planmodifier.List {
+	return optionalComputedBlock{}
+}
+
+func (m optionalComputedBlock) Description(_ context.Context) string {
+	return "Implements Optional+Computed behavior for ListNestedBlock"
+}
+
+func (m optionalComputedBlock) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m optionalComputedBlock) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	// If config has a value (user configured the block), use it as-is
+	if !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) > 0 {
+		return
+	}
+
+	// Block is not configured (null or empty in config)
+	// Check if we have prior state
+	if req.StateValue.IsNull() || len(req.StateValue.Elements()) == 0 {
+		// No prior state (Create case): set plan to unknown
+		// This allows the provider to return defaults without causing
+		// "block count changed from 0 to 1" error
+		resp.PlanValue = basetypes.NewListUnknown(req.PlanValue.ElementType(ctx))
+	} else {
+		// Has prior state (Update case): preserve prior state
+		// This keeps the block stable when user hasn't configured it
+		resp.PlanValue = req.StateValue
+	}
 }
 
 // Helper functions - shared between Framework and SDKv2 implementations
