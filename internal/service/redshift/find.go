@@ -795,6 +795,14 @@ func findSnapshotSchedule(ctx context.Context, conn *redshift.Client, input *red
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func findSnapshotScheduleByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.SnapshotSchedule, error) {
+	input := redshift.DescribeSnapshotSchedulesInput{
+		ScheduleIdentifier: aws.String(id),
+	}
+
+	return findSnapshotSchedule(ctx, conn, &input)
+}
+
 func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Client, clusterID, scheduleID string) (*awstypes.ClusterAssociatedToSchedule, error) {
 	input := redshift.DescribeSnapshotSchedulesInput{
 		ClusterIdentifier:  aws.String(clusterID),

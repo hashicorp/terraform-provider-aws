@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -222,22 +221,4 @@ func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Client,
 	}
 
 	return diags
-}
-
-func findSnapshotScheduleByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.SnapshotSchedule, error) {
-	input := &redshift.DescribeSnapshotSchedulesInput{
-		ScheduleIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeSnapshotSchedules(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.SnapshotSchedules)
 }
