@@ -269,7 +269,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   # Custom error response
   custom_error_response {
     error_code         = 404
-    response_code      = 200
+    response_code      = "200"
     response_page_path = "/404.html"
   }
 
