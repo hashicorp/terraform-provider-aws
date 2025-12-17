@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = var.rName
+  table_name = aws_dynamodb_table.test.name
+  index_name = var.rName
+
   projection {
     projection_type = "ALL"
   }

@@ -1,7 +1,8 @@
 resource "aws_dynamodb_global_secondary_index" "test" {
 {{- template "region" }}
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = var.rName
+  table_name = aws_dynamodb_table.test.name
+  index_name = var.rName
+
   projection {
     projection_type = "ALL"
   }
