@@ -343,9 +343,19 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	response.Diagnostics.Append(r.readDomain(ctx, &data)...)
-	if response.Diagnostics.HasError() {
+	diags := r.readDomain(ctx, &data)
+	response.Diagnostics.Append(diags...)
+
+	// If readDomain returned a warning (resource not found), remove from state.
+	// This handles the case where the domain was deleted outside of Terraform.
+	if diags.HasError() {
 		return
+	}
+	for _, d := range diags {
+		if d.Severity() == diag.SeverityWarning {
+			response.State.RemoveResource(ctx)
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -450,6 +460,14 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	conn := r.Meta().CloudSearchClient(ctx)
 	domainName := new.ID.ValueString()
 	requiresIndexDocuments := false
+
+	// Preserve immutable computed values from prior state.
+	// These don't change after creation (based on immutable domain name).
+	// This prevents plan inconsistencies when Terraform marks them as potentially changing.
+	new.ARN = old.ARN
+	new.DocumentServiceEndpoint = old.DocumentServiceEndpoint
+	new.DomainID = old.DomainID
+	new.SearchServiceEndpoint = old.SearchServiceEndpoint
 
 	// Update scaling parameters only if user configured them or is removing them.
 	// Check config to determine user intent, not plan (which may have synthetic elements).
@@ -578,13 +596,25 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			}
 		}
 
-		// Add or update fields that are in new
+		// Two-pass approach for handling source_fields dependencies:
+		// Pass 1: Create/update fields WITHOUT source_fields (these may be referenced by other fields)
+		// Pass 2: Create/update fields WITH source_fields (these depend on other fields existing)
+		//
+		// This ensures that when a field references another field via source_fields,
+		// the referenced field already exists.
+
+		// Pass 1: Fields without source_fields
 		for name, newField := range newByName {
+			// Skip fields with source_fields - they'll be processed in pass 2
+			if !newField.SourceFields.IsNull() && newField.SourceFields.ValueString() != "" {
+				continue
+			}
+
 			oldField, exists := oldByName[name]
 
 			// If field doesn't exist or has changed, define it
 			if !exists || !indexFieldsEqual(oldField, newField) {
-				apiField, sourceFieldsConfigured, err := expandIndexFieldModel(newField)
+				apiField, _, err := expandIndexFieldModel(newField)
 				if err != nil {
 					response.Diagnostics.AddError(fmt.Sprintf("expanding index field (%s)", name), err.Error())
 					return
@@ -601,10 +631,36 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 					return
 				}
 
-				if sourceFieldsConfigured {
-					tflog.Warn(ctx, "source_fields is configured for index field; if this is a new field, ensure the source field(s) exist before this field", map[string]any{
-						"index_field": name,
-					})
+				requiresIndexDocuments = true
+			}
+		}
+
+		// Pass 2: Fields with source_fields (depend on other fields existing)
+		for name, newField := range newByName {
+			// Only process fields with source_fields in this pass
+			if newField.SourceFields.IsNull() || newField.SourceFields.ValueString() == "" {
+				continue
+			}
+
+			oldField, exists := oldByName[name]
+
+			// If field doesn't exist or has changed, define it
+			if !exists || !indexFieldsEqual(oldField, newField) {
+				apiField, _, err := expandIndexFieldModel(newField)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("expanding index field (%s)", name), err.Error())
+					return
+				}
+
+				defineInput := &cloudsearch.DefineIndexFieldInput{
+					DomainName: aws.String(domainName),
+					IndexField: apiField,
+				}
+
+				_, err = conn.DefineIndexField(ctx, defineInput)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("defining CloudSearch Domain (%s) index field (%s)", domainName, name), err.Error())
+					return
 				}
 
 				requiresIndexDocuments = true
@@ -762,17 +818,113 @@ func indexFieldSemanticEquality(ctx context.Context, oldValue, newValue fwtypes.
 // This is used for set membership comparison to prevent spurious remove/add diffs.
 // With schema defaults properly set (Default: false for booleans), we can use
 // direct comparison instead of treating null/false as equivalent.
+// indexFieldsSemanticEqual compares two index fields for semantic equality.
+// Different field types support different options, so we only compare the
+// attributes that are relevant for the specific field type.
+// See: https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_IndexField.html
 func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
-	return a.Name.Equal(b.Name) &&
-		a.Type.Equal(b.Type) &&
-		a.Facet.Equal(b.Facet) &&
-		a.Highlight.Equal(b.Highlight) &&
-		a.Return.Equal(b.Return) &&
-		a.Search.Equal(b.Search) &&
-		a.Sort.Equal(b.Sort) &&
-		a.AnalysisScheme.Equal(b.AnalysisScheme) &&
-		a.DefaultValue.Equal(b.DefaultValue) &&
-		a.SourceFields.Equal(b.SourceFields)
+	// Name and type must always match
+	if !a.Name.Equal(b.Name) || !a.Type.Equal(b.Type) {
+		return false
+	}
+
+	// Compare type-specific attributes based on field type
+	fieldType := a.Type.ValueString()
+	switch fieldType {
+	case "text":
+		// text: analysis_scheme, default_value, highlight, return, sort, source_fields
+		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+			a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Highlight.Equal(b.Highlight) &&
+			a.Return.Equal(b.Return) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "text-array":
+		// text-array: analysis_scheme, default_value, highlight, return, source_fields
+		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+			a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Highlight.Equal(b.Highlight) &&
+			a.Return.Equal(b.Return) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "literal":
+		// literal: default_value, facet, return, search, sort, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "literal-array":
+		// literal-array: default_value, facet, return, search, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "int":
+		// int: default_value, facet, return, search, sort, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "int-array":
+		// int-array: default_value, facet, return, search, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "double":
+		// double: default_value, facet, return, search, sort, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "double-array":
+		// double-array: default_value, facet, return, search, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "date":
+		// date: default_value, facet, return, search, sort, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "date-array":
+		// date-array: default_value, facet, return, search, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.SourceFields.Equal(b.SourceFields)
+	case "latlon":
+		// latlon: default_value, facet, return, search, sort, source_fields
+		return a.DefaultValue.Equal(b.DefaultValue) &&
+			a.Facet.Equal(b.Facet) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.SourceFields.Equal(b.SourceFields)
+	default:
+		// For unknown types, compare all attributes
+		return a.Facet.Equal(b.Facet) &&
+			a.Highlight.Equal(b.Highlight) &&
+			a.Return.Equal(b.Return) &&
+			a.Search.Equal(b.Search) &&
+			a.Sort.Equal(b.Sort) &&
+			a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+			a.DefaultValue.Equal(b.DefaultValue) &&
+			a.SourceFields.Equal(b.SourceFields)
+	}
 }
 
 // indexFieldsEqual compares two index fields for exact equality (used in Update)
@@ -1525,7 +1677,21 @@ func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfresource.AssertSingleValueResult(output.DomainStatusList)
+	domain, err := tfresource.AssertSingleValueResult(output.DomainStatusList)
+	if err != nil {
+		return nil, err
+	}
+
+	// Treat deleted domains as not found (soft delete).
+	// CloudSearch domains have Deleted=true status after deletion but still
+	// appear in DescribeDomains API response.
+	if aws.ToBool(domain.Deleted) {
+		return nil, &retry.NotFoundError{
+			Message: "domain is deleted",
+		}
+	}
+
+	return domain, nil
 }
 
 func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.AvailabilityOptionsStatus, error) {
