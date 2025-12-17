@@ -7,11 +7,13 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,12 +100,15 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule awstypes.FirewallRule) bool {
-		if v, ok := d.GetOk(names.AttrAction); ok && string(rule.Action) != v.(string) {
+	input := route53resolver.ListFirewallRulesInput{
+		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
+	}
+	rules, err := findFirewallRules(ctx, conn, &input, func(r *awstypes.FirewallRule) bool {
+		if v, ok := d.GetOk(names.AttrAction); ok && string(r.Action) != v.(string) {
 			return false
 		}
 
-		if v, ok := d.GetOk(names.AttrPriority); ok && aws.ToInt32(rule.Priority) != int32(v.(int)) {
+		if v, ok := d.GetOk(names.AttrPriority); ok && aws.ToInt32(r.Priority) != int32(v.(int)) {
 			return false
 		}
 
@@ -114,10 +119,8 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rules (%s): %s", firewallRuleGroupID, err)
 	}
 
-	if n := len(rules); n == 0 {
-		return sdkdiag.AppendErrorf(diags, "no Route53 Resolver Firewall Rules matched")
-	} else if n > 1 {
-		return sdkdiag.AppendErrorf(diags, "%d Route53 Resolver Firewall Rules matched; use additional constraints to reduce matches to a single Firewall Rule", n)
+	if _, err := tfresource.AssertSingleValueResult(rules); err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Route53 Resolver Firewall Rule", err))
 	}
 
 	if err := d.Set("firewall_rules", flattenFirewallRules(rules)); err != nil {
