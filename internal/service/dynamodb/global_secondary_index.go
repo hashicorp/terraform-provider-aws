@@ -447,8 +447,8 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	}
 
 	hasUpdate := !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput) ||
-		!new.OnDemandThroughputs.Equal(old.OnDemandThroughputs) ||
-		!new.WarmThroughputs.Equal(old.WarmThroughputs)
+		!new.OnDemandThroughput.Equal(old.OnDemandThroughput) ||
+		!new.WarmThroughput.Equal(old.WarmThroughput)
 
 	if hasUpdate {
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
@@ -629,10 +629,10 @@ type resourceGlobalSecondaryIndexModel struct {
 	IndexName             types.String                                                `tfsdk:"index_name"`
 	KeySchema             fwtypes.ListNestedObjectValueOf[keySchemaModel]             `tfsdk:"key_schema"`
 	TableName             types.String                                                `tfsdk:"table_name"`
-	OnDemandThroughputs   fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
+	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
 	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
 	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
-	WarmThroughputs       fwtypes.ListNestedObjectValueOf[warmThroughputModel]        `tfsdk:"warm_throughput"`
+	WarmThroughput        fwtypes.ListNestedObjectValueOf[warmThroughputModel]        `tfsdk:"warm_throughput"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
