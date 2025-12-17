@@ -40,7 +40,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
@@ -48,7 +48,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
@@ -103,13 +103,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceGlobalSecondaryIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -138,13 +138,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceNameTable),
 				),
 				ExpectNonEmptyPlan: true,
@@ -173,7 +173,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(rNameTable, rName),
@@ -181,7 +181,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -215,7 +215,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput(rNameTable, rName),
@@ -223,7 +223,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -262,7 +262,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
@@ -270,7 +270,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -296,7 +296,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -335,7 +335,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 2),
@@ -343,7 +343,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -369,7 +369,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -408,7 +408,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(rNameTable, rName, 2),
@@ -416,7 +416,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(2)),
@@ -445,7 +445,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(4)),
@@ -487,7 +487,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(rNameTable, rName, 2),
@@ -495,7 +495,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(2)),
@@ -524,7 +524,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("read_capacity"), knownvalue.Int64Exact(4)),
@@ -566,7 +566,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
@@ -574,7 +574,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -600,7 +600,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -639,7 +639,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 2),
@@ -647,7 +647,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -673,7 +673,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -712,7 +712,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_bas
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName, 15000, 5000),
@@ -720,7 +720,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_bas
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -760,7 +760,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName, 12000, 4000),
@@ -768,17 +768,17 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
-					// 	knownvalue.ObjectExact(map[string]knownvalue.Check{
-					// 		"read_units_per_second":  knownvalue.Int64Exact(12000),
-					// 		"write_units_per_second": knownvalue.Int64Exact(4000),
-					// 	}),
-					// })),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_units_per_second":  knownvalue.Int64Exact(12000),
+							"write_units_per_second": knownvalue.Int64Exact(4000),
+						}),
+					})),
 				},
 			},
 			{
@@ -808,7 +808,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput_unspecified(rNameTable, rName),
@@ -816,17 +816,17 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
-					// 	knownvalue.ObjectExact(map[string]knownvalue.Check{
-					// 		"read_units_per_second":  knownvalue.Int64Exact(12000),
-					// 		"write_units_per_second": knownvalue.Int64Exact(4000),
-					// 	}),
-					// })),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_units_per_second":  knownvalue.Int64Exact(12000),
+							"write_units_per_second": knownvalue.Int64Exact(4000),
+						}),
+					})),
 				},
 			},
 			{
@@ -842,7 +842,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -877,7 +877,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_attributeValidation(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_missmatchedType(rNameTable, rName),
@@ -914,7 +914,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rName, 2),
@@ -922,7 +922,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -948,7 +948,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -987,7 +987,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
@@ -995,7 +995,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1021,7 +1021,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
 
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
@@ -1061,14 +1061,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *tes
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create GSI with hash key not on table
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1128,14 +1128,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create GSI with keys not on table
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey, rSortKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1204,14 +1204,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create GSI with hash key same as table's hash key
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1229,7 +1229,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1274,7 +1274,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rHashKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1336,14 +1336,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create GSI with hash key same as table's hash key
 			{
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(rNameTable, rName, rNameTable),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1361,7 +1361,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey1, rSortKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1415,7 +1415,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 				Config: testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(rNameTable, rName, rHashKey2, rSortKey2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
@@ -1482,13 +1482,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{"test1", "test2"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
@@ -1528,13 +1528,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes_updateSetup(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
@@ -1556,7 +1556,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{"test1", "test2"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
@@ -1581,7 +1581,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1599,14 +1599,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
-					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName1, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName1, "key_schema.#", "1"),
@@ -1635,6 +1633,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName2, &gsi2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1647,7 +1647,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1665,14 +1665,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_update(rNameTable, rName1, rName2, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
-					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName1, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName1, "key_schema.#", "1"),
@@ -1695,6 +1693,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName2, &gsi2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1732,8 +1732,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_update(rNameTable, rName1, rName2, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
-					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName1, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName1, "key_schema.#", "1"),
@@ -1754,6 +1752,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName2, "index_name", rName2),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName2, &gsi2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1791,7 +1791,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_delete(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1809,14 +1809,12 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
-					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName1, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
 					resource.TestCheckResourceAttr(resourceName1, "key_schema.#", "1"),
@@ -1845,6 +1843,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName2, &gsi2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1881,7 +1881,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_tableOnly(rNameTable),
@@ -1917,7 +1917,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
@@ -1940,7 +1940,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -1984,7 +1984,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_setup(rNameTable, rName),
@@ -1999,7 +1999,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 				Config: testAccGlobalSecondaryIndexConfig_migrate_single_importblock(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -2044,7 +2044,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
@@ -2108,7 +2108,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
@@ -2123,8 +2123,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_importblock(rNameTable, rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSIExists(ctx, t, resourceName1, &gsi1),
-					testAccCheckGSIExists(ctx, t, resourceName2, &gsi2),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName1, &gsi1),
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName2, &gsi2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectTableGSINoChange.AddStateValue(resourceNameTable, tfjsonpath.New("global_secondary_index")),
@@ -2176,7 +2176,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(rNameTable, rName1, rName2),
@@ -2217,7 +2217,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 	})
 }
 
-func testAccCheckGSIDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckGlobalSecondaryIndexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
@@ -2244,7 +2244,7 @@ func testAccCheckGSIDestroy(ctx context.Context, t *testing.T) resource.TestChec
 	}
 }
 
-func testAccCheckGSIExists(ctx context.Context, t *testing.T, n string, gsi *awstypes.GlobalSecondaryIndexDescription) resource.TestCheckFunc {
+func testAccCheckGlobalSecondaryIndexExists(ctx context.Context, t *testing.T, n string, gsi *awstypes.GlobalSecondaryIndexDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
