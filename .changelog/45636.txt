@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_odb_network: Enhancements to support KMS and STS parameters in CreateOdbNetwork and UpdateOdbNetwork.
+```
