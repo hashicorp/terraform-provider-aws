@@ -105,6 +105,13 @@ func resourceProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoint_network_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.EndpointNetworkType](),
+			},
 			"engine_family": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -175,6 +182,10 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 	}
 
+	if v, ok := d.GetOk("endpoint_network_type"); ok {
+		input.EndpointNetworkType = types.EndpointNetworkType(v.(string))
+	}
+
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
 		input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 	}
@@ -223,6 +234,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrName, dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("default_auth_scheme", dbProxy.DefaultAuthScheme)
+	d.Set("endpoint_network_type", dbProxy.EndpointNetworkType)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
