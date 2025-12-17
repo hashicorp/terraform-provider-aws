@@ -249,6 +249,16 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	// Read config separately to determine what the user actually configured.
+	// This is important because plan modifiers may create synthetic elements
+	// (e.g., for endpoint_options and scaling_parameters) that shouldn't trigger
+	// API calls unless the user explicitly configured them.
+	var config domainResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().CloudSearchClient(ctx)
 
 	name := data.Name.ValueString()
@@ -264,8 +274,9 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 	data.ID = types.StringValue(name)
 
-	// Update scaling parameters if specified
-	if !data.ScalingParameters.IsNull() && !data.ScalingParameters.IsUnknown() {
+	// Update scaling parameters only if user explicitly configured them (check config, not plan).
+	// The plan may contain synthetic elements from plan modifiers.
+	if !config.ScalingParameters.IsNull() && len(config.ScalingParameters.Elements()) > 0 {
 		scalingParams, diags := data.ScalingParameters.ToPtr(ctx)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
@@ -286,8 +297,8 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 	}
 
-	// Update multi_az if specified
-	if !data.MultiAZ.IsNull() && !data.MultiAZ.IsUnknown() {
+	// Update multi_az if specified (check config, not plan)
+	if !config.MultiAZ.IsNull() {
 		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
 			DomainName: aws.String(name),
 			MultiAZ:    aws.Bool(data.MultiAZ.ValueBool()),
@@ -300,8 +311,9 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		}
 	}
 
-	// Update endpoint options if specified
-	if !data.EndpointOptions.IsNull() && !data.EndpointOptions.IsUnknown() {
+	// Update endpoint options only if user explicitly configured them (check config, not plan).
+	// The plan may contain synthetic elements from plan modifiers.
+	if !config.EndpointOptions.IsNull() && len(config.EndpointOptions.Elements()) > 0 {
 		endpointOpts, diags := data.EndpointOptions.ToPtr(ctx)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
@@ -485,27 +497,35 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
+	// Read config to determine what the user actually configured.
+	// This is important for detecting when a user removes a block from config
+	// (which should reset to defaults) vs when they never configured it.
+	var config domainResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().CloudSearchClient(ctx)
 	domainName := new.ID.ValueString()
 	requiresIndexDocuments := false
 
-	// Update scaling parameters
-	if !new.ScalingParameters.Equal(old.ScalingParameters) {
+	// Update scaling parameters only if user configured them or is removing them.
+	// Check config to determine user intent, not plan (which may have synthetic elements).
+	configHasScalingParams := !config.ScalingParameters.IsNull() && len(config.ScalingParameters.Elements()) > 0
+	if configHasScalingParams {
+		// User configured scaling_parameters - apply their values
 		scalingInput := &cloudsearch.UpdateScalingParametersInput{
 			DomainName: aws.String(domainName),
 		}
 
-		if !new.ScalingParameters.IsNull() {
-			scalingParams, diags := new.ScalingParameters.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			if scalingParams != nil {
-				scalingInput.ScalingParameters = expandScalingParametersModel(scalingParams)
-			} else {
-				scalingInput.ScalingParameters = &awstypes.ScalingParameters{}
-			}
+		scalingParams, diags := new.ScalingParameters.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if scalingParams != nil {
+			scalingInput.ScalingParameters = expandScalingParametersModel(scalingParams)
 		} else {
 			scalingInput.ScalingParameters = &awstypes.ScalingParameters{}
 		}
@@ -520,9 +540,13 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			requiresIndexDocuments = true
 		}
 	}
+	// Note: If user removes scaling_parameters from config, we don't reset to defaults.
+	// This matches the behavior where unconfigured blocks are just read from API.
+	// The SDKv2 behavior of resetting to defaults when block is removed would require
+	// tracking "was this previously managed" in private state.
 
-	// Update multi_az
-	if !new.MultiAZ.Equal(old.MultiAZ) {
+	// Update multi_az only if user configured it
+	if !config.MultiAZ.IsNull() && !new.MultiAZ.Equal(old.MultiAZ) {
 		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
 			DomainName: aws.String(domainName),
 			MultiAZ:    aws.Bool(new.MultiAZ.ValueBool()),
@@ -539,23 +563,22 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 	}
 
-	// Update endpoint options
-	if !new.EndpointOptions.Equal(old.EndpointOptions) {
+	// Update endpoint options only if user configured them.
+	// Check config to determine user intent, not plan (which may have synthetic elements).
+	configHasEndpointOpts := !config.EndpointOptions.IsNull() && len(config.EndpointOptions.Elements()) > 0
+	if configHasEndpointOpts {
+		// User configured endpoint_options - apply their values
 		endpointInput := &cloudsearch.UpdateDomainEndpointOptionsInput{
 			DomainName: aws.String(domainName),
 		}
 
-		if !new.EndpointOptions.IsNull() {
-			endpointOpts, diags := new.EndpointOptions.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			if endpointOpts != nil {
-				endpointInput.DomainEndpointOptions = expandEndpointOptionsModel(endpointOpts)
-			} else {
-				endpointInput.DomainEndpointOptions = &awstypes.DomainEndpointOptions{}
-			}
+		endpointOpts, diags := new.EndpointOptions.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if endpointOpts != nil {
+			endpointInput.DomainEndpointOptions = expandEndpointOptionsModel(endpointOpts)
 		} else {
 			endpointInput.DomainEndpointOptions = &awstypes.DomainEndpointOptions{}
 		}
