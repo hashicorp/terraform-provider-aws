@@ -145,3 +145,20 @@ Detach the `aws_dynamodb_global_secondary_index` resource from state with:
 ```
 
 Run `terraform plan` to validate.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB tables using the `table_name` and `index_name`, separated by a comma. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_global_secondary_index.example
+  id = "example-table,example-index"
+}
+```
+
+Using `terraform import`, import DynamoDB tables using the `table_name` and `index_name`, separated by a comma. For example:
+
+```console
+% terraform import aws_dynamodb_global_secondary_index.example 'example-table,example-index'
+```
