@@ -610,3 +610,42 @@ func findIntegrationByARN(ctx context.Context, conn *redshift.Client, arn string
 
 	return findIntegration(ctx, conn, &input)
 }
+
+func findLoggingStatus(ctx context.Context, conn *redshift.Client, input *redshift.DescribeLoggingStatusInput) (*redshift.DescribeLoggingStatusOutput, error) {
+	output, err := conn.DescribeLoggingStatus(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findLoggingStatusByID(ctx context.Context, conn *redshift.Client, clusterID string) (*redshift.DescribeLoggingStatusOutput, error) {
+	input := redshift.DescribeLoggingStatusInput{
+		ClusterIdentifier: aws.String(clusterID),
+	}
+
+	output, err := findLoggingStatus(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !aws.ToBool(output.LoggingEnabled) {
+		return nil, &sdkretry.NotFoundError{}
+	}
+
+	return output, nil
+}
