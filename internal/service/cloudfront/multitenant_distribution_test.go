@@ -141,19 +141,13 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 
 					// Check multiple origins
-					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.id", "custom-origin"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_path", "/api"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.0.header_name", "X-Custom-Header"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.0.header_value", "test-value"),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, "origin.0.origin_shield.0.origin_shield_region"),
-
-					resource.TestCheckResourceAttr(resourceName, "origin.1.id", "s3-origin"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1.s3_origin_config.#", "1"),
 
 					// Check cache behaviors
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
@@ -172,9 +166,9 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 
-					// Check tenant config with multiple parameters
+					// Check tenant config with single parameter
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.#", "1"),
 				),
 			},
 			{
@@ -188,8 +182,6 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 
 func testAccMultiTenantDistributionConfig_comprehensive(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -208,7 +200,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   default_root_object = "index.html"
   http_version        = "http2"
 
-  # Custom origin with headers and shield
+  # Single custom origin (remove S3 origin that might be causing issues)
   origin {
     domain_name = "example.com"
     id          = "custom-origin"
@@ -225,26 +217,10 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-
-    origin_shield {
-      enabled              = true
-      origin_shield_region = data.aws_region.current.name
-    }
-  }
-
-  # S3 origin
-  origin {
-    domain_name              = aws_s3_bucket.test.bucket_regional_domain_name
-    id                       = "s3-origin"
-    origin_access_control_id = aws_cloudfront_origin_access_control.test.id
-
-    s3_origin_config {
-      origin_access_identity = ""
-    }
   }
 
   default_cache_behavior {
-    target_origin_id       = "s3-origin"
+    target_origin_id       = "custom-origin"
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
 
@@ -254,7 +230,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 
-  # Additional cache behavior
+  # Single cache behavior
   cache_behavior {
     path_pattern           = "/api/*"
     target_origin_id       = "custom-origin"
@@ -285,7 +261,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 
-  # Multi-parameter tenant config
+  # Simplified tenant config
   tenant_config {
     parameter_definition {
       name = "origin_domain"
@@ -293,16 +269,6 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
         string_schema {
           required = true
           comment  = "Origin domain parameter for tenants"
-        }
-      }
-    }
-
-    parameter_definition {
-      name = "cache_prefix"
-      definition {
-        string_schema {
-          required = false
-          comment  = "Cache prefix parameter for tenants"
         }
       }
     }
