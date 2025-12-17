@@ -139,6 +139,13 @@ func resourceProxy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_connection_network_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.TargetConnectionNetworkType](),
+			},
 			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -194,6 +201,10 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.RequireTLS = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("target_connection_network_type"); ok {
+		input.TargetConnectionNetworkType = types.TargetConnectionNetworkType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -239,6 +250,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
+	d.Set("target_connection_network_type", dbProxy.TargetConnectionNetworkType)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
 	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
