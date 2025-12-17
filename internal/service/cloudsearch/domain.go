@@ -1830,7 +1830,28 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusDomainProcessing(conn, name),
+		Refresh: func(ctx context.Context) (any, string, error) {
+			output, err := findDomainByName(ctx, conn, name)
+			if err != nil {
+				return nil, "", err
+			}
+
+			// Wait for domain to be created and not processing.
+			// AWS docs indicate endpoints are available when Created=true.
+			// If race conditions occur where Created=true but endpoints are still null,
+			// add additional check: hasEndpoints := output.SearchService != nil &&
+			//                       output.SearchService.Endpoint != nil &&
+			//                       output.DocService != nil &&
+			//                       output.DocService.Endpoint != nil
+			created := aws.ToBool(output.Created)
+			processing := aws.ToBool(output.Processing)
+
+			if created && !processing {
+				return output, "false", nil
+			}
+
+			return output, "true", nil
+		},
 		Timeout: timeout,
 	}
 
