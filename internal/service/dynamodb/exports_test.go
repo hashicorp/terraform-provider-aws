@@ -37,3 +37,7 @@ var (
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
 )
+
+const (
+	GlobalSecondaryIndexExperimentalFlagEnvVar = globalSecondaryIndexExperimentalFlagEnvVar
+)

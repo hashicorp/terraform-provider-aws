@@ -26,6 +26,8 @@ import (
 )
 
 func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -89,6 +91,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -124,6 +128,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -159,6 +165,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -201,6 +209,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -248,6 +258,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -321,6 +333,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChanges(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -394,6 +408,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSameAsTable(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -473,6 +489,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDifferentFromTable(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -552,6 +570,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput_capacityChange(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -625,6 +645,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput_capacityChange_ignoreChanges(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -698,6 +720,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_basic(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -746,6 +770,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_bas
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_explicitDefault(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -794,6 +820,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_updateUnspecified(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -863,6 +891,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_attributeValidation(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 
 	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -895,6 +925,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_attributeValidation(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -968,6 +1000,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1041,6 +1075,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1107,6 +1143,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashOnly(t *tes
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1183,6 +1221,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onCreate_hashAndSort(t *
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1313,6 +1353,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashOnly(t *tes
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1463,6 +1505,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_keysNotOnTable_onUpdate_hashAndSort(t *
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1509,6 +1553,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T)
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1577,6 +1623,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_create(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1609,6 +1657,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_create(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_update(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1649,6 +1699,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_update(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_delete(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1689,6 +1741,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_delete(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 
@@ -1724,6 +1778,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
 
 // lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1791,6 +1847,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 
 // lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -1850,6 +1908,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 
 // lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 
@@ -1912,6 +1972,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importcmd(t *testing.T
 
 // lintignore:AT002
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi1 awstypes.GlobalSecondaryIndexDescription
@@ -1985,6 +2047,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 }
 
 func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 
@@ -2035,6 +2099,43 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_featureFlagNotSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	// Explicitly clear `TF_AWS_EXPERIMENT_dynamodb_global_secondary_index`
+	t.Setenv(tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar, "")
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
+
+					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
+					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
+				),
+				ExpectError: regexache.MustCompile(`Experimental Resource Type Not Enabled: "aws_dynamodb_global_secondary_index"`),
 			},
 		},
 	})

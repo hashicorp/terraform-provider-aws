@@ -6,6 +6,7 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -54,6 +56,7 @@ const (
 // @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(importStateIdFunc=testAccGlobalSecondaryIndexImportStateIdFunc)
 // @Testing(importStateIdAttribute="arn")
+// @Testing(requireEnvVar="TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")
 func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGlobalSecondaryIndex{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -62,6 +65,10 @@ func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithCo
 
 	return r, nil
 }
+
+var (
+	_ resource.ResourceWithValidateConfig = &resourceGlobalSecondaryIndex{}
+)
 
 type resourceGlobalSecondaryIndex struct {
 	framework.ResourceWithModel[resourceGlobalSecondaryIndexModel]
@@ -582,6 +589,40 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 			fmt.Sprintf(`Error while waiting for "%s" to be active after delete`, data.TableName.ValueString()),
 			err.Error(),
 		)
+	}
+}
+
+const (
+	globalSecondaryIndexExperimentalFlagEnvVar = "TF_AWS_EXPERIMENT_dynamodb_global_secondary_index"
+)
+
+func (r *resourceGlobalSecondaryIndex) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	if flag := os.Getenv(globalSecondaryIndexExperimentalFlagEnvVar); flag != "" {
+		response.Diagnostics.AddWarning(
+			"Experimental Resource Type Enabled: \"aws_dynamodb_global_secondary_index\"",
+			fmt.Sprintf("The experimental resource type \"aws_dynamodb_global_secondary_index\" has been enabled by setting the environment variable \""+globalSecondaryIndexExperimentalFlagEnvVar+"\" to %q.", flag)+
+				"\n\nPlease be aware that experimental features are not covered by any SLA or support agreement, and may not be suitable for production workloads. "+
+				"Experimental features may change without notice, including removal from the provider.",
+		)
+		tflog.Info(ctx, "Experimental resource type enabled", map[string]any{
+			"feature_flag.key":            globalSecondaryIndexExperimentalFlagEnvVar,
+			"feature_flag.result.value":   flag,
+			"feature_flag.result.variant": "enabled",
+		})
+	} else {
+		response.Diagnostics.AddError(
+			"Experimental Resource Type Not Enabled: \"aws_dynamodb_global_secondary_index\"",
+			"The experimental resource type \"aws_dynamodb_global_secondary_index\" is not enabled. "+
+				"To enable this resource type, set the environment variable \""+globalSecondaryIndexExperimentalFlagEnvVar+"\" to any value before running Terraform."+
+				"\n\nPlease be aware that experimental features are not covered by any SLA or support agreement, and may not be suitable for production workloads. "+
+				"Experimental features may change without notice, including removal from the provider.",
+		)
+		tflog.Error(ctx, "Experimental resource type not enabled", map[string]any{
+			"feature_flag.key":            globalSecondaryIndexExperimentalFlagEnvVar,
+			"feature_flag.result.value":   nil,
+			"feature_flag.result.variant": "disabled",
+			"feature_flag.result.reason":  "default",
+		})
 	}
 }
 
