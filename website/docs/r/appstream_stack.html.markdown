@@ -112,6 +112,7 @@ The following arguments are optional:
 * `connector_type` - (Required) Type of storage connector.
   Valid values are `HOMEFOLDERS`, `GOOGLE_DRIVE`, or `ONE_DRIVE`.
 * `domains` - (Optional) Names of the domains for the account.
+* `domains_require_admin_consent` - (Optional) Names of the domains for the account where you require admin consent. Only applicable for `ONE_DRIVE`.
 * `resource_identifier` - (Optional) ARN of the storage connector.
 
 ### `user_settings`

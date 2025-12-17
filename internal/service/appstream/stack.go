@@ -155,6 +155,16 @@ func resourceStack() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 64),
 							},
 						},
+						"domains_require_admin_consent": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+						},
 						"resource_identifier": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -399,6 +409,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 		}
 
+		if d.HasChange("storage_connectors") {
+			input.StorageConnectors = expandStorageConnectors(d.Get("storage_connectors").(*schema.Set).List())
+		}
+
 		_, err := conn.UpdateStack(ctx, &input)
 
 		if err != nil {
@@ -633,6 +647,10 @@ func expandStorageConnector(tfMap map[string]any) awstypes.StorageConnector {
 		apiObject.Domains = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := tfMap["domains_require_admin_consent"]; ok && len(v.([]any)) > 0 {
+		apiObject.DomainsRequireAdminConsent = flex.ExpandStringValueList(v.([]any))
+	}
+
 	if v, ok := tfMap["resource_identifier"]; ok && v.(string) != "" {
 		apiObject.ResourceIdentifier = aws.String(v.(string))
 	}
@@ -664,6 +682,7 @@ func flattenStorageConnector(apiObject awstypes.StorageConnector) map[string]any
 
 	tfMap["connector_type"] = apiObject.ConnectorType
 	tfMap["domains"] = apiObject.Domains
+	tfMap["domains_require_admin_consent"] = apiObject.DomainsRequireAdminConsent
 	tfMap["resource_identifier"] = aws.ToString(apiObject.ResourceIdentifier)
 
 	return tfMap
