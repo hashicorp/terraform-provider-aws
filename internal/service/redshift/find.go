@@ -717,3 +717,45 @@ func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, clusterID 
 
 	return output.ClusterSnapshotCopyStatus, nil
 }
+
+func findSnapshotCopyGrants(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotCopyGrantsInput) ([]awstypes.SnapshotCopyGrant, error) {
+	var output []awstypes.SnapshotCopyGrant
+
+	pages := redshift.NewDescribeSnapshotCopyGrantsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.SnapshotCopyGrantNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SnapshotCopyGrants...)
+	}
+
+	return output, nil
+}
+
+func findSnapshotCopyGrant(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotCopyGrantsInput) (*awstypes.SnapshotCopyGrant, error) {
+	output, err := findSnapshotCopyGrants(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.SnapshotCopyGrant, error) {
+	input := redshift.DescribeSnapshotCopyGrantsInput{
+		SnapshotCopyGrantName: aws.String(name),
+	}
+
+	return findSnapshotCopyGrant(ctx, conn, &input)
+}

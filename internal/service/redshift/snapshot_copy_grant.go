@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -159,29 +158,4 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
-}
-
-func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.SnapshotCopyGrant, error) {
-	input := &redshift.DescribeSnapshotCopyGrantsInput{
-		SnapshotCopyGrantName: aws.String(name),
-	}
-
-	output, err := conn.DescribeSnapshotCopyGrants(ctx, input)
-
-	if errs.IsA[*awstypes.SnapshotCopyGrantNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.SnapshotCopyGrants)
 }
