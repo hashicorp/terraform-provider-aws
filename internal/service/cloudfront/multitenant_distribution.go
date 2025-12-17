@@ -145,38 +145,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-			"active_trusted_signers": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[activeTrustedSignersModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrEnabled: schema.BoolAttribute{Computed: true},
-					},
-					Blocks: map[string]schema.Block{
-						"items": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[signerModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"aws_account_number": schema.StringAttribute{Computed: true},
-									"key_pair_ids": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringType,
-										Computed:    true,
-										ElementType: types.StringType,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"alias_icp_recordals": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[aliasICPRecordalModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"cname":               schema.StringAttribute{Computed: true},
-						"icp_recordal_status": schema.StringAttribute{Computed: true},
-					},
-				},
-			},
+
 			"custom_error_response": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customErrorResponseModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -819,8 +788,6 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 type multiTenantDistributionResourceModel struct {
 	ActiveTrustedKeyGroups        fwtypes.ListNestedObjectValueOf[activeTrustedKeyGroupsModel] `tfsdk:"active_trusted_key_groups" autoflex:",xmlwrapper=Items,omitempty"`
-	ActiveTrustedSigners          fwtypes.ListNestedObjectValueOf[activeTrustedSignersModel]   `tfsdk:"active_trusted_signers" autoflex:",xmlwrapper=Items,omitempty"`
-	AliasICPRecordals             fwtypes.ListNestedObjectValueOf[aliasICPRecordalModel]       `tfsdk:"alias_icp_recordals"`
 	ARN                           types.String                                                 `tfsdk:"arn"`
 	CacheBehavior                 fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]          `tfsdk:"cache_behavior" autoflex:",xmlwrapper=Items,omitempty"`
 	CallerReference               types.String                                                 `tfsdk:"caller_reference"`
@@ -1003,19 +970,4 @@ type activeTrustedKeyGroupsModel struct {
 type kgKeyPairIDsModel struct {
 	KeyGroupID types.String                      `tfsdk:"key_group_id"`
 	KeyPairIDs fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",xmlwrapper=Items"`
-}
-
-type activeTrustedSignersModel struct {
-	Enabled types.Bool                                   `tfsdk:"enabled"`
-	Items   fwtypes.ListNestedObjectValueOf[signerModel] `tfsdk:"items"`
-}
-
-type signerModel struct {
-	AWSAccountNumber types.String                      `tfsdk:"aws_account_number"`
-	KeyPairIDs       fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",xmlwrapper=Items"`
-}
-
-type aliasICPRecordalModel struct {
-	CNAME             types.String `tfsdk:"cname"`
-	ICPRecordalStatus types.String `tfsdk:"icp_recordal_status"`
 }
