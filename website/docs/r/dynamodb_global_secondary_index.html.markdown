@@ -13,9 +13,9 @@ description: |-
 The following **experimental** DynamoDB table description models the table and GSI shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
 ```terraform
-resource "aws_dynamodb_global_secondary_index" "GameTitleIndex" {
-  table              = aws_dynamodb_table.basic-dynamodb-table.name
-  name               = "GameTitleIndex"
+resource "aws_dynamodb_global_secondary_index" "example" {
+  table = aws_dynamodb_table.example.name
+  name  = "GameTitleIndex"
 
   projection {
     projection_type    = "INCLUDE"
@@ -40,8 +40,8 @@ resource "aws_dynamodb_global_secondary_index" "GameTitleIndex" {
   }
 }
 
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name           = "GameScores"
+resource "aws_dynamodb_table" "example" {
+  name           = "example"
   billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
