@@ -39,9 +39,6 @@ import (
 )
 
 const (
-	warmThoughputMinReadUnitsPerSecond  = 12000
-	warmThoughputMinWriteUnitsPerSecond = 4000
-
 	minNumberOfHashes = 1
 	maxNumberOfHashes = 4
 
