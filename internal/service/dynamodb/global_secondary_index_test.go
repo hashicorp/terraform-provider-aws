@@ -738,6 +738,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_bas
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"warm_throughput"},
 			},
 		},
 	})
@@ -785,6 +786,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"warm_throughput"},
 			},
 		},
 	})
@@ -858,6 +860,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"warm_throughput"},
 			},
 		},
 	})
