@@ -76,15 +76,14 @@ The following arguments are required:
 
 * `index_name` - (Required) Name of the index.
 * `key_schema` - (Required) Set of nested attribute definitions. At least 1 element defining a `HASH` is required, See below.
-* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
+* `projection` - (Required) Describes which attributes from the table are represented in the index.
+  See [`projection` below](#projection).
 * `table_name` - (Required) Name of the table this index belongs to
 
 The following arguments are optional:
 
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
-* `projection` - (Required) Describes which attributes from the table are represented in the index.
-  See [`projection` below](#projection).
 * `provisioned_throughput` - (Optional) Provisioned throughput for the index.
   See [`provisioned_throughput` below](#provisioned_throughput).
   Required if the table's `billing_mode` is `PROVISIONED`.
