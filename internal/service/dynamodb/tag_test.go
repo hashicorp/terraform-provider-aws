@@ -23,12 +23,12 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -51,12 +51,12 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,12 +78,12 @@ func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_resourceARNTableReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -105,12 +105,12 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -123,7 +123,7 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
@@ -143,14 +143,14 @@ func TestAccDynamoDBTag_multipleTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_multipleTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
-					testAccCheckTagExists(ctx, resourceName2),
-					testAccCheckTagExists(ctx, resourceName3),
+					testAccCheckTagExists(ctx, t, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName2),
+					testAccCheckTagExists(ctx, t, resourceName3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrKey, fmt.Sprintf("%s-2", acctest.CtKey1)),
@@ -162,9 +162,9 @@ func TestAccDynamoDBTag_multipleTags(t *testing.T) {
 			{
 				Config: testAccTagConfig_multipleTagsUpdate(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
-					testAccCheckTagExists(ctx, resourceName2),
-					testAccCheckTagExists(ctx, resourceName3),
+					testAccCheckTagExists(ctx, t, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName2),
+					testAccCheckTagExists(ctx, t, resourceName3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrKey, fmt.Sprintf("%s-2", acctest.CtKey1)),
@@ -176,8 +176,8 @@ func TestAccDynamoDBTag_multipleTags(t *testing.T) {
 			{
 				Config: testAccTagConfig_multipleTagsRemove(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
-					testAccCheckTagExists(ctx, resourceName2),
+					testAccCheckTagExists(ctx, t, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrKey, fmt.Sprintf("%s-2", acctest.CtKey1)),
