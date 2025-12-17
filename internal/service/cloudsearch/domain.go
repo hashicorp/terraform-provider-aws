@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -120,26 +119,14 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					endpointOptionsComputedBlockModifier(),
-					listplanmodifier.UseStateForUnknown(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"enforce_https": schema.BoolAttribute{
 							Optional: true,
-							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
 						},
 						"tls_security_policy": schema.StringAttribute{
 							Optional:   true,
-							Computed:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.TLSSecurityPolicy](),
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 				},
@@ -213,27 +200,17 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					scalingParametersComputedBlockModifier(),
-					listplanmodifier.UseStateForUnknown(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"desired_instance_type": schema.StringAttribute{
 							Optional:   true,
-							Computed:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.PartitionInstanceType](),
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 						"desired_partition_count": schema.Int64Attribute{
 							Optional: true,
-							Computed: true,
 						},
 						"desired_replication_count": schema.Int64Attribute{
 							Optional: true,
-							Computed: true,
 						},
 					},
 				},
@@ -450,21 +427,28 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 	}
 	data.MultiAZ = types.BoolValue(availabilityOptionStatus.Options)
 
-	// Read endpoint options (always populated for drift detection)
-	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
-		return diags
+	// Read endpoint options only if they were previously configured (exist in state).
+	// This is the clean Framework pattern: nested blocks represent user intent,
+	// not computed status outputs. If user didn't configure the block, we don't
+	// populate it in state.
+	if !data.EndpointOptions.IsNull() && len(data.EndpointOptions.Elements()) > 0 {
+		endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
+		if err != nil {
+			diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
+			return diags
+		}
+		data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
 	}
-	data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
 
-	// Read scaling parameters (always populated for drift detection)
-	scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
-		return diags
+	// Read scaling parameters only if they were previously configured (exist in state).
+	if !data.ScalingParameters.IsNull() && len(data.ScalingParameters.Elements()) > 0 {
+		scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
+		if err != nil {
+			diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
+			return diags
+		}
+		data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
 	}
-	data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
 
 	// Read index fields
 	indexInput := &cloudsearch.DescribeIndexFieldsInput{
@@ -1600,111 +1584,6 @@ func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldMod
 	}
 
 	return m, nil
-}
-
-// endpointOptionsComputedModifier is a plan modifier that implements Optional+Computed
-// behavior for the endpoint_options ListNestedBlock. This emulates the SDKv2 behavior
-// where a block can be both optional and computed.
-//
-// When the block is not configured (null/empty in config):
-// - On Create: sets plan to a known list with one element where all attributes are unknown
-// - On Update: preserves prior state value
-//
-// This is necessary because Framework's ListNestedBlock doesn't have a Computed field
-// like ListAttribute does, and Terraform Core requires nested blocks to have a known
-// length (cannot set the entire block to unknown).
-type endpointOptionsComputedModifier struct{}
-
-var _ planmodifier.List = endpointOptionsComputedModifier{}
-
-func endpointOptionsComputedBlockModifier() planmodifier.List {
-	return endpointOptionsComputedModifier{}
-}
-
-func (m endpointOptionsComputedModifier) Description(_ context.Context) string {
-	return "Implements Optional+Computed behavior for endpoint_options ListNestedBlock"
-}
-
-func (m endpointOptionsComputedModifier) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m endpointOptionsComputedModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// If config has a value (user configured the block), use it as-is
-	if !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) > 0 {
-		return
-	}
-
-	// Block is not configured (null or empty in config)
-	// Check if we have prior state
-	if req.StateValue.IsNull() || len(req.StateValue.Elements()) == 0 {
-		// No prior state (Create case): set plan to a known list with one element
-		// where all attributes are unknown. This allows the provider to return
-		// defaults without causing "block count changed from 0 to 1" error.
-		// Note: Terraform Core requires nested blocks to have known length,
-		// so we cannot use NewListUnknown - we must create a list with unknown attributes.
-		unknownModel := &endpointOptionsModel{
-			EnforceHTTPS:      types.BoolUnknown(),
-			TLSSecurityPolicy: fwtypes.StringEnumUnknown[awstypes.TLSSecurityPolicy](),
-		}
-		listValue, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, unknownModel)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		resp.PlanValue = listValue.ListValue
-	} else {
-		// Has prior state (Update case): preserve prior state
-		// This keeps the block stable when user hasn't configured it
-		resp.PlanValue = req.StateValue
-	}
-}
-
-// scalingParametersComputedModifier is a plan modifier that implements Optional+Computed
-// behavior for the scaling_parameters ListNestedBlock.
-type scalingParametersComputedModifier struct{}
-
-var _ planmodifier.List = scalingParametersComputedModifier{}
-
-func scalingParametersComputedBlockModifier() planmodifier.List {
-	return scalingParametersComputedModifier{}
-}
-
-func (m scalingParametersComputedModifier) Description(_ context.Context) string {
-	return "Implements Optional+Computed behavior for scaling_parameters ListNestedBlock"
-}
-
-func (m scalingParametersComputedModifier) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m scalingParametersComputedModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// If config has a value (user configured the block), use it as-is
-	if !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) > 0 {
-		return
-	}
-
-	// Block is not configured (null or empty in config)
-	// Check if we have prior state
-	if req.StateValue.IsNull() || len(req.StateValue.Elements()) == 0 {
-		// No prior state (Create case): set plan to a known list with one element
-		// where all attributes are unknown.
-		unknownModel := &scalingParametersModel{
-			DesiredInstanceType:     fwtypes.StringEnumUnknown[awstypes.PartitionInstanceType](),
-			DesiredPartitionCount:   types.Int64Unknown(),
-			DesiredReplicationCount: types.Int64Unknown(),
-		}
-		listValue, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, unknownModel)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		resp.PlanValue = listValue.ListValue
-	} else {
-		// Has prior state (Update case): preserve prior state
-		// This keeps the block stable when user hasn't configured it
-		resp.PlanValue = req.StateValue
-	}
 }
 
 // Helper functions - shared between Framework and SDKv2 implementations
