@@ -100,6 +100,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"connection_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ConnectionMode](),
+				Computed:   true,
+			},
 			names.AttrComment: schema.StringAttribute{
 				Required: true,
 			},
@@ -791,6 +795,7 @@ type multiTenantDistributionResourceModel struct {
 	ARN                           types.String                                                 `tfsdk:"arn"`
 	CacheBehavior                 fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]          `tfsdk:"cache_behavior" autoflex:",xmlwrapper=Items,omitempty"`
 	CallerReference               types.String                                                 `tfsdk:"caller_reference"`
+	ConnectionMode                fwtypes.StringEnum[awstypes.ConnectionMode]                  `tfsdk:"connection_mode"`
 	Comment                       types.String                                                 `tfsdk:"comment"`
 	CustomErrorResponse           fwtypes.ListNestedObjectValueOf[customErrorResponseModel]    `tfsdk:"custom_error_response" autoflex:",xmlwrapper=Items,omitempty"`
 	DefaultCacheBehavior          fwtypes.ListNestedObjectValueOf[defaultCacheBehaviorModel]   `tfsdk:"default_cache_behavior"`
