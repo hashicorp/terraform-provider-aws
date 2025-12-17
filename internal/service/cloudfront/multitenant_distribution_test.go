@@ -150,7 +150,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.0.header_value", "test-value"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.origin_shield.0.origin_shield_region"),
 
 					resource.TestCheckResourceAttr(resourceName, "origin.1.id", "s3-origin"),
 					resource.TestCheckResourceAttr(resourceName, "origin.1.s3_origin_config.#", "1"),
@@ -188,6 +188,8 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 
 func testAccMultiTenantDistributionConfig_comprehensive(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -226,7 +228,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
     origin_shield {
       enabled              = true
-      origin_shield_region = "us-east-1"
+      origin_shield_region = data.aws_region.current.name
     }
   }
 
