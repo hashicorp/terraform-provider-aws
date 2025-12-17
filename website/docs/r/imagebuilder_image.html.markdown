@@ -30,6 +30,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
+* `deletion_settings` - (Optional) Configuration block with deletion settings. Detailed below.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
@@ -82,6 +83,21 @@ The following arguments are required:
 
 * `name` - (Required) The name of the Workflow parameter.
 * `value` - (Required) The value of the Workflow parameter.
+
+### deletion_settings
+
+When configured, enables managed deletion of the image and all associated resources using Image Builder's lifecycle management. When not configured, uses standard deletion which only removes the image record.
+
+For AMI-based images, managed deletion removes:
+* AMIs
+* EBS snapshots
+
+For container images, managed deletion removes:
+* Container images from ECR repositories
+
+The following arguments are required:
+
+* `execution_role` - (Required) Amazon Resource Name (ARN) of the IAM role used to delete the image and associated resources.
 
 ## Attribute Reference
 
