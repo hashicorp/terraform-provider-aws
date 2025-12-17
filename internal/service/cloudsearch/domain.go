@@ -100,7 +100,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringvalidator.RegexMatches(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 				},
 			},
-		"search_service_endpoint": schema.StringAttribute{
+			"search_service_endpoint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
