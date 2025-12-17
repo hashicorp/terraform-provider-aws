@@ -414,8 +414,8 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 		return
 	}
 
-	g, err := findGSIFromTable(table, indexName)
-	if err != nil || g == nil {
+	index, err := findGSIFromTable(table, indexName)
+	if err != nil || index == nil {
 		response.Diagnostics.Append(
 			fwdiag.NewResourceNotFoundWarningDiagnostic(
 				fmt.Errorf(`unable to find global secondary index with arn "%s", treating it as new`, data.ARN.ValueString()),
@@ -426,7 +426,7 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 		return
 	}
 
-	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, *g, table)...)
+	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, index, table)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -492,11 +492,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 		output, err := conn.UpdateTable(ctx, &input)
 		if err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.IndexName.ValueString(), new.TableName.ValueString()),
-				err.Error(),
-			)
-
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
 			return
 		}
 		table = output.TableDescription
@@ -508,35 +504,24 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		}
 
 		if _, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for table "%s" to be active`, new.TableName.ValueString()),
-				err.Error(),
-			)
-
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
 			return
 		}
 
 		if err = waitGSIWarmThroughputActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.TableName.ValueString()),
-				err.Error(),
-			)
-
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
 			return
 		}
 
-		if g, err := waitGSIActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.TableName.ValueString()),
-				err.Error(),
-			)
-
+		index, err := waitGSIActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
 			return
-		} else {
-			response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &new, *g, table)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
+		}
+
+		response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &new, index, table)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 	}
 
@@ -638,7 +623,7 @@ type resourceGlobalSecondaryIndexModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
-func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, index awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, index *awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	diags.Append(fwflex.Flatten(ctx, index, data,
