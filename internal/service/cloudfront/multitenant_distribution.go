@@ -158,6 +158,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					Attributes: map[string]schema.Attribute{
 						"error_caching_min_ttl": schema.Int64Attribute{
 							Optional: true,
+							Computed: true,
 						},
 						"error_code": schema.Int64Attribute{
 							Required: true,
