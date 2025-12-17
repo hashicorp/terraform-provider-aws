@@ -12,7 +12,7 @@ Creates an Amazon CloudFront multi-tenant distribution.
 
 Multi-tenant distributions are a specialized type of CloudFront distribution designed for multi-tenant applications. They have specific limitations and requirements compared to standard CloudFront distributions.
 
-For information about CloudFront multi-tenant distributions, see the [Amazon CloudFront Developer Guide][1].
+For information about CloudFront multi-tenant distributions, see the [Amazon CloudFront Developer Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/).
 
 ~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed state after creation or modification. During this time, deletes to resources will be blocked. If you need to delete a distribution that is enabled and you do not want to wait, you need to use the `retain_on_delete` flag.
 
@@ -92,34 +92,26 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
 
 This resource supports the following arguments:
 
-* `comment` - (Required) Any comments you want to include about the distribution.
-* `enabled` - (Required) Whether the distribution is enabled to accept end user requests for content.
-* `default_root_object` - (Optional) Object that you want CloudFront to return when an end user requests the root URL.
-* `http_version` - (Optional) Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3`, and `http3`. Default: `http2`.
-* `web_acl_id` - (Optional) Unique identifier that specifies the AWS WAF v2 web ACL to associate with this distribution.
-* `origin` - (Required) One or more origins for this distribution (multiples allowed). See [Origin](#origin) below.
-* `default_cache_behavior` - (Required) Default cache behavior for this distribution. See [Default Cache Behavior](#default-cache-behavior) below.
 * `cache_behavior` - (Optional) Ordered list of cache behaviors resource for this distribution. See [Cache Behavior](#cache-behavior) below.
+* `comment` - (Required) Any comments you want to include about the distribution.
 * `custom_error_response` - (Optional) One or more custom error response elements. See [Custom Error Response](#custom-error-response) below.
-* `logging_config` - (Optional) Logging configuration that controls how logs are written to your distribution. See [Logging Config](#logging-config) below.
+* `default_cache_behavior` - (Required) Default cache behavior for this distribution. See [Default Cache Behavior](#default-cache-behavior) below.
+* `default_root_object` - (Optional) Object that you want CloudFront to return when an end user requests the root URL.
+* `enabled` - (Required) Whether the distribution is enabled to accept end user requests for content.
+* `http_version` - (Optional) Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3`, and `http3`. Default: `http2`.
 * `origin_group` - (Optional) One or more origin_group for this distribution (multiples allowed). See [Origin Group](#origin-group) below.
+* `origin` - (Required) One or more origins for this distribution (multiples allowed). See [Origin](#origin) below.
 * `restrictions` - (Required) Restriction configuration for this distribution. See [Restrictions](#restrictions) below.
-* `viewer_certificate` - (Required) SSL configuration for this distribution. See [Viewer Certificate](#viewer-certificate) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenant_config` - (Required) Tenant configuration that contains parameter definitions for multi-tenant distributions. See [Tenant Config](#tenant-config) below.
+* `viewer_certificate` - (Required) SSL configuration for this distribution. See [Viewer Certificate](#viewer-certificate) below.
+* `web_acl_id` - (Optional) Unique identifier that specifies the AWS WAF v2 web ACL to associate with this distribution.
 
-### Origin
+### Cache Behavior
 
-* `domain_name` - (Required) DNS domain name of either the S3 bucket, or web site of your custom origin.
-* `origin_id` - (Required) Unique identifier for the origin.
-* `connection_attempts` - (Optional) Number of times that CloudFront attempts to connect to the origin. Must be between 1-3. Default: 3.
-* `connection_timeout` - (Optional) Number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Default: 10.
-* `custom_header` - (Optional) One or more sub-resources with `name` and `value` parameters that specify header data that will be sent to the origin. See [Custom Header](#custom-header) below.
-* `custom_origin_config` - (Optional) CloudFront origin access identity to associate with the origin. See [Custom Origin Config](#custom-origin-config) below.
-* `origin_access_control_id` - (Optional) CloudFront origin access control identifier to associate with the origin.
-* `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
-* `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
-* `s3_origin_config` - (Optional) CloudFront S3 origin access identity to associate with the origin. See [S3 Origin Config](#s3-origin-config) below.
-* `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
+Cache behavior supports all the same arguments as [Default Cache Behavior](#default-cache-behavior) with the addition of:
+
+* `path_pattern` - (Required) Pattern that specifies which requests you want this cache behavior to apply to.
 
 ### Default Cache Behavior
 
@@ -137,27 +129,19 @@ This resource supports the following arguments:
 * `response_headers_policy_id` - (Optional) Identifier for a response headers policy.
 * `trusted_key_groups` - (Optional) List of key group IDs that CloudFront can use to validate signed URLs or signed cookies.
 
-### Cache Behavior
+### Origin
 
-Cache behavior supports all the same arguments as [Default Cache Behavior](#default-cache-behavior) with the addition of:
-
-* `path_pattern` - (Required) Pattern that specifies which requests you want this cache behavior to apply to.
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN for the distribution.
-* `caller_reference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
-* `connection_mode` - Connection mode for the distribution. Always set to `tenant-only` for multi-tenant distributions.
-* `domain_name` - Domain name corresponding to the distribution.
-* `etag` - Current version of the distribution's information.
-* `id` - Identifier for the distribution.
-* `in_progress_invalidation_batches` - Number of invalidation batches currently in progress.
-* `last_modified_time` - Date and time the distribution was last modified.
-* `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `active_trusted_key_groups` - List of key groups that CloudFront can use to validate signed URLs or signed cookies. See [Active Trusted Key Groups](#active-trusted-key-groups) below.
+* `domain_name` - (Required) DNS domain name of either the S3 bucket, or web site of your custom origin.
+* `origin_id` - (Required) Unique identifier for the origin.
+* `connection_attempts` - (Optional) Number of times that CloudFront attempts to connect to the origin. Must be between 1-3. Default: 3.
+* `connection_timeout` - (Optional) Number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Default: 10.
+* `custom_header` - (Optional) One or more sub-resources with `name` and `value` parameters that specify header data that will be sent to the origin. See [Custom Header](#custom-header) below.
+* `custom_origin_config` - (Optional) CloudFront origin access identity to associate with the origin. See [Custom Origin Config](#custom-origin-config) below.
+* `origin_access_control_id` - (Optional) CloudFront origin access control identifier to associate with the origin.
+* `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
+* `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
+* `s3_origin_config` - (Optional) CloudFront S3 origin access identity to associate with the origin. See [S3 Origin Config](#s3-origin-config) below.
+* `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
 
 ### Active Trusted Key Groups
 
@@ -175,6 +159,47 @@ This resource exports the following attributes in addition to the arguments abov
 * `origin_read_timeout` - (Optional) Custom read timeout, in seconds. By default, CloudFront uses a default timeout. Default: 30.
 * `vpc_origin_id` - (Required) ID of the VPC origin that you want CloudFront to route requests to.
 
+### Custom Error Response
+
+* `error_caching_min_ttl` - (Optional) Minimum amount of time that you want CloudFront to cache the HTTP status code specified in ErrorCode.
+* `error_code` - (Required) HTTP status code for which you want to specify a custom error page and/or a caching duration.
+* `response_code` - (Optional) HTTP status code that you want CloudFront to return to the viewer along with the custom error page.
+* `response_page_path` - (Optional) Path to the custom error page that you want CloudFront to return to a viewer when your origin returns the HTTP status code specified by ErrorCode.
+
+### Tenant Config
+
+* `parameter_definition` - (Required) One or more parameter definitions for the tenant configuration. See [Parameter Definition](#parameter-definition) below.
+
+### Parameter Definition
+
+* `name` - (Required) Name of the parameter.
+* `definition` - (Required) Definition of the parameter schema. See [Parameter Definition Schema](#parameter-definition-schema) below.
+
+### Parameter Definition Schema
+
+* `string_schema` - (Required) String schema configuration. See [String Schema](#string-schema) below.
+
+### String Schema
+
+* `required` - (Required) Whether the parameter is required.
+* `comment` - (Optional) Comment describing the parameter.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN for the distribution.
+* `caller_reference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
+* `connection_mode` - Connection mode for the distribution. Always set to `tenant-only` for multi-tenant distributions.
+* `domain_name` - Domain name corresponding to the distribution.
+* `etag` - Current version of the distribution's information.
+* `id` - Identifier for the distribution.
+* `in_progress_invalidation_batches` - Number of invalidation batches currently in progress.
+* `last_modified_time` - Date and time the distribution was last modified.
+* `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `active_trusted_key_groups` - List of key groups that CloudFront can use to validate signed URLs or signed cookies. See [Active Trusted Key Groups](#active-trusted-key-groups) below.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Multi-tenant Distributions using the `id`. For example:
@@ -191,5 +216,3 @@ Using `terraform import`, import CloudFront Multi-tenant Distributions using the
 ```console
 % terraform import aws_cloudfront_multitenant_distribution.distribution E74FTE3AEXAMPLE
 ```
-
-[1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/
