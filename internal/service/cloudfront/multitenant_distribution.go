@@ -47,11 +47,12 @@ const (
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
 // - ActiveTrustedSigners (use ActiveTrustedKeyGroups instead)
 // - AliasICPRecordals (managed by connection groups)
-// - S3OriginConfig (use origin access control instead)
 // - CacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
+// - CacheBehavior.ForwardedValues (deprecated and not supported)
 // - CacheBehavior.SmoothStreaming
 // - CacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
 // - DefaultCacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
+// - DefaultCacheBehavior.ForwardedValues (deprecated and not supported)
 // - DefaultCacheBehavior.SmoothStreaming
 // - DefaultCacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
 // - DistributionConfig.Aliases (managed by connection groups)
@@ -60,8 +61,7 @@ const (
 // - DistributionConfig.IsIPV6Enabled (use connection group instead)
 // - DistributionConfig.PriceClass
 // - DistributionConfig.Staging
-// - CacheBehavior.ForwardedValues (deprecated and not supported)
-// - DefaultCacheBehavior.ForwardedValues (deprecated and not supported)
+// - S3OriginConfig (use origin access control instead)
 // - ViewerCertificate.IAMCertificateId (use ACM certificates instead)
 //
 // Multi-tenant Distribution Requirements:
