@@ -202,9 +202,10 @@ func main() {
 			}
 
 			commonConfig := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				RequiredEnvVars:  resource.RequiredEnvVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:     additionalTfVars,
+				RequiredEnvVars:      resource.RequiredEnvVars,
+				RequiredEnvVarValues: resource.RequiredEnvVarValues,
+				WithRName:            (resource.Generator != ""),
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
@@ -437,11 +438,12 @@ func (r ResourceDatum) LatestIdentityVersion() int64 {
 }
 
 type commonConfig struct {
-	AdditionalTfVars  []string
-	WithRName         bool
-	WithRegion        bool
-	ExternalProviders map[string]requiredProvider
-	RequiredEnvVars   []string
+	AdditionalTfVars     []string
+	WithRName            bool
+	WithRegion           bool
+	ExternalProviders    map[string]requiredProvider
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 }
 
 type requiredProvider struct {
