@@ -32,12 +32,6 @@ resource "aws_dynamodb_global_secondary_index" "example" {
     attribute_type = "S"
     key_type       = "HASH"
   }
-
-  key_schema {
-    attribute_name = "TopScore"
-    attribute_type = "N"
-    key_type       = "RANGE"
-  }
 }
 
 resource "aws_dynamodb_table" "example" {
@@ -56,16 +50,6 @@ resource "aws_dynamodb_table" "example" {
   attribute {
     name = "GameTitle"
     type = "S"
-  }
-
-  ttl {
-    attribute_name = "TimeToExist"
-    enabled        = true
-  }
-
-  tags = {
-    Name        = "dynamodb-table-1"
-    Environment = "production"
   }
 }
 ```
