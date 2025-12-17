@@ -61,18 +61,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
-			Factory:  newTrustStoreResource,
-			TypeName: "aws_cloudfront_trust_store",
-			Name:     "Trust Store",
+			Factory:  newMultiTenantDistributionResource,
+			TypeName: "aws_cloudfront_multitenant_distribution",
+			Name:     "Multi-tenant Distribution",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newMultiTenantDistributionResource,
-			TypeName: "aws_cloudfront_multitenant_distribution",
-			Name:     "Multi-tenant Distribution",
+			Factory:  newTrustStoreResource,
+			TypeName: "aws_cloudfront_trust_store",
+			Name:     "Trust Store",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
