@@ -27,7 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudsearch_domain", name="Domain")
+// SDKv2 resource replaced by Framework resource in domain_fw.go
+// SDKResource annotation commented out for Framework migration
+// was: @SDKResource("aws_cloudsearch_domain", name="Domain")
 func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
