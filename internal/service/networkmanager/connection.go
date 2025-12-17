@@ -283,7 +283,7 @@ func findConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 	return output, nil
 }
 
-func statusConnectionState(conn *networkmanager.Client, globalNetworkID, connectionID string) retry.StateRefreshFunc {
+func statusConnection(conn *networkmanager.Client, globalNetworkID, connectionID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
@@ -304,23 +304,7 @@ func waitConnectionCreated(ctx context.Context, conn *networkmanager.Client, glo
 		Pending: enum.Slice(awstypes.ConnectionStatePending),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,
-		Refresh: statusConnectionState(conn, globalNetworkID, connectionID),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitConnectionDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ConnectionStateDeleting),
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusConnectionState(conn, globalNetworkID, connectionID),
+		Refresh: statusConnection(conn, globalNetworkID, connectionID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -336,7 +320,23 @@ func waitConnectionUpdated(ctx context.Context, conn *networkmanager.Client, glo
 		Pending: enum.Slice(awstypes.ConnectionStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
 		Timeout: timeout,
-		Refresh: statusConnectionState(conn, globalNetworkID, connectionID),
+		Refresh: statusConnection(conn, globalNetworkID, connectionID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitConnectionDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectionID string, timeout time.Duration) (*awstypes.Connection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ConnectionStateDeleting),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusConnection(conn, globalNetworkID, connectionID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
