@@ -140,7 +140,6 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `origin_access_control_id` - (Optional) CloudFront origin access control identifier to associate with the origin.
 * `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
-* `s3_origin_config` - (Optional) CloudFront S3 origin access identity to associate with the origin. See [S3 Origin Config](#s3-origin-config) below.
 * `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
 
 ### Active Trusted Key Groups
