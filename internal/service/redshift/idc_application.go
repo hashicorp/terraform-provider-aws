@@ -6,6 +6,7 @@ package redshift
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -248,7 +249,7 @@ func (r *resourceIDCApplication) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -318,7 +319,7 @@ func (r *resourceIDCApplication) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -414,10 +415,12 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 	switch {
 	case !m.LakeFormation.IsNull():
 		lakeFormationData, d := m.LakeFormation.ToPtr(ctx)
+		fmt.Print(m)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
+		fmt.Print(lakeFormationData)
 
 		var r awstypes.ServiceIntegrationsUnionMemberLakeFormation
 		diags.Append(flex.Expand(ctx, lakeFormationData, &r.Value)...)

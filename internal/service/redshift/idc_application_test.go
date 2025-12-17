@@ -5,14 +5,18 @@ package redshift_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,9 +45,11 @@ func TestAccRedshiftIDCApplication_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "redshift_idc_application_arn",
 			},
 		},
 	})
@@ -64,7 +70,7 @@ func TestAccRedshiftIDCApplication_disappears(t *testing.T) {
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceIdcApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfredshift.ResourceIdcApplication, resourceName, IDCApplicationDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,9 +101,11 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "redshift_idc_application_arn",
 			},
 		},
 	})
@@ -125,9 +133,11 @@ func TestAccRedshiftIDCApplication_serviceIntegrations(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "redshift_idc_application_arn",
 			},
 		},
 	})
@@ -141,7 +151,10 @@ func testAccCheckIDCApplicationDestroy(ctx context.Context) resource.TestCheckFu
 			if rs.Type != "aws_redshift_idc_application" {
 				continue
 			}
-			_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, rs.Primary.ID)
+
+			arn := rs.Primary.Attributes["redshift_idc_application_arn"]
+
+			_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -165,17 +178,33 @@ func testAccCheckIDCApplicationExists(ctx context.Context, name string) resource
 			return fmt.Errorf("not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
+		arn := rs.Primary.Attributes["redshift_idc_application_arn"]
+
+		if arn == "" {
 			return fmt.Errorf("Redshift IDC Application is not set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, rs.Primary.ID)
+		_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, arn)
 
 		return err
 	}
 }
+
+func IDCApplicationDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	v, ok := is.Attributes["redshift_idc_application_arn"]
+	if !ok {
+		return errors.New(`Identifying attribute "redshift_idc_application_arn" not defined`)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("redshift_idc_application_arn"), v)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func testAccIdcApplicationConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -261,8 +290,6 @@ resource "aws_redshift_idc_application" "test" {
   idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   redshift_idc_application_name = %[1]q
 }
-
-
 `, rName))
 }
 
@@ -279,13 +306,13 @@ resource "aws_redshift_idc_application" "test" {
   redshift_idc_application_name = %[1]q
   service_integrations {
     lake_formation {
-      lake_formation_query = {
-        authorization = "Enabled"
-      }
+	  lake_formation_scope {
+	    lake_formation_query {
+          authorization = "Enabled"
+        }
+	  }
     }
   }
 }
-
-
 `, rName))
 }
