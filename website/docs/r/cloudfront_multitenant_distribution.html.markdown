@@ -66,7 +66,7 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
     target_origin_id       = "example-origin"
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = aws_cloudfront_cache_policy.example.id
-    
+
     allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods  = ["GET", "HEAD"]
   }
