@@ -491,6 +491,26 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
+						"vpc_origin_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"origin_keepalive_timeout": schema.Int32Attribute{
+										Optional: true,
+										Computed: true,
+										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
+									},
+									"origin_read_timeout": schema.Int32Attribute{
+										Optional: true,
+										Computed: true,
+										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
+									},
+									"vpc_origin_id": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -831,6 +851,7 @@ type originModel struct {
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
 	S3OriginConfig            fwtypes.ListNestedObjectValueOf[s3OriginConfigModel]     `tfsdk:"s3_origin_config" autoflex:",omitempty"`
+	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
 }
 
 type customHeaderModel struct {
@@ -855,6 +876,12 @@ type originShieldModel struct {
 
 type s3OriginConfigModel struct {
 	OriginAccessIdentity types.String `tfsdk:"origin_access_identity"`
+}
+
+type vpcOriginConfigModel struct {
+	OriginKeepaliveTimeout types.Int32  `tfsdk:"origin_keepalive_timeout"`
+	OriginReadTimeout      types.Int32  `tfsdk:"origin_read_timeout"`
+	VpcOriginID            types.String `tfsdk:"vpc_origin_id"`
 }
 
 type originGroupModel struct {
