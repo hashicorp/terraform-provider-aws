@@ -3081,9 +3081,9 @@ func testAccGlobalSecondaryIndexConfig_migrate_single_importblock(tableName, ind
 		fmt.Sprintf(`
 import {
   to = aws_dynamodb_global_secondary_index.test
-  id = "%[1]s,%[2]s"
+  id = "${aws_dynamodb_table.test.name},%[1]s"
 }
-`, tableName, indexName))
+`, indexName))
 }
 
 func testAccGlobalSecondaryIndexConfig_migrate_multiple_setup(tableName, indexName1, indexName2 string) string {
@@ -3188,14 +3188,14 @@ func testAccGlobalSecondaryIndexConfig_migrate_multiple_importblock(tableName, i
 		fmt.Sprintf(`
 import {
   to = aws_dynamodb_global_secondary_index.test1
-  id = "%[1]s,%[2]s"
+  id = "${aws_dynamodb_table.test.name},%[1]s"
 }
 
 import {
   to = aws_dynamodb_global_secondary_index.test2
-  id = "%[1]s,%[3]s"
+  id = "${aws_dynamodb_table.test.name},%[2]s"
 }
-`, tableName, indexName1, indexName2))
+`, indexName1, indexName2))
 }
 
 func testAccGlobalSecondaryIndexConfig_migrate_partial(tableName, indexName1, indexName2 string) string {
