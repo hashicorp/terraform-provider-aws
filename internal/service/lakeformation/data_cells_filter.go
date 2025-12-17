@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -115,8 +114,8 @@ func (r *dataCellsFilterResource) Schema(ctx context.Context, _ resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"excluded_column_names": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
+									"excluded_column_names": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
 									},
 								},
@@ -168,9 +167,9 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	in := &lakeformation.CreateDataCellsFilterInput{}
+	in := lakeformation.CreateDataCellsFilterInput{}
 
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +181,7 @@ func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	_, err := conn.CreateDataCellsFilter(ctx, in)
+	_, err := conn.CreateDataCellsFilter(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, planTD.Name.String(), err),
@@ -281,15 +280,13 @@ func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	if !plan.TableData.Equal(state.TableData) {
-		in := &lakeformation.UpdateDataCellsFilterInput{}
-
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
-
+		in := lakeformation.UpdateDataCellsFilterInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateDataCellsFilter(ctx, in)
+		_, err := conn.UpdateDataCellsFilter(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
@@ -299,7 +296,6 @@ func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.Updat
 		}
 
 		output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
-
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
@@ -310,7 +306,6 @@ func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.Updat
 
 		td := tableData{}
 		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
-
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -398,9 +393,8 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 	out, err := conn.GetDataCellsFilter(ctx, in)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -427,14 +421,14 @@ type tableData struct {
 	Name           types.String                                    `tfsdk:"name"`
 	TableCatalogID types.String                                    `tfsdk:"table_catalog_id"`
 	TableName      types.String                                    `tfsdk:"table_name"`
-	ColumnNames    fwtypes.SetValueOf[types.String]                `tfsdk:"column_names"`
+	ColumnNames    fwtypes.SetOfString                             `tfsdk:"column_names"`
 	ColumnWildcard fwtypes.ListNestedObjectValueOf[columnWildcard] `tfsdk:"column_wildcard"`
 	RowFilter      fwtypes.ListNestedObjectValueOf[rowFilter]      `tfsdk:"row_filter"`
 	VersionID      types.String                                    `tfsdk:"version_id"`
 }
 
 type columnWildcard struct {
-	ExcludedColumnNames fwtypes.ListValueOf[types.String] `tfsdk:"excluded_column_names"`
+	ExcludedColumnNames fwtypes.SetOfString `tfsdk:"excluded_column_names"`
 }
 
 type rowFilter struct {

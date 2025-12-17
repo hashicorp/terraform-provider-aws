@@ -124,6 +124,7 @@ func resourceFunction() *schema.Resource {
 			},
 			"code_sha256": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"code_signing_config_arn": {
@@ -1780,6 +1781,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
+		d.HasChange("code_sha256") ||
 		d.HasChange("source_code_hash") ||
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||

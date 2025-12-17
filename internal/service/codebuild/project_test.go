@@ -434,6 +434,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location1),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
@@ -443,6 +444,27 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
+				),
+			},
+			{
+				Config: testAccProjectConfig_cacheNamespace(rName, s3Location2, "S3", "my-namespace"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", "my-namespace"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_cache(rName, s3Location2, "S3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
@@ -460,6 +482,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.modes.0", "LOCAL_DOCKER_LAYER_CACHE"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
@@ -468,6 +491,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", string(types.CacheTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 		},
@@ -3503,6 +3527,48 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, modeType))
+}
+
+func testAccProjectConfig_cacheNamespace(rName, cacheLocation, cacheType, cacheNamespace string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test1" {
+  bucket        = "%[1]s-1"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = "%[1]s-2"
+  force_destroy = true
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  cache {
+    location        = %[2]q
+    type            = %[3]q
+    cache_namespace = %[4]q
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  depends_on = [aws_s3_bucket.test1, aws_s3_bucket.test2]
+}
+`, rName, cacheLocation, cacheType, cacheNamespace))
 }
 
 func testAccProjectConfig_s3ComputedLocation(rName string) string {

@@ -27,14 +27,14 @@ TEST_COUNT                   ?= 1
 # Service-specific variables (interchangeable for user convenience):
 #   PKG=<service>     - Service name (e.g., ses, lambda, s3) - traditional usage
 #   K=<service>       - Service name (e.g., ses, lambda, s3) - shorter alias
-# 
+#
 # Test-specific variables:
 #   T=<pattern>       - Test name pattern (e.g., TestAccLambda) - preferred
 #   TESTS=<pattern>   - Test name pattern - legacy alias for T
 #
 # Derived variables (set automatically based on above):
 #   PKG_NAME          - Full package path (e.g., internal/service/ses)
-#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)  
+#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)
 #   TEST              - Test path pattern (e.g., ./internal/service/ses/...)
 #
 # Examples:
@@ -43,7 +43,7 @@ TEST_COUNT                   ?= 1
 #   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
 
 # Variable consolidation for backward compatibility and user convenience:
-# - PKG and K both refer to service names (e.g., 'ses', 'lambda')  
+# - PKG and K both refer to service names (e.g., 'ses', 'lambda')
 # - If one is provided, automatically set the other for consistency
 # - This allows 'make quick-fix PKG=ses' and 'make quick-fix K=ses' to work identically
 ifneq ($(origin PKG), undefined)
@@ -162,6 +162,67 @@ clean-go: prereq-go ## Clean up Go cache
 	go clean -modcache -testcache -cache -i -r
 	@echo "make: Go caches cleaned"
 
+clean-go-cache-trim: prereq-go ## Trim Go build cache to manageable size (keeps recent entries)
+	@echo "make: Trimming Go build cache..."
+	@cache_dir=$$(go env GOCACHE) ; \
+	if [ -d "$$cache_dir" ]; then \
+		echo "make: Current cache size: $$(du -sh $$cache_dir | cut -f1)" ; \
+		echo "make: Removing cache entries older than 7 days..." ; \
+		find "$$cache_dir" -type f -atime +7 -delete 2>/dev/null || true ; \
+		find "$$cache_dir" -type d -empty -delete 2>/dev/null || true ; \
+		echo "make: Cache size after trim: $$(du -sh $$cache_dir | cut -f1)" ; \
+		cache_size_mb=$$(du -sm "$$cache_dir" | cut -f1) ; \
+		if [ $$cache_size_mb -gt 51200 ]; then \
+			echo "make: WARNING: Cache still large ($$cache_size_mb MB). Consider 'make clean-go' for full cleanup." ; \
+		fi ; \
+	else \
+		echo "make: No cache directory found at $$cache_dir" ; \
+	fi
+
+cache-info: prereq-go ## Display Go cache and GitHub Actions cache information
+	@echo "=== Go Cache Information ==="
+	@gocache=$$(go env GOCACHE) ; \
+	gomodcache=$$(go env GOMODCACHE) ; \
+	echo "GOCACHE:     $$gocache" ; \
+	echo "GOMODCACHE:  $$gomodcache" ; \
+	echo "" ; \
+	if [ -d "$$gocache" ]; then \
+		size=$$(du -sh "$$gocache" 2>/dev/null | cut -f1) ; \
+		files=$$(find "$$gocache" -type f 2>/dev/null | wc -l | xargs) ; \
+		echo "Build cache size:  $$size ($$files files)" ; \
+		recent=$$(find "$$gocache" -type f -mtime -1 2>/dev/null | wc -l | xargs) ; \
+		week=$$(find "$$gocache" -type f -mtime -7 2>/dev/null | wc -l | xargs) ; \
+		old=$$(find "$$gocache" -type f -mtime +7 2>/dev/null | wc -l | xargs) ; \
+		echo "  < 1 day old:  $$recent files" ; \
+		echo "  < 7 days old: $$week files" ; \
+		echo "  > 7 days old: $$old files" ; \
+	else \
+		echo "Build cache: not found" ; \
+	fi ; \
+	echo "" ; \
+	if [ -d "$$gomodcache" ]; then \
+		size=$$(du -sh "$$gomodcache" 2>/dev/null | cut -f1) ; \
+		echo "Module cache size: $$size" ; \
+	else \
+		echo "Module cache: not found" ; \
+	fi ; \
+	echo "" ; \
+	echo "=== GitHub Actions Cache (if in CI) ===" ; \
+	if [ -n "$$GITHUB_ACTIONS" ]; then \
+		echo "Running in GitHub Actions" ; \
+		echo "CACHE_DATE: $${CACHE_DATE:-not set}" ; \
+		echo "Runner OS:  $${RUNNER_OS:-not set}" ; \
+		if [ -n "$$ACTIONS_CACHE_URL" ]; then \
+			echo "Cache service: available" ; \
+		else \
+			echo "Cache service: not available" ; \
+		fi ; \
+	else \
+		echo "Not running in GitHub Actions" ; \
+		echo "To check GitHub cache usage, visit:" ; \
+		echo "  https://github.com/hashicorp/terraform-provider-aws/actions/caches" ; \
+	fi
+
 clean-make-tests: ## Clean up artifacts from make tests
 	@echo "make: Cleaning up artifacts from make tests..."
 	@rm -rf sweeper-bin
@@ -191,14 +252,14 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-copyright: ## [CI] Copyright Checks / add headers check
-	@echo "make: Copyright Checks / add headers check..."
-	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop@v0.2.0
+copyright: ## [CI] Copyright Checks / headers check
+	@echo "make: Copyright Checks / headers check..."
+	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop
 	@copyplop check
 
 copyright-fix: ## Fix copyright headers
 	@echo "make: Fixing copyright headers..."
-	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop@v0.2.0
+	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop
 	@copyplop fix
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
@@ -364,11 +425,11 @@ misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] 
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -test $(TEST)
 
 modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
 	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -fix -test $(TEST)
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -422,7 +483,7 @@ quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -668,11 +729,6 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
 
-test: prereq-go fmt-check ## Run unit tests
-	@branch=$$(git rev-parse --abbrev-ref HEAD); \
-	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
-	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
-
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
@@ -680,6 +736,94 @@ test-compile: prereq-go ## Test package compilation
 		exit 1; \
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
+
+test: prereq-go ## Run unit tests (auto-detects environment and scope)
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
+	@# Auto-detect: single service or full codebase
+	@if [ -n "$(PKG)$(K)" ]; then \
+		echo "Testing single service: $(or $(PKG),$(K))"; \
+		$(MAKE) test-single-service; \
+	else \
+		echo "Testing full codebase"; \
+		$(MAKE) test-full; \
+	fi
+
+test-single-service: ## Internal: test single service
+	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
+		mkdir -p "$$build_dir/cache"; \
+		export GOCACHE="$$build_dir/cache"; \
+		export GOTMPDIR="$$build_dir"; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
+	test_parallel=$${TEST_PARALLEL:-$$cores}; \
+	printf "Testing with -parallel %s\n" "$$test_parallel"; \
+	$(GO_VER) test $(TEST) \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 30m \
+		-vet=off \
+		-buildvcs=false \
+		-count=1; \
+	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
+
+test-full: ## Internal: test full codebase
+	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		build_dir="/tmp/terraform-aws-build-$$$$"; \
+		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
+		export GOCACHE="$$build_dir/cache"; \
+		export GOTMPDIR="$$build_dir/tmp"; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	test_p=$${TEST_P:-$$cores}; \
+	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
+	printf "Testing with -p %s -parallel %s\n" "$$test_p" "$$test_parallel"; \
+	$(GO_VER) test $(TEST) \
+		-p $$test_p \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 60m \
+		-vet=off \
+		-buildvcs=false; \
+	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
+
+test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 TOTAL_SHARDS=4)
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
+		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
+		echo "Example: make test-shard SHARD=0 TOTAL_SHARDS=4"; \
+		exit 1; \
+	fi
+	@echo "Running shard $(SHARD) of $(TOTAL_SHARDS)..."
+	@packages=$$($(GO_VER) list ./... | grep -v '/vendor/' | sort); \
+	count=0; \
+	shard_packages=""; \
+	for pkg in $$packages; do \
+		if [ $$((count % $(TOTAL_SHARDS))) -eq $(SHARD) ]; then \
+			shard_packages="$$shard_packages $$pkg"; \
+		fi; \
+		count=$$((count + 1)); \
+	done; \
+	if [ -z "$$shard_packages" ]; then \
+		echo "No packages assigned to shard $(SHARD)"; \
+		exit 0; \
+	fi; \
+	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	test_p=$${TEST_P:-$$cores}; \
+	test_parallel=$${TEST_PARALLEL:-$$((cores * 2))}; \
+	echo "Testing $$( echo $$shard_packages | wc -w | xargs ) packages with -p $$test_p -parallel $$test_parallel"; \
+	$(GO_VER) test $$shard_packages \
+		-p $$test_p \
+		-parallel $$test_parallel \
+		-run '^Test[^A]|^TestA[^c]|^TestAc[^c]' \
+		$(RUNARGS) $(TESTARGS) \
+		-timeout 60m \
+		-vet=off \
+		-buildvcs=false
 
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
@@ -767,7 +911,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop@v0.2.0
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
@@ -939,11 +1083,13 @@ yamllint: ## [CI] YAML Linting / yamllint
 .PHONY: \
 	acctest-lint \
 	build \
+	cache-info \
 	changelog-misspell \
 	ci \
 	ci-quick \
 	clean \
 	clean-go \
+	clean-go-cache-trim \
 	clean-make-tests \
 	clean-tidy \
 	copyright \
@@ -1012,6 +1158,9 @@ yamllint: ## [CI] YAML Linting / yamllint
 	t \
 	test \
 	test-compile \
+	test-full \
+	test-shard \
+	test-single-service \
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \

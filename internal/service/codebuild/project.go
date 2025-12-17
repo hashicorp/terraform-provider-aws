@@ -214,6 +214,10 @@ func resourceProject() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cache_namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1417,6 +1421,10 @@ func expandProjectCache(tfMap map[string]any) *types.ProjectCache {
 		}
 	}
 
+	if v, ok := tfMap["cache_namespace"]; ok && v != "" {
+		apiObject.CacheNamespace = aws.String(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -1934,6 +1942,10 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 		names.AttrLocation: aws.ToString(apiObject.Location),
 		"modes":            apiObject.Modes,
 		names.AttrType:     apiObject.Type,
+	}
+
+	if apiObject.CacheNamespace != nil {
+		tfMap["cache_namespace"] = aws.ToString(apiObject.CacheNamespace)
 	}
 
 	return []any{tfMap}
