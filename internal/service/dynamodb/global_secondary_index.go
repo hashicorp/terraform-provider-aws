@@ -327,33 +327,21 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		},
 	}
 
-	if utRes, err := conn.UpdateTable(ctx, &input); err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf(`Unable to create index "%s" on table "%s"`, data.IndexName.ValueString(), data.TableName.ValueString()),
-			err.Error(),
-		)
-
+	output, err := conn.UpdateTable(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
 		return
-	} else {
-		g, err := findGSIFromTable(utRes.TableDescription, data.IndexName.ValueString())
-		if err != nil || g == nil {
-			response.Diagnostics.AddError(
-				"Unable to find remote GSI after create",
-				fmt.Sprintf(
-					`GSI with name "%s" (arn: "%s") was not found in table "%s"`,
-					data.IndexName.ValueString(),
-					data.ARN.ValueString(),
-					data.TableName.ValueString(),
-				),
-			)
+	}
 
-			return
-		}
+	index, err := findGSIFromTable(output.TableDescription, data.IndexName.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
+		return
+	}
 
-		response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, *g, utRes.TableDescription)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, *index, output.TableDescription)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	if _, err = waitTableActive(ctx, conn, data.TableName.ValueString(), createTimeout); err != nil {
