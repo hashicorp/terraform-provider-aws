@@ -104,6 +104,15 @@ func (r ResourceIdentity) IdentityDuplicateAttrs() []string {
 	})
 }
 
+func (r ResourceIdentity) Validate() error {
+	if r.IsMultipleParameterizedIdentity() {
+		if r.ImportIDHandler == "" {
+			return errors.New("ImportIDHandler required for multiple parameterized identity")
+		}
+	}
+	return nil
+}
+
 type IdentityAttribute struct {
 	Name_                  string
 	Optional               bool

@@ -454,6 +454,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
+	if err := d.Validate(); err != nil {
+		v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+	}
+
 	// Then build the resource maps, looking for duplicates.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
