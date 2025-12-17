@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
 * resource/aws_codebuild_project: Add `cache.cache_namespace` argument ([#45584](https://github.com/hashicorp/terraform-provider-aws/issues/45584))
 * resource/aws_datazone_domain: Add `root_domain_unit_id` argument ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
+* resource/aws_lambda_function: `code_sha256` is now optional and computed ([#45618](https://github.com/hashicorp/terraform-provider-aws/issues/45618))
 * resource/aws_networkmanager_connect_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `bgp_options.peer_asn` ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_networkmanager_dx_gateway_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
