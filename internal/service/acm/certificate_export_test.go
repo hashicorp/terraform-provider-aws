@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +56,7 @@ func TestAccACMCertificateExport_withCertificateChain(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateExportDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateExportConfig_withChain(certificate, key, caCertificate, "test-passphrase-456"),
@@ -69,6 +70,32 @@ func TestAccACMCertificateExport_withCertificateChain(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckCertificateExportDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acm_certificate" {
+				continue
+			}
+
+			_, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ACM Certificate %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckCertificateExportExists(ctx context.Context, n string) resource.TestCheckFunc {
