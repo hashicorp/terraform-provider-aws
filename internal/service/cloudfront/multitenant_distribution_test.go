@@ -40,6 +40,12 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
 		},
 	})
 }
@@ -172,9 +178,10 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
 			},
 		},
 	})
