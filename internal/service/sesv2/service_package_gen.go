@@ -21,7 +21,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceAccount,
+			TypeName: "aws_sesv2_account",
+			Name:     "Account",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {

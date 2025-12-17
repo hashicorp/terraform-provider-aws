@@ -173,21 +173,6 @@ func findAccountVDMAttributes(ctx context.Context, conn *sesv2.Client) (*types.V
 	return output.VdmAttributes, nil
 }
 
-func findAccount(ctx context.Context, conn *sesv2.Client) (*sesv2.GetAccountOutput, error) {
-	input := &sesv2.GetAccountInput{}
-	output, err := conn.GetAccount(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func expandDashboardAttributes(tfMap map[string]any) *types.DashboardAttributes {
 	if tfMap == nil {
 		return nil
