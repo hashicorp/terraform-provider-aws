@@ -32,3 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the parameter group.
 * `family` - Family of the parameter group.
 * `description` - Description of the parameter group.
+* `parameters` - Set of parameters in the parameter group. Each parameter block supports the following:
+    * `apply_method` - Method to apply the parameter (e.g., `immediate` or `pending-reboot`).
+    * `name` - Name of the parameter.
+    * `value` - Value of the parameter.
