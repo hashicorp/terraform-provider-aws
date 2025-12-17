@@ -269,7 +269,6 @@ func findConnectionByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 		ConnectionIds:   []string{connectionID},
 		GlobalNetworkId: aws.String(globalNetworkID),
 	}
-
 	output, err := findConnection(ctx, conn, &input)
 
 	if err != nil {
