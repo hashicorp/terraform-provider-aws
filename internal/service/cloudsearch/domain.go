@@ -1229,9 +1229,20 @@ func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldMod
 	}
 
 	field := apiObject.Options
+	// Initialize all optional fields to null to avoid "unknown after apply" errors.
+	// The zero value of types.Bool/types.String is "unknown", not null, so we must
+	// explicitly set them to null for fields that the API doesn't return.
 	m := &indexFieldModel{
-		Name: types.StringValue(aws.ToString(field.IndexFieldName)),
-		Type: fwtypes.StringEnumValue(field.IndexFieldType),
+		Name:           types.StringValue(aws.ToString(field.IndexFieldName)),
+		Type:           fwtypes.StringEnumValue(field.IndexFieldType),
+		AnalysisScheme: types.StringNull(),
+		DefaultValue:   types.StringNull(),
+		Facet:          types.BoolNull(),
+		Highlight:      types.BoolNull(),
+		Return:         types.BoolNull(),
+		Search:         types.BoolNull(),
+		Sort:           types.BoolNull(),
+		SourceFields:   types.StringNull(),
 	}
 
 	switch fieldType := field.IndexFieldType; fieldType {
