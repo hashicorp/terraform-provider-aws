@@ -45,6 +45,26 @@ func StringIsInt32(v any, k string) (ws []string, errors []error) {
 	return
 }
 
+// IntBetween64 validates that an integer value is within the specified range,
+// supporting int64 min/max values that may exceed the platform's int size.
+// This is useful for values like ASNs that can be up to 4294967295.
+func IntBetween64(min, max int64) schema.SchemaValidateFunc {
+	return func(i any, k string) (warnings []string, errors []error) {
+		v, ok := i.(int)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be int", k))
+			return
+		}
+
+		val := int64(v)
+		if val < min || val > max {
+			errors = append(errors, fmt.Errorf("expected %s to be in the range (%d - %d), got %d", k, min, max, val))
+		}
+
+		return warnings, errors
+	}
+}
+
 func Valid4ByteASN(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 

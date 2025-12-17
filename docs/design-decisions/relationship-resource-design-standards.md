@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Relationship Resource Design Standards
 
 **Summary:** Align on design standards for relationship management resources in the Terraform AWS Provider.  

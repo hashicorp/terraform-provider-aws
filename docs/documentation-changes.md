@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # End User Documentation Changes
 
 All practitioner-focused documentation is found in the `/website` folder of the repository.

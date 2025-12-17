@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Alexa Example
 
 This example will show you how to use Terraform to enable the Alexa permission on a lambda function.
