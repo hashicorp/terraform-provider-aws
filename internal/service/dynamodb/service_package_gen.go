@@ -46,6 +46,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_dynamodb_global_secondary_index",
 			Name:     "Global Secondary Index",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrTableName, true),
+				inttypes.StringIdentityAttribute("index_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      globalSecondaryIndexImportID{},
+			},
 		},
 		{
 			Factory:  newResourcePolicyResource,

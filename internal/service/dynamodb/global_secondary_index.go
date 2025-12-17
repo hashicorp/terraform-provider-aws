@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -47,7 +46,14 @@ const (
 )
 
 // @FrameworkResource("aws_dynamodb_global_secondary_index", name="Global Secondary Index")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @IdentityAttribute("table_name")
+// @IdentityAttribute("index_name")
+// @ImportIDHandler("globalSecondaryIndexImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.GlobalSecondaryIndexDescription")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
+// @Testing(importStateIdFunc=testAccGlobalSecondaryIndexImportStateIdFunc)
+// @Testing(importStateIdAttribute="arn")
 func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGlobalSecondaryIndex{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -60,6 +66,7 @@ func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithCo
 type resourceGlobalSecondaryIndex struct {
 	framework.ResourceWithModel[resourceGlobalSecondaryIndexModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -215,27 +222,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 	}
 
 	response.Schema = s
-}
-
-func (r *resourceGlobalSecondaryIndex) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	handler := globalSecondaryIndexImportID{}
-	_, parts, err := handler.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.Append(importer.InvalidResourceImportIDError(
-			"could not be parsed.\n\n" +
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		))
-		return
-	}
-
-	for attr, val := range parts {
-		attrPath := path.Root(attr)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, val)...)
-
-		if identity := response.Identity; identity != nil {
-			response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, val)...)
-		}
-	}
 }
 
 func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
