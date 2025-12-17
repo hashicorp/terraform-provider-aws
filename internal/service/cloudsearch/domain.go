@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -107,6 +107,14 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			// endpoint_options is Optional+Computed using ListAttribute (not ListNestedBlock)
+			// to support true optional+computed semantics. This preserves drift detection
+			// and allows users to reference computed values without explicitly configuring the block.
+			// See: https://github.com/hashicorp/terraform-plugin-framework/issues/883
+			"endpoint_options": framework.ResourceOptionalComputedListOfObjectsAttribute[endpointOptionsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			// scaling_parameters is Optional+Computed using ListAttribute (not ListNestedBlock)
+			// for the same reasons as endpoint_options.
+			"scaling_parameters": framework.ResourceOptionalComputedListOfObjectsAttribute[scalingParametersModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -114,23 +122,6 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Update: true,
 				Delete: true,
 			}),
-			"endpoint_options": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointOptionsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"enforce_https": schema.BoolAttribute{
-							Optional: true,
-						},
-						"tls_security_policy": schema.StringAttribute{
-							Optional:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.TLSSecurityPolicy](),
-						},
-					},
-				},
-			},
 			"index_field": schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[indexFieldModel](ctx, indexFieldSetOptions...),
 				NestedObject: schema.NestedBlockObject{
@@ -191,26 +182,6 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 						names.AttrType: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.IndexFieldType](),
-						},
-					},
-				},
-			},
-			"scaling_parameters": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingParametersModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"desired_instance_type": schema.StringAttribute{
-							Optional:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.PartitionInstanceType](),
-						},
-						"desired_partition_count": schema.Int64Attribute{
-							Optional: true,
-						},
-						"desired_replication_count": schema.Int64Attribute{
-							Optional: true,
 						},
 					},
 				},
@@ -427,28 +398,23 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 	}
 	data.MultiAZ = types.BoolValue(availabilityOptionStatus.Options)
 
-	// Read endpoint options only if they were previously configured (exist in state).
-	// This is the clean Framework pattern: nested blocks represent user intent,
-	// not computed status outputs. If user didn't configure the block, we don't
-	// populate it in state.
-	if !data.EndpointOptions.IsNull() && len(data.EndpointOptions.Elements()) > 0 {
-		endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
-		if err != nil {
-			diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
-			return diags
-		}
-		data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
+	// Read endpoint options - always populate from API since this is now a true
+	// Optional+Computed ListAttribute (not ListNestedBlock). The UseStateForUnknown
+	// plan modifier handles preserving state during planning.
+	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
+		return diags
 	}
+	data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
 
-	// Read scaling parameters only if they were previously configured (exist in state).
-	if !data.ScalingParameters.IsNull() && len(data.ScalingParameters.Elements()) > 0 {
-		scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
-		if err != nil {
-			diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
-			return diags
-		}
-		data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
+	// Read scaling parameters - always populate from API for the same reason.
+	scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
+		return diags
 	}
+	data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
 
 	// Read index fields
 	indexInput := &cloudsearch.DescribeIndexFieldsInput{
