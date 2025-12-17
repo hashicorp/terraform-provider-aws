@@ -33,6 +33,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -436,42 +437,11 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	var old, new resourceGlobalSecondaryIndexModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	conn := r.Meta().DynamoDBClient(ctx)
-
-	table, err := waitAllGSIActive(ctx, conn, new.TableName.ValueString(), updateTimeout)
-	if err != nil {
-		if retry.NotFound(err) {
-			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			response.State.RemoveResource(ctx)
-		} else {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Unable to read table "%s"`, new.TableName.ValueString()),
-				err.Error(),
-			)
-		}
-
-		return
-	}
-
-	response.Diagnostics.Append(validateNewGSIAttributes(ctx, new, table)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var action awstypes.UpdateGlobalSecondaryIndexAction
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, &action)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -480,40 +450,60 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		!new.OnDemandThroughputs.Equal(old.OnDemandThroughputs) ||
 		!new.WarmThroughputs.Equal(old.WarmThroughputs)
 
-	input := dynamodb.UpdateTableInput{
-		TableName: new.TableName.ValueStringPointer(),
-		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
-			{
-				Update: &action,
-			},
-		},
-	}
-
 	if hasUpdate {
-		if utRes, err := conn.UpdateTable(ctx, &input); err != nil {
+		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+		conn := r.Meta().DynamoDBClient(ctx)
+
+		table, err := waitAllGSIActive(ctx, conn, new.TableName.ValueString(), updateTimeout)
+		if err != nil {
+			if retry.NotFound(err) {
+				response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+				response.State.RemoveResource(ctx)
+			} else {
+				response.Diagnostics.AddError(
+					fmt.Sprintf(`Unable to read table "%s"`, new.TableName.ValueString()),
+					err.Error(),
+				)
+			}
+
+			return
+		}
+
+		response.Diagnostics.Append(validateNewGSIAttributes(ctx, new, table)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		var action awstypes.UpdateGlobalSecondaryIndexAction
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &action)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input := dynamodb.UpdateTableInput{
+			TableName: new.TableName.ValueStringPointer(),
+			GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &action,
+				},
+			},
+		}
+
+		output, err := conn.UpdateTable(ctx, &input)
+		if err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.IndexName.ValueString(), new.TableName.ValueString()),
 				err.Error(),
 			)
 
 			return
-		} else {
-			g, err := findGSIFromTable(utRes.TableDescription, new.IndexName.ValueString())
-			table = utRes.TableDescription
+		}
+		table = output.TableDescription
 
-			if err != nil || g == nil {
-				response.Diagnostics.AddError(
-					"Unable to find remote GSI after update",
-					fmt.Sprintf(
-						`GSI with name "%s" (arn: "%s") was not found in table "%s"`,
-						new.IndexName.ValueString(),
-						new.ARN.ValueString(),
-						new.TableName.ValueString(),
-					),
-				)
-
-				return
-			}
+		_, err = findGSIFromTable(output.TableDescription, new.IndexName.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+			return
 		}
 
 		if _, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
