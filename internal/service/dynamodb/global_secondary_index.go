@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,8 +37,8 @@ import (
 )
 
 const (
-	warmThoughtPutMinReadUnitsPerSecond  = 12000
-	warmThoughtPutMinWriteUnitsPerSecond = 4000
+	warmThoughputMinReadUnitsPerSecond  = 12000
+	warmThoughputMinWriteUnitsPerSecond = 4000
 
 	minNumberOfHashes = 1
 	maxNumberOfHashes = 4
@@ -635,29 +634,23 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 
 	data.TableName = fwflex.StringToFramework(ctx, table.TableName)
 
-	var kss []keySchemaModel
-	adm := map[string]awstypes.ScalarAttributeType{}
-	for _, ad := range table.AttributeDefinitions {
-		adm[aws.ToString(ad.AttributeName)] = ad.AttributeType
+	attributeTypes := make(map[string]awstypes.ScalarAttributeType, len(table.AttributeDefinitions))
+	for _, attribute := range table.AttributeDefinitions {
+		attributeTypes[aws.ToString(attribute.AttributeName)] = attribute.AttributeType
 	}
 
-	for _, ks := range index.KeySchema {
-		kss = append(kss, keySchemaModel{
+	keyModels := make([]keySchemaModel, len(index.KeySchema))
+	for i, ks := range index.KeySchema {
+		keyModels[i] = keySchemaModel{
 			AttributeName: fwflex.StringToFramework(ctx, ks.AttributeName),
-			AttributeType: fwtypes.StringEnumValue(adm[aws.ToString(ks.AttributeName)]),
+			AttributeType: fwtypes.StringEnumValue(attributeTypes[aws.ToString(ks.AttributeName)]),
 			KeyType:       fwtypes.StringEnumValue(ks.KeyType),
-		})
+		}
 	}
 
-	if len(kss) > 0 {
-		data.KeySchema = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, kss)
-	} else {
-		data.KeySchema = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []keySchemaModel{})
-	}
+	data.KeySchema = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, keyModels)
 
-	if index.ProvisionedThroughput == nil {
-		data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfNull[provisionedThroughputModel](ctx)
-	} else {
+	if index.ProvisionedThroughput != nil {
 		var ptM provisionedThroughputModel
 		d := fwflex.Flatten(ctx, index.ProvisionedThroughput, &ptM)
 		diags.Append(d...)
@@ -671,22 +664,27 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		}
 	}
 
-	if index.WarmThroughput != nil {
-		rups := max(aws.ToInt64(index.WarmThroughput.ReadUnitsPerSecond), warmThoughtPutMinReadUnitsPerSecond)
-		wups := max(aws.ToInt64(index.WarmThroughput.WriteUnitsPerSecond), warmThoughtPutMinWriteUnitsPerSecond)
-
-		var wtms []warmThroughputModel
-		if rups > warmThoughtPutMinReadUnitsPerSecond || wups > warmThoughtPutMinWriteUnitsPerSecond {
-			wtms = append(wtms, warmThroughputModel{
-				ReadUnitsPerSecond:  types.Int64Value(rups),
-				WriteUnitsPerSecond: types.Int64Value(wups),
-			})
-		}
-
-		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, wtms)
-	} else {
-		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{})
-	}
+	// Warm Throughput is not properly supported in `PROVISIONED` mode by `aws_dynamodb_table`,
+	// so temporarily disabling it here, too.
+	// Note: the logic in `aws_dynamodb_table` is incorrect, as small values in Warm Throughput are for `PROVISIONED` tables.
+	// billingMode := awstypes.BillingModeProvisioned
+	// if table.BillingModeSummary != nil {
+	// 	billingMode = table.BillingModeSummary.BillingMode
+	// }
+	// if billingMode == awstypes.BillingModeProvisioned {
+	// 	data.WarmThroughput = fwtypes.NewListNestedObjectValueOfNull[warmThroughputModel](ctx)
+	// } else {
+	// 	// Only set Warm Throughput values if explicitly configured. Prevents "inconsistent result" errors.
+	// 	if !data.WarmThroughput.IsNull() && len(data.WarmThroughput.Elements()) != 0 {
+	// 		var wtM warmThroughputModel
+	// 		d := fwflex.Flatten(ctx, index.WarmThroughput, &wtM)
+	// 		diags.Append(d...)
+	// 		if diags.HasError() {
+	// 			return diags
+	// 		}
+	// 		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{wtM})
+	// 	}
+	// }
 
 	return diags
 }

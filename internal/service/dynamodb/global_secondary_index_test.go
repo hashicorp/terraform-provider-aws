@@ -696,7 +696,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -714,7 +714,127 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName),
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName, 15000, 5000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"read_units_per_second":  knownvalue.Int64Exact(15000),
+							"write_units_per_second": knownvalue.Int64Exact(5000),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_explicitDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName, 12000, 4000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
+					// 	knownvalue.ObjectExact(map[string]knownvalue.Check{
+					// 		"read_units_per_second":  knownvalue.Int64Exact(12000),
+					// 		"write_units_per_second": knownvalue.Int64Exact(4000),
+					// 	}),
+					// })),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_updateFromDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGSIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput_unspecified(rNameTable, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
+					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
+
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					// statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
+					// 	knownvalue.ObjectExact(map[string]knownvalue.Check{
+					// 		"read_units_per_second":  knownvalue.Int64Exact(12000),
+					// 		"write_units_per_second": knownvalue.Int64Exact(4000),
+					// 	}),
+					// })),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(rNameTable, rName, 15000, 5000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
@@ -1413,8 +1533,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T)
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("ALL")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"projection_type":    knownvalue.StringExact("ALL"),
@@ -2548,7 +2666,7 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName, capacity)
 }
 
-func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(tableName, indexName string) string {
+func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(tableName, indexName string, readUnits, writeUnits int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name      = aws_dynamodb_table.test.name
@@ -2570,8 +2688,43 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   }
 
   warm_throughput {
-    read_units_per_second  = 15000
-    write_units_per_second = 5000
+    read_units_per_second  = %[3]d
+    write_units_per_second = %[4]d
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  hash_key     = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, tableName, indexName, readUnits, writeUnits)
+}
+
+func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput_unspecified(tableName, indexName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table_name      = aws_dynamodb_table.test.name
+  index_name      = %[2]q
+  projection {
+    projection_type = "ALL"
+  }
+
+  key_schema {
+    attribute_name = %[1]q
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+
+  key_schema {
+    attribute_name = %[2]q
+    attribute_type = "S"
+    key_type       = "RANGE"
   }
 }
 
