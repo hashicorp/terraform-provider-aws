@@ -772,7 +772,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	// Handle tag updates
+	// Handle tag updates first
 	if !new.Tags.Equal(old.Tags) {
 		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
 			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
@@ -780,8 +780,51 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		}
 	}
 
-	// For other updates, we would need to call UpdateDistribution API
-	// For now, just read the current state to ensure computed values are populated
+	// Check if distribution config needs updating (anything other than tags)
+	if !distributionConfigEqual(old, new) {
+		// Get current distribution to get ETag for update
+		output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution for update", err.Error())
+			return
+		}
+
+		// Prepare update input
+		input := &cloudfront.UpdateDistributionInput{
+			Id:      new.ID.ValueStringPointer(),
+			IfMatch: output.ETag,
+		}
+
+		// Expand the new configuration
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.DistributionConfig)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Ensure ConnectionMode remains tenant-only
+		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
+
+		// Update the distribution
+		updateOutput, err := conn.UpdateDistribution(ctx, input)
+		if err != nil {
+			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution", err.Error())
+			return
+		}
+
+		// Wait for deployment if enabled
+		if new.Enabled.ValueBool() {
+			_, err = waitDistributionDeployed(ctx, conn, new.ID.ValueString())
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) update", new.ID.ValueString()), err.Error())
+				return
+			}
+		}
+
+		// Update ETag from response
+		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
+	}
+
+	// Read back the updated distribution to ensure state consistency
 	output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution after update", err.Error())
@@ -799,6 +842,24 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+// distributionConfigEqual checks if distribution configuration has changed (excluding tags)
+func distributionConfigEqual(old, new multiTenantDistributionResourceModel) bool {
+	// Compare key fields that would require UpdateDistribution API call
+	return old.Comment.Equal(new.Comment) &&
+		old.DefaultRootObject.Equal(new.DefaultRootObject) &&
+		old.Enabled.Equal(new.Enabled) &&
+		old.HTTPVersion.Equal(new.HTTPVersion) &&
+		old.WebACLID.Equal(new.WebACLID) &&
+		old.CacheBehavior.Equal(new.CacheBehavior) &&
+		old.CustomErrorResponse.Equal(new.CustomErrorResponse) &&
+		old.DefaultCacheBehavior.Equal(new.DefaultCacheBehavior) &&
+		old.Origin.Equal(new.Origin) &&
+		old.OriginGroup.Equal(new.OriginGroup) &&
+		old.Restrictions.Equal(new.Restrictions) &&
+		old.TenantConfig.Equal(new.TenantConfig) &&
+		old.ViewerCertificate.Equal(new.ViewerCertificate)
 }
 
 func (r *multiTenantDistributionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
