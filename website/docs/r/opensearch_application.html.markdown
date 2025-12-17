@@ -215,6 +215,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the OpenSearch application.
 * `id` - The unique identifier of the OpenSearch application.
+* `iam_identity_center_options[0].iam_identity_center_application_arn` - If `iam_identity_center_options.enabled` is true this will hold the Amazon Resource Name (ARN) of the IAM Identity Center application.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

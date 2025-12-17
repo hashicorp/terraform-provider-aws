@@ -161,6 +161,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 								),
 							},
 						},
+						"iam_identity_center_application_arn": framework.ARNAttributeComputedOnly(),
 					},
 				},
 			},
@@ -452,6 +453,7 @@ type iamIdentityCenterOptionsModel struct {
 	Enabled                                types.Bool  `tfsdk:"enabled"`
 	IamIdentityCenterInstanceArn           fwtypes.ARN `tfsdk:"iam_identity_center_instance_arn"`
 	IamRoleForIdentityCenterApplicationArn fwtypes.ARN `tfsdk:"iam_role_for_identity_center_application_arn"`
+	IamIdentityCenterApplicationArn        fwtypes.ARN `tfsdk:"iam_identity_center_application_arn"`
 }
 
 func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
