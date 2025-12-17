@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -758,4 +759,54 @@ func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Client, nam
 	}
 
 	return findSnapshotCopyGrant(ctx, conn, &input)
+}
+
+func findSnapshotSchedules(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotSchedulesInput) ([]awstypes.SnapshotSchedule, error) {
+	var output []awstypes.SnapshotSchedule
+
+	pages := redshift.NewDescribeSnapshotSchedulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.SnapshotScheduleNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SnapshotSchedules...)
+	}
+
+	return output, nil
+}
+
+func findSnapshotSchedule(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotSchedulesInput) (*awstypes.SnapshotSchedule, error) {
+	output, err := findSnapshotSchedules(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Client, clusterID, scheduleID string) (*awstypes.ClusterAssociatedToSchedule, error) {
+	input := redshift.DescribeSnapshotSchedulesInput{
+		ClusterIdentifier:  aws.String(clusterID),
+		ScheduleIdentifier: aws.String(scheduleID),
+	}
+	output, err := findSnapshotSchedule(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.AssociatedClusters, func(v awstypes.ClusterAssociatedToSchedule) bool {
+		return aws.ToString(v.ClusterIdentifier) == clusterID
+	}))
 }

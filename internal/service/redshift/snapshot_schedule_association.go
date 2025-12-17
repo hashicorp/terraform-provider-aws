@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +56,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 
 	clusterIdentifier := d.Get(names.AttrClusterIdentifier).(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
-	id := SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier)
+	id := snapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier)
 	input := &redshift.ModifyClusterSnapshotScheduleInput{
 		ClusterIdentifier:    aws.String(clusterIdentifier),
 		ScheduleIdentifier:   aws.String(scheduleIdentifier),
@@ -83,7 +82,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseResourceID(d.Id())
+	clusterIdentifier, scheduleIdentifier, err := snapshotScheduleAssociationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -110,7 +109,7 @@ func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseResourceID(d.Id())
+	clusterIdentifier, scheduleIdentifier, err := snapshotScheduleAssociationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -138,14 +137,14 @@ func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.Re
 
 const snapshotScheduleAssociationIDSeparator = "/"
 
-func SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier string) string {
+func snapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier string) string {
 	parts := []string{clusterIdentifier, scheduleIdentifier}
 	id := strings.Join(parts, snapshotScheduleAssociationIDSeparator)
 
 	return id
 }
 
-func SnapshotScheduleAssociationParseResourceID(id string) (string, string, error) {
+func snapshotScheduleAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, snapshotScheduleAssociationIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -153,37 +152,6 @@ func SnapshotScheduleAssociationParseResourceID(id string) (string, string, erro
 	}
 
 	return parts[0], parts[1], nil
-}
-
-func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) {
-	input := &redshift.DescribeSnapshotSchedulesInput{
-		ClusterIdentifier:  aws.String(clusterIdentifier),
-		ScheduleIdentifier: aws.String(scheduleIdentifier),
-	}
-
-	output, err := conn.DescribeSnapshotSchedules(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	schedule, err := tfresource.AssertSingleValueResult(output.SnapshotSchedules)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range schedule.AssociatedClusters {
-		if aws.ToString(v.ClusterIdentifier) == clusterIdentifier {
-			return &v, nil
-		}
-	}
-
-	return nil, &sdkretry.NotFoundError{}
 }
 
 func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {

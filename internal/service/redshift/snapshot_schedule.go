@@ -210,14 +210,14 @@ func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Client,
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule Association (%s): %s", SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
+			return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule Association (%s): %s", snapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
 		}
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
 		clusterIdentifier := aws.ToString(associatedCluster.ClusterIdentifier)
 		if _, err := waitSnapshotScheduleAssociationDeleted(ctx, conn, clusterIdentifier, id); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Snapshot Schedule Association (%s) delete: %s", SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Snapshot Schedule Association (%s) delete: %s", snapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
 		}
 	}
 
