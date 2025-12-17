@@ -8,9 +8,15 @@ description: |-
 
 # Resource: aws_dynamodb_global_secondary_index
 
-## Example Usage
+!> The resource type `aws_dynamodb_global_secondary_index` is an experimental feature. The schema or behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider.
 
-The following **experimental** DynamoDB table description models the table and GSI shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
+~> The resource type `aws_dynamodb_global_secondary_index` can be enabled by setting the environment variable `TF_AWS_EXPERIMENT_dynamodb_global_secondary_index` to any value. If not enabled, use of `aws_dynamodb_global_secondary_index` will result in an error when running Terraform.
+
+-> Please provide feedback, positive or negative, at https://github.com/hashicorp/terraform-provider-aws/issues/45640. User feedback will determine if this experiment is a success.
+
+!> **WARNING:** Do not combine `aws_dynamodb_global_secondary_index` resources in conjunction with `global_secondary_index` on [`aws_dynamodb_table`](dynamodb_table.html). Doing so may cause conflicts, perpertual differences, and Global Secondary Indexes being overwritten.
+
+## Example Usage
 
 ```terraform
 resource "aws_dynamodb_global_secondary_index" "example" {
@@ -53,6 +59,122 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 ```
+
+## Migrating
+
+Use the following steps to migrate existing Global Secondary Indexes defined inline in `global_secondary_index` on an `aws_dynamodb_table`.
+
+For each block `global_secondary_index` create a new `aws_dynamodb_global_secondary_index` resource with configuration corresponding to the existing block.
+
+For example, starting with the following configuration:
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name           = "example-table"
+  hash_key       = "example-key"
+  read_capacity  = 1
+  write_capacity = 1
+
+  global_secondary_index {
+    name            = "example-index-1"
+    projection_type = "ALL"
+    hash_key        = "example-gsi-key-1"
+    read_capacity   = 1
+    write_capacity  = 1
+  }
+
+  global_secondary_index {
+    name            = "example-index-2"
+    projection_type = "ALL"
+    hash_key        = "example-gsi-key-2"
+    read_capacity   = 1
+    write_capacity  = 1
+  }
+
+  attribute {
+    name = "example-key"
+    type = "S"
+  }
+
+  attribute {
+    name = "example-gsi-key-1"
+    type = "S"
+  }
+
+  attribute {
+    name = "example-gsi-key-2"
+    type = "S"
+  }
+}
+```
+
+Update the configuration to the following. Note that the schema of `aws_dynamodb_global_secondary_index` has some differences with `global_secondary_index` on `aws_dynamodb_table`.
+
+If using Terraform versions prior to v1.5.0, remove the `import` blocks and use the `terraform import` command.
+
+```terraform
+import {
+  to = aws_dynamodb_global_secondary_index.example1
+  id = "${aws_dynamodb_table.example.name},example-index-1"
+}
+
+import {
+  to = aws_dynamodb_global_secondary_index.example2
+  id = "${aws_dynamodb_table.example.name},example-index-2"
+}
+
+resource "aws_dynamodb_global_secondary_index" "example1" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = "example-index-1"
+  projection {
+    projection_type = "ALL"
+  }
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
+  key_schema {
+    attribute_name = "example-gsi-key-1"
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_global_secondary_index" "example2" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = "example-index-2"
+  projection {
+    projection_type = "ALL"
+  }
+
+  provisioned_throughput {
+    read_capacity_units  = 1
+    write_capacity_units = 1
+  }
+
+  key_schema {
+    attribute_name = "example-gsi-key-2"
+    attribute_type = "S"
+    key_type       = "HASH"
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "example-table"
+  hash_key       = "example-key"
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "example-key"
+    type = "S"
+  }
+}
+```
+
+For more details on importing `aws_dynamodb_global_secondary_index` resources, see [the Import section below](#import).
 
 ## Argument Reference
 
@@ -97,37 +219,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `attribute_name` - (Required) Name of the attribute
 * `attribute_type` - (Required) Type of the attribute in the index; Valid values are `S` (string), `N` (number), `B` (binary).
 * `key_type` - (Required) Key type. Valid values are `HASH`, `RANGE`.
-
-## Migrating
-
-For each block `global_secondary_index` create a new `aws_dynamodb_global_secondary_index` resource with the same configuration as the block you're replacing and add the following line into the new resource:
-
-```
-    # see Example section; replace $resource$ with the actual resource name
-    table_name = aws_dynamodb_global_secondary_index.$resource$.name
-```
-
-Using `terraform import`, import DynamoDB global secondary indexes using the `arn`. For example:
-
-```console
-% terraform import aws_dynamodb_global_secondary_index.GameScores arn:aws:dynamodb:eu-west-1:123456789012:table/GameScores/index/GameTitleIndex
-```
-
-Run `terraform plan` to validate.
-
-~> **Note:** You can use either `global_secondary_index` blocks or `aws_dynamodb_global_secondary_index` resources. You cannot use both on the same table. If you chose to migrate to this new resource, you must migrate all the global secondary indexes that the table defines.
-
-## Reverting
-
-For each `aws_dynamodb_global_secondary_index` that you want to remove, you must create a `global_secondary_index` inside the table where it belongs.
-
-Detach the `aws_dynamodb_global_secondary_index` resource from state with:
-
-```
-% terraform state rm aws_dynamodb_global_secondary_index.$resource$
-```
-
-Run `terraform plan` to validate.
 
 ## Import
 
