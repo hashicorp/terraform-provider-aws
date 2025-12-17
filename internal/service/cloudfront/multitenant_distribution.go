@@ -45,6 +45,8 @@ const (
 //
 // Multi-tenant Distribution Limitations:
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
+// - ActiveTrustedSigners (use ActiveTrustedKeyGroups instead)
+// - AliasICPRecordals (managed by connection groups)
 // - CacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
 // - CacheBehavior.SmoothStreaming
 // - CacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
