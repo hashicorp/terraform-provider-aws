@@ -545,22 +545,16 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	conn := r.Meta().DynamoDBClient(ctx)
 
 	table, err := waitAllGSIActive(ctx, conn, data.TableName.ValueString(), deleteTimeout)
-	// attempt early exit if owning table is already in deleting state
-	if table != nil && table.TableStatus == awstypes.TableStatusDeleting {
+	if retry.NotFound(err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
 		return
 	}
 
-	if err != nil {
-		if retry.NotFound(err) {
-			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			response.State.RemoveResource(ctx)
-		} else {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Unable to read table "%s"`, data.TableName.ValueString()),
-				err.Error(),
-			)
-		}
-
+	// If owning table is already deleting, exit
+	if table != nil && table.TableStatus == awstypes.TableStatusDeleting {
 		return
 	}
 
