@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -28,11 +27,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -219,7 +221,24 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 }
 
 func (r *resourceGlobalSecondaryIndex) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	handler := globalSecondaryIndexImportID{}
+	_, parts, err := handler.Parse(request.ID)
+	if err != nil {
+		response.Diagnostics.Append(importer.InvalidResourceImportIDError(
+			"could not be parsed.\n\n" +
+				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+		))
+		return
+	}
+
+	for attr, val := range parts {
+		attrPath := path.Root(attr)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, val)...)
+
+		if identity := response.Identity; identity != nil {
+			response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, val)...)
+		}
+	}
 }
 
 func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -384,32 +403,19 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 		return
 	}
 
-	re := regexache.MustCompile(":table/([^\\/]+)/index/(.+)")
-	grps := re.FindStringSubmatch(data.ARN.ValueString())
-	var tableName string
-	var indexName string
-	if len(grps) == 3 {
-		tableName = grps[1]
-		indexName = grps[2]
-	} else {
-		tableName = data.TableName.ValueString()
-		indexName = data.IndexName.ValueString()
-	}
+	tableName := data.TableName.ValueString()
+	indexName := data.IndexName.ValueString()
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
 	table, err := findTableByName(ctx, conn, tableName)
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if retry.NotFound(err) {
-			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			response.State.RemoveResource(ctx)
-		} else {
-			response.Diagnostics.AddError(
-				fmt.Sprintf(`Unable to read table "%s"`, tableName),
-				err.Error(),
-			)
-		}
-
+		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
 		return
 	}
 
@@ -840,4 +846,24 @@ func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryI
 	}
 
 	return diags
+}
+
+var (
+	_ inttypes.ImportIDParser = globalSecondaryIndexImportID{}
+)
+
+type globalSecondaryIndexImportID struct{}
+
+func (globalSecondaryIndexImportID) Parse(id string) (string, map[string]string, error) {
+	tableName, indexName, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("Import ID \"%s\" should be in the format <table-name>"+intflex.ResourceIdSeparator+"<index-name>", id)
+	}
+
+	result := map[string]string{
+		names.AttrTableName: tableName,
+		"index_name":        indexName,
+	}
+
+	return id, result, nil
 }
