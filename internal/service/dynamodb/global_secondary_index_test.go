@@ -2140,8 +2140,8 @@ func testAccGlobalSecondaryIndexImportCmdIdFunc(tableName, indexName string) res
 func testAccGlobalSecondaryIndexConfig_basic(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2175,8 +2175,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2210,8 +2210,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2263,8 +2263,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiSameAsTable(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2298,8 +2298,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_provisioned_capacity_gsiDifferentFromTable(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2333,8 +2333,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2368,8 +2368,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2413,8 +2413,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2458,8 +2458,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2515,8 +2515,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput(tableName, indexName string, readUnits, writeUnits int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2555,8 +2555,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_warmThroughput_unspecified(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2590,8 +2590,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_validateAttribute_missmatchedType(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2648,8 +2648,8 @@ func testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(tabl
 
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2692,10 +2692,10 @@ func testAccGlobalSecondaryIndexConfig_nonKeyAttributes(tableName, indexName str
 
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
-    projection_type = "INCLUDE"
+    projection_type    = "INCLUDE"
     non_key_attributes = ["%[3]s"]
   }
 
@@ -2729,8 +2729,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_nonKeyAttributes_updateSetup(tableName, indexName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2764,8 +2764,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashOnly(tableName, indexName, hashKey string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2799,8 +2799,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_keysNotOnTable_hashAndSort(tableName, indexName, hashKey, sortKey string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2839,8 +2839,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_multipleGsi_create(tableName, indexName1, indexName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2858,8 +2858,8 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 }
 
 resource "aws_dynamodb_global_secondary_index" "test2" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[3]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[3]q
   projection {
     projection_type = "ALL"
   }
@@ -2909,8 +2909,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_multipleGsi_update(tableName, indexName1, indexName2 string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2927,8 +2927,8 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 }
 
 resource "aws_dynamodb_global_secondary_index" "test2" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[3]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[3]q
   projection {
     projection_type = "ALL"
   }
@@ -2961,8 +2961,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_multipleGsi_badKeys(tableName, indexName1, indexName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -2980,8 +2980,8 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 }
 
 resource "aws_dynamodb_global_secondary_index" "test2" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[3]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[3]q
   projection {
     projection_type = "ALL"
   }
@@ -3043,8 +3043,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_migrate_single(tableName, indexName1 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -3131,8 +3131,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccGlobalSecondaryIndexConfig_migrate_multiple(tableName, indexName1, indexName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
@@ -3150,8 +3150,8 @@ resource "aws_dynamodb_global_secondary_index" "test1" {
 }
 
 resource "aws_dynamodb_global_secondary_index" "test2" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[3]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[3]q
   projection {
     projection_type = "ALL"
   }
@@ -3201,8 +3201,8 @@ import {
 func testAccGlobalSecondaryIndexConfig_migrate_partial(tableName, indexName1, indexName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name      = aws_dynamodb_table.test.name
-  index_name      = %[2]q
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
   projection {
     projection_type = "ALL"
   }
