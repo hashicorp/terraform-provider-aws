@@ -104,6 +104,11 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return SetValueOf[T]{}
 }
 
+func (t setTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	return NewSetValueOfNull[T](ctx), diags
+}
+
 // SetValueOf represents a Terraform Plugin Framework Set value whose elements are of type `T`.
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue

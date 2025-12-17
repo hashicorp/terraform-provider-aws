@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -104,6 +105,77 @@ func TestSetOfValidateAttribute(t *testing.T) {
 			eval.ValidateAttribute(ctx, req, &resp)
 			if resp.Diagnostics.HasError() != test.expectError {
 				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			}
+		})
+	}
+}
+
+func TestSetTypeOfNullValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		setType attr.Type
+		want    attr.Value
+	}{
+		"SetOfARNType": {
+			setType: fwtypes.SetOfARNType,
+			want:    fwtypes.NewSetValueOfNull[fwtypes.ARN](ctx),
+		},
+		"SetOfStringType": {
+			setType: fwtypes.SetOfStringType,
+			want:    fwtypes.NewSetValueOfNull[types.String](ctx),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Test that the type implements NullValue method
+			if nullValuer, ok := testCase.setType.(interface{ NullValue(context.Context) (attr.Value, diag.Diagnostics) }); !ok {
+				t.Errorf("type %T does not implement NullValue method", testCase.setType)
+			} else {
+				got, diags := nullValuer.NullValue(ctx)
+				if diags.HasError() {
+					t.Errorf("unexpected error creating null value: %v", diags)
+				}
+				if !cmp.Equal(got, testCase.want) {
+					t.Errorf("got = %v, want = %v", got, testCase.want)
+				}
+			}
+		})
+	}
+}
+
+func TestNullValueOfWithSetTypes(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		value any
+		want  attr.Value
+	}{
+		"SetValueOf[ARN]": {
+			value: fwtypes.SetValueOf[fwtypes.ARN]{},
+			want:  fwtypes.NewSetValueOfNull[fwtypes.ARN](ctx),
+		},
+		"SetValueOf[string]": {
+			value: fwtypes.SetValueOf[types.String]{},
+			want:  fwtypes.NewSetValueOfNull[types.String](ctx),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := fwtypes.NullValueOf(ctx, testCase.value)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if !cmp.Equal(got, testCase.want) {
+				t.Errorf("got = %v, want = %v", got, testCase.want)
 			}
 		})
 	}
