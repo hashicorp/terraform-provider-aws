@@ -53,7 +53,8 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 }
 
 type autoFlattener struct {
-	Options AutoFlexOptions
+	Options    AutoFlexOptions
+	fieldCache map[reflect.Type]map[string]reflect.StructField
 }
 
 // newAutoFlattener initializes an auto-flattener with defaults that can be overridden
@@ -68,7 +69,8 @@ func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
 	}
 
 	return &autoFlattener{
-		Options: o,
+		Options:    o,
+		fieldCache: make(map[reflect.Type]map[string]reflect.StructField),
 	}
 }
 
@@ -109,6 +111,31 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
 			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
+			// Special case: Check if source is XML wrapper struct and target has xmlwrapper fields
+			if potentialXMLWrapperStruct(typFrom) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Source is XML wrapper struct", map[string]any{
+					"source_type": typFrom.String(),
+				})
+				// Check if target has any fields with xmlwrapper tags
+				for toField := range tfreflect.ExportedStructFields(typTo) {
+					_, toOpts := autoflexTags(toField)
+					if toOpts.XMLWrapperField() != "" {
+						// Found xmlwrapper tag, handle direct XML wrapper conversion
+						tflog.SubsystemTrace(ctx, subsystemName, "Direct XML wrapper struct conversion", map[string]any{
+							"target_field":   toField.Name,
+							"xmlwrapper_tag": toOpts.XMLWrapperField(),
+						})
+						diags.Append(handleDirectXMLWrapperStruct(ctx, valFrom, valTo, typFrom, typTo, flexer)...)
+						return diags
+					}
+				}
+				tflog.SubsystemTrace(ctx, subsystemName, "No xmlwrapper tags found in target")
+			} else {
+				tflog.SubsystemTrace(ctx, subsystemName, "Source is not XML wrapper struct", map[string]any{
+					"source_type": typFrom.String(),
+				})
+			}
+
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
@@ -835,6 +862,49 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 			return diags
 		}
+
+	default:
+		// Check for custom types with string underlying type (e.g., enums)
+		// For type declarations like "type MyEnum string", Kind() will not be reflect.String,
+		// but we can convert values to string using String() method
+		if tSliceElem.Kind() != reflect.String {
+			// Try to see if this is a string-based custom type by checking if we can call String() on it
+			sampleVal := reflect.New(tSliceElem).Elem()
+			if sampleVal.CanInterface() {
+				// Check if it has an underlying string type
+				if tSliceElem.ConvertibleTo(reflect.TypeOf("")) {
+					var elementType attr.Type = types.StringType
+					attrValueFromReflectValue := newStringValueFromReflectValue
+					if tTo, ok := tTo.(attr.TypeWithElementType); ok {
+						if tElem, ok := tTo.ElementType().(basetypes.StringTypable); ok {
+							//
+							// []stringy -> types.List/Set(OfStringEnum).
+							//
+							elementType = tElem
+							attrValueFromReflectValue = func(val reflect.Value) (attr.Value, diag.Diagnostics) {
+								return tElem.ValueFromString(ctx, types.StringValue(val.String()))
+							}
+						}
+					}
+
+					switch tTo := tTo.(type) {
+					case basetypes.ListTypable:
+						//
+						// []custom_string_type -> types.List(OfString).
+						//
+						diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
+						return diags
+
+					case basetypes.SetTypable:
+						//
+						// []custom_string_type -> types.Set(OfString).
+						//
+						diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
+						return diags
+					}
+				}
+			}
+		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
@@ -1191,6 +1261,73 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 		}
 	}
 
+	// Check if source is a Rule 2 XML wrapper struct with all zero values and omitempty
+	if potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
+		wrapperFieldName := getXMLWrapperSliceFieldName(vFrom.Type())
+		itemsField := vFrom.FieldByName(wrapperFieldName)
+
+		if itemsField.IsValid() {
+			itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+
+			if itemsEmpty {
+				allOtherFieldsZero := true
+				for i := 0; i < vFrom.NumField(); i++ {
+					sourceField := vFrom.Field(i)
+					fieldName := vFrom.Type().Field(i).Name
+
+					if fieldName == wrapperFieldName || fieldName == xmlWrapperFieldQuantity {
+						continue
+					}
+
+					isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
+						sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
+						sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
+
+					if !isFieldZero {
+						allOtherFieldsZero = false
+						break
+					}
+				}
+
+				if allOtherFieldsZero {
+					tflog.SubsystemTrace(ctx, subsystemName, "Nested XML wrapper struct has all zero values with omitempty, returning null")
+					val, d := tTo.NullValue(ctx)
+					diags.Append(d...)
+					if !diags.HasError() {
+						vTo.Set(reflect.ValueOf(val))
+					}
+					return diags
+				}
+			}
+		}
+	}
+
+	// Check if source is a regular struct with all zero values and omitempty
+	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
+		allFieldsZero := true
+		for i := 0; i < vFrom.NumField(); i++ {
+			sourceField := vFrom.Field(i)
+			isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
+				sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
+				sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
+
+			if !isFieldZero {
+				allFieldsZero = false
+				break
+			}
+		}
+
+		if allFieldsZero {
+			tflog.SubsystemTrace(ctx, subsystemName, "Nested struct has all zero values with omitempty, returning null")
+			val, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if !diags.HasError() {
+				vTo.Set(reflect.ValueOf(val))
+			}
+			return diags
+		}
+	}
+
 	// Create a new target structure and walk its fields.
 	to, d := tTo.NewObjectPtr(ctx)
 	diags.Append(d...)
@@ -1299,6 +1436,23 @@ func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom 
 		}
 	} else {
 		if vFrom.IsNil() {
+			if fieldOpts.legacy {
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListValue (empty for nil in legacy mode)")
+				list, d := types.ListValue(elementType, []attr.Value{})
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+				to, d := tTo.ValueFromList(ctx, list)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with ListNull")
 			to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
 			diags.Append(d...)
@@ -1364,6 +1518,38 @@ func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom 
 		}
 	} else {
 		if vFrom.IsNil() {
+			// If omitempty is set, return null
+			if fieldOpts.omitempty {
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetNull (omitempty)")
+				to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
+			// If legacy mode, return empty set
+			if fieldOpts.legacy {
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue (empty for nil in legacy mode)")
+				set, d := types.SetValue(elementType, []attr.Value{})
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+				to, d := tTo.ValueFromSet(ctx, set)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
+			// Default: return null set
 			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetNull")
 			to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
 			diags.Append(d...)
@@ -1374,6 +1560,19 @@ func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom 
 			vTo.Set(reflect.ValueOf(to))
 			return diags
 		}
+	}
+
+	// Check if slice is empty and omitempty is set - return null instead of empty set
+	if vFrom.Len() == 0 && fieldOpts.omitempty {
+		tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue (null for empty slice with omitempty)")
+		to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
 	}
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Flattening with SetValue", map[string]any{
@@ -1429,7 +1628,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 		}
 	} else {
 		if vFrom.IsNil() {
-			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NullValue")
+			tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NullValue (for nested object collection)")
 			val, d := tTo.NullValue(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
@@ -1446,7 +1645,34 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 
 	tflog.SubsystemTrace(ctx, subsystemName, "Flattening nested object collection", map[string]any{
 		logAttrKeySourceSize: n,
+		"source_type":        vFrom.Type().String(),
+		"target_type":        tTo.String(),
 	})
+
+	// DEBUG: Log the source struct fields for the first element
+	if n > 0 {
+		firstElem := vFrom.Index(0)
+		tflog.SubsystemDebug(ctx, subsystemName, "DEBUG: First element of nested object collection", map[string]any{
+			"element_type": firstElem.Type().String(),
+		})
+
+		// Log exported fields only
+		if firstElem.Kind() == reflect.Struct {
+			for i := 0; i < firstElem.NumField(); i++ {
+				field := firstElem.Type().Field(i)
+				if !field.IsExported() {
+					continue
+				}
+				fieldVal := firstElem.Field(i)
+				tflog.SubsystemDebug(ctx, subsystemName, "DEBUG: Struct field", map[string]any{
+					"field_name": field.Name,
+					"field_type": fieldVal.Type().String(),
+					"is_nil":     fieldVal.Kind() == reflect.Pointer && fieldVal.IsNil(),
+					"is_zero":    fieldVal.IsZero(),
+				})
+			}
+		}
+	}
 
 	to, d := tTo.NewObjectSlice(ctx, n, n)
 	diags.Append(d...)
@@ -1486,27 +1712,77 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 }
 
 // xmlWrapperFlatten handles flattening from AWS XML wrapper structs to TF collection types
-// that follow the pattern: {Items: []T, Quantity: *int32} -> []T
-func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, wrapperField string) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+//
+// XML Wrapper Compatibility Rules:
+// Rule 1: Items/Quantity only - Direct collection mapping
+//
+//	AWS: {Items: []T, Quantity: *int32}
+//	TF:  Repeatable singular blocks (e.g., lambda_function_association { ... })
+//
+// Rule 2: Items/Quantity + additional fields - Single plural block
+//
+//	AWS: {Items: []T, Quantity: *int32, Enabled: *bool, ...}
+//	TF:  Single plural block (e.g., trusted_signers { items = [...], enabled = true })
+//
+// Supports both Rule 1 (Items/Quantity only) and Rule 2 (Items/Quantity + additional fields)
+func (flattener *autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
+	wrapperField := opts.XMLWrapperField()
 	tflog.SubsystemTrace(ctx, subsystemName, "Starting XML wrapper flatten", map[string]any{
 		"source_type":   vFrom.Type().String(),
 		"target_type":   tTo.String(),
 		"wrapper_field": wrapperField,
 	})
 
-	// Verify source is a valid XML wrapper struct
-	if !isXMLWrapperStruct(vFrom.Type()) {
-		tflog.SubsystemError(ctx, subsystemName, "Source is not a valid XML wrapper struct", map[string]any{
-			"source_type": vFrom.Type().String(),
+	// Check if target is a NestedObjectCollection (Rule 2 pattern)
+	if nestedObjType, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2", map[string]any{
+			"target_type": tTo.String(),
 		})
-		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
-		return diags
+
+		// Rule 2 detection: check if source AWS struct has more than 2 fields
+		// (Items, Quantity, plus additional fields like Enabled)
+		sourceStructType := vFrom.Type()
+		if sourceStructType.Kind() == reflect.Ptr {
+			sourceStructType = sourceStructType.Elem()
+		}
+
+		isRule2 := false
+		if sourceStructType.Kind() == reflect.Struct {
+			// Count fields, excluding noSmithyDocumentSerde
+			fieldCount := 0
+			for i := 0; i < sourceStructType.NumField(); i++ {
+				fieldName := sourceStructType.Field(i).Name
+				if fieldName != "noSmithyDocumentSerde" {
+					fieldCount++
+				}
+			}
+			isRule2 = fieldCount > 2
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Rule 2 detection result", map[string]any{
+			"is_rule2":    isRule2,
+			"field_count": sourceStructType.NumField(),
+			"source_type": sourceStructType.String(),
+		})
+
+		if isRule2 {
+			tflog.SubsystemTrace(ctx, subsystemName, "Using Rule 2 flatten - calling xmlWrapperFlattenRule2")
+			return flattener.xmlWrapperFlattenRule2(ctx, vFrom, nestedObjType, vTo, opts)
+		}
+		tflog.SubsystemTrace(ctx, subsystemName, "NOT Rule 2 - continuing with Rule 1")
 	}
 
+	// Rule 1: Flatten Items field directly to collection
+	return flattener.xmlWrapperFlattenRule1(ctx, vFrom, tTo, vTo)
+}
+
+// xmlWrapperFlattenRule1 handles Rule 1: flatten Items field directly to collection
+func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	// Get the Items field from the source wrapper struct
-	itemsField := vFrom.FieldByName("Items")
+	wrapperFieldName := getXMLWrapperSliceFieldName(vFrom.Type())
+	itemsField := vFrom.FieldByName(wrapperFieldName)
 	if !itemsField.IsValid() {
 		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing Items field")
 		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
@@ -1546,15 +1822,26 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 
 		// Convert items slice to list elements
 		itemsLen := itemsField.Len()
-		elements := make([]attr.Value, itemsLen)
+
+		// Filter out nil pointers first and collect valid items
+		validItems := make([]reflect.Value, 0, itemsLen)
+		for i := range itemsLen {
+			item := itemsField.Index(i)
+			// Skip nil pointers
+			if item.Kind() == reflect.Pointer && item.IsNil() {
+				continue
+			}
+			validItems = append(validItems, item)
+		}
+
+		elements := make([]attr.Value, len(validItems))
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting items to list elements", map[string]any{
 			"items_count": itemsLen,
+			"valid_count": len(validItems),
 		})
 
-		for i := range itemsLen {
-			item := itemsField.Index(i)
-
+		for i, item := range validItems {
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
 				"index":      i,
 				"item_kind":  item.Kind().String(),
@@ -1564,14 +1851,89 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 			// Convert each item based on its type
 			switch item.Kind() {
 			case reflect.Int32:
-				elements[i] = types.Int64Value(item.Int())
+				// Handle int32 -> Int64 conversion for XML wrapper items
+				if val, d := newInt64ValueFromReflectValue(item); d.HasError() {
+					diags.Append(d...)
+					return diags
+				} else {
+					elements[i] = val
+				}
 			case reflect.String:
-				elements[i] = types.StringValue(item.String())
+				// Try to create a value that matches the target element type
+				if val, d := flattener.createTargetValue(ctx, types.StringValue(item.String()), elementType); d.HasError() {
+					diags.Append(d...)
+					return diags
+				} else {
+					elements[i] = val
+				}
+			case reflect.Pointer:
+				// Handle pointer types like *testEnum (pointer to enum)
+				// (nil pointers are already filtered out)
+				// Dereference the pointer and get the underlying value
+				derefItem := item.Elem()
+
+				// Handle the dereferenced value based on its type
+				switch derefItem.Kind() {
+				case reflect.String:
+					// Handle *string or *testEnum (where testEnum is a string type)
+					stringVal := derefItem.String()
+					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+						diags.Append(d...)
+						return diags
+					} else {
+						elements[i] = val
+					}
+				default:
+					// Check if the dereferenced type is convertible to string (like custom enums)
+					if derefItem.Type().ConvertibleTo(reflect.TypeOf("")) {
+						stringVal := derefItem.Convert(reflect.TypeOf("")).String()
+						if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+							diags.Append(d...)
+							return diags
+						} else {
+							elements[i] = val
+						}
+					} else {
+						diags.Append(DiagFlatteningIncompatibleTypes(derefItem.Type(), reflect.TypeOf(elementType)))
+						return diags
+					}
+				}
+			case reflect.Struct:
+				// Handle struct types - convert to ObjectValue
+				if objType, ok := elementType.(fwtypes.NestedObjectType); ok {
+					objPtr, d := objType.NewObjectPtr(ctx)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+					diags.Append(autoFlattenConvert(ctx, item.Interface(), objPtr, flattener)...)
+					if diags.HasError() {
+						return diags
+					}
+					objVal, d := objType.ValueFromObjectPtr(ctx, objPtr)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+					elements[i] = objVal
+				} else {
+					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
+					return diags
+				}
 			default:
-				// For complex types, handle struct conversion if needed
-				if item.Kind() == reflect.Struct {
-					// This would need to be handled by a nested object conversion
-					// For now, we'll return an error for unsupported types
+				// Check for custom string types (like enums)
+				if item.Type().ConvertibleTo(reflect.TypeOf("")) {
+					// Convert custom string type (like testEnum/Method) to string
+					stringVal := item.Convert(reflect.TypeOf("")).String()
+
+					// Try to create a value that matches the target element type
+					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+						diags.Append(d...)
+						return diags
+					} else {
+						elements[i] = val
+					}
+				} else {
 					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
 					return diags
 				}
@@ -1620,15 +1982,26 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 
 		// Convert items slice to set elements
 		itemsLen := itemsField.Len()
-		elements := make([]attr.Value, itemsLen)
+
+		// Filter out nil pointers first and collect valid items
+		validItems := make([]reflect.Value, 0, itemsLen)
+		for i := range itemsLen {
+			item := itemsField.Index(i)
+			// Skip nil pointers
+			if item.Kind() == reflect.Pointer && item.IsNil() {
+				continue
+			}
+			validItems = append(validItems, item)
+		}
+
+		elements := make([]attr.Value, len(validItems))
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Converting items to set elements", map[string]any{
 			"items_count": itemsLen,
+			"valid_count": len(validItems),
 		})
 
-		for i := range itemsLen {
-			item := itemsField.Index(i)
-
+		for i, item := range validItems {
 			tflog.SubsystemTrace(ctx, subsystemName, "Processing item", map[string]any{
 				"index":      i,
 				"item_kind":  item.Kind().String(),
@@ -1638,9 +2011,53 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 			// Convert each item based on its type
 			switch item.Kind() {
 			case reflect.Int32:
-				elements[i] = types.Int64Value(item.Int())
+				// Handle int32 -> Int64 conversion for XML wrapper items
+				if val, d := newInt64ValueFromReflectValue(item); d.HasError() {
+					diags.Append(d...)
+					return diags
+				} else {
+					elements[i] = val
+				}
 			case reflect.String:
-				elements[i] = types.StringValue(item.String())
+				// Try to create a value that matches the target element type
+				if val, d := flattener.createTargetValue(ctx, types.StringValue(item.String()), elementType); d.HasError() {
+					diags.Append(d...)
+					return diags
+				} else {
+					elements[i] = val
+				}
+			case reflect.Pointer:
+				// Handle pointer types like *testEnum (pointer to enum)
+				// (nil pointers are already filtered out)
+				// Dereference the pointer and get the underlying value
+				derefItem := item.Elem()
+
+				// Handle the dereferenced value based on its type
+				switch derefItem.Kind() {
+				case reflect.String:
+					// Handle *string or *testEnum (where testEnum is a string type)
+					stringVal := derefItem.String()
+					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+						diags.Append(d...)
+						return diags
+					} else {
+						elements[i] = val
+					}
+				default:
+					// Check if the dereferenced type is convertible to string (like custom enums)
+					if derefItem.Type().ConvertibleTo(reflect.TypeOf("")) {
+						stringVal := derefItem.Convert(reflect.TypeOf("")).String()
+						if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+							diags.Append(d...)
+							return diags
+						} else {
+							elements[i] = val
+						}
+					} else {
+						diags.Append(DiagFlatteningIncompatibleTypes(derefItem.Type(), reflect.TypeOf(elementType)))
+						return diags
+					}
+				}
 			case reflect.Struct:
 				// Handle complex struct types by converting to the target element type
 				if elemTyper, ok := tTo.(attr.TypeWithElementType); ok && elemTyper.ElementType() != nil {
@@ -1667,9 +2084,23 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 					return diags
 				}
 			default:
-				// For other complex types, handle conversion if needed
-				diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
-				return diags
+				// Check for custom string types (like enums)
+				if item.Type().ConvertibleTo(reflect.TypeOf("")) {
+					// Convert custom string type (like testEnum/Method) to string
+					stringVal := item.Convert(reflect.TypeOf("")).String()
+
+					// Try to create a value that matches the target element type
+					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
+						diags.Append(d...)
+						return diags
+					} else {
+						elements[i] = val
+					}
+				} else {
+					// For other complex types, handle conversion if needed
+					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
+					return diags
+				}
 			}
 		}
 
@@ -1702,6 +2133,49 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 }
 
 // flattenStruct traverses struct `from`, calling `flexer` for each exported field.
+// handleXMLWrapperRule1 handles Rule 1: flatten entire source struct to target collection field with xmlwrapper tag
+func handleXMLWrapperRule1(ctx context.Context, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, flexer autoFlexer) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Skip if target is a struct - that's Rule 2 where we map fields individually
+	if typeTo.Kind() == reflect.Struct {
+		return false, diags
+	}
+
+	for toField := range tfreflect.ExportedStructFields(typeTo) {
+		toFieldName := toField.Name
+		_, toOpts := autoflexTags(toField)
+		if wrapperField := toOpts.XMLWrapperField(); wrapperField != "" {
+			toFieldVal := valTo.FieldByIndex(toField.Index)
+			if !toFieldVal.CanSet() {
+				continue
+			}
+
+			tflog.SubsystemTrace(ctx, subsystemName, "Converting entire XML wrapper struct to collection field (Rule 1)", map[string]any{
+				logAttrKeySourceType:      typeFrom.String(),
+				logAttrKeyTargetFieldname: toFieldName,
+				"wrapper_field":           wrapperField,
+			})
+
+			attrVal, ok := toFieldVal.Interface().(attr.Value)
+			if !ok {
+				tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+				diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
+				return true, diags
+			}
+
+			if f, ok := flexer.(*autoFlattener); ok {
+				diags.Append(f.xmlWrapperFlatten(ctx, valFrom, attrVal.Type(ctx), toFieldVal, toOpts)...)
+			} else {
+				diags.Append(DiagFlatteningIncompatibleTypes(valFrom.Type(), reflect.TypeOf(toFieldVal.Interface())))
+			}
+			return true, diags
+		}
+	}
+
+	return false, diags
+}
+
 func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1723,47 +2197,30 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	// Special handling: Check if the entire source struct is an XML wrapper
-	// and should be flattened to a target field with wrapper tag
-	if isXMLWrapperStruct(typeFrom) {
-		for toField := range tfreflect.ExportedStructFields(typeTo) {
-			toFieldName := toField.Name
-			_, toOpts := autoflexTags(toField)
-			if wrapperField := toOpts.XMLWrapperField(); wrapperField != "" {
-				toFieldVal := valTo.FieldByIndex(toField.Index)
-				if !toFieldVal.CanSet() {
-					continue
-				}
+	// Special handling: Check if target has xmlwrapper tag (Rule 1)
+	if handled, d := handleXMLWrapperRule1(ctx, valFrom, valTo, typeFrom, typeTo, flexer); handled {
+		diags.Append(d...)
+		return diags
+	}
 
-				tflog.SubsystemTrace(ctx, subsystemName, "Converting entire XML wrapper struct to collection field", map[string]any{
-					logAttrKeySourceType:      typeFrom.String(),
-					logAttrKeyTargetFieldname: toFieldName,
-					"wrapper_field":           wrapperField,
-				})
-
-				valTo, ok := toFieldVal.Interface().(attr.Value)
-				if !ok {
-					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
-					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
-					return diags
-				}
-
-				if f, ok := flexer.(*autoFlattener); ok {
-					diags.Append(f.xmlWrapperFlatten(ctx, valFrom, valTo.Type(ctx), toFieldVal, wrapperField)...)
-				} else {
-					diags.Append(DiagFlatteningIncompatibleTypes(valFrom.Type(), reflect.TypeOf(toFieldVal.Interface())))
-				}
-				if diags.HasError() {
-					return diags
-				}
-				// Successfully handled as XML wrapper, don't process individual fields
-				return diags
-			}
-		}
+	// Handle XML wrapper split patterns where complex source fields
+	// need to be split into multiple target collection fields
+	processedFields := make(map[string]bool)
+	diags.Append(flexer.handleXMLWrapperCollapse(ctx, sourcePath, valFrom, targetPath, valTo, typeFrom, typeTo, processedFields)...)
+	if diags.HasError() {
+		return diags
 	}
 
 	for fromField := range flattenSourceFields(ctx, typeFrom, flexer.getOptions()) {
 		fromFieldName := fromField.Name
+
+		// Skip fields that were already processed by XML wrapper split
+		if processedFields[fromFieldName] {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping field already processed by XML wrapper split", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+			})
+			continue
+		}
 
 		toField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
@@ -1807,7 +2264,9 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		// Check if target has wrapper tag and source is an XML wrapper struct
 		if wrapperField := toFieldOpts.XMLWrapperField(); wrapperField != "" {
 			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
-			if isXMLWrapperStruct(fromFieldVal.Type()) {
+
+			// Handle direct XML wrapper struct
+			if potentialXMLWrapperStruct(fromFieldVal.Type()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
 					logAttrKeySourceFieldname: fromFieldName,
 					logAttrKeyTargetFieldname: toFieldName,
@@ -1822,8 +2281,87 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 				}
 
 				if f, ok := flexer.(*autoFlattener); ok {
-					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal, valTo.Type(ctx), toFieldVal, wrapperField)...)
+					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
 				} else {
+					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
+				}
+				if diags.HasError() {
+					break
+				}
+				continue
+			}
+
+			// Handle pointer to XML wrapper struct
+			if fromFieldVal.Kind() == reflect.Pointer && !fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Converting pointer to XML wrapper struct to collection via wrapper tag", map[string]any{
+					logAttrKeySourceFieldname: fromFieldName,
+					logAttrKeyTargetFieldname: toFieldName,
+					"wrapper_field":           wrapperField,
+					"flexer_type":             fmt.Sprintf("%T", flexer),
+				})
+
+				valTo, ok := toFieldVal.Interface().(attr.Value)
+				if !ok {
+					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
+					break
+				}
+
+				// Try both value and pointer type assertions
+				if f, ok := flexer.(autoFlattener); ok {
+					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+				} else if f, ok := flexer.(*autoFlattener); ok {
+					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+				} else {
+					tflog.SubsystemError(ctx, subsystemName, "Type assertion to autoFlattener failed for wrapper tag", map[string]any{
+						"flexer_type": fmt.Sprintf("%T", flexer),
+					})
+					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
+				}
+				if diags.HasError() {
+					break
+				}
+				continue
+			}
+
+			// Handle nil pointer to XML wrapper struct
+			if fromFieldVal.Kind() == reflect.Pointer && fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Converting nil pointer to XML wrapper struct to null collection", map[string]any{
+					logAttrKeySourceFieldname: fromFieldName,
+					logAttrKeyTargetFieldname: toFieldName,
+					"wrapper_field":           wrapperField,
+				})
+
+				valTo, ok := toFieldVal.Interface().(attr.Value)
+				if !ok {
+					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
+					break
+				}
+
+				// For nil XML wrapper pointers, set target to null collection
+				switch tTo := valTo.Type(ctx).(type) {
+				case basetypes.ListTypable:
+					var elementType attr.Type = types.StringType // default
+					if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+						elementType = tToWithElem.ElementType()
+					}
+					nullList, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
+					diags.Append(d...)
+					if !diags.HasError() {
+						toFieldVal.Set(reflect.ValueOf(nullList))
+					}
+				case basetypes.SetTypable:
+					var elementType attr.Type = types.StringType // default
+					if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+						elementType = tToWithElem.ElementType()
+					}
+					nullSet, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+					diags.Append(d...)
+					if !diags.HasError() {
+						toFieldVal.Set(reflect.ValueOf(nullSet))
+					}
+				default:
 					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
 				}
 				if diags.HasError() {
@@ -1833,10 +2371,208 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			}
 		}
 
+		// Automatic XML wrapper detection (without explicit wrapper tags)
+		fromFieldVal := valFrom.FieldByIndex(fromField.Index)
+		_, toOpts := autoflexTags(toField)
+
+		// Handle pointer to XML wrapper struct
+		// Only auto-detect if target has explicit wrapper tag
+		if fromFieldVal.Kind() == reflect.Pointer {
+			if toOpts.XMLWrapperField() != "" && !fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+				// Check if target is a collection type (Set, List, or NestedObjectCollection)
+				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+					targetType := valTo.Type(ctx)
+					switch tt := targetType.(type) {
+					case basetypes.SetTypable, basetypes.ListTypable, fwtypes.NestedObjectCollectionType:
+						// Check if wrapper Items field is empty/nil
+						// If so, set null and skip processing
+						wrapperVal := fromFieldVal.Elem()
+						wrapperFieldName := getXMLWrapperSliceFieldName(wrapperVal.Type())
+						itemsField := wrapperVal.FieldByName(wrapperFieldName)
+
+						if itemsField.IsValid() {
+							itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+
+							if itemsEmpty {
+								tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper Items is empty, setting null", map[string]any{
+									logAttrKeySourceFieldname: fromFieldName,
+									logAttrKeyTargetFieldname: toFieldName,
+								})
+
+								// Call NullValue on NestedObjectCollectionType
+								if nestedObjType, ok := tt.(fwtypes.NestedObjectCollectionType); ok {
+									nullVal, d := nestedObjType.NullValue(ctx)
+									diags.Append(d...)
+									if !diags.HasError() {
+										toFieldVal.Set(reflect.ValueOf(nullVal))
+									}
+									continue
+								}
+							}
+						}
+
+						// Determine wrapper field based on target type
+						// For NestedObjectCollection, the wrapper field doesn't matter as Rule 2 will be used
+						wrapperField := getXMLWrapperSliceFieldName(fromFieldVal.Type().Elem())
+
+						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting pointer to XML wrapper struct to collection", map[string]any{
+							logAttrKeySourceFieldname: fromFieldName,
+							logAttrKeyTargetFieldname: toFieldName,
+							"wrapper_field":           wrapperField,
+						})
+
+						// Try both value and pointer type assertions
+						if f, ok := flexer.(autoFlattener); ok {
+							diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), targetType, toFieldVal, toFieldOpts)...)
+							if diags.HasError() {
+								break
+							}
+							continue // Successfully handled, skip normal processing
+						} else if f, ok := flexer.(*autoFlattener); ok {
+							diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), targetType, toFieldVal, toFieldOpts)...)
+							if diags.HasError() {
+								break
+							}
+							continue // Successfully handled, skip normal processing
+						}
+						// If flexer is not autoFlattener, fall through to normal field matching
+					}
+				}
+			} else if toOpts.XMLWrapperField() != "" && fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+				// Handle nil pointer to XML wrapper struct - should result in null collection
+				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+					switch tTo := valTo.Type(ctx).(type) {
+					case basetypes.SetTypable:
+						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting nil pointer to XML wrapper struct to null set", map[string]any{
+							logAttrKeySourceFieldname: fromFieldName,
+							logAttrKeyTargetFieldname: toFieldName,
+						})
+						var elemType attr.Type = types.StringType
+						if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+							elemType = tToWithElem.ElementType()
+						}
+						nullSet, d := tTo.ValueFromSet(ctx, types.SetNull(elemType))
+						diags.Append(d...)
+						if !diags.HasError() {
+							toFieldVal.Set(reflect.ValueOf(nullSet))
+						}
+						if diags.HasError() {
+							break
+						}
+						continue
+					case basetypes.ListTypable:
+						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting nil pointer to XML wrapper struct to null list", map[string]any{
+							logAttrKeySourceFieldname: fromFieldName,
+							logAttrKeyTargetFieldname: toFieldName,
+						})
+						var elemType attr.Type = types.StringType
+						if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+							elemType = tToWithElem.ElementType()
+						}
+						nullList, d := tTo.ValueFromList(ctx, types.ListNull(elemType))
+						diags.Append(d...)
+						if !diags.HasError() {
+							toFieldVal.Set(reflect.ValueOf(nullList))
+						}
+						if diags.HasError() {
+							break
+						}
+						continue
+					}
+				}
+			}
+		} else if toOpts.XMLWrapperField() != "" && potentialXMLWrapperStruct(fromFieldVal.Type()) {
+			// Handle direct XML wrapper struct (non-pointer)
+			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+				switch valTo.Type(ctx).(type) {
+				case basetypes.SetTypable, basetypes.ListTypable:
+					wrapperField := toOpts.XMLWrapperField()
+					tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting XML wrapper struct to collection", map[string]any{
+						logAttrKeySourceFieldname: fromFieldName,
+						logAttrKeyTargetFieldname: toFieldName,
+						"wrapper_field":           wrapperField,
+					})
+
+					if f, ok := flexer.(*autoFlattener); ok {
+						diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal, valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+					} else {
+						diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
+					}
+					if diags.HasError() {
+						break
+					}
+					continue
+				}
+			}
+		}
+
+		// Check for Rule 2: Source is XML wrapper, target is NestedObjectCollection
+		// Only apply if target field has xmlwrapper tag
+		fromFieldVal2 := valFrom.FieldByIndex(fromField.Index)
+		if toFieldOpts.XMLWrapperField() != "" && fromFieldVal2.Kind() == reflect.Pointer && !fromFieldVal2.IsNil() && potentialXMLWrapperStruct(fromFieldVal2.Type().Elem()) {
+			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+				if nestedObjType, ok := valTo.Type(ctx).(fwtypes.NestedObjectCollectionType); ok {
+					sourceStructType := fromFieldVal2.Type().Elem()
+
+					// Check if source is Rule 2 (more than 2 fields: Items, Quantity, + additional fields)
+					isRule2 := sourceStructType.NumField() > 2
+
+					if isRule2 {
+						tflog.SubsystemTrace(ctx, subsystemName, "Detected nested Rule 2 XML wrapper to NestedObjectCollection", map[string]any{
+							logAttrKeySourceFieldname: fromFieldName,
+							logAttrKeyTargetFieldname: toFieldName,
+							"field_count":             sourceStructType.NumField(),
+						})
+
+						if f, ok := flexer.(*autoFlattener); ok {
+							diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal2.Elem(), valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+							if diags.HasError() {
+								break
+							}
+							continue
+						}
+					}
+
+					// Also check if nested model has xmlwrapper field (original logic)
+					samplePtr, d := nestedObjType.NewObjectPtr(ctx)
+					diags.Append(d...)
+					if !diags.HasError() {
+						sampleValue := reflect.ValueOf(samplePtr).Elem()
+						hasXMLWrapperTag := false
+						for i := 0; i < sampleValue.NumField(); i++ {
+							field := sampleValue.Type().Field(i)
+							_, fieldOpts := autoflexTags(field)
+							if fieldOpts.XMLWrapperField() != "" {
+								hasXMLWrapperTag = true
+								break
+							}
+						}
+
+						if hasXMLWrapperTag {
+							tflog.SubsystemTrace(ctx, subsystemName, "Detected Rule 2: XML wrapper to NestedObjectCollection with nested xmlwrapper field", map[string]any{
+								logAttrKeySourceFieldname: fromFieldName,
+								logAttrKeyTargetFieldname: toFieldName,
+							})
+
+							_ = getXMLWrapperSliceFieldName(fromFieldVal2.Type().Elem())
+							if f, ok := flexer.(*autoFlattener); ok {
+								diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal2.Elem(), valTo.Type(ctx), toFieldVal, toFieldOpts)...)
+								if diags.HasError() {
+									break
+								}
+								continue
+							}
+						}
+					}
+				}
+			}
+		}
+
 		opts := fieldOpts{
-			legacy:     toFieldOpts.Legacy(),
-			omitempty:  toFieldOpts.OmitEmpty(),
-			xmlWrapper: toFieldOpts.XMLWrapperField() != "",
+			legacy:          toFieldOpts.Legacy(),
+			omitempty:       toFieldOpts.OmitEmpty(),
+			xmlWrapper:      toFieldOpts.XMLWrapperField() != "",
+			xmlWrapperField: toFieldOpts.XMLWrapperField(),
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
@@ -2064,4 +2800,547 @@ func DiagFlatteningIncompatibleTypes(sourceType, targetType reflect.Type) diag.E
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q cannot be flattened to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
+}
+
+// handleDirectXMLWrapperStruct handles direct XML wrapper struct to target with xmlwrapper tags
+func handleDirectXMLWrapperStruct(ctx context.Context, valFrom, valTo reflect.Value, typeFrom, typeTo reflect.Type, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	wrapperFieldName := getXMLWrapperSliceFieldName(typeFrom)
+	sourceItemsField := valFrom.FieldByName(wrapperFieldName)
+	if !sourceItemsField.IsValid() {
+		tflog.SubsystemError(ctx, subsystemName, "Source Items field not valid", map[string]any{
+			"wrapper_field_name": wrapperFieldName,
+		})
+		return diags
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Processing direct XML wrapper", map[string]any{
+		"wrapper_field_name": wrapperFieldName,
+		"source_type":        typeFrom.String(),
+		"target_type":        typeTo.String(),
+	})
+
+	// Find target fields with matching xmlwrapper tags and map the source Items field to them
+	for toField := range tfreflect.ExportedStructFields(typeTo) {
+		toFieldName := toField.Name
+		_, toOpts := autoflexTags(toField)
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Checking target field", map[string]any{
+			"target_field":   toFieldName,
+			"xmlwrapper_tag": toOpts.XMLWrapperField(),
+		})
+
+		// Check if this target field expects the wrapper field from source
+		if toOpts.XMLWrapperField() == wrapperFieldName {
+			toFieldVal := valTo.FieldByName(toFieldName)
+			if !toFieldVal.IsValid() || !toFieldVal.CanSet() {
+				tflog.SubsystemError(ctx, subsystemName, "Target field not valid or settable")
+				continue
+			}
+
+			tflog.SubsystemTrace(ctx, subsystemName, "Found matching xmlwrapper field", map[string]any{
+				"source_field": wrapperFieldName,
+				"target_field": toFieldName,
+			})
+
+			// Get the target field as attr.Value for XML wrapper flattening
+			if toAttr, ok := toFieldVal.Interface().(attr.Value); ok {
+				if f, ok := flexer.(*autoFlattener); ok {
+					tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten")
+					// Use XML wrapper flattening to convert the source Items field to the target collection
+					diags.Append(f.xmlWrapperFlatten(ctx, valFrom, toAttr.Type(ctx), toFieldVal, toOpts)...)
+				} else {
+					tflog.SubsystemError(ctx, subsystemName, "Flexer is not autoFlattener")
+					diags.Append(DiagFlatteningIncompatibleTypes(typeFrom, toField.Type))
+				}
+			} else {
+				tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
+			}
+		}
+	}
+
+	return diags
+}
+
+// This takes complex AWS structures with XML wrapper patterns and splits them into multiple TF fields.
+func (flattener autoFlattener) handleXMLWrapperCollapse(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, valTo reflect.Value, typeFrom, typeTo reflect.Type, processedFields map[string]bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Look for source fields that are complex XML wrapper structures that should be split
+	for i := 0; i < typeFrom.NumField(); i++ {
+		fromField := typeFrom.Field(i)
+		fromFieldName := fromField.Name
+		fromFieldType := fromField.Type
+		fromFieldVal := valFrom.Field(i)
+
+		// Skip already processed fields
+		if processedFields[fromFieldName] {
+			continue
+		}
+
+		// Check if this is a pointer to a struct or direct struct that could be split
+		var sourceStructType reflect.Type
+		var sourceStructVal reflect.Value
+		isNil := false
+
+		if fromFieldType.Kind() == reflect.Pointer && fromFieldType.Elem().Kind() == reflect.Struct {
+			if fromFieldVal.IsNil() {
+				isNil = true
+				sourceStructType = fromFieldType.Elem()
+				sourceStructVal = reflect.Zero(sourceStructType)
+			} else {
+				sourceStructType = fromFieldType.Elem()
+				sourceStructVal = fromFieldVal.Elem()
+			}
+		} else if fromFieldType.Kind() == reflect.Struct {
+			sourceStructType = fromFieldType
+			sourceStructVal = fromFieldVal
+		} else {
+			continue
+		}
+
+		// Check if this source struct should be split into multiple target fields
+		if !flattener.isXMLWrapperSplitSource(sourceStructType) {
+			continue
+		}
+
+		// Before splitting, check if there's a direct field match in the target
+		// If the target has a field with the same name that can accept this XML wrapper,
+		// skip the split and let normal field matching handle it
+		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, fromFieldName, typeFrom, typeTo, flattener); ok {
+			if targetFieldVal := valTo.FieldByIndex(targetField.Index); targetFieldVal.CanSet() {
+				// Check if target field is a NestedObjectCollection that can accept this wrapper
+				if targetAttr, ok := targetFieldVal.Interface().(attr.Value); ok {
+					if _, isNestedObjCollection := targetAttr.Type(ctx).(fwtypes.NestedObjectCollectionType); isNestedObjCollection {
+						// Skip split - let normal field matching handle this as a direct wrapper-to-wrapper mapping
+						tflog.SubsystemTrace(ctx, subsystemName, "Skipping XML wrapper split - direct field match found", map[string]any{
+							logAttrKeySourceFieldname: fromFieldName,
+							logAttrKeyTargetFieldname: targetField.Name,
+						})
+						continue
+					}
+				}
+			}
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Found XML wrapper split source", map[string]any{
+			logAttrKeySourceFieldname: fromFieldName,
+			logAttrKeySourceType:      sourceStructType.String(),
+			"is_nil":                  isNil,
+		})
+
+		// Handle the XML wrapper split
+		diags.Append(flattener.handleXMLWrapperSplit(ctx, sourcePath.AtName(fromFieldName), sourceStructVal, targetPath, valTo, sourceStructType, typeTo, isNil)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// Mark the source field as processed
+		processedFields[fromFieldName] = true
+	}
+
+	return diags
+}
+
+// isXMLWrapperSplitSource checks if a struct type represents a source that should be
+// split into multiple target fields (complex XML wrapper with additional fields beyond Items/Quantity)
+func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) bool {
+	hasValidItems := false
+	hasValidQuantity := false
+	hasOtherFields := false
+
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)
+		fieldName := field.Name
+		fieldType := field.Type
+
+		switch fieldName {
+		case getXMLWrapperSliceFieldName(structType):
+			// Items must be a slice to be a valid XML wrapper
+			if fieldType.Kind() == reflect.Slice {
+				hasValidItems = true
+			}
+		case xmlWrapperFieldQuantity:
+			// Quantity must be *int32 to be a valid XML wrapper
+			if fieldType == reflect.TypeOf((*int32)(nil)) {
+				hasValidQuantity = true
+			}
+		default:
+			// Any other field suggests this is a complex structure that should be split
+			hasOtherFields = true
+		}
+	}
+
+	// Must have properly typed Items/Quantity (XML wrapper pattern) plus other fields to be a split candidate
+	return hasValidItems && hasValidQuantity && hasOtherFields
+}
+
+// handleXMLWrapperSplit splits a complex AWS XML wrapper structure into multiple Terraform fields
+func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, sourcePath path.Path, sourceStructVal reflect.Value, targetPath path.Path, valTo reflect.Value, sourceStructType, typeTo reflect.Type, isNil bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Handling XML wrapper split", map[string]any{
+		logAttrKeySourceType: sourceStructType.String(),
+		logAttrKeyTargetType: typeTo.String(),
+	})
+
+	// If source is nil, find and set the matching target field to null
+	if isNil {
+		// Extract source field name from path
+		sourceFieldName := ""
+		sourcePathStr := sourcePath.String()
+		if lastDot := strings.LastIndex(sourcePathStr, "."); lastDot >= 0 {
+			sourceFieldName = sourcePathStr[lastDot+1:]
+		}
+
+		// Find matching target field
+		if sourceFieldName != "" {
+			if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeOf(""), PkgPath: ""}}), typeTo, flattener); ok {
+				toFieldVal := valTo.FieldByIndex(targetField.Index)
+				if toFieldVal.CanSet() {
+					if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+						switch tTo := valTo.Type(ctx).(type) {
+						case basetypes.SetTypable, basetypes.ListTypable:
+							tflog.SubsystemTrace(ctx, subsystemName, "Setting target collection field to null", map[string]any{
+								logAttrKeyTargetFieldname: targetField.Name,
+							})
+
+							var elemType attr.Type = types.StringType
+							if tToWithElem, ok := tTo.(attr.TypeWithElementType); ok {
+								elemType = tToWithElem.ElementType()
+							}
+
+							var nullVal attr.Value
+							var d diag.Diagnostics
+							if setType, ok := tTo.(basetypes.SetTypable); ok {
+								nullVal, d = setType.ValueFromSet(ctx, types.SetNull(elemType))
+							} else if listType, ok := tTo.(basetypes.ListTypable); ok {
+								nullVal, d = listType.ValueFromList(ctx, types.ListNull(elemType))
+							}
+							diags.Append(d...)
+							if !diags.HasError() {
+								toFieldVal.Set(reflect.ValueOf(nullVal))
+							}
+						}
+					}
+				}
+			}
+		}
+		return diags
+	}
+
+	// Map each field in the source struct to corresponding target fields
+	for i := 0; i < sourceStructType.NumField(); i++ {
+		sourceField := sourceStructType.Field(i)
+		sourceFieldName := sourceField.Name
+		sourceFieldVal := sourceStructVal.Field(i)
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Processing source field for split", map[string]any{
+			"source_field": sourceFieldName,
+			"source_type":  sourceField.Type.String(),
+		})
+
+		// Map the source field to target field(s)
+		wrapperFieldName := getXMLWrapperSliceFieldName(sourceStructType)
+		if sourceFieldName == wrapperFieldName || sourceFieldName == xmlWrapperFieldQuantity {
+			// Items and Quantity should map to the main collection field
+			// Find a target field that matches the parent source field name
+			mainTargetFieldName := flattener.findMainTargetFieldForSplit(ctx, sourcePath, typeTo)
+			if mainTargetFieldName != "" {
+				if _, found := typeTo.FieldByName(mainTargetFieldName); found {
+					toFieldVal := valTo.FieldByName(mainTargetFieldName)
+					if toFieldVal.CanSet() {
+						tflog.SubsystemTrace(ctx, subsystemName, "Mapping Items/Quantity to main target field", map[string]any{
+							"source_field": sourceFieldName,
+							"target_field": mainTargetFieldName,
+						})
+
+						// Only process this for the Items field, skip Quantity
+						if sourceFieldName == wrapperFieldName {
+							// Extract tagOptions from target field
+							opts := tagOptions("")
+							if targetField, ok := typeTo.FieldByName(mainTargetFieldName); ok {
+								if tag := targetField.Tag.Get("autoflex"); tag != "" {
+									_, opts = parseTag(tag)
+								}
+							}
+							diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath, sourceStructVal, targetPath.AtName(mainTargetFieldName), toFieldVal, opts)...)
+							if diags.HasError() {
+								return diags
+							}
+						}
+					}
+				}
+			}
+		} else {
+			// Other fields should map directly by name
+			if targetField, found := typeTo.FieldByName(sourceFieldName); found {
+				toFieldVal := valTo.FieldByName(sourceFieldName)
+				if toFieldVal.CanSet() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Mapping additional field by name", map[string]any{
+						"source_field": sourceFieldName,
+						"target_field": sourceFieldName,
+					})
+
+					// Extract tagOptions from target field
+					opts := tagOptions("")
+					if tag := targetField.Tag.Get("autoflex"); tag != "" {
+						_, opts = parseTag(tag)
+					}
+
+					// Convert the source field to target field
+					diags.Append(flattener.convertXMLWrapperFieldToCollection(ctx, sourcePath.AtName(sourceFieldName), sourceFieldVal, targetPath.AtName(sourceFieldName), toFieldVal, opts)...)
+					if diags.HasError() {
+						return diags
+					}
+				}
+			}
+		}
+	}
+
+	return diags
+}
+
+// findMainTargetFieldForSplit determines which target field should receive the Items/Quantity from the source
+func (flattener autoFlattener) findMainTargetFieldForSplit(ctx context.Context, sourcePath path.Path, typeTo reflect.Type) string {
+	sourcePathStr := sourcePath.String()
+	if lastDot := strings.LastIndex(sourcePathStr, "."); lastDot >= 0 {
+		sourceFieldName := sourcePathStr[lastDot+1:]
+
+		// Use fuzzy field finder for proper singular/plural and case matching
+		dummySourceType := reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeOf(""), PkgPath: ""}})
+		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, dummySourceType, typeTo, flattener); ok {
+			return targetField.Name
+		}
+	}
+
+	return ""
+}
+
+// convertXMLWrapperFieldToCollection converts a source field (either XML wrapper or simple field) to a target collection
+func (flattener autoFlattener) convertXMLWrapperFieldToCollection(ctx context.Context, sourcePath path.Path, sourceFieldVal reflect.Value, targetPath path.Path, toFieldVal reflect.Value, opts tagOptions) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Check if source is an XML wrapper struct (has slice field + Quantity)
+	if sourceFieldVal.Kind() == reflect.Struct && potentialXMLWrapperStruct(sourceFieldVal.Type()) {
+		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type())
+		tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
+			"source_type":   sourceFieldVal.Type().String(),
+			"wrapper_field": wrapperFieldName,
+		})
+
+		// Use existing XML wrapper flatten logic
+		if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+			diags.Append(flattener.xmlWrapperFlatten(ctx, sourceFieldVal, valTo.Type(ctx), toFieldVal, opts)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	} else if sourceFieldVal.Kind() == reflect.Pointer && !sourceFieldVal.IsNil() && potentialXMLWrapperStruct(sourceFieldVal.Type().Elem()) {
+		wrapperFieldName := getXMLWrapperSliceFieldName(sourceFieldVal.Type().Elem())
+		tflog.SubsystemTrace(ctx, subsystemName, "Converting pointer to XML wrapper struct to collection", map[string]any{
+			"source_type":   sourceFieldVal.Type().String(),
+			"wrapper_field": wrapperFieldName,
+		})
+
+		// Use existing XML wrapper flatten logic
+		if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+			diags.Append(flattener.xmlWrapperFlatten(ctx, sourceFieldVal.Elem(), valTo.Type(ctx), toFieldVal, opts)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	} else {
+		tflog.SubsystemTrace(ctx, subsystemName, "Converting non-XML wrapper field", map[string]any{
+			"source_type": sourceFieldVal.Type().String(),
+		})
+
+		// For non-XML wrapper fields, use regular conversion
+		fieldOpts := fieldOpts{}
+		diags.Append(flattener.convert(ctx, sourcePath, sourceFieldVal, targetPath, toFieldVal, fieldOpts)...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	return diags
+}
+
+// createTargetValue creates a value of the target type from a source string value
+func (flattener autoFlattener) createTargetValue(ctx context.Context, sourceValue types.String, targetType attr.Type) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Check what type of target we have
+	switch targetType := targetType.(type) {
+	case basetypes.StringTypable:
+		// Regular string type
+		val, d := targetType.ValueFromString(ctx, sourceValue)
+		diags.Append(d...)
+		return val, diags
+	default:
+		// For StringEnum types or other complex types, try to use regular conversion
+		// This is a bit of a hack, but StringEnum types should accept string values
+		targetTypeStr := targetType.String()
+		if strings.Contains(targetTypeStr, "StringEnum") {
+			// Create a zero value of the target type and try to set it
+			targetVal := reflect.New(reflect.TypeOf(targetType.ValueType(ctx))).Elem()
+
+			// Try to convert using the AutoFlex conversion logic
+			diags.Append(flattener.convert(ctx, path.Empty(), reflect.ValueOf(sourceValue), path.Empty(), targetVal, fieldOpts{})...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			if attrVal, ok := targetVal.Interface().(attr.Value); ok {
+				return attrVal, diags
+			}
+		}
+
+		// Fallback to string value
+		return sourceValue, diags
+	}
+}
+
+// xmlWrapperFlattenRule2 handles Rule 2: XML wrapper to single plural block with items + additional fields
+func (flattener *autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value, opts tagOptions) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	tflog.SubsystemTrace(ctx, subsystemName, "xmlWrapperFlattenRule2 ENTRY", map[string]any{
+		"source_type": vFrom.Type().String(),
+	})
+
+	// Check if wrapper Items field is empty/nil
+	wrapperFieldName := getXMLWrapperSliceFieldName(vFrom.Type())
+	itemsField := vFrom.FieldByName(wrapperFieldName)
+
+	itemsLen := 0
+	if itemsField.IsValid() && !itemsField.IsNil() {
+		itemsLen = itemsField.Len()
+	}
+
+	tflog.SubsystemTrace(ctx, subsystemName, "Checking Items field", map[string]any{
+		"wrapper_field_name": wrapperFieldName,
+		"items_valid":        itemsField.IsValid(),
+		"items_len":          itemsLen,
+	})
+
+	if itemsField.IsValid() {
+		itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Items empty check", map[string]any{
+			"items_empty": itemsEmpty,
+		})
+
+		// If Items is empty AND all other fields (except Quantity) are nil or zero,
+		// return null instead of creating a block with all default values
+		if itemsEmpty {
+			allOtherFieldsZero := true
+			for i := 0; i < vFrom.NumField(); i++ {
+				sourceField := vFrom.Field(i)
+				fieldName := vFrom.Type().Field(i).Name
+
+				// Skip Items and Quantity fields
+				if fieldName == wrapperFieldName || fieldName == xmlWrapperFieldQuantity {
+					continue
+				}
+
+				// For pointers: nil is zero, non-nil pointer to zero value is also considered zero
+				// For non-pointers: use IsZero()
+				isFieldZero := false
+				if sourceField.Kind() == reflect.Pointer {
+					if sourceField.IsNil() {
+						isFieldZero = true
+					} else if sourceField.Elem().IsZero() {
+						isFieldZero = true
+					}
+				} else {
+					isFieldZero = sourceField.IsZero()
+				}
+
+				tflog.SubsystemTrace(ctx, subsystemName, "Checking field zero status", map[string]any{
+					"field_name":    fieldName,
+					"is_field_zero": isFieldZero,
+					"field_kind":    sourceField.Kind().String(),
+					"field_is_nil":  sourceField.Kind() == reflect.Pointer && sourceField.IsNil(),
+				})
+
+				if !isFieldZero {
+					allOtherFieldsZero = false
+					break
+				}
+			}
+
+			tflog.SubsystemTrace(ctx, subsystemName, "Zero value check result", map[string]any{
+				"all_other_fields_zero": allOtherFieldsZero,
+			})
+
+			if allOtherFieldsZero {
+				// Check if target field has omitempty - only return null if it does
+				if opts.OmitEmpty() {
+					tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper Items is empty and all other fields are zero, returning null for Rule 2 (omitempty)")
+					nullVal, d := tTo.NullValue(ctx)
+					diags.Append(d...)
+					if !diags.HasError() {
+						vTo.Set(reflect.ValueOf(nullVal))
+					}
+					return diags
+				}
+				tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper Items is empty and all other fields are zero, but no omitempty - creating zero-value struct for Rule 2")
+			}
+		}
+	}
+
+	nestedObjPtr, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	nestedObjValue := reflect.ValueOf(nestedObjPtr).Elem()
+
+	// Map Items field - find target field by xmlwrapper tag
+	if itemsField := vFrom.FieldByName(wrapperFieldName); itemsField.IsValid() {
+		for i := 0; i < nestedObjValue.NumField(); i++ {
+			targetField := nestedObjValue.Field(i)
+			targetFieldType := nestedObjValue.Type().Field(i)
+			_, fieldOpts := autoflexTags(targetFieldType)
+			if fieldOpts.XMLWrapperField() == wrapperFieldName {
+				if targetField.CanAddr() {
+					if targetAttr, ok := targetField.Addr().Interface().(attr.Value); ok {
+						diags.Append(autoFlattenConvert(ctx, itemsField.Interface(), targetAttr, flattener)...)
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// Map all other fields (skip Items and Quantity)
+	for i := 0; i < vFrom.NumField(); i++ {
+		sourceField := vFrom.Field(i)
+		fieldName := vFrom.Type().Field(i).Name
+
+		if fieldName == wrapperFieldName || fieldName == xmlWrapperFieldQuantity {
+			continue
+		}
+
+		if targetField := nestedObjValue.FieldByName(fieldName); targetField.IsValid() && targetField.CanAddr() {
+			if targetAttr, ok := targetField.Addr().Interface().(attr.Value); ok {
+				diags.Append(autoFlattenConvert(ctx, sourceField.Interface(), targetAttr, flattener)...)
+			}
+		}
+	}
+
+	ptrType := reflect.TypeOf(nestedObjPtr)
+	objectSlice := reflect.MakeSlice(reflect.SliceOf(ptrType), 1, 1)
+	objectSlice.Index(0).Set(reflect.ValueOf(nestedObjPtr))
+
+	targetValue, d := tTo.ValueFromObjectSlice(ctx, objectSlice.Interface())
+	diags.Append(d...)
+	if !diags.HasError() {
+		vTo.Set(reflect.ValueOf(targetValue))
+	}
+
+	return diags
 }
