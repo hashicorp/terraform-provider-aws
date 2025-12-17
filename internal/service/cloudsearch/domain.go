@@ -1836,17 +1836,18 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 				return nil, "", err
 			}
 
-			// Wait for domain to be created and not processing.
-			// AWS docs indicate endpoints are available when Created=true.
-			// If race conditions occur where Created=true but endpoints are still null,
-			// add additional check: hasEndpoints := output.SearchService != nil &&
-			//                       output.SearchService.Endpoint != nil &&
-			//                       output.DocService != nil &&
-			//                       output.DocService.Endpoint != nil
+			// Wait for domain to be created, not processing, and have endpoints available.
+			// AWS documentation suggests endpoints are available when Created=true, but
+			// empirical testing confirms a race condition exists where endpoints can still
+			// be null. All three conditions are required for Framework consistency.
 			created := aws.ToBool(output.Created)
 			processing := aws.ToBool(output.Processing)
+			hasEndpoints := output.SearchService != nil &&
+				output.SearchService.Endpoint != nil &&
+				output.DocService != nil &&
+				output.DocService.Endpoint != nil
 
-			if created && !processing {
+			if created && !processing && hasEndpoints {
 				return output, "false", nil
 			}
 
