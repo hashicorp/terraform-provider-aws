@@ -186,6 +186,93 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerConnectPeer_4BytePeerASN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectPeer
+	resourceName := "aws_networkmanager_connect_peer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	insideCidrBlocksv4 := "169.254.10.0/29"
+	peerAddress := "1.1.1.1"
+	protocol := awstypes.TunnelProtocolGre
+	asn := "4294967290"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerConnectPeer_upgradeFromV6_26_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectPeer
+	resourceName := "aws_networkmanager_connect_peer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	insideCidrBlocksv4 := "169.254.10.0/29"
+	peerAddress := "1.1.1.1"
+	protocol := awstypes.TunnelProtocolGre
+	asn := "65501"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		CheckDestroy: testAccCheckConnectPeerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.26.0",
+					},
+				},
+				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectPeerExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckConnectPeerExists(ctx context.Context, n string, v *awstypes.ConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
