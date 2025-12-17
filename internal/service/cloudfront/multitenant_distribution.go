@@ -770,8 +770,35 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		return
 	}
 
-	// For now, just set the new state - updates can be implemented later
-	response.Diagnostics.Append(response.State.Set(ctx, new)...)
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	// Handle tag updates
+	if !new.Tags.Equal(old.Tags) {
+		if err := updateTags(ctx, conn, new.ARN.ValueString(), old.Tags, new.Tags); err != nil {
+			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution tags", err.Error())
+			return
+		}
+	}
+
+	// For other updates, we would need to call UpdateDistribution API
+	// For now, just read the current state to ensure computed values are populated
+	output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError("reading CloudFront Multi-tenant Distribution after update", err.Error())
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *multiTenantDistributionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
