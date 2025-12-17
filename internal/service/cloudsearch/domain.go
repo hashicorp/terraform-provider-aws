@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -135,16 +136,12 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"facet": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
+							Default:  booldefault.StaticBool(false),
 						},
 						"highlight": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
+							Default:  booldefault.StaticBool(false),
 						},
 						names.AttrName: schema.StringAttribute{
 							Required: true,
@@ -155,23 +152,17 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"return": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
+							Default:  booldefault.StaticBool(false),
 						},
 						"search": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
+							Default:  booldefault.StaticBool(false),
 						},
 						"sort": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.Bool{
-								boolplanmodifier.UseStateForUnknown(),
-							},
+							Default:  booldefault.StaticBool(false),
 						},
 						"source_fields": schema.StringAttribute{
 							Optional: true,
@@ -767,67 +758,21 @@ func indexFieldSemanticEquality(ctx context.Context, oldValue, newValue fwtypes.
 	return true, diags
 }
 
-// indexFieldsSemanticEqual compares two index fields with normalization
-// Treats null and false as equivalent for boolean fields
-// Treats null and empty string as equivalent for string fields
+// indexFieldsSemanticEqual compares two index fields for equality.
+// This is used for set membership comparison to prevent spurious remove/add diffs.
+// With schema defaults properly set (Default: false for booleans), we can use
+// direct comparison instead of treating null/false as equivalent.
 func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
-	if a.Name.ValueString() != b.Name.ValueString() {
-		return false
-	}
-	if a.Type.ValueString() != b.Type.ValueString() {
-		return false
-	}
-	if !boolSemanticEqual(a.Facet, b.Facet) {
-		return false
-	}
-	if !boolSemanticEqual(a.Highlight, b.Highlight) {
-		return false
-	}
-	if !boolSemanticEqual(a.Return, b.Return) {
-		return false
-	}
-	if !boolSemanticEqual(a.Search, b.Search) {
-		return false
-	}
-	if !boolSemanticEqual(a.Sort, b.Sort) {
-		return false
-	}
-	if !stringSemanticEqual(a.AnalysisScheme, b.AnalysisScheme) {
-		return false
-	}
-	if !stringSemanticEqual(a.DefaultValue, b.DefaultValue) {
-		return false
-	}
-	if !stringSemanticEqual(a.SourceFields, b.SourceFields) {
-		return false
-	}
-	return true
-}
-
-// boolSemanticEqual treats null and false as equivalent
-func boolSemanticEqual(a, b types.Bool) bool {
-	aVal := false
-	if !a.IsNull() && !a.IsUnknown() {
-		aVal = a.ValueBool()
-	}
-	bVal := false
-	if !b.IsNull() && !b.IsUnknown() {
-		bVal = b.ValueBool()
-	}
-	return aVal == bVal
-}
-
-// stringSemanticEqual treats null and empty string as equivalent
-func stringSemanticEqual(a, b types.String) bool {
-	aVal := ""
-	if !a.IsNull() && !a.IsUnknown() {
-		aVal = a.ValueString()
-	}
-	bVal := ""
-	if !b.IsNull() && !b.IsUnknown() {
-		bVal = b.ValueString()
-	}
-	return aVal == bVal
+	return a.Name.Equal(b.Name) &&
+		a.Type.Equal(b.Type) &&
+		a.Facet.Equal(b.Facet) &&
+		a.Highlight.Equal(b.Highlight) &&
+		a.Return.Equal(b.Return) &&
+		a.Search.Equal(b.Search) &&
+		a.Sort.Equal(b.Sort) &&
+		a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+		a.DefaultValue.Equal(b.DefaultValue) &&
+		a.SourceFields.Equal(b.SourceFields)
 }
 
 // indexFieldsEqual compares two index fields for exact equality (used in Update)
@@ -1229,19 +1174,19 @@ func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldMod
 	}
 
 	field := apiObject.Options
-	// Initialize all optional fields to null to avoid "unknown after apply" errors.
-	// The zero value of types.Bool/types.String is "unknown", not null, so we must
-	// explicitly set them to null for fields that the API doesn't return.
+	// Initialize boolean fields to false to match SDKv2's Default: false behavior.
+	// String fields are initialized to null since they don't have defaults.
+	// This ensures consistency between schema defaults and flatten output.
 	m := &indexFieldModel{
 		Name:           types.StringValue(aws.ToString(field.IndexFieldName)),
 		Type:           fwtypes.StringEnumValue(field.IndexFieldType),
 		AnalysisScheme: types.StringNull(),
 		DefaultValue:   types.StringNull(),
-		Facet:          types.BoolNull(),
-		Highlight:      types.BoolNull(),
-		Return:         types.BoolNull(),
-		Search:         types.BoolNull(),
-		Sort:           types.BoolNull(),
+		Facet:          types.BoolValue(false),
+		Highlight:      types.BoolValue(false),
+		Return:         types.BoolValue(false),
+		Search:         types.BoolValue(false),
+		Sort:           types.BoolValue(false),
 		SourceFields:   types.StringNull(),
 	}
 
