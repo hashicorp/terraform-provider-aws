@@ -649,3 +649,57 @@ func findLoggingStatusByID(ctx context.Context, conn *redshift.Client, clusterID
 
 	return output, nil
 }
+
+func findClusterParameterGroups(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParameterGroupsInput) ([]awstypes.ClusterParameterGroup, error) {
+	var output []awstypes.ClusterParameterGroup
+
+	pages := redshift.NewDescribeClusterParameterGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ParameterGroups...)
+	}
+
+	return output, nil
+}
+
+func findClusterParameterGroup(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParameterGroupsInput) (*awstypes.ClusterParameterGroup, error) {
+	output, err := findClusterParameterGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ClusterParameterGroup, error) {
+	input := redshift.DescribeClusterParameterGroupsInput{
+		ParameterGroupName: aws.String(name),
+	}
+	output, err := findClusterParameterGroup(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ParameterGroupName) != name {
+		return nil, &sdkretry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
