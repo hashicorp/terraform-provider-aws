@@ -32,16 +32,16 @@ The following attributes that are available in standard CloudFront distributions
 
 - `active_trusted_signers` - Use `active_trusted_key_groups` instead
 - `alias_icp_recordals` - Managed by connection groups
-- Cache behavior TTL settings (`default_ttl`, `max_ttl`, `min_ttl`) - Use cache policies instead
-- `smooth_streaming` in cache behaviors
-- `trusted_signers` in cache behaviors - Use `trusted_key_groups` instead
-- `forwarded_values` in cache behaviors - Deprecated, use cache policies instead
 - `aliases` - Managed by connection groups
+- `anycast_ip_list_id` - Use connection groups instead
+- `continuous_deployment_policy_id`
+- `forwarded_values` in cache behaviors - Deprecated, use cache policies instead
 - `is_ipv6_enabled` - Managed by connection groups
 - `price_class` - Managed by connection groups
+- `smooth_streaming` in cache behaviors
 - `staging` mode
-- `continuous_deployment_policy_id`
-- `anycast_ip_list_id` - Use connection groups instead
+- `trusted_signers` in cache behaviors - Use `trusted_key_groups` instead
+- Cache behavior TTL settings (`default_ttl`, `max_ttl`, `min_ttl`) - Use cache policies instead
 
 ## Example Usage
 
