@@ -2125,16 +2125,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_featureFlagNotSet(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
-
-					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-				),
+				Config:      testAccGlobalSecondaryIndexConfig_basic(rNameTable, rName),
 				ExpectError: regexache.MustCompile(`Experimental Resource Type Not Enabled: "aws_dynamodb_global_secondary_index"`),
 			},
 		},
