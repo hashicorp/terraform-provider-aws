@@ -5,7 +5,7 @@ package cloudsearch
 
 // Exports for use in tests only.
 var (
-	ResourceDomain                    = resourceDomain
+	ResourceDomain                    = newDomainResource
 	ResourceDomainServiceAccessPolicy = resourceDomainServiceAccessPolicy
 
 	FindAccessPolicyByName = findAccessPolicyByName

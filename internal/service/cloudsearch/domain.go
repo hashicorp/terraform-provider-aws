@@ -6,552 +6,1565 @@ package cloudsearch
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
-	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// SDKv2 resource replaced by Framework resource in domain_fw.go
-// SDKResource annotation commented out for Framework migration
-// was: @SDKResource("aws_cloudsearch_domain", name="Domain")
-func resourceDomain() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceDomainCreate,
-		ReadWithoutTimeout:   resourceDomainRead,
-		UpdateWithoutTimeout: resourceDomainUpdate,
-		DeleteWithoutTimeout: resourceDomainDelete,
+// @FrameworkResource("aws_cloudsearch_domain", name="Domain")
+func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &domainResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"document_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_options": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"tls_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.TLSSecurityPolicy](),
-						},
-					},
-				},
-			},
-			// The index_field schema is based on the AWS Console screen, not the API model.
-			"index_field": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"analysis_scheme": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrDefaultValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"facet": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"highlight": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateIndexName,
-						},
-						"return": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"search": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"sort": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"source_fields": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.IndexFieldType](),
-						},
-					},
-				},
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
-			},
-			"scaling_parameters": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"desired_instance_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.PartitionInstanceType](),
-						},
-						"desired_partition_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"desired_replication_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"search_service_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-	}
+type domainResource struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
 }
 
 var (
 	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
 	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
-	scoreRegex     = regexache.MustCompile(`score`)
 )
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
+func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	indexFieldSetOptions := []fwtypes.NestedObjectOfOption[indexFieldModel]{
+		fwtypes.WithSemanticEqualityFunc(indexFieldSemanticEquality),
+	}
 
-	name := d.Get(names.AttrName).(string)
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"document_service_endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"domain_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			"multi_az": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				},
+			},
+			"search_service_endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTimeouts: timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+		Blocks: map[string]schema.Block{
+			"endpoint_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointOptionsModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"enforce_https": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"tls_security_policy": schema.StringAttribute{
+							Optional:   true,
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.TLSSecurityPolicy](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+					},
+				},
+			},
+			"index_field": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[indexFieldModel](ctx, indexFieldSetOptions...),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"analysis_scheme": schema.StringAttribute{
+							Optional: true,
+						},
+						names.AttrDefaultValue: schema.StringAttribute{
+							Optional: true,
+						},
+						"facet": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"highlight": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						names.AttrName: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(indexNameRegex, ""),
+							},
+						},
+						"return": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"search": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"sort": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"source_fields": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[^s]|s[^c]|sc[^o]|sco[^r]|scor[^e]`), "Cannot be set to reserved field score"),
+							},
+						},
+						names.AttrType: schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.IndexFieldType](),
+						},
+					},
+				},
+			},
+			"scaling_parameters": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingParametersModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"desired_instance_type": schema.StringAttribute{
+							Optional:   true,
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.PartitionInstanceType](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"desired_partition_count": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+						},
+						"desired_replication_count": schema.Int64Attribute{
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *domainResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudSearchClient(ctx)
+
+	name := data.Name.ValueString()
 	input := &cloudsearch.CreateDomainInput{
 		DomainName: aws.String(name),
 	}
+
 	_, err := conn.CreateDomain(ctx, input)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudSearch Domain (%s): %s", name, err)
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudSearch Domain (%s)", name), err.Error())
+		return
 	}
 
-	d.SetId(name)
+	data.ID = types.StringValue(name)
 
-	if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input := &cloudsearch.UpdateScalingParametersInput{
-			DomainName:        aws.String(d.Id()),
-			ScalingParameters: expandScalingParameters(v.([]any)[0].(map[string]any)),
+	// Update scaling parameters if specified
+	if !data.ScalingParameters.IsNull() && !data.ScalingParameters.IsUnknown() {
+		scalingParams, diags := data.ScalingParameters.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		_, err := conn.UpdateScalingParameters(ctx, input)
+		if scalingParams != nil {
+			scalingInput := &cloudsearch.UpdateScalingParametersInput{
+				DomainName:        aws.String(name),
+				ScalingParameters: expandScalingParametersModel(scalingParams),
+			}
 
+			_, err := conn.UpdateScalingParameters(ctx, scalingInput)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) scaling parameters", name), err.Error())
+				return
+			}
+		}
+	}
+
+	// Update multi_az if specified
+	if !data.MultiAZ.IsNull() && !data.MultiAZ.IsUnknown() {
+		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
+			DomainName: aws.String(name),
+			MultiAZ:    aws.Bool(data.MultiAZ.ValueBool()),
+		}
+
+		_, err := conn.UpdateAvailabilityOptions(ctx, multiAZInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) availability options", name), err.Error())
+			return
 		}
 	}
 
-	if v, ok := d.GetOk("multi_az"); ok {
-		input := &cloudsearch.UpdateAvailabilityOptionsInput{
-			DomainName: aws.String(d.Id()),
-			MultiAZ:    aws.Bool(v.(bool)),
+	// Update endpoint options if specified
+	if !data.EndpointOptions.IsNull() && !data.EndpointOptions.IsUnknown() {
+		endpointOpts, diags := data.EndpointOptions.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		_, err := conn.UpdateAvailabilityOptions(ctx, input)
+		if endpointOpts != nil {
+			endpointInput := &cloudsearch.UpdateDomainEndpointOptionsInput{
+				DomainName:            aws.String(name),
+				DomainEndpointOptions: expandEndpointOptionsModel(endpointOpts),
+			}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) availability options: %s", d.Id(), err)
-		}
-	}
-
-	if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
-			DomainEndpointOptions: expandDomainEndpointOptions(v.([]any)[0].(map[string]any)),
-			DomainName:            aws.String(d.Id()),
-		}
-
-		_, err := conn.UpdateDomainEndpointOptions(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
+			_, err := conn.UpdateDomainEndpointOptions(ctx, endpointInput)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) endpoint options", name), err.Error())
+				return
+			}
 		}
 	}
 
-	if v, ok := d.GetOk("index_field"); ok && v.(*schema.Set).Len() > 0 {
-		err := defineIndexFields(ctx, conn, d.Id(), v.(*schema.Set).List())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating CloudSearch Domain (%s): %s", name, err)
+	// Define index fields if specified
+	if !data.IndexFields.IsNull() && !data.IndexFields.IsUnknown() {
+		indexFields, diags := data.IndexFields.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		input := &cloudsearch.IndexDocumentsInput{
-			DomainName: aws.String(d.Id()),
-		}
+		if len(indexFields) > 0 {
+			for _, field := range indexFields {
+				apiField, sourceFieldsConfigured, err := expandIndexFieldModel(field)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("expanding index field (%s)", field.Name.ValueString()), err.Error())
+					return
+				}
 
-		_, err = conn.IndexDocuments(ctx, input)
+				defineInput := &cloudsearch.DefineIndexFieldInput{
+					DomainName: aws.String(name),
+					IndexField: apiField,
+				}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "indexing CloudSearch Domain (%s) documents: %s", d.Id(), err)
+				_, err = conn.DefineIndexField(ctx, defineInput)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("defining CloudSearch Domain (%s) index field (%s)", name, field.Name.ValueString()), err.Error())
+					return
+				}
+
+				if sourceFieldsConfigured {
+					tflog.Warn(ctx, "source_fields is configured for index field; if this is a new field, ensure the source field(s) exist before this field", map[string]any{
+						"index_field": field.Name.ValueString(),
+					})
+				}
+			}
+
+			// Trigger indexing
+			indexInput := &cloudsearch.IndexDocumentsInput{
+				DomainName: aws.String(name),
+			}
+
+			_, err := conn.IndexDocuments(ctx, indexInput)
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("indexing CloudSearch Domain (%s) documents", name), err.Error())
+				return
+			}
 		}
 	}
 
-	// TODO: Status.RequiresIndexDocuments = true?
-
-	if _, err := waitDomainActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) create: %s", d.Id(), err)
+	// Wait for domain to become active
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err := waitDomainActive(ctx, conn, name, createTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) create", name), err.Error())
+		return
 	}
 
-	return append(diags, resourceDomainRead(ctx, d, meta)...)
+	// Read the domain to get computed values
+	response.Diagnostics.Append(r.readDomain(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.readDomain(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *domainResource) readDomain(ctx context.Context, data *domainResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
+	conn := r.Meta().CloudSearchClient(ctx)
 
-	domain, err := findDomainByName(ctx, conn, d.Id())
+	domainName := data.ID.ValueString()
 
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] CloudSearch Domain (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	domain, err := findDomainByName(ctx, conn, domainName)
+	if retry.NotFound(err) {
+		diags.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		return diags
+	}
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s)", domainName), err.Error())
 		return diags
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s): %s", d.Id(), err)
-	}
-
-	d.Set(names.AttrARN, domain.ARN)
+	data.ARN = fwflex.StringToFramework(ctx, domain.ARN)
 	if domain.DocService != nil {
-		d.Set("document_service_endpoint", domain.DocService.Endpoint)
+		data.DocumentServiceEndpoint = fwflex.StringToFramework(ctx, domain.DocService.Endpoint)
 	} else {
-		d.Set("document_service_endpoint", nil)
+		data.DocumentServiceEndpoint = types.StringNull()
 	}
-	d.Set("domain_id", domain.DomainId)
-	d.Set(names.AttrName, domain.DomainName)
+	data.DomainID = fwflex.StringToFramework(ctx, domain.DomainId)
+	data.Name = fwflex.StringToFramework(ctx, domain.DomainName)
 	if domain.SearchService != nil {
-		d.Set("search_service_endpoint", domain.SearchService.Endpoint)
+		data.SearchServiceEndpoint = fwflex.StringToFramework(ctx, domain.SearchService.Endpoint)
 	} else {
-		d.Set("search_service_endpoint", nil)
+		data.SearchServiceEndpoint = types.StringNull()
 	}
 
-	availabilityOptionStatus, err := findAvailabilityOptionsStatusByName(ctx, conn, d.Id())
-
+	// Read availability options
+	availabilityOptionStatus, err := findAvailabilityOptionsStatusByName(ctx, conn, domainName)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) availability options: %s", d.Id(), err)
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) availability options", domainName), err.Error())
+		return diags
 	}
+	data.MultiAZ = types.BoolValue(availabilityOptionStatus.Options)
 
-	d.Set("multi_az", availabilityOptionStatus.Options)
-
-	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, d.Id())
-
+	// Read endpoint options
+	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, domainName)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
+		return diags
 	}
+	data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
 
-	if err := d.Set("endpoint_options", []any{flattenDomainEndpointOptions(endpointOptions)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint_options: %s", err)
-	}
-
-	scalingParameters, err := findScalingParametersByName(ctx, conn, d.Id())
-
+	// Read scaling parameters
+	scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
+		return diags
 	}
+	data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
 
-	if err := d.Set("scaling_parameters", []any{flattenScalingParameters(scalingParameters)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting scaling_parameters: %s", err)
+	// Read index fields
+	indexInput := &cloudsearch.DescribeIndexFieldsInput{
+		DomainName: aws.String(domainName),
 	}
-
-	input := cloudsearch.DescribeIndexFieldsInput{
-		DomainName: aws.String(d.Get(names.AttrName).(string)),
-	}
-	indexResults, err := conn.DescribeIndexFields(ctx, &input)
-
+	indexResults, err := conn.DescribeIndexFields(ctx, indexInput)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) index fields: %s", d.Id(), err)
+		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) index fields", domainName), err.Error())
+		return diags
 	}
 
-	if tfList, err := flattenIndexFieldStatuses(indexResults.IndexFields); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s): %s", d.Id(), err)
-	} else if err := d.Set("index_field", tfList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting index_field: %s", err)
+	indexFields, d := flattenIndexFieldModels(ctx, indexResults.IndexFields)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
 	}
+	data.IndexFields = indexFields
 
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
+func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new domainResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	conn := r.Meta().CloudSearchClient(ctx)
+	domainName := new.ID.ValueString()
 	requiresIndexDocuments := false
-	if d.HasChange("scaling_parameters") {
-		input := &cloudsearch.UpdateScalingParametersInput{
-			DomainName: aws.String(d.Id()),
+
+	// Update scaling parameters
+	if !new.ScalingParameters.Equal(old.ScalingParameters) {
+		scalingInput := &cloudsearch.UpdateScalingParametersInput{
+			DomainName: aws.String(domainName),
 		}
 
-		if v, ok := d.GetOk("scaling_parameters"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.ScalingParameters = expandScalingParameters(v.([]any)[0].(map[string]any))
+		if !new.ScalingParameters.IsNull() {
+			scalingParams, diags := new.ScalingParameters.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if scalingParams != nil {
+				scalingInput.ScalingParameters = expandScalingParametersModel(scalingParams)
+			} else {
+				scalingInput.ScalingParameters = &awstypes.ScalingParameters{}
+			}
 		} else {
-			input.ScalingParameters = &types.ScalingParameters{}
+			scalingInput.ScalingParameters = &awstypes.ScalingParameters{}
 		}
 
-		output, err := conn.UpdateScalingParameters(ctx, input)
-
+		output, err := conn.UpdateScalingParameters(ctx, scalingInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
+			return
 		}
 
-		if output != nil && output.ScalingParameters != nil && output.ScalingParameters.Status != nil && output.ScalingParameters.Status.State == types.OptionStateRequiresIndexDocuments {
+		if output != nil && output.ScalingParameters != nil && output.ScalingParameters.Status != nil && output.ScalingParameters.Status.State == awstypes.OptionStateRequiresIndexDocuments {
 			requiresIndexDocuments = true
 		}
 	}
 
-	if d.HasChange("multi_az") {
-		input := &cloudsearch.UpdateAvailabilityOptionsInput{
-			DomainName: aws.String(d.Id()),
-			MultiAZ:    aws.Bool(d.Get("multi_az").(bool)),
+	// Update multi_az
+	if !new.MultiAZ.Equal(old.MultiAZ) {
+		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
+			DomainName: aws.String(domainName),
+			MultiAZ:    aws.Bool(new.MultiAZ.ValueBool()),
 		}
 
-		output, err := conn.UpdateAvailabilityOptions(ctx, input)
-
+		output, err := conn.UpdateAvailabilityOptions(ctx, multiAZInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) availability options: %s", d.Id(), err)
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) availability options", domainName), err.Error())
+			return
 		}
 
-		if output != nil && output.AvailabilityOptions != nil && output.AvailabilityOptions.Status != nil && output.AvailabilityOptions.Status.State == types.OptionStateRequiresIndexDocuments {
+		if output != nil && output.AvailabilityOptions != nil && output.AvailabilityOptions.Status != nil && output.AvailabilityOptions.Status.State == awstypes.OptionStateRequiresIndexDocuments {
 			requiresIndexDocuments = true
 		}
 	}
 
-	if d.HasChange("endpoint_options") {
-		input := &cloudsearch.UpdateDomainEndpointOptionsInput{
-			DomainName: aws.String(d.Id()),
+	// Update endpoint options
+	if !new.EndpointOptions.Equal(old.EndpointOptions) {
+		endpointInput := &cloudsearch.UpdateDomainEndpointOptionsInput{
+			DomainName: aws.String(domainName),
 		}
 
-		if v, ok := d.GetOk("endpoint_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any)[0].(map[string]any))
+		if !new.EndpointOptions.IsNull() {
+			endpointOpts, diags := new.EndpointOptions.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if endpointOpts != nil {
+				endpointInput.DomainEndpointOptions = expandEndpointOptionsModel(endpointOpts)
+			} else {
+				endpointInput.DomainEndpointOptions = &awstypes.DomainEndpointOptions{}
+			}
 		} else {
-			input.DomainEndpointOptions = &types.DomainEndpointOptions{}
+			endpointInput.DomainEndpointOptions = &awstypes.DomainEndpointOptions{}
 		}
 
-		output, err := conn.UpdateDomainEndpointOptions(ctx, input)
-
+		output, err := conn.UpdateDomainEndpointOptions(ctx, endpointInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudSearch Domain (%s) endpoint options", domainName), err.Error())
+			return
 		}
 
-		if output != nil && output.DomainEndpointOptions != nil && output.DomainEndpointOptions.Status != nil && output.DomainEndpointOptions.Status.State == types.OptionStateRequiresIndexDocuments {
+		if output != nil && output.DomainEndpointOptions != nil && output.DomainEndpointOptions.Status != nil && output.DomainEndpointOptions.Status.State == awstypes.OptionStateRequiresIndexDocuments {
 			requiresIndexDocuments = true
 		}
 	}
 
-	if d.HasChange("index_field") {
-		o, n := d.GetChange("index_field")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-
-		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]any)
-			if !ok {
-				continue
-			}
-
-			fieldName, _ := tfMap[names.AttrName].(string)
-
-			if fieldName == "" {
-				continue
-			}
-
-			input := &cloudsearch.DeleteIndexFieldInput{
-				DomainName:     aws.String(d.Id()),
-				IndexFieldName: aws.String(fieldName),
-			}
-
-			_, err := conn.DeleteIndexField(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s) index field (%s): %s", d.Id(), fieldName, err)
-			}
-
-			requiresIndexDocuments = true
+	// Update index fields
+	if !new.IndexFields.Equal(old.IndexFields) {
+		oldFields, diags := old.IndexFields.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if v := ns.Difference(os); v.Len() > 0 {
-			if err := defineIndexFields(ctx, conn, d.Id(), v.List()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s): %s", d.Id(), err)
-			}
+		newFields, diags := new.IndexFields.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
-			requiresIndexDocuments = true
+		// Build maps by name for comparison
+		oldByName := make(map[string]*indexFieldModel)
+		for _, f := range oldFields {
+			oldByName[f.Name.ValueString()] = f
+		}
+
+		newByName := make(map[string]*indexFieldModel)
+		for _, f := range newFields {
+			newByName[f.Name.ValueString()] = f
+		}
+
+		// Delete fields that are in old but not in new
+		for name := range oldByName {
+			if _, exists := newByName[name]; !exists {
+				deleteInput := &cloudsearch.DeleteIndexFieldInput{
+					DomainName:     aws.String(domainName),
+					IndexFieldName: aws.String(name),
+				}
+
+				_, err := conn.DeleteIndexField(ctx, deleteInput)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("deleting CloudSearch Domain (%s) index field (%s)", domainName, name), err.Error())
+					return
+				}
+
+				requiresIndexDocuments = true
+			}
+		}
+
+		// Add or update fields that are in new
+		for name, newField := range newByName {
+			oldField, exists := oldByName[name]
+
+			// If field doesn't exist or has changed, define it
+			if !exists || !indexFieldsEqual(oldField, newField) {
+				apiField, sourceFieldsConfigured, err := expandIndexFieldModel(newField)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("expanding index field (%s)", name), err.Error())
+					return
+				}
+
+				defineInput := &cloudsearch.DefineIndexFieldInput{
+					DomainName: aws.String(domainName),
+					IndexField: apiField,
+				}
+
+				_, err = conn.DefineIndexField(ctx, defineInput)
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("defining CloudSearch Domain (%s) index field (%s)", domainName, name), err.Error())
+					return
+				}
+
+				if sourceFieldsConfigured {
+					tflog.Warn(ctx, "source_fields is configured for index field; if this is a new field, ensure the source field(s) exist before this field", map[string]any{
+						"index_field": name,
+					})
+				}
+
+				requiresIndexDocuments = true
+			}
 		}
 	}
 
 	if requiresIndexDocuments {
-		input := &cloudsearch.IndexDocumentsInput{
-			DomainName: aws.String(d.Id()),
+		indexInput := &cloudsearch.IndexDocumentsInput{
+			DomainName: aws.String(domainName),
 		}
 
-		_, err := conn.IndexDocuments(ctx, input)
-
+		_, err := conn.IndexDocuments(ctx, indexInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "indexing CloudSearch Domain (%s) documents: %s", d.Id(), err)
+			response.Diagnostics.AddError(fmt.Sprintf("indexing CloudSearch Domain (%s) documents", domainName), err.Error())
+			return
 		}
 	}
 
-	if _, err := waitDomainActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) update: %s", d.Id(), err)
+	// Wait for domain to become active
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+	if _, err := waitDomainActive(ctx, conn, domainName, updateTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) update", domainName), err.Error())
+		return
 	}
 
-	return append(diags, resourceDomainRead(ctx, d, meta)...)
+	// Read the domain to get computed values
+	response.Diagnostics.Append(r.readDomain(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
-
-	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
-	input := cloudsearch.DeleteDomainInput{
-		DomainName: aws.String(d.Id()),
+func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
-	_, err := conn.DeleteDomain(ctx, &input)
 
+	conn := r.Meta().CloudSearchClient(ctx)
+	domainName := data.ID.ValueString()
+
+	tflog.Debug(ctx, "Deleting CloudSearch Domain", map[string]any{
+		"domain_name": domainName,
+	})
+
+	input := &cloudsearch.DeleteDomainInput{
+		DomainName: aws.String(domainName),
+	}
+
+	_, err := conn.DeleteDomain(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s): %s", d.Id(), err)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudSearch Domain (%s)", domainName), err.Error())
+		return
 	}
 
-	if _, err := waitDomainDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) delete: %s", d.Id(), err)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if _, err := waitDomainDeleted(ctx, conn, domainName, deleteTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) delete", domainName), err.Error())
+		return
 	}
-
-	return diags
 }
 
-func validateIndexName(v any, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	if !indexNameRegex.MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
-	}
-
-	if value == "score" {
-		es = append(es, fmt.Errorf("'score' is a reserved field name and cannot be used"))
-	}
-
-	return
+func (r *domainResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
-func defineIndexFields(ctx context.Context, conn *cloudsearch.Client, domainName string, tfList []any) error {
-	// Define index fields with source fields after those without.
-	for _, defineWhenSourceFieldsConfigured := range []bool{false, true} {
-		for _, tfMapRaw := range tfList {
-			tfMap, ok := tfMapRaw.(map[string]any)
+// Model types
 
-			if !ok {
-				continue
-			}
+type domainResourceModel struct {
+	ARN                     types.String                                            `tfsdk:"arn"`
+	DocumentServiceEndpoint types.String                                            `tfsdk:"document_service_endpoint"`
+	DomainID                types.String                                            `tfsdk:"domain_id"`
+	EndpointOptions         fwtypes.ListNestedObjectValueOf[endpointOptionsModel]   `tfsdk:"endpoint_options"`
+	ID                      types.String                                            `tfsdk:"id"`
+	IndexFields             fwtypes.SetNestedObjectValueOf[indexFieldModel]         `tfsdk:"index_field"`
+	MultiAZ                 types.Bool                                              `tfsdk:"multi_az"`
+	Name                    types.String                                            `tfsdk:"name"`
+	ScalingParameters       fwtypes.ListNestedObjectValueOf[scalingParametersModel] `tfsdk:"scaling_parameters"`
+	SearchServiceEndpoint   types.String                                            `tfsdk:"search_service_endpoint"`
+	Timeouts                timeouts.Value                                          `tfsdk:"timeouts"`
+}
 
-			apiObject, sourceFieldsConfigured, err := expandIndexField(tfMap)
+type endpointOptionsModel struct {
+	EnforceHTTPS      types.Bool                                     `tfsdk:"enforce_https"`
+	TLSSecurityPolicy fwtypes.StringEnum[awstypes.TLSSecurityPolicy] `tfsdk:"tls_security_policy"`
+}
 
-			if err != nil {
-				return err
-			}
+type indexFieldModel struct {
+	AnalysisScheme types.String                                `tfsdk:"analysis_scheme"`
+	DefaultValue   types.String                                `tfsdk:"default_value"`
+	Facet          types.Bool                                  `tfsdk:"facet"`
+	Highlight      types.Bool                                  `tfsdk:"highlight"`
+	Name           types.String                                `tfsdk:"name"`
+	Return         types.Bool                                  `tfsdk:"return"`
+	Search         types.Bool                                  `tfsdk:"search"`
+	Sort           types.Bool                                  `tfsdk:"sort"`
+	SourceFields   types.String                                `tfsdk:"source_fields"`
+	Type           fwtypes.StringEnum[awstypes.IndexFieldType] `tfsdk:"type"`
+}
 
-			if apiObject == nil {
-				continue
-			}
+type scalingParametersModel struct {
+	DesiredInstanceType     fwtypes.StringEnum[awstypes.PartitionInstanceType] `tfsdk:"desired_instance_type"`
+	DesiredPartitionCount   types.Int64                                        `tfsdk:"desired_partition_count"`
+	DesiredReplicationCount types.Int64                                        `tfsdk:"desired_replication_count"`
+}
 
-			if sourceFieldsConfigured && !defineWhenSourceFieldsConfigured {
-				continue
-			}
+// Semantic equality function for index_field set
+// This matches elements by name only for identity purposes
+func indexFieldSemanticEquality(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[indexFieldModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
-			if !sourceFieldsConfigured && defineWhenSourceFieldsConfigured {
-				continue
-			}
+	oldSlice, d := oldValue.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
 
-			input := &cloudsearch.DefineIndexFieldInput{
-				DomainName: aws.String(domainName),
-				IndexField: apiObject,
-			}
+	newSlice, d := newValue.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
 
-			_, err = conn.DefineIndexField(ctx, input)
+	if len(oldSlice) != len(newSlice) {
+		return false, diags
+	}
 
-			if err != nil {
-				return fmt.Errorf("defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.ToString(apiObject.IndexFieldName), err)
-			}
+	// Build map by name for stable matching
+	oldByName := make(map[string]*indexFieldModel)
+	for _, f := range oldSlice {
+		oldByName[f.Name.ValueString()] = f
+	}
+
+	// Check that all new fields exist in old and are equal
+	for _, newField := range newSlice {
+		oldField, exists := oldByName[newField.Name.ValueString()]
+		if !exists {
+			return false, diags
+		}
+
+		if !indexFieldsSemanticEqual(oldField, newField) {
+			return false, diags
 		}
 	}
 
-	return nil
+	return true, diags
 }
 
-func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.DomainStatus, error) {
+// indexFieldsSemanticEqual compares two index fields with normalization
+// Treats null and false as equivalent for boolean fields
+// Treats null and empty string as equivalent for string fields
+func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
+	if a.Name.ValueString() != b.Name.ValueString() {
+		return false
+	}
+	if a.Type.ValueString() != b.Type.ValueString() {
+		return false
+	}
+	if !boolSemanticEqual(a.Facet, b.Facet) {
+		return false
+	}
+	if !boolSemanticEqual(a.Highlight, b.Highlight) {
+		return false
+	}
+	if !boolSemanticEqual(a.Return, b.Return) {
+		return false
+	}
+	if !boolSemanticEqual(a.Search, b.Search) {
+		return false
+	}
+	if !boolSemanticEqual(a.Sort, b.Sort) {
+		return false
+	}
+	if !stringSemanticEqual(a.AnalysisScheme, b.AnalysisScheme) {
+		return false
+	}
+	if !stringSemanticEqual(a.DefaultValue, b.DefaultValue) {
+		return false
+	}
+	if !stringSemanticEqual(a.SourceFields, b.SourceFields) {
+		return false
+	}
+	return true
+}
+
+// boolSemanticEqual treats null and false as equivalent
+func boolSemanticEqual(a, b types.Bool) bool {
+	aVal := false
+	if !a.IsNull() && !a.IsUnknown() {
+		aVal = a.ValueBool()
+	}
+	bVal := false
+	if !b.IsNull() && !b.IsUnknown() {
+		bVal = b.ValueBool()
+	}
+	return aVal == bVal
+}
+
+// stringSemanticEqual treats null and empty string as equivalent
+func stringSemanticEqual(a, b types.String) bool {
+	aVal := ""
+	if !a.IsNull() && !a.IsUnknown() {
+		aVal = a.ValueString()
+	}
+	bVal := ""
+	if !b.IsNull() && !b.IsUnknown() {
+		bVal = b.ValueString()
+	}
+	return aVal == bVal
+}
+
+// indexFieldsEqual compares two index fields for exact equality (used in Update)
+func indexFieldsEqual(a, b *indexFieldModel) bool {
+	return a.Name.Equal(b.Name) &&
+		a.Type.Equal(b.Type) &&
+		a.Facet.Equal(b.Facet) &&
+		a.Highlight.Equal(b.Highlight) &&
+		a.Return.Equal(b.Return) &&
+		a.Search.Equal(b.Search) &&
+		a.Sort.Equal(b.Sort) &&
+		a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+		a.DefaultValue.Equal(b.DefaultValue) &&
+		a.SourceFields.Equal(b.SourceFields)
+}
+
+// Expand functions - convert Framework models to AWS API types
+
+func expandEndpointOptionsModel(m *endpointOptionsModel) *awstypes.DomainEndpointOptions {
+	if m == nil {
+		return nil
+	}
+
+	opts := &awstypes.DomainEndpointOptions{}
+
+	if !m.EnforceHTTPS.IsNull() && !m.EnforceHTTPS.IsUnknown() {
+		opts.EnforceHTTPS = aws.Bool(m.EnforceHTTPS.ValueBool())
+	}
+
+	if !m.TLSSecurityPolicy.IsNull() && !m.TLSSecurityPolicy.IsUnknown() {
+		opts.TLSSecurityPolicy = m.TLSSecurityPolicy.ValueEnum()
+	}
+
+	return opts
+}
+
+func expandScalingParametersModel(m *scalingParametersModel) *awstypes.ScalingParameters {
+	if m == nil {
+		return nil
+	}
+
+	params := &awstypes.ScalingParameters{}
+
+	if !m.DesiredInstanceType.IsNull() && !m.DesiredInstanceType.IsUnknown() {
+		params.DesiredInstanceType = m.DesiredInstanceType.ValueEnum()
+	}
+
+	if !m.DesiredPartitionCount.IsNull() && !m.DesiredPartitionCount.IsUnknown() {
+		params.DesiredPartitionCount = int32(m.DesiredPartitionCount.ValueInt64())
+	}
+
+	if !m.DesiredReplicationCount.IsNull() && !m.DesiredReplicationCount.IsUnknown() {
+		params.DesiredReplicationCount = int32(m.DesiredReplicationCount.ValueInt64())
+	}
+
+	return params
+}
+
+func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, error) {
+	if m == nil {
+		return nil, false, nil
+	}
+
+	apiObject := &awstypes.IndexField{
+		IndexFieldName: aws.String(m.Name.ValueString()),
+		IndexFieldType: m.Type.ValueEnum(),
+	}
+
+	analysisScheme := ""
+	if !m.AnalysisScheme.IsNull() && !m.AnalysisScheme.IsUnknown() {
+		analysisScheme = m.AnalysisScheme.ValueString()
+	}
+
+	facetEnabled := false
+	if !m.Facet.IsNull() && !m.Facet.IsUnknown() {
+		facetEnabled = m.Facet.ValueBool()
+	}
+
+	highlightEnabled := false
+	if !m.Highlight.IsNull() && !m.Highlight.IsUnknown() {
+		highlightEnabled = m.Highlight.ValueBool()
+	}
+
+	returnEnabled := false
+	if !m.Return.IsNull() && !m.Return.IsUnknown() {
+		returnEnabled = m.Return.ValueBool()
+	}
+
+	searchEnabled := false
+	if !m.Search.IsNull() && !m.Search.IsUnknown() {
+		searchEnabled = m.Search.ValueBool()
+	}
+
+	sortEnabled := false
+	if !m.Sort.IsNull() && !m.Sort.IsUnknown() {
+		sortEnabled = m.Sort.ValueBool()
+	}
+
+	var sourceFieldsConfigured bool
+
+	switch fieldType := apiObject.IndexFieldType; fieldType {
+	case awstypes.IndexFieldTypeDate:
+		options := &awstypes.DateOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.DateOptions = options
+
+	case awstypes.IndexFieldTypeDateArray:
+		options := &awstypes.DateArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.DateArrayOptions = options
+
+	case awstypes.IndexFieldTypeDouble:
+		options := &awstypes.DoubleOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			v, err := strconv.ParseFloat(m.DefaultValue.ValueString(), 64)
+			if err != nil {
+				return nil, false, err
+			}
+			options.DefaultValue = aws.Float64(v)
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.DoubleOptions = options
+
+	case awstypes.IndexFieldTypeDoubleArray:
+		options := &awstypes.DoubleArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			v, err := strconv.ParseFloat(m.DefaultValue.ValueString(), 64)
+			if err != nil {
+				return nil, false, err
+			}
+			options.DefaultValue = aws.Float64(v)
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.DoubleArrayOptions = options
+
+	case awstypes.IndexFieldTypeInt:
+		options := &awstypes.IntOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			v, err := strconv.Atoi(m.DefaultValue.ValueString())
+			if err != nil {
+				return nil, false, err
+			}
+			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.IntOptions = options
+
+	case awstypes.IndexFieldTypeIntArray:
+		options := &awstypes.IntArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			v, err := strconv.Atoi(m.DefaultValue.ValueString())
+			if err != nil {
+				return nil, false, err
+			}
+			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.IntArrayOptions = options
+
+	case awstypes.IndexFieldTypeLatlon:
+		options := &awstypes.LatLonOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.LatLonOptions = options
+
+	case awstypes.IndexFieldTypeLiteral:
+		options := &awstypes.LiteralOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+			SortEnabled:   aws.Bool(sortEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.LiteralOptions = options
+
+	case awstypes.IndexFieldTypeLiteralArray:
+		options := &awstypes.LiteralArrayOptions{
+			FacetEnabled:  aws.Bool(facetEnabled),
+			ReturnEnabled: aws.Bool(returnEnabled),
+			SearchEnabled: aws.Bool(searchEnabled),
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.LiteralArrayOptions = options
+
+	case awstypes.IndexFieldTypeText:
+		options := &awstypes.TextOptions{
+			HighlightEnabled: aws.Bool(highlightEnabled),
+			ReturnEnabled:    aws.Bool(returnEnabled),
+			SortEnabled:      aws.Bool(sortEnabled),
+		}
+
+		if analysisScheme != "" {
+			options.AnalysisScheme = aws.String(analysisScheme)
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceField = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.TextOptions = options
+
+	case awstypes.IndexFieldTypeTextArray:
+		options := &awstypes.TextArrayOptions{
+			HighlightEnabled: aws.Bool(highlightEnabled),
+			ReturnEnabled:    aws.Bool(returnEnabled),
+		}
+
+		if analysisScheme != "" {
+			options.AnalysisScheme = aws.String(analysisScheme)
+		}
+
+		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
+			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+		}
+
+		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
+			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			sourceFieldsConfigured = true
+		}
+
+		apiObject.TextArrayOptions = options
+
+	default:
+		return nil, false, fmt.Errorf("unsupported index_field type: %s", fieldType)
+	}
+
+	return apiObject, sourceFieldsConfigured, nil
+}
+
+// Flatten functions - convert AWS API types to Framework models
+
+func flattenEndpointOptionsModel(ctx context.Context, apiObject *awstypes.DomainEndpointOptions) fwtypes.ListNestedObjectValueOf[endpointOptionsModel] {
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[endpointOptionsModel](ctx)
+	}
+
+	m := &endpointOptionsModel{
+		EnforceHTTPS:      types.BoolValue(aws.ToBool(apiObject.EnforceHTTPS)),
+		TLSSecurityPolicy: fwtypes.StringEnumValue(apiObject.TLSSecurityPolicy),
+	}
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, m)
+}
+
+func flattenScalingParametersModel(ctx context.Context, apiObject *awstypes.ScalingParameters) fwtypes.ListNestedObjectValueOf[scalingParametersModel] {
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[scalingParametersModel](ctx)
+	}
+
+	m := &scalingParametersModel{
+		DesiredInstanceType:     fwtypes.StringEnumValue(apiObject.DesiredInstanceType),
+		DesiredPartitionCount:   types.Int64Value(int64(apiObject.DesiredPartitionCount)),
+		DesiredReplicationCount: types.Int64Value(int64(apiObject.DesiredReplicationCount)),
+	}
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, m)
+}
+
+func flattenIndexFieldModels(ctx context.Context, apiObjects []awstypes.IndexFieldStatus) (fwtypes.SetNestedObjectValueOf[indexFieldModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(apiObjects) == 0 {
+		return fwtypes.NewSetNestedObjectValueOfNull[indexFieldModel](ctx), diags
+	}
+
+	var models []*indexFieldModel
+
+	for _, apiObject := range apiObjects {
+		m, err := flattenIndexFieldModel(apiObject)
+		if err != nil {
+			diags.AddError("flattening index field", err.Error())
+			return fwtypes.NewSetNestedObjectValueOfNull[indexFieldModel](ctx), diags
+		}
+		if m != nil {
+			models = append(models, m)
+		}
+	}
+
+	// Use the semantic equality function when creating the set
+	result, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, models, indexFieldSemanticEquality)
+	diags.Append(d...)
+
+	return result, diags
+}
+
+func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldModel, error) {
+	if apiObject.Options == nil || apiObject.Status == nil {
+		return nil, nil
+	}
+
+	// Don't read in any fields that are pending deletion
+	if aws.ToBool(apiObject.Status.PendingDeletion) {
+		return nil, nil
+	}
+
+	field := apiObject.Options
+	m := &indexFieldModel{
+		Name: types.StringValue(aws.ToString(field.IndexFieldName)),
+		Type: fwtypes.StringEnumValue(field.IndexFieldType),
+	}
+
+	switch fieldType := field.IndexFieldType; fieldType {
+	case awstypes.IndexFieldTypeDate:
+		options := field.DateOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeDateArray:
+		options := field.DateArrayOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceFields; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeDouble:
+		options := field.DoubleOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeDoubleArray:
+		options := field.DoubleArrayOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceFields; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeInt:
+		options := field.IntOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(strconv.FormatInt(aws.ToInt64(v), 10))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeIntArray:
+		options := field.IntArrayOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(strconv.FormatInt(aws.ToInt64(v), 10))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceFields; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeLatlon:
+		options := field.LatLonOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeLiteral:
+		options := field.LiteralOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeLiteralArray:
+		options := field.LiteralArrayOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.FacetEnabled; v != nil {
+			m.Facet = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SearchEnabled; v != nil {
+			m.Search = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceFields; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeText:
+		options := field.TextOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.AnalysisScheme; v != nil {
+			m.AnalysisScheme = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.HighlightEnabled; v != nil {
+			m.Highlight = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SortEnabled; v != nil {
+			m.Sort = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceField; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	case awstypes.IndexFieldTypeTextArray:
+		options := field.TextArrayOptions
+		if options == nil {
+			break
+		}
+
+		if v := options.AnalysisScheme; v != nil {
+			m.AnalysisScheme = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.DefaultValue; v != nil {
+			m.DefaultValue = types.StringValue(aws.ToString(v))
+		}
+
+		if v := options.HighlightEnabled; v != nil {
+			m.Highlight = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.ReturnEnabled; v != nil {
+			m.Return = types.BoolValue(aws.ToBool(v))
+		}
+
+		if v := options.SourceFields; v != nil {
+			m.SourceFields = types.StringValue(aws.ToString(v))
+		}
+
+	default:
+		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
+	}
+
+	return m, nil
+}
+
+// Helper functions - shared between Framework and SDKv2 implementations
+
+func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.DomainStatus, error) {
 	input := &cloudsearch.DescribeDomainsInput{
 		DomainNames: []string{name},
 	}
@@ -569,14 +1582,14 @@ func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string
 	return tfresource.AssertSingleValueResult(output.DomainStatusList)
 }
 
-func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.AvailabilityOptionsStatus, error) {
+func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.AvailabilityOptionsStatus, error) {
 	input := &cloudsearch.DescribeAvailabilityOptionsInput{
 		DomainName: aws.String(name),
 	}
 
 	output, err := conn.DescribeAvailabilityOptions(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
@@ -593,7 +1606,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 	return output.AvailabilityOptions, nil
 }
 
-func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.DomainEndpointOptions, error) {
+func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.DomainEndpointOptions, error) {
 	output, err := findDomainEndpointOptionsStatusByName(ctx, conn, name)
 
 	if err != nil {
@@ -607,14 +1620,14 @@ func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Clie
 	return output.Options, nil
 }
 
-func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.DomainEndpointOptionsStatus, error) {
+func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.DomainEndpointOptionsStatus, error) {
 	input := &cloudsearch.DescribeDomainEndpointOptionsInput{
 		DomainName: aws.String(name),
 	}
 
 	output, err := conn.DescribeDomainEndpointOptions(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
@@ -631,7 +1644,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 	return output.DomainEndpointOptions, nil
 }
 
-func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.ScalingParameters, error) {
+func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.ScalingParameters, error) {
 	output, err := findScalingParametersStatusByName(ctx, conn, name)
 
 	if err != nil {
@@ -645,14 +1658,14 @@ func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, 
 	return output.Options, nil
 }
 
-func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.ScalingParametersStatus, error) {
+func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*awstypes.ScalingParametersStatus, error) {
 	input := &cloudsearch.DescribeScalingParametersInput{
 		DomainName: aws.String(name),
 	}
 
 	output, err := conn.DescribeScalingParameters(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
@@ -701,7 +1714,7 @@ func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRe
 	}
 }
 
-func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*types.DomainStatus, error) { //nolint:unparam
+func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*awstypes.DomainStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
@@ -711,14 +1724,14 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DomainStatus); ok {
+	if output, ok := outputRaw.(*awstypes.DomainStatus); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*types.DomainStatus, error) {
+func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*awstypes.DomainStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{},
@@ -728,751 +1741,9 @@ func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.DomainStatus); ok {
+	if output, ok := outputRaw.(*awstypes.DomainStatus); ok {
 		return output, err
 	}
 
 	return nil, err
-}
-
-func expandDomainEndpointOptions(tfMap map[string]any) *types.DomainEndpointOptions {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.DomainEndpointOptions{}
-
-	if v, ok := tfMap["enforce_https"].(bool); ok {
-		apiObject.EnforceHTTPS = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["tls_security_policy"].(string); ok && v != "" {
-		apiObject.TLSSecurityPolicy = types.TLSSecurityPolicy(v)
-	}
-
-	return apiObject
-}
-
-func flattenDomainEndpointOptions(apiObject *types.DomainEndpointOptions) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"tls_security_policy": apiObject.TLSSecurityPolicy,
-	}
-
-	if v := apiObject.EnforceHTTPS; v != nil {
-		tfMap["enforce_https"] = aws.ToBool(v)
-	}
-
-	return tfMap
-}
-
-func expandIndexField(tfMap map[string]any) (*types.IndexField, bool, error) {
-	if tfMap == nil {
-		return nil, false, nil
-	}
-
-	apiObject := &types.IndexField{}
-
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		apiObject.IndexFieldName = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.IndexFieldType = types.IndexFieldType(v)
-	}
-
-	analysisScheme, _ := tfMap["analysis_scheme"].(string)
-	facetEnabled, _ := tfMap["facet"].(bool)
-	highlightEnabled, _ := tfMap["highlight"].(bool)
-	returnEnabled, _ := tfMap["return"].(bool)
-	searchEnabled, _ := tfMap["search"].(bool)
-	sortEnabled, _ := tfMap["sort"].(bool)
-	var sourceFieldsConfigured bool
-
-	switch fieldType := apiObject.IndexFieldType; fieldType {
-	case types.IndexFieldTypeDate:
-		options := &types.DateOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-			SortEnabled:   aws.Bool(sortEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.DateOptions = options
-
-	case types.IndexFieldTypeDateArray:
-		options := &types.DateArrayOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceFields = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.DateArrayOptions = options
-
-	case types.IndexFieldTypeDouble:
-		options := &types.DoubleOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-			SortEnabled:   aws.Bool(sortEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			v, err := strconv.ParseFloat(v, 64)
-
-			if err != nil {
-				return nil, false, err
-			}
-
-			options.DefaultValue = aws.Float64(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.DoubleOptions = options
-
-	case types.IndexFieldTypeDoubleArray:
-		options := &types.DoubleArrayOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			v, err := strconv.ParseFloat(v, 64)
-
-			if err != nil {
-				return nil, false, err
-			}
-
-			options.DefaultValue = aws.Float64(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceFields = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.DoubleArrayOptions = options
-
-	case types.IndexFieldTypeInt:
-		options := &types.IntOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-			SortEnabled:   aws.Bool(sortEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			v, err := strconv.Atoi(v)
-
-			if err != nil {
-				return nil, false, err
-			}
-
-			options.DefaultValue = aws.Int64(int64(v))
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.IntOptions = options
-
-	case types.IndexFieldTypeIntArray:
-		options := &types.IntArrayOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			v, err := strconv.Atoi(v)
-
-			if err != nil {
-				return nil, false, err
-			}
-
-			options.DefaultValue = aws.Int64(int64(v))
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceFields = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.IntArrayOptions = options
-
-	case types.IndexFieldTypeLatlon:
-		options := &types.LatLonOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-			SortEnabled:   aws.Bool(sortEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.LatLonOptions = options
-
-	case types.IndexFieldTypeLiteral:
-		options := &types.LiteralOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-			SortEnabled:   aws.Bool(sortEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.LiteralOptions = options
-
-	case types.IndexFieldTypeLiteralArray:
-		options := &types.LiteralArrayOptions{
-			FacetEnabled:  aws.Bool(facetEnabled),
-			ReturnEnabled: aws.Bool(returnEnabled),
-			SearchEnabled: aws.Bool(searchEnabled),
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceFields = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.LiteralArrayOptions = options
-
-	case types.IndexFieldTypeText:
-		options := &types.TextOptions{
-			HighlightEnabled: aws.Bool(highlightEnabled),
-			ReturnEnabled:    aws.Bool(returnEnabled),
-			SortEnabled:      aws.Bool(sortEnabled),
-		}
-
-		if analysisScheme != "" {
-			options.AnalysisScheme = aws.String(analysisScheme)
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceField = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.TextOptions = options
-
-	case types.IndexFieldTypeTextArray:
-		options := &types.TextArrayOptions{
-			HighlightEnabled: aws.Bool(highlightEnabled),
-			ReturnEnabled:    aws.Bool(returnEnabled),
-		}
-
-		if analysisScheme != "" {
-			options.AnalysisScheme = aws.String(analysisScheme)
-		}
-
-		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
-			options.DefaultValue = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
-			options.SourceFields = aws.String(v)
-			sourceFieldsConfigured = true
-		}
-
-		apiObject.TextArrayOptions = options
-
-	default:
-		return nil, false, fmt.Errorf("unsupported index_field type: %s", fieldType)
-	}
-
-	return apiObject, sourceFieldsConfigured, nil
-}
-
-func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]any, error) {
-	if apiObject.Options == nil || apiObject.Status == nil {
-		return nil, nil
-	}
-
-	// Don't read in any fields that are pending deletion.
-	if aws.ToBool(apiObject.Status.PendingDeletion) {
-		return nil, nil
-	}
-
-	field := apiObject.Options
-	tfMap := map[string]any{}
-
-	if v := field.IndexFieldName; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
-	}
-
-	fieldType := field.IndexFieldType
-	tfMap[names.AttrType] = fieldType
-
-	switch fieldType {
-	case types.IndexFieldTypeDate:
-		options := field.DateOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-
-	case types.IndexFieldTypeDateArray:
-		options := field.DateArrayOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceFields; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-		tfMap["sort"] = false
-
-	case types.IndexFieldTypeDouble:
-		options := field.DoubleOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-
-	case types.IndexFieldTypeDoubleArray:
-		options := field.DoubleArrayOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceFields; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-		tfMap["sort"] = false
-
-	case types.IndexFieldTypeInt:
-		options := field.IntOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-
-	case types.IndexFieldTypeIntArray:
-		options := field.IntArrayOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceFields; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-		tfMap["sort"] = false
-
-	case types.IndexFieldTypeLatlon:
-		options := field.LatLonOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-
-	case types.IndexFieldTypeLiteral:
-		options := field.LiteralOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-
-	case types.IndexFieldTypeLiteralArray:
-		options := field.LiteralArrayOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.FacetEnabled; v != nil {
-			tfMap["facet"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SearchEnabled; v != nil {
-			tfMap["search"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceFields; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["analysis_scheme"] = ""
-		tfMap["highlight"] = false
-		tfMap["sort"] = false
-
-	case types.IndexFieldTypeText:
-		options := field.TextOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.AnalysisScheme; v != nil {
-			tfMap["analysis_scheme"] = aws.ToString(v)
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.HighlightEnabled; v != nil {
-			tfMap["highlight"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SortEnabled; v != nil {
-			tfMap["sort"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceField; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["facet"] = false
-		tfMap["search"] = true
-
-	case types.IndexFieldTypeTextArray:
-		options := field.TextArrayOptions
-		if options == nil {
-			break
-		}
-
-		if v := options.AnalysisScheme; v != nil {
-			tfMap["analysis_scheme"] = aws.ToString(v)
-		}
-
-		if v := options.DefaultValue; v != nil {
-			tfMap[names.AttrDefaultValue] = aws.ToString(v)
-		}
-
-		if v := options.HighlightEnabled; v != nil {
-			tfMap["highlight"] = aws.ToBool(v)
-		}
-
-		if v := options.ReturnEnabled; v != nil {
-			tfMap["return"] = aws.ToBool(v)
-		}
-
-		if v := options.SourceFields; v != nil {
-			tfMap["source_fields"] = aws.ToString(v)
-		}
-
-		// Defaults not returned via the API.
-		tfMap["facet"] = false
-		tfMap["search"] = true
-		tfMap["sort"] = false
-
-	default:
-		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
-	}
-
-	return tfMap, nil
-}
-
-func flattenIndexFieldStatuses(apiObjects []types.IndexFieldStatus) ([]any, error) {
-	if len(apiObjects) == 0 {
-		return nil, nil
-	}
-
-	var tfList []any
-
-	for _, apiObject := range apiObjects {
-		tfMap, err := flattenIndexFieldStatus(apiObject)
-
-		if err != nil {
-			return nil, err
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList, nil
-}
-
-func expandScalingParameters(tfMap map[string]any) *types.ScalingParameters {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.ScalingParameters{}
-
-	if v, ok := tfMap["desired_instance_type"].(string); ok && v != "" {
-		apiObject.DesiredInstanceType = types.PartitionInstanceType(v)
-	}
-
-	if v, ok := tfMap["desired_partition_count"].(int); ok && v != 0 {
-		apiObject.DesiredPartitionCount = int32(v)
-	}
-
-	if v, ok := tfMap["desired_replication_count"].(int); ok && v != 0 {
-		apiObject.DesiredReplicationCount = int32(v)
-	}
-
-	return apiObject
-}
-
-func flattenScalingParameters(apiObject *types.ScalingParameters) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"desired_instance_type":     apiObject.DesiredInstanceType,
-		"desired_partition_count":   apiObject.DesiredPartitionCount,
-		"desired_replication_count": apiObject.DesiredReplicationCount,
-	}
-
-	return tfMap
 }
