@@ -334,14 +334,9 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	index, err := findGSIFromTable(output.TableDescription, data.IndexName.ValueString())
+	_, err = findGSIFromTable(output.TableDescription, data.IndexName.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
-		return
-	}
-
-	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, *index, output.TableDescription)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -354,12 +349,18 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	if _, err := waitGSIActive(ctx, conn, data.TableName.ValueString(), data.IndexName.ValueString(), createTimeout); err != nil {
+	index, err := waitGSIActive(ctx, conn, data.TableName.ValueString(), data.IndexName.ValueString(), createTimeout)
+	if err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, data.IndexName.ValueString(), data.TableName.ValueString()),
 			err.Error(),
 		)
 
+		return
+	}
+
+	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, index, output.TableDescription)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
