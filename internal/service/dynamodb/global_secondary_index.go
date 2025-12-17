@@ -309,17 +309,11 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	}
 
 	var ksms []keySchemaModel
-	var keySchema []awstypes.KeySchemaElement
 	response.Diagnostics.Append(data.KeySchema.ElementsAs(ctx, &ksms, false)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 	for _, ks := range ksms {
-		keySchema = append(keySchema, awstypes.KeySchemaElement{
-			AttributeName: ks.AttributeName.ValueStringPointer(),
-			KeyType:       ks.KeyType.ValueEnum(),
-		})
-
 		typ, exists := knownAttributes[ks.AttributeName.ValueString()]
 		if exists && typ == ks.AttributeType.ValueEnum() {
 			continue
