@@ -43,6 +43,7 @@ func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &integrationResource{}
 
 	r.SetDefaultCreateTimeout(60 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -80,16 +81,12 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"integration_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
@@ -119,6 +116,7 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -220,6 +218,51 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+func (r *integrationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old integrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().RDSClient(ctx)
+
+	if !new.DataFilter.Equal(old.DataFilter) ||
+		!new.IntegrationName.Equal(old.IntegrationName) {
+		input := &rds.ModifyIntegrationInput{
+			IntegrationIdentifier: fwflex.StringFromFramework(ctx, old.ID),
+		}
+
+		if !new.DataFilter.Equal(old.DataFilter) {
+			input.DataFilter = fwflex.StringFromFramework(ctx, new.DataFilter)
+		}
+
+		if !new.IntegrationName.Equal(old.IntegrationName) {
+			input.IntegrationName = fwflex.StringFromFramework(ctx, new.IntegrationName)
+		}
+
+		_, err := conn.ModifyIntegration(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating RDS Integration (%s)", old.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitIntegrationUpdated(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Integration (%s) update", old.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
 func (r *integrationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data integrationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -315,6 +358,25 @@ func statusIntegration(ctx context.Context, conn *rds.Client, arn string) sdkret
 func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{integrationStatusCreating, integrationStatusModifying},
+		Target:  []string{integrationStatusActive},
+		Refresh: statusIntegration(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Integration); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIntegrationUpdated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
 		Refresh: statusIntegration(ctx, conn, arn),
 		Timeout: timeout,
