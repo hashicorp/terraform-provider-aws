@@ -47,6 +47,7 @@ const (
 // The following fields are NOT supported for multi-tenant distributions and have been excluded from the schema:
 // - ActiveTrustedSigners (use ActiveTrustedKeyGroups instead)
 // - AliasICPRecordals (managed by connection groups)
+// - S3OriginConfig (use origin access control instead)
 // - CacheBehavior.DefaultTTL, MaxTTL, MinTTL (use cache policies instead)
 // - CacheBehavior.SmoothStreaming
 // - CacheBehavior.TrustedSigners (use TrustedKeyGroups instead)
@@ -484,16 +485,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"s3_origin_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3OriginConfigModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"origin_access_identity": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
+
 						"vpc_origin_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
@@ -853,7 +845,6 @@ type originModel struct {
 	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
-	S3OriginConfig            fwtypes.ListNestedObjectValueOf[s3OriginConfigModel]     `tfsdk:"s3_origin_config" autoflex:",omitempty"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
 }
 
@@ -875,10 +866,6 @@ type customOriginConfigModel struct {
 type originShieldModel struct {
 	Enabled            types.Bool   `tfsdk:"enabled"`
 	OriginShieldRegion types.String `tfsdk:"origin_shield_region"`
-}
-
-type s3OriginConfigModel struct {
-	OriginAccessIdentity types.String `tfsdk:"origin_access_identity"`
 }
 
 type vpcOriginConfigModel struct {
