@@ -607,7 +607,7 @@ func (r *resourceGlobalSecondaryIndex) ValidateConfig(ctx context.Context, reque
 		tflog.Info(ctx, "Experimental resource type enabled", map[string]any{
 			"feature_flag.key":            globalSecondaryIndexExperimentalFlagEnvVar,
 			"feature_flag.result.value":   flag,
-			"feature_flag.result.variant": "enabled",
+			"feature_flag.result.variant": "enabled", // nosemgrep:ci.literal-enabled-string-constant
 		})
 	} else {
 		response.Diagnostics.AddError(
