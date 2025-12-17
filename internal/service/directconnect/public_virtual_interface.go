@@ -66,9 +66,17 @@ func resourcePublicVirtualInterface() *schema.Resource {
 				Computed: true,
 			},
 			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"bgp_asn_long"},
+			},
+			"bgp_asn_long": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validLongASN(),
+				ConflictsWith: []string{"bgp_asn"},
 			},
 			"bgp_auth_key": {
 				Type:     schema.TypeString,
@@ -124,11 +132,19 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPublicVirtualInterface: &awstypes.NewPublicVirtualInterface{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  int32(d.Get("bgp_asn").(int)),
 			Tags:                 getTagsIn(ctx),
 			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 int32(d.Get("vlan").(int)),
 		},
+	}
+
+	if v, ok := d.GetOk("bgp_asn"); ok {
+		input.NewPublicVirtualInterface.Asn = int32(v.(int))
+	}
+
+	if v, ok := d.GetOk("bgp_asn_long"); ok {
+		asn, _ := parseASN(v.(string))
+		input.NewPublicVirtualInterface.AsnLong = aws.Int64(asn)
 	}
 
 	if v, ok := d.GetOk("amazon_address"); ok {
@@ -190,7 +206,13 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	d.Set("bgp_asn", vif.Asn)
+	if vif.Asn == 0 {
+		// Long ASN was used - AWS returns 0 for asn field when 4-byte ASN exceeds int32 range
+		d.Set("bgp_asn_long", strconv.FormatInt(aws.ToInt64(vif.AsnLong), 10))
+	} else {
+		// Regular ASN was used
+		d.Set("bgp_asn", vif.Asn)
+	}
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
