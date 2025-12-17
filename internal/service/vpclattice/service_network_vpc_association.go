@@ -16,6 +16,7 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -55,6 +56,39 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 			"created_by": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"dns_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"private_dns_preference": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.PrivateDnsPreference](),
+						},
+						"private_dns_specified_domains": {
+							Type:     schema.TypeSet,
+							MaxItems: 10,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
+					},
+				},
+			},
+			"private_dns_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
@@ -98,6 +132,15 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 		input.SecurityGroupIds = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("private_dns_enabled"); ok {
+		input.PrivateDnsEnabled = aws.Bool(v.(bool))
+	}
+
+	if aws.ToBool(input.PrivateDnsEnabled) {
+		if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 {
+			input.DnsOptions = expandDNSOptions(v.([]any)[0].(map[string]any))
+		}
+	}
 	output, err := conn.CreateServiceNetworkVpcAssociation(ctx, &input)
 
 	if err != nil {
@@ -131,6 +174,12 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrARN, output.Arn)
 	d.Set("created_by", output.CreatedBy)
+	d.Set("private_dns_enabled", output.PrivateDnsEnabled)
+	if aws.ToBool(output.PrivateDnsEnabled) {
+		if err := d.Set("dns_options", flattenDNSOptions(output.DnsOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
+		}
+	}
 	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 	d.Set("service_network_identifier", output.ServiceNetworkId)
 	d.Set(names.AttrStatus, output.Status)
@@ -151,6 +200,8 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 		if d.HasChange(names.AttrSecurityGroupIDs) {
 			input.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]any))
 		}
+
+		log.Printf("[INFO] Updating VPCLattice Service Network VPC Association: %s", d.Id())
 
 		_, err := conn.UpdateServiceNetworkVpcAssociation(ctx, &input)
 
@@ -273,4 +324,41 @@ func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclatti
 	}
 
 	return nil, err
+}
+
+func expandDNSOptions(m map[string]any) *types.DnsOptions {
+	if len(m) == 0 {
+		return nil
+	}
+
+	dnsOptions := &types.DnsOptions{}
+
+	if v, ok := m["private_dns_preference"].(string); ok && v != "" {
+		dnsOptions.PrivateDnsPreference = types.PrivateDnsPreference(v)
+	}
+
+	if dnsOptions.PrivateDnsPreference == types.PrivateDnsPreferenceVerifiedDomainsAndSpecifiedDomains || dnsOptions.PrivateDnsPreference == types.PrivateDnsPreferenceSpecifiedDomainsOnly {
+		if v, ok := m["private_dns_specified_domains"]; ok && v != nil && len(v.(*schema.Set).List()) > 0 {
+			dnsOptions.PrivateDnsSpecifiedDomains = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+	}
+	return dnsOptions
+}
+
+func flattenDNSOptions(dnsOptions *types.DnsOptions) []map[string]any {
+	if dnsOptions == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if dnsOptions.PrivateDnsPreference != "" {
+		m["private_dns_preference"] = string(dnsOptions.PrivateDnsPreference)
+	}
+
+	if len(dnsOptions.PrivateDnsSpecifiedDomains) > 0 {
+		m["private_dns_specified_domains"] = flex.FlattenStringValueList(dnsOptions.PrivateDnsSpecifiedDomains)
+	}
+
+	return []map[string]any{m}
 }
