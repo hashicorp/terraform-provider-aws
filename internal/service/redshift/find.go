@@ -703,3 +703,17 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name s
 
 	return output, nil
 }
+
+func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, clusterID string) (*awstypes.ClusterSnapshotCopyStatus, error) {
+	output, err := findClusterByID(ctx, conn, clusterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ClusterSnapshotCopyStatus == nil {
+		return nil, tfresource.NewEmptyResultError(clusterID)
+	}
+
+	return output.ClusterSnapshotCopyStatus, nil
+}
