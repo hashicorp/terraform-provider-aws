@@ -132,7 +132,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_comprehensive(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Comprehensive multi-tenant distribution test"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_object", "index.html"),
 					resource.TestCheckResourceAttr(resourceName, "http_version", "http2"),
@@ -201,7 +201,7 @@ resource "aws_cloudfront_origin_access_control" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled             = true
+  enabled             = false
   comment             = "Comprehensive multi-tenant distribution test"
   default_root_object = "index.html"
   http_version        = "http2"
