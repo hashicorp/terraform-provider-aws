@@ -637,20 +637,16 @@ type resourceGlobalSecondaryIndexModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
-func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, g awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecondaryIndexModel, index awstypes.GlobalSecondaryIndexDescription, table *awstypes.TableDescription) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
-	if table == nil {
-		diags.AddError(
-			"Bad argument",
-			"Table description is nil",
-		)
+	diags.Append(fwflex.Flatten(ctx, index, data,
+		fwflex.WithFieldNamePrefix("Index"),
+		fwflex.WithIgnoredFieldNamesAppend("KeySchema"),
+		fwflex.WithIgnoredFieldNamesAppend("ProvisionedThroughput"),
+		fwflex.WithIgnoredFieldNamesAppend("WarmThroughput"),
+	)...)
 
-		return diags
-	}
-
-	data.ARN = fwflex.StringToFramework(ctx, g.IndexArn)
-	data.IndexName = fwflex.StringToFramework(ctx, g.IndexName)
 	data.TableName = fwflex.StringToFramework(ctx, table.TableName)
 
 	var kss []keySchemaModel
@@ -659,7 +655,7 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		adm[aws.ToString(ad.AttributeName)] = ad.AttributeType
 	}
 
-	for _, ks := range g.KeySchema {
+	for _, ks := range index.KeySchema {
 		kss = append(kss, keySchemaModel{
 			AttributeName: fwflex.StringToFramework(ctx, ks.AttributeName),
 			AttributeType: fwtypes.StringEnumValue(adm[aws.ToString(ks.AttributeName)]),
@@ -673,19 +669,11 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		data.KeySchema = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []keySchemaModel{})
 	}
 
-	var projection projectionModel
-	d := fwflex.Flatten(ctx, g.Projection, &projection)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	data.Projection = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []projectionModel{projection})
-
-	if g.ProvisionedThroughput == nil {
+	if index.ProvisionedThroughput == nil {
 		data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfNull[provisionedThroughputModel](ctx)
 	} else {
 		var ptM provisionedThroughputModel
-		d := fwflex.Flatten(ctx, g.ProvisionedThroughput, &ptM)
+		d := fwflex.Flatten(ctx, index.ProvisionedThroughput, &ptM)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -697,24 +685,9 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		}
 	}
 
-	if g.OnDemandThroughput != nil {
-		var odtms []onDemandThroughputModel
-		mrru := aws.ToInt64(g.OnDemandThroughput.MaxReadRequestUnits)
-		mwru := aws.ToInt64(g.OnDemandThroughput.MaxWriteRequestUnits)
-
-		if mrru > 0 || mwru > 0 {
-			odtms = append(odtms, onDemandThroughputModel{
-				MaxReadRequestUnits:  types.Int64Value(mrru),
-				MaxWriteRequestUnits: types.Int64Value(mwru),
-			})
-		}
-
-		data.OnDemandThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, odtms)
-	}
-
-	if g.WarmThroughput != nil {
-		rups := max(aws.ToInt64(g.WarmThroughput.ReadUnitsPerSecond), warmThoughtPutMinReadUnitsPerSecond)
-		wups := max(aws.ToInt64(g.WarmThroughput.WriteUnitsPerSecond), warmThoughtPutMinWriteUnitsPerSecond)
+	if index.WarmThroughput != nil {
+		rups := max(aws.ToInt64(index.WarmThroughput.ReadUnitsPerSecond), warmThoughtPutMinReadUnitsPerSecond)
+		wups := max(aws.ToInt64(index.WarmThroughput.WriteUnitsPerSecond), warmThoughtPutMinWriteUnitsPerSecond)
 
 		var wtms []warmThroughputModel
 		if rups > warmThoughtPutMinReadUnitsPerSecond || wups > warmThoughtPutMinWriteUnitsPerSecond {
@@ -724,9 +697,9 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 			})
 		}
 
-		data.WarmThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, wtms)
+		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, wtms)
 	} else {
-		data.WarmThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{})
+		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{})
 	}
 
 	return diags
