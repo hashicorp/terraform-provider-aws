@@ -100,19 +100,19 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringvalidator.RegexMatches(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 				},
 			},
-			"search_service_endpoint": schema.StringAttribute{
+		"search_service_endpoint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTimeouts: timeouts.Attributes(ctx, timeouts.Opts{
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
 			}),
-		},
-		Blocks: map[string]schema.Block{
 			"endpoint_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointOptionsModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -698,6 +698,7 @@ func (r *domainResource) ImportState(ctx context.Context, request resource.Impor
 // Model types
 
 type domainResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                            `tfsdk:"arn"`
 	DocumentServiceEndpoint types.String                                            `tfsdk:"document_service_endpoint"`
 	DomainID                types.String                                            `tfsdk:"domain_id"`
