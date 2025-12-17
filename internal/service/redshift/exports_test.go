@@ -35,14 +35,14 @@ var (
 	FindDataShareAuthorizationByID              = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID        = findDataShareConsumerAssociationByID
 	FindEndpointAccessByName                    = findEndpointAccessByName
-	FindEndpointAuthorizationByID               = findEndpointAuthorizationByID
+	FindEndpointAuthorizationByTwoPartKey       = findEndpointAuthorizationByTwoPartKey
 	FindEventSubscriptionByName                 = findEventSubscriptionByName
 	FindHSMClientCertificateByID                = findHSMClientCertificateByID
 	FindHSMConfigurationByID                    = findHSMConfigurationByID
 	FindIntegrationByARN                        = findIntegrationByARN
 	FindLoggingByID                             = findLoggingByID
 	FindParameterGroupByName                    = findParameterGroupByName
-	FindPartnerByID                             = findPartnerByID
+	FindPartnerByFourPartKey                    = findPartnerByFourPartKey
 	FindResourcePolicyByARN                     = findResourcePolicyByARN
 	FindScheduledActionByName                   = findScheduledActionByName
 	FindSnapshotCopyByID                        = findSnapshotCopyByID
@@ -51,5 +51,6 @@ var (
 	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
 	FindSubnetGroupByName                       = findSubnetGroupByName
 	FindUsageLimitByID                          = findUsageLimitByID
-	WaitSnapshotScheduleAssociationCreated      = waitSnapshotScheduleAssociationCreated
+
+	WaitSnapshotScheduleAssociationCreated = waitSnapshotScheduleAssociationCreated
 )
