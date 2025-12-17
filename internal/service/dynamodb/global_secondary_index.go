@@ -570,6 +570,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	}
 
 	if res, err := conn.UpdateTable(ctx, &input); err != nil {
+		// TODO: not sure this is possible when err != nil
 		// exit if owning table is already in deleting state
 		if res != nil && res.TableDescription != nil && res.TableDescription.TableStatus == awstypes.TableStatusDeleting {
 			return
