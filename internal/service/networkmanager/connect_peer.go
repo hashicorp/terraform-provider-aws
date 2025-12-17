@@ -57,6 +57,7 @@ func resourceConnectPeer() *schema.Resource {
 			"bgp_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -64,6 +65,8 @@ func resourceConnectPeer() *schema.Resource {
 						"peer_asn": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.Valid4ByteASN,
 						},
 					},
