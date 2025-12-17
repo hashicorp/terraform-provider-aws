@@ -119,6 +119,7 @@ This resource supports the following arguments:
 * `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
 * `s3_origin_config` - (Optional) CloudFront S3 origin access identity to associate with the origin. See [S3 Origin Config](#s3-origin-config) below.
+* `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
 
 ### Default Cache Behavior
 
@@ -167,6 +168,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `key_group_id` - ID of the key group that contains the public keys.
 * `key_pair_ids` - Set of active CloudFront key pairs associated with the signer that can be used to verify the signatures of signed URLs and signed cookies.
+
+### VPC Origin Config
+
+* `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. By default, CloudFront uses a default timeout. Default: 5.
+* `origin_read_timeout` - (Optional) Custom read timeout, in seconds. By default, CloudFront uses a default timeout. Default: 30.
+* `vpc_origin_id` - (Required) ID of the VPC origin that you want CloudFront to route requests to.
 
 ## Import
 
