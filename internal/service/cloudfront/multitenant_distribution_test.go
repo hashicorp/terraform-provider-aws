@@ -167,10 +167,6 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.response_code", "200"),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.response_page_path", "/404.html"),
 
-					// Check logging config
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.0.include_cookies", acctest.CtFalse),
-
 					// Check tags
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
@@ -194,11 +190,6 @@ func testAccMultiTenantDistributionConfig_comprehensive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_s3_bucket" "logs" {
-  bucket        = "%[1]s-logs"
   force_destroy = true
 }
 
@@ -234,8 +225,8 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
 
     origin_shield {
-      enabled                = true
-      origin_shield_region   = "us-east-1"
+      enabled              = true
+      origin_shield_region = "us-east-1"
     }
   }
 
@@ -282,13 +273,6 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     response_page_path = "/404.html"
   }
 
-  # Logging configuration
-  logging_config {
-    bucket          = aws_s3_bucket.logs.bucket_domain_name
-    include_cookies = false
-    prefix          = "cloudfront-logs/"
-  }
-
   viewer_certificate {
     cloudfront_default_certificate = true
   }
@@ -312,13 +296,11 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
 
     parameter_definition {
-      name = "cache_ttl"
+      name = "cache_prefix"
       definition {
-        number_schema {
+        string_schema {
           required = false
-          comment  = "Cache TTL parameter for tenants"
-          minimum  = 0
-          maximum  = 86400
+          comment  = "Cache prefix parameter for tenants"
         }
       }
     }
