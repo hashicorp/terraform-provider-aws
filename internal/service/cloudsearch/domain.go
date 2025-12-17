@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -122,7 +121,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					optionalComputedBlockModifier(),
+					endpointOptionsComputedBlockModifier(),
 					listplanmodifier.UseStateForUnknown(),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -215,7 +214,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					optionalComputedBlockModifier(),
+					scalingParametersComputedBlockModifier(),
 					listplanmodifier.UseStateForUnknown(),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -1580,33 +1579,34 @@ func flattenIndexFieldModel(apiObject awstypes.IndexFieldStatus) (*indexFieldMod
 	return m, nil
 }
 
-// optionalComputedBlock is a plan modifier that implements Optional+Computed behavior
-// for ListNestedBlock. This emulates the SDKv2 behavior where a block can be both
-// optional (user can configure it) and computed (provider fills in defaults if not configured).
+// endpointOptionsComputedModifier is a plan modifier that implements Optional+Computed
+// behavior for the endpoint_options ListNestedBlock. This emulates the SDKv2 behavior
+// where a block can be both optional and computed.
 //
 // When the block is not configured (null/empty in config):
-// - On Create: sets plan to unknown, allowing provider to return defaults
-// - On Update: preserves prior state value, keeping it stable
+// - On Create: sets plan to a known list with one element where all attributes are unknown
+// - On Update: preserves prior state value
 //
 // This is necessary because Framework's ListNestedBlock doesn't have a Computed field
-// like ListAttribute does.
-type optionalComputedBlock struct{}
+// like ListAttribute does, and Terraform Core requires nested blocks to have a known
+// length (cannot set the entire block to unknown).
+type endpointOptionsComputedModifier struct{}
 
-var _ planmodifier.List = optionalComputedBlock{}
+var _ planmodifier.List = endpointOptionsComputedModifier{}
 
-func optionalComputedBlockModifier() planmodifier.List {
-	return optionalComputedBlock{}
+func endpointOptionsComputedBlockModifier() planmodifier.List {
+	return endpointOptionsComputedModifier{}
 }
 
-func (m optionalComputedBlock) Description(_ context.Context) string {
-	return "Implements Optional+Computed behavior for ListNestedBlock"
+func (m endpointOptionsComputedModifier) Description(_ context.Context) string {
+	return "Implements Optional+Computed behavior for endpoint_options ListNestedBlock"
 }
 
-func (m optionalComputedBlock) MarkdownDescription(ctx context.Context) string {
+func (m endpointOptionsComputedModifier) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m optionalComputedBlock) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+func (m endpointOptionsComputedModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
 	// If config has a value (user configured the block), use it as-is
 	if !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) > 0 {
 		return
@@ -1615,10 +1615,68 @@ func (m optionalComputedBlock) PlanModifyList(ctx context.Context, req planmodif
 	// Block is not configured (null or empty in config)
 	// Check if we have prior state
 	if req.StateValue.IsNull() || len(req.StateValue.Elements()) == 0 {
-		// No prior state (Create case): set plan to unknown
-		// This allows the provider to return defaults without causing
-		// "block count changed from 0 to 1" error
-		resp.PlanValue = basetypes.NewListUnknown(req.PlanValue.ElementType(ctx))
+		// No prior state (Create case): set plan to a known list with one element
+		// where all attributes are unknown. This allows the provider to return
+		// defaults without causing "block count changed from 0 to 1" error.
+		// Note: Terraform Core requires nested blocks to have known length,
+		// so we cannot use NewListUnknown - we must create a list with unknown attributes.
+		unknownModel := &endpointOptionsModel{
+			EnforceHTTPS:      types.BoolUnknown(),
+			TLSSecurityPolicy: fwtypes.StringEnumUnknown[awstypes.TLSSecurityPolicy](),
+		}
+		listValue, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, unknownModel)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.PlanValue = listValue.ListValue
+	} else {
+		// Has prior state (Update case): preserve prior state
+		// This keeps the block stable when user hasn't configured it
+		resp.PlanValue = req.StateValue
+	}
+}
+
+// scalingParametersComputedModifier is a plan modifier that implements Optional+Computed
+// behavior for the scaling_parameters ListNestedBlock.
+type scalingParametersComputedModifier struct{}
+
+var _ planmodifier.List = scalingParametersComputedModifier{}
+
+func scalingParametersComputedBlockModifier() planmodifier.List {
+	return scalingParametersComputedModifier{}
+}
+
+func (m scalingParametersComputedModifier) Description(_ context.Context) string {
+	return "Implements Optional+Computed behavior for scaling_parameters ListNestedBlock"
+}
+
+func (m scalingParametersComputedModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m scalingParametersComputedModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	// If config has a value (user configured the block), use it as-is
+	if !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) > 0 {
+		return
+	}
+
+	// Block is not configured (null or empty in config)
+	// Check if we have prior state
+	if req.StateValue.IsNull() || len(req.StateValue.Elements()) == 0 {
+		// No prior state (Create case): set plan to a known list with one element
+		// where all attributes are unknown.
+		unknownModel := &scalingParametersModel{
+			DesiredInstanceType:     fwtypes.StringEnumUnknown[awstypes.PartitionInstanceType](),
+			DesiredPartitionCount:   types.Int64Unknown(),
+			DesiredReplicationCount: types.Int64Unknown(),
+		}
+		listValue, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, unknownModel)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.PlanValue = listValue.ListValue
 	} else {
 		// Has prior state (Update case): preserve prior state
 		// This keeps the block stable when user hasn't configured it
