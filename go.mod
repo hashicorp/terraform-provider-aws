@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.41.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.5
+	github.com/aws/aws-sdk-go-v2/config v1.32.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.16
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.16
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.17
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.7
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.18
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.9
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.3
-	github.com/aws/aws-sdk-go-v2/service/iot v1.69.15
+	github.com/aws/aws-sdk-go-v2/service/iot v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.9
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.5
@@ -253,14 +253,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.15
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.16
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.25.15
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.7
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.12
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.9
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/swf v1.33.11
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.42.9
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.16
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.17.10
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.15
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.53.10
@@ -269,7 +269,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.15
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.16
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.4
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8
