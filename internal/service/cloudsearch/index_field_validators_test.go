@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -239,6 +240,157 @@ func TestInvalidForFieldTypes_Description(t *testing.T) {
 	}
 
 	mdDesc := v.MarkdownDescription(ctx)
+	if mdDesc != desc {
+		t.Errorf("markdown description should match description: got %s, want %s", mdDesc, desc)
+	}
+}
+
+// TestAnalysisSchemeDefault tests the plan modifier that sets "_en_default_" for text fields
+// when analysis_scheme is not configured. This prevents "does not correlate" errors because
+// AWS returns "_en_default_" for text/text-array fields even when not configured.
+func TestAnalysisSchemeDefault(t *testing.T) {
+	t.Parallel()
+
+	// Define a minimal schema that matches the index_field structure
+	indexFieldSchema := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"type": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.IndexFieldType](),
+			},
+			"analysis_scheme": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+
+	type testCase struct {
+		fieldType     string
+		configValue   types.String // What user configured
+		stateValue    types.String // What's in state
+		expectedValue types.String // What plan should have
+	}
+
+	testCases := map[string]testCase{
+		// Text fields without analysis_scheme should get "_en_default_"
+		"text field null config gets default": {
+			fieldType:     "text",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringNull(),
+			expectedValue: types.StringValue("_en_default_"),
+		},
+		"text-array field null config gets default": {
+			fieldType:     "text-array",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringNull(),
+			expectedValue: types.StringValue("_en_default_"),
+		},
+		// Non-text fields should NOT get the default
+		"literal field null config stays null": {
+			fieldType:     "literal",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringNull(),
+			expectedValue: types.StringNull(),
+		},
+		"int field null config stays null": {
+			fieldType:     "int",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringNull(),
+			expectedValue: types.StringNull(),
+		},
+		// Explicit config value should be preserved
+		"text field with explicit config preserves value": {
+			fieldType:     "text",
+			configValue:   types.StringValue("custom_scheme"),
+			stateValue:    types.StringNull(),
+			expectedValue: types.StringValue("custom_scheme"),
+		},
+		// State value should be used when available (UseStateForUnknown behavior)
+		"text field with state value uses state": {
+			fieldType:     "text",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringValue("_en_default_"),
+			expectedValue: types.StringValue("_en_default_"),
+		},
+		"literal field with state value uses state": {
+			fieldType:     "literal",
+			configValue:   types.StringNull(),
+			stateValue:    types.StringValue("some_scheme"),
+			expectedValue: types.StringValue("some_scheme"),
+		},
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			modifier := AnalysisSchemeDefault()
+
+			// Create a mock config with the type field
+			attrs := map[string]tftypes.Value{
+				"name": tftypes.NewValue(tftypes.String, "test_field"),
+				"type": tftypes.NewValue(tftypes.String, test.fieldType),
+			}
+
+			// Set analysis_scheme based on config value
+			if test.configValue.IsNull() {
+				attrs["analysis_scheme"] = tftypes.NewValue(tftypes.String, nil)
+			} else if test.configValue.IsUnknown() {
+				attrs["analysis_scheme"] = tftypes.NewValue(tftypes.String, tftypes.UnknownValue)
+			} else {
+				attrs["analysis_scheme"] = tftypes.NewValue(tftypes.String, test.configValue.ValueString())
+			}
+
+			rawVal := tftypes.NewValue(indexFieldSchema.Type().TerraformType(ctx), attrs)
+
+			config := tfsdk.Config{
+				Raw:    rawVal,
+				Schema: indexFieldSchema,
+			}
+
+			req := planmodifier.StringRequest{
+				Path:        path.Root("analysis_scheme"),
+				ConfigValue: test.configValue,
+				StateValue:  test.stateValue,
+				PlanValue:   test.configValue, // Plan starts with config value
+				Config:      config,
+			}
+
+			resp := &planmodifier.StringResponse{
+				PlanValue: req.PlanValue,
+			}
+
+			modifier.PlanModifyString(ctx, req, resp)
+
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected error: %s", resp.Diagnostics)
+			}
+
+			// Compare the result
+			if !resp.PlanValue.Equal(test.expectedValue) {
+				t.Errorf("expected plan value %v, got %v", test.expectedValue, resp.PlanValue)
+			}
+		})
+	}
+}
+
+func TestAnalysisSchemeDefault_Description(t *testing.T) {
+	t.Parallel()
+
+	modifier := AnalysisSchemeDefault()
+
+	ctx := context.Background()
+	desc := modifier.Description(ctx)
+	if desc != "Sets default analysis_scheme for text fields" {
+		t.Errorf("unexpected description: %s", desc)
+	}
+
+	mdDesc := modifier.MarkdownDescription(ctx)
 	if mdDesc != desc {
 		t.Errorf("markdown description should match description: got %s, want %s", mdDesc, desc)
 	}
