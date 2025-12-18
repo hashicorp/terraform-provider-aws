@@ -195,6 +195,8 @@ type odbNetworkManagedServicesDataSourceModel struct {
 	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]  `tfsdk:"managed_s3_backup_access"`
 	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]          `tfsdk:"zero_tl_access"`
 	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]               `tfsdk:"s3_access"`
+	StsAccess                fwtypes.ListNestedObjectValueOf[stsAccessOdbNetworkDataSourceModel]              `tfsdk:"sts_access"`
+	KmsAccess                fwtypes.ListNestedObjectValueOf[kmsAccessOdbNetworkDataSourceModel]              `tfsdk:"kms_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkDataSourceModel struct {
@@ -217,4 +219,18 @@ type s3AccessOdbNetworkDataSourceModel struct {
 	Ipv4Addresses    fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
 	DomainName       types.String                                       `tfsdk:"domain_name"`
 	S3PolicyDocument types.String                                       `tfsdk:"s3_policy_document"`
+}
+
+type stsAccessOdbNetworkDataSourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	StsPolicyDocument types.String                                       `tfsdk:"sts_policy_document"`
+}
+
+type kmsAccessOdbNetworkDataSourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.ListOfString                               `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	KmsPolicyDocument types.String                                       `tfsdk:"kms_policy_document"`
 }
