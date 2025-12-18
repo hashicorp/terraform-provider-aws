@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
@@ -16,10 +15,10 @@ import (
 
 func TestAccDynamoDBTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,10 +43,10 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 
 func TestAccDynamoDBTag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,10 +67,10 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
 func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -98,10 +97,10 @@ func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 
 func TestAccDynamoDBTag_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,12 +133,12 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 
 func TestAccDynamoDBTag_multipleTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 	resourceName2 := "aws_dynamodb_tag.test2"
 	resourceName3 := "aws_dynamodb_tag.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -219,13 +218,13 @@ func testAccTagConfig_resourceARNTableReplica(rName string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "awsalternate"
+  region = %[2]q
 }
 
 data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
-  provider = "awsalternate"
+  region = %[2]q
 
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = "TestTableHashKey"
@@ -248,7 +247,7 @@ resource "aws_dynamodb_tag" "test" {
   key          = "testkey"
   value        = "testvalue"
 }
-`, rName))
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccTagConfig_multipleTags(rName string, key string, value string) string {
