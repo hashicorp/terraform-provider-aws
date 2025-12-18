@@ -6,6 +6,7 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -88,7 +89,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_comprehensive(rName),
+				Config: testAccMultiTenantDistributionConfig_comprehensive(rName, "Comprehensive multi-tenant distribution test", "index.html", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -112,7 +113,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.0.path_pattern", "/api/*"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.0.target_origin_id", "custom-origin"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.0.compress", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.0.compress", acctest.CtFalse),
 
 					// Check custom error responses
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "1"),
@@ -128,6 +129,16 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					// Check tenant config with single parameter
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.#", "1"),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_comprehensive(rName, "Updated comprehensive test", "updated.html", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comprehensive test"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_object", "updated.html"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior.0.compress", acctest.CtTrue),
 				),
 			},
 			{
@@ -155,7 +166,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey1: acctest.CtValue1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -169,7 +180,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"etag"},
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey1: acctest.CtValue1Updated, acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -178,7 +189,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -203,7 +214,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_update1(),
+				Config: testAccMultiTenantDistributionConfig_update("Initial comment", "http1.1", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -212,7 +223,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_update2(),
+				Config: testAccMultiTenantDistributionConfig_update("Updated comment", "http2", "updated.html"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -332,7 +343,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `
 }
 
-func testAccMultiTenantDistributionConfig_comprehensive(rName string) string {
+func testAccMultiTenantDistributionConfig_comprehensive(rName, comment, defaultRootObject string, compress bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -348,8 +359,8 @@ resource "aws_cloudfront_origin_access_control" "test" {
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled             = false
-  comment             = "Comprehensive multi-tenant distribution test"
-  default_root_object = "index.html"
+  comment             = %[2]q
+  default_root_object = %[3]q
   http_version        = "http2"
 
   origin {
@@ -387,7 +398,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     target_origin_id       = "custom-origin"
     viewer_protocol_policy = "https-only"
     cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
-    compress               = true
+    compress               = %[4]t
 
     allowed_methods {
       items          = ["GET", "HEAD", "OPTIONS"]
@@ -430,10 +441,16 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     Name        = %[1]q
   }
 }
-`, rName)
+`, rName, comment, defaultRootObject, compress)
 }
 
-func testAccMultiTenantDistributionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccMultiTenantDistributionConfig_tags(rName string, tags map[string]string) string {
+	var tagLines []string
+	for key, value := range tags {
+		tagLines = append(tagLines, fmt.Sprintf("    %q = %q", key, value))
+	}
+	tagConfig := fmt.Sprintf("  tags = {\n%s\n  }", strings.Join(tagLines, "\n"))
+
 	return fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = false
@@ -484,134 +501,23 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 
-  tags = {
-    %[2]q = %[3]q
-  }
+%s
 }
-`, rName, tagKey1, tagValue1)
+`, tagConfig)
 }
 
-func testAccMultiTenantDistributionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMultiTenantDistributionConfig_update(comment, httpVersion, defaultRootObject string) string {
+	defaultRootObjectConfig := ""
+	if defaultRootObject != "" {
+		defaultRootObjectConfig = fmt.Sprintf("default_root_object = %q", defaultRootObject)
+	}
+
 	return fmt.Sprintf(`
-resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled = false
-  comment = "Test multi-tenant distribution for tags"
-
-  origin {
-    domain_name = "example.com"
-    id          = "example"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  default_cache_behavior {
-    target_origin_id       = "example"
-    viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
-
-    allowed_methods {
-      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-      cached_methods = ["GET", "HEAD", "OPTIONS"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  tenant_config {
-    parameter_definition {
-      name = "origin_domain"
-      definition {
-        string_schema {
-          required = true
-          comment  = "Origin domain parameter for tenants"
-        }
-      }
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccMultiTenantDistributionConfig_update1() string {
-	return `
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled      = false
-  comment      = "Initial comment"
-  http_version = "http1.1"
-
-  origin {
-    domain_name = "example.com"
-    id          = "example"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "https-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  default_cache_behavior {
-    target_origin_id       = "example"
-    viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
-
-    allowed_methods {
-      items          = ["GET", "HEAD"]
-      cached_methods = ["GET", "HEAD"]
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  tenant_config {
-    parameter_definition {
-      name = "origin_domain"
-      definition {
-        string_schema {
-          required = true
-          comment  = "Origin domain parameter for tenants"
-        }
-      }
-    }
-  }
-}
-`
-}
-
-func testAccMultiTenantDistributionConfig_update2() string {
-	return `
-resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled             = false
-  comment             = "Updated comment"
-  http_version        = "http2"
-  default_root_object = "updated.html"
+  comment      = %[1]q
+  http_version = %[2]q
+  %[3]s
 
   origin {
     domain_name = "example.com"
@@ -658,5 +564,5 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 }
-`
+`, comment, httpVersion, defaultRootObjectConfig)
 }
