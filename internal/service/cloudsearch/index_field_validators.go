@@ -105,12 +105,6 @@ func (m analysisSchemeDefaultPlanModifier) PlanModifyString(ctx context.Context,
 		return
 	}
 
-	// If we have a state value, use it (UseStateForUnknown behavior)
-	if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
-		resp.PlanValue = req.StateValue
-		return
-	}
-
 	// Get the "type" attribute from the same index_field block
 	var fieldType fwtypes.StringEnum[awstypes.IndexFieldType]
 	diags := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName("type"), &fieldType)
@@ -120,10 +114,22 @@ func (m analysisSchemeDefaultPlanModifier) PlanModifyString(ctx context.Context,
 		return
 	}
 
-	// For text and text-array fields, AWS returns "_en_default_" when not configured
+	// For text and text-array fields with no config, use "_en_default_"
+	// This ensures the plan matches what AWS returns, preventing "does not correlate" errors
 	fieldTypeStr := string(fieldType.ValueEnum())
 	if fieldTypeStr == "text" || fieldTypeStr == "text-array" {
-		resp.PlanValue = types.StringValue("_en_default_")
+		// Use state if available, otherwise set default
+		if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
+			resp.PlanValue = req.StateValue
+		} else {
+			resp.PlanValue = types.StringValue("_en_default_")
+		}
+		return
+	}
+
+	// For non-text fields, use state if available (UseStateForUnknown behavior)
+	if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
+		resp.PlanValue = req.StateValue
 	}
 }
 
