@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceRulesPackages,
+			Factory:  dataSourceRulesPackages,
 			TypeName: "aws_inspector_rules_packages",
 			Name:     "Rules Packages",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
