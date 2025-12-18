@@ -138,7 +138,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 * `event_type` - (Required) Specific event to trigger this function. Valid values: `viewer-request`, `origin-request`, `viewer-response`, `origin-response`.
 * `include_body` - (Optional) When set to true, the request body is exposed to the Lambda function. Default: `false`.
-* `lambda_arn` - (Required) ARN of the Lambda function.
+* `lambda_function_arn` - (Required) ARN of the Lambda function.
 
 ### Origin
 
