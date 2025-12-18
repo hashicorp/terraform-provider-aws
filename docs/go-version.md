@@ -20,7 +20,7 @@ The Terraform AWS provider should switch to the latest minor version for the nex
 ### To Upgrade Major Version
 
 * Edit `.go-version`
-* Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.24.11")'`
+* Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.25.5")'`
 * Run a smoke tests, e.g. `make sane`
 * If a new version of [`modernize`](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize) has been released supporting the new Go version, update the `make modern-check` and `make modern-fix` [makefile targets](https://hashicorp.github.io/terraform-provider-aws/makefile-cheat-sheet/#cheat-sheet)
 * Create a PR with the changes
