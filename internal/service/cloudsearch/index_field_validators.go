@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"slices"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // indexFieldAttributeValidator validates that an attribute is only set for compatible field types
@@ -34,7 +35,8 @@ func (v indexFieldAttributeValidator) ValidateBool(ctx context.Context, req vali
 	}
 
 	// Get the "type" attribute from the same index_field block
-	var fieldType types.String
+	// Must use fwtypes.StringEnum to match the schema's CustomType
+	var fieldType fwtypes.StringEnum[awstypes.IndexFieldType]
 	diags := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName("type"), &fieldType)
 	resp.Diagnostics.Append(diags...)
 
@@ -43,7 +45,8 @@ func (v indexFieldAttributeValidator) ValidateBool(ctx context.Context, req vali
 	}
 
 	// Check if this field type is invalid for this attribute
-	if slices.Contains(v.invalidFieldTypes, fieldType.ValueString()) {
+	// Convert enum to string for comparison with invalidFieldTypes
+	if slices.Contains(v.invalidFieldTypes, string(fieldType.ValueEnum())) {
 		// Create attribute-specific reason message
 		var reason string
 		switch v.attributeName {

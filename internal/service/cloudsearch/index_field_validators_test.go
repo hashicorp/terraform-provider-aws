@@ -7,25 +7,29 @@ import (
 	"context"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func TestInvalidForFieldTypes(t *testing.T) {
 	t.Parallel()
 
 	// Define a minimal schema that matches the index_field structure
+	// Must use CustomType for "type" to match the real schema
 	indexFieldSchema := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required: true,
 			},
 			"type": schema.StringAttribute{
-				Required: true,
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.IndexFieldType](),
 			},
 			"facet": schema.BoolAttribute{
 				Optional: true,
