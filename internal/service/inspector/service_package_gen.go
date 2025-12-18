@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceResourceGroup,
+			Factory:  resourceResourceGroup,
 			TypeName: "aws_inspector_resource_group",
 			Name:     "Resource Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

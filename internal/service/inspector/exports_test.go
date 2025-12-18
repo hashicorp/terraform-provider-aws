@@ -7,6 +7,7 @@ package inspector
 var (
 	ResourceAssessmentTarget   = resourceAssessmentTarget
 	ResourceAssessmentTemplate = resourceAssessmentTemplate
+	ResourceResourceGroup      = resourceResourceGroup
 
 	FindAssessmentTargetByARN   = findAssessmentTargetByARN
 	FindAssessmentTemplateByARN = findAssessmentTemplateByARN
