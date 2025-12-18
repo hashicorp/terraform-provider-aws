@@ -1,5 +1,10 @@
 ## 6.28.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+* resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+
 ## 6.27.0 (December 17, 2025)
 
 FEATURES:
