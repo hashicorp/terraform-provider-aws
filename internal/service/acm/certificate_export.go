@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/asn1"
 	"encoding/base64"
@@ -162,6 +163,13 @@ func resourceCertificateExportUpdate(ctx context.Context, d *schema.ResourceData
 			encryptedKey := d.Get(names.AttrPrivateKey).(string)
 			passphrase := d.Get("passphrase").(string)
 			
+			log.Printf("[DEBUG] Update: attempting to decrypt with passphrase length=%d, encrypted_key length=%d", 
+				len(passphrase), len(encryptedKey))
+			
+			if passphrase == "" {
+				return sdkdiag.AppendErrorf(diags, "passphrase is empty in state, cannot decrypt")
+			}
+			
 			decryptedKey, err := decryptPKCS8PrivateKey(encryptedKey, passphrase)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "decrypting private key: %s", err)
@@ -258,11 +266,18 @@ func decryptPKCS8PrivateKey(encryptedPEM, passphrase string) (string, error) {
 	if keyLen == 0 {
 		keyLen = 32 // AES-256 key size
 	}
-	derivedKey := pbkdf2.Key([]byte(passphrase), pbkdf2Param.Salt, pbkdf2Param.IterationCount, keyLen, sha256.New)
+	
+	log.Printf("[DEBUG] PKCS#8 decryption params: salt_len=%d, iterations=%d, key_len=%d, iv_len=%d, encrypted_len=%d",
+		len(pbkdf2Param.Salt), pbkdf2Param.IterationCount, keyLen, len(iv), len(encryptedKey.EncryptedData))
+	
+	// PKCS#8 default PRF for PBKDF2 is HMAC-SHA1 (not SHA256)
+	// AWS ACM uses the default unless explicitly specified
+	derivedKey := pbkdf2.Key([]byte(passphrase), pbkdf2Param.Salt, pbkdf2Param.IterationCount, keyLen, sha1.New)
 
 	plaintext, err := decryptAES256CBC(encryptedKey.EncryptedData, derivedKey, iv)
 	if err != nil {
-		return "", fmt.Errorf("decryption failed: %w", err)
+		return "", fmt.Errorf("decryption failed (salt_len=%d, iter=%d, key_len=%d, iv_len=%d): %w", 
+			len(pbkdf2Param.Salt), pbkdf2Param.IterationCount, keyLen, len(iv), err)
 	}
 
 	decryptedBlock := &pem.Block{
