@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -778,12 +779,12 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
+	var hiddenAppTypesString strings.Builder
 	for i, appType := range hiddenAppTypes {
 		if i > 0 {
-			hiddenAppTypesString += ", "
+			hiddenAppTypesString.WriteString(", ")
 		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
+		hiddenAppTypesString.WriteString(fmt.Sprintf("%q", appType))
 	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
@@ -798,16 +799,16 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, hiddenAppTypesString.String()))
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
+	var hiddenMlToolsString strings.Builder
 	for i, mlTool := range hiddenMlTools {
 		if i > 0 {
-			hiddenMlToolsString += ", "
+			hiddenMlToolsString.WriteString(", ")
 		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
+		hiddenMlToolsString.WriteString(fmt.Sprintf("%q", mlTool))
 	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
@@ -822,5 +823,5 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, hiddenMlToolsString.String()))
 }

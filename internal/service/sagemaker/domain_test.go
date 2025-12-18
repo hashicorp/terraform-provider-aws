@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -3120,12 +3121,12 @@ resource "aws_sagemaker_domain" "test" {
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
+	var hiddenAppTypesString strings.Builder
 	for i, appType := range hiddenAppTypes {
 		if i > 0 {
-			hiddenAppTypesString += ", "
+			hiddenAppTypesString.WriteString(", ")
 		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
+		hiddenAppTypesString.WriteString(fmt.Sprintf("%q", appType))
 	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -3146,16 +3147,16 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, hiddenAppTypesString.String()))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName string, hiddenInstanceTypes []string) string {
-	var hiddenInstanceTypesString string
+	var hiddenInstanceTypesString strings.Builder
 	for i, instanceType := range hiddenInstanceTypes {
 		if i > 0 {
-			hiddenInstanceTypesString += ", "
+			hiddenInstanceTypesString.WriteString(", ")
 		}
-		hiddenInstanceTypesString += fmt.Sprintf("%q", instanceType)
+		hiddenInstanceTypesString.WriteString(fmt.Sprintf("%q", instanceType))
 	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -3176,16 +3177,16 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenInstanceTypesString))
+`, rName, hiddenInstanceTypesString.String()))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
+	var hiddenMlToolsString strings.Builder
 	for i, mlTool := range hiddenMlTools {
 		if i > 0 {
-			hiddenMlToolsString += ", "
+			hiddenMlToolsString.WriteString(", ")
 		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
+		hiddenMlToolsString.WriteString(fmt.Sprintf("%q", mlTool))
 	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -3206,7 +3207,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, hiddenMlToolsString.String()))
 }
 
 func testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName string, defaultUserSettingsinstanceType string, defaultSpaceSettingsinstanceType string) string {

@@ -1434,11 +1434,12 @@ resource "aws_nat_gateway" "test" {
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName string, eipCount int, config map[int][]int) string {
-	localsStr := "locals {\n  config = [\n"
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr += fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
+		localsStr.WriteString(fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]")))
 	}
-	localsStr += "  ]\n}\n\n"
+	localsStr.WriteString("  ]\n}\n\n")
 
 	return acctest.ConfigCompose(
 		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
@@ -1463,15 +1464,16 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 
-`, rName, localsStr))
+`, rName, localsStr.String()))
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName string, eipCount int, config map[int][]int) string {
-	localsStr := "locals {\n  config = [\n"
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr += fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
+		localsStr.WriteString(fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]")))
 	}
-	localsStr += "  ]\n}\n\n"
+	localsStr.WriteString("  ]\n}\n\n")
 
 	return acctest.ConfigCompose(
 		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
@@ -1496,5 +1498,5 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 
-`, rName, localsStr))
+`, rName, localsStr.String()))
 }
