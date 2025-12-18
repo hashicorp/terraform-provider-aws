@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 const (
@@ -605,9 +606,9 @@ func (r *resourceGlobalSecondaryIndex) ValidateConfig(ctx context.Context, reque
 				"Experimental features may change without notice, including removal from the provider.",
 		)
 		tflog.Info(ctx, "Experimental resource type enabled", map[string]any{
-			"feature_flag.key":            globalSecondaryIndexExperimentalFlagEnvVar,
-			"feature_flag.result.value":   flag,
-			"feature_flag.result.variant": "enabled", // nosemgrep:ci.literal-enabled-string-constant
+			string(semconv.FeatureFlagKeyKey):           globalSecondaryIndexExperimentalFlagEnvVar,
+			string(semconv.FeatureFlagResultValueKey):   flag,
+			string(semconv.FeatureFlagResultVariantKey): "enabled", // nosemgrep:ci.literal-enabled-string-constant
 		})
 	} else {
 		response.Diagnostics.AddError(
@@ -618,10 +619,10 @@ func (r *resourceGlobalSecondaryIndex) ValidateConfig(ctx context.Context, reque
 				"Experimental features may change without notice, including removal from the provider.",
 		)
 		tflog.Error(ctx, "Experimental resource type not enabled", map[string]any{
-			"feature_flag.key":            globalSecondaryIndexExperimentalFlagEnvVar,
-			"feature_flag.result.value":   nil,
-			"feature_flag.result.variant": "disabled",
-			"feature_flag.result.reason":  "default",
+			string(semconv.FeatureFlagKeyKey):                  globalSecondaryIndexExperimentalFlagEnvVar,
+			string(semconv.FeatureFlagResultValueKey):          nil,
+			string(semconv.FeatureFlagResultVariantKey):        "disabled",
+			string(semconv.FeatureFlagResultReasonDefault.Key): semconv.FeatureFlagResultReasonDefault.Value,
 		})
 	}
 }
