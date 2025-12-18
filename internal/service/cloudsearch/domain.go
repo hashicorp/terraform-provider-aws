@@ -843,6 +843,24 @@ func indexFieldSemanticEquality(ctx context.Context, oldValue, newValue fwtypes.
 // Different field types support different options, so we only compare the
 // attributes that are relevant for the specific field type.
 // See: https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_IndexField.html
+// analysisSchemeEqual compares analysis_scheme values, treating null as equivalent to AWS's default "_en_default_"
+func analysisSchemeEqual(a, b types.String) bool {
+	// If both are null or both have the same value, they're equal
+	if a.Equal(b) {
+		return true
+	}
+
+	// AWS automatically sets "_en_default_" for text fields when not specified
+	// Treat null and "_en_default_" as semantically equivalent
+	aVal := a.ValueString()
+	bVal := b.ValueString()
+
+	aIsDefault := a.IsNull() || aVal == "_en_default_"
+	bIsDefault := b.IsNull() || bVal == "_en_default_"
+
+	return aIsDefault && bIsDefault
+}
+
 func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 	// Name and type must always match
 	if !a.Name.Equal(b.Name) || !a.Type.Equal(b.Type) {
@@ -854,7 +872,7 @@ func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 	switch fieldType {
 	case "text":
 		// text: analysis_scheme, default_value, highlight, return, sort, source_fields
-		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+		return analysisSchemeEqual(a.AnalysisScheme, b.AnalysisScheme) &&
 			a.DefaultValue.Equal(b.DefaultValue) &&
 			a.Highlight.Equal(b.Highlight) &&
 			a.Return.Equal(b.Return) &&
@@ -862,7 +880,7 @@ func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 			a.SourceFields.Equal(b.SourceFields)
 	case "text-array":
 		// text-array: analysis_scheme, default_value, highlight, return, source_fields
-		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
+		return analysisSchemeEqual(a.AnalysisScheme, b.AnalysisScheme) &&
 			a.DefaultValue.Equal(b.DefaultValue) &&
 			a.Highlight.Equal(b.Highlight) &&
 			a.Return.Equal(b.Return) &&
