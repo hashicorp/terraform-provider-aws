@@ -1016,6 +1016,12 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		analysisScheme = m.AnalysisScheme.ValueString()
 	}
 
+	// Initialize boolean fields to false to match SDKv2 behavior.
+	// When user doesn't configure these options, we explicitly send false to AWS
+	// rather than omitting them. This ensures consistent behavior but differs from
+	// AWS's documented "enabled by default" statement (which conflicts with Console
+	// UI showing unchecked, and API omitting options entirely). This has been the
+	// provider's behavior since creation.
 	facetEnabled := false
 	if !m.Facet.IsNull() && !m.Facet.IsUnknown() {
 		facetEnabled = m.Facet.ValueBool()

@@ -22,16 +22,17 @@ resource "aws_cloudsearch_domain" "example" {
     desired_instance_type = "search.medium"
   }
 
+  # Text field: supports highlight and analysis_scheme, but NOT facet or search
+  # (text fields are always searchable)
   index_field {
     name            = "headline"
     type            = "text"
-    search          = true
     return          = true
-    sort            = true
-    highlight       = false
+    highlight       = true
     analysis_scheme = "_en_default_"
   }
 
+  # Double field: supports facet, search, return, sort
   index_field {
     name   = "price"
     type   = "double"
@@ -39,8 +40,16 @@ resource "aws_cloudsearch_domain" "example" {
     facet  = true
     return = true
     sort   = true
+  }
 
-    source_fields = "headline"
+  # Literal field: supports facet, search, return, sort
+  index_field {
+    name   = "category"
+    type   = "literal"
+    search = true
+    facet  = true
+    return = true
+    sort   = true
   }
 }
 ```
@@ -77,14 +86,33 @@ This configuration block supports the following attributes:
 
 * `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 1 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
 * `type` - (Required) The field type. Valid values: `date`, `date-array`, `double`, `double-array`, `int`, `int-array`, `literal`, `literal-array`, `text`, `text-array`.
-* `analysis_scheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing.
+* `analysis_scheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing. **Only valid for `text` and `text-array` fields.**
 * `default_value` - (Optional) The default value for the field. This value is used when no value is specified for the field in the document data.
-* `facet` - (Optional) You can get facet information by enabling this.
-* `highlight` - (Optional) You can highlight information.
-* `return` - (Optional) You can enable returning the value of all searchable fields.
-* `search` - (Optional) You can set whether this index should be searchable or not.
-* `sort` - (Optional) You can enable the property to be sortable.
+* `facet` - (Optional, Default: `false`) Enable faceting for this field. **Cannot be set for `text` or `text-array` fields** (text fields are always searchable and cannot be faceted).
+* `highlight` - (Optional, Default: `false`) Enable highlighting for this field. **Only valid for `text` and `text-array` fields.**
+* `return` - (Optional, Default: `false`) Enable returning this field's value in search results.
+* `search` - (Optional, Default: `false`) Enable this field to be searchable. **Cannot be set for `text` or `text-array` fields** (text fields are always searchable).
+* `sort` - (Optional, Default: `false`) Enable sorting by this field. **Cannot be set for array field types** (`int-array`, `double-array`, `literal-array`, `date-array`, `text-array`).
 * `source_fields` - (Optional) A comma-separated list of source fields to map to the field. Specifying a source field copies data from one field to another, enabling you to use the same source data in different ways by configuring different options for the fields.
+
+~> **NOTE:** Terraform will return a validation error if you attempt to set attributes that are invalid for your chosen field type, even if set to `false`. Remove invalid attributes from your configuration.
+
+**Boolean Attribute Behavior:**
+
+All boolean attributes (`facet`, `highlight`, `return`, `search`, `sort`) are Optional with `Default: false` in Terraform. When not specified in your configuration, Terraform explicitly sends `false` to AWS CloudSearch.
+
+~> **Important:** There is ambiguity in AWS CloudSearch's behavior for omitted boolean options. AWS documentation states options are "enabled by default" when not specified, but the AWS Console displays them as disabled/unchecked, and the API omits the entire options block when nothing is configured. We have not validated which representation reflects actual runtime behavior. Terraform's approach of explicitly sending `false` ensures consistent, predictable behavior and has been the provider's design since creation.
+
+To explicitly enable features, set them to `true`:
+
+```terraform
+index_field {
+  name   = "myfield"
+  type   = "literal"
+  facet  = true
+  search = true
+}
+```
 
 ## Attribute Reference
 
