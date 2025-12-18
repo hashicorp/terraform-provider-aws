@@ -138,7 +138,7 @@ func resourceCertificateExportRead(ctx context.Context, d *schema.ResourceData, 
 	arn := d.Get(names.AttrCertificateARN).(string)
 
 	// Verify the certificate still exists
-	_, err := FindCertificateByARN(ctx, conn, arn)
+	_, err := findCertificateByARN(ctx, conn, arn)
 
 	if err != nil {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", arn)

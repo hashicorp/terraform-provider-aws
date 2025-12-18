@@ -5,6 +5,5 @@ package acm
 
 // Exports for use in other modules.
 var (
-	FindCertificateByARN = findCertificateByARN
-	SvcTags              = svcTags
+	SvcTags = svcTags
 )
