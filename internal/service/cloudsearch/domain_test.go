@@ -6,6 +6,7 @@ package cloudsearch_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
@@ -445,7 +446,13 @@ resource "aws_cloudsearch_domain" "test" {
     type            = "text"
     analysis_scheme = "_en_default_"
     highlight       = true
-    search          = true
+  }
+
+  index_field {
+    name      = "text_default"
+    type      = "text"
+    return    = true
+    highlight = true
   }
 
   index_field {
@@ -567,9 +574,40 @@ resource "aws_cloudsearch_domain" "test" {
     name            = "text_array_test"
     type            = "text-array"
     return          = true
-    search          = true
     analysis_scheme = "_fr_default_"
   }
 }
 `, rName)
+}
+
+func TestAccCloudSearchDomain_indexFieldValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDomainConfig_invalidTextArrayFacet(),
+				ExpectError: regexp.MustCompile(`cannot be set for 'text-array' field types`),
+			},
+		},
+	})
+}
+
+func testAccDomainConfig_invalidTextArrayFacet() string {
+	return `
+resource "aws_cloudsearch_domain" "test" {
+  name = "tf-test-validation"
+
+  index_field {
+    name   = "test_invalid"
+    type   = "text-array"
+    facet  = true
+    return = true
+  }
+}
+`
 }
