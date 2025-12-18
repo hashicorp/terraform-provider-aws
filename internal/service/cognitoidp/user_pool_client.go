@@ -391,6 +391,16 @@ func (r *userPoolClientResource) Create(ctx context.Context, request resource.Cr
 	}
 	data.TokenValidityUnits = tvu
 
+	// Set config value to suppress diff for disabled rotation
+	var refreshTokenRotation []refreshTokenRotationModel
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("refresh_token_rotation"), &refreshTokenRotation)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if len(refreshTokenRotation) > 0 && refreshTokenRotation[0].Feature.ValueEnum() == awstypes.FeatureTypeDisabled {
+		data.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &refreshTokenRotation[0])
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -433,6 +443,16 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 			return
 		}
 		data.TokenValidityUnits = tvu
+	}
+
+	// Use state value to suppress diff for disabled rotation
+	var refreshTokenRotation []refreshTokenRotationModel
+	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("refresh_token_rotation"), &refreshTokenRotation)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if len(refreshTokenRotation) > 0 && refreshTokenRotation[0].Feature.ValueEnum() == awstypes.FeatureTypeDisabled {
+		data.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &refreshTokenRotation[0])
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -497,6 +517,16 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 			return
 		}
 		plan.TokenValidityUnits = tvu
+	}
+
+	// Set state value to suppress diff for disabled rotation
+	var refreshTokenRotation []refreshTokenRotationModel
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("refresh_token_rotation"), &refreshTokenRotation)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if len(refreshTokenRotation) > 0 && refreshTokenRotation[0].Feature.ValueEnum() == awstypes.FeatureTypeDisabled {
+		plan.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &refreshTokenRotation[0])
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
