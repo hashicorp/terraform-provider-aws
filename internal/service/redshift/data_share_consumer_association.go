@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -20,15 +19,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -125,10 +123,7 @@ func (r *dataShareConsumerAssociationResource) Create(ctx context.Context, req r
 	}
 	id, err := intflex.FlattenResourceId(parts, dataShareConsumerAssociationIDPartCount, true)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionFlatteningResourceId, ResNameDataShareConsumerAssociation, dataShareARN, err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
 		return
 	}
 	plan.ID = types.StringValue(id)
@@ -166,8 +161,8 @@ func (r *dataShareConsumerAssociationResource) Create(ctx context.Context, req r
 		return
 	}
 
-	plan.ProducerARN = flex.StringToFrameworkARN(ctx, out.ProducerArn)
-	plan.ManagedBy = flex.StringToFramework(ctx, out.ManagedBy)
+	plan.ProducerARN = fwflex.StringToFrameworkARN(ctx, out.ProducerArn)
+	plan.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -181,28 +176,17 @@ func (r *dataShareConsumerAssociationResource) Read(ctx context.Context, req res
 		return
 	}
 
-	parts, err := intflex.ExpandResourceId(state.ID.ValueString(), dataShareConsumerAssociationIDPartCount, true)
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
+	parts, err := intflex.ExpandResourceId(id, dataShareConsumerAssociationIDPartCount, true)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionExpandingResourceId, ResNameDataShareAuthorization, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
-	// split ID and write constituent parts to state to support import
-	state.DataShareARN = fwtypes.ARNValue(parts[0])
-	if parts[1] != "" {
-		state.AssociateEntireAccount = types.BoolValue(parts[1] == "true")
-	}
-	if parts[2] != "" {
-		state.ConsumerARN = fwtypes.ARNValue(parts[2])
-	}
-	if parts[3] != "" {
-		state.ConsumerRegion = types.StringValue(parts[3])
-	}
 
-	out, err := findDataShareConsumerAssociationByID(ctx, conn, state.ID.ValueString())
+	dataShareARN, associateEntireAccount, consumerARN, consumerRegion := parts[0], parts[1], parts[2], parts[3]
+	out, err := findDataShareConsumerAssociationByFourPartKey(ctx, conn, dataShareARN, associateEntireAccount, consumerARN, consumerRegion)
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -214,8 +198,18 @@ func (r *dataShareConsumerAssociationResource) Read(ctx context.Context, req res
 		return
 	}
 
-	state.ProducerARN = flex.StringToFrameworkARN(ctx, out.ProducerArn)
-	state.ManagedBy = flex.StringToFramework(ctx, out.ManagedBy)
+	if associateEntireAccount != "" {
+		state.AssociateEntireAccount = fwflex.BoolValueToFramework(ctx, intflex.StringValueToBoolValue(associateEntireAccount))
+	}
+	if consumerARN != "" {
+		state.ConsumerARN = fwtypes.ARNValue(consumerARN)
+	}
+	if consumerRegion != "" {
+		state.ConsumerRegion = fwflex.StringValueToFramework(ctx, consumerRegion)
+	}
+	state.DataShareARN = fwtypes.ARNValue(dataShareARN)
+	state.ProducerARN = fwflex.StringToFrameworkARN(ctx, out.ProducerArn)
+	state.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -271,64 +265,6 @@ func (r *dataShareConsumerAssociationResource) ConfigValidators(_ context.Contex
 	}
 }
 
-func findDataShareConsumerAssociationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.DataShare, error) {
-	parts, err := intflex.ExpandResourceId(id, dataShareConsumerAssociationIDPartCount, true)
-	if err != nil {
-		return nil, err
-	}
-	dataShareARN := parts[0]
-	associateEntireAccount := parts[1]
-	consumerARN := parts[2]
-	consumerRegion := parts[3]
-
-	in := &redshift.DescribeDataSharesInput{
-		DataShareArn: aws.String(dataShareARN),
-	}
-
-	out, err := conn.DescribeDataShares(ctx, in)
-	if errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
-		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.DataShares) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-	if len(out.DataShares) != 1 {
-		return nil, tfresource.NewTooManyResultsError(len(out.DataShares), in)
-	}
-
-	share := out.DataShares[0]
-
-	// The data share should include an association in an "ACTIVE" status where
-	// one of the following is true:
-	// - `associate_entire_account` is `true` and `ConsumerIdentifier` matches the
-	//   account number of the data share ARN.
-	// - `consumer_arn` is set and `ConsumerIdentifier` matches its value.
-	// - `consumer_region` is set and `ConsumerRegion` matches its value.
-	for _, assoc := range share.DataShareAssociations {
-		if assoc.Status == awstypes.DataShareStatusActive {
-			if associateEntireAccount == "true" && accountIDFromARN(dataShareARN) == aws.ToString(assoc.ConsumerIdentifier) ||
-				consumerARN != "" && consumerARN == aws.ToString(assoc.ConsumerIdentifier) ||
-				consumerRegion != "" && consumerRegion == aws.ToString(assoc.ConsumerRegion) {
-				return &share, nil
-			}
-		}
-	}
-
-	return nil, &sdkretry.NotFoundError{
-		LastError:   err,
-		LastRequest: in,
-	}
-}
-
 type dataShareConsumerAssociationResourceModel struct {
 	framework.WithRegionModel
 	AllowWrites            types.Bool   `tfsdk:"allow_writes"`
@@ -339,16 +275,4 @@ type dataShareConsumerAssociationResourceModel struct {
 	ID                     types.String `tfsdk:"id"`
 	ManagedBy              types.String `tfsdk:"managed_by"`
 	ProducerARN            fwtypes.ARN  `tfsdk:"producer_arn"`
-}
-
-// accountIDFromARN returns the account ID from the provided ARN string
-//
-// If the string is not a valid ARN, an empty string is returned, making
-// this function safe for use in comparison operators.
-func accountIDFromARN(s string) string {
-	parsed, err := arn.Parse(s)
-	if err != nil {
-		return ""
-	}
-	return parsed.AccountID
 }

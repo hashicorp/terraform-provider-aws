@@ -321,7 +321,13 @@ func BoolValueToString(v bool) *string {
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
-	return aws.ToString(v) == strconv.FormatBool(true)
+	return StringValueToBoolValue(aws.ToString(v))
+}
+
+// StringValueToBoolValue converts a string value to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringValueToBoolValue(v string) bool {
+	return v == strconv.FormatBool(true)
 }
 
 // Float32ValueToFloat64Value converts a float32 value to a Go float64 value.

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -826,7 +827,9 @@ func findDataShares(ctx context.Context, conn *redshift.Client, input *redshift.
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
 			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
@@ -853,9 +856,9 @@ func findDataShare(ctx context.Context, conn *redshift.Client, input *redshift.D
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.Client, arn, consumerID string) (*awstypes.DataShare, error) {
+func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.Client, dataShareARN, consumerID string) (*awstypes.DataShare, error) {
 	input := redshift.DescribeDataSharesInput{
-		DataShareArn: aws.String(arn),
+		DataShareArn: aws.String(dataShareARN),
 	}
 	output, err := findDataShare(ctx, conn, &input)
 
@@ -867,6 +870,44 @@ func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.
 	// status is one of "AUTHORIZED" or "ACTIVE".
 	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
 		return aws.ToString(v.ConsumerIdentifier) == consumerID && (v.Status == awstypes.DataShareStatusAuthorized || v.Status == awstypes.DataShareStatusActive)
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDataShareConsumerAssociationByFourPartKey(ctx context.Context, conn *redshift.Client, dataShareARN, associateEntireAccount, consumerARN, consumerRegion string) (*awstypes.DataShare, error) {
+	input := redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(dataShareARN),
+	}
+	output, err := findDataShare(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// The data share should include an association in an "ACTIVE" status where
+	// one of the following is true:
+	// - `associate_entire_account` is `true` and `ConsumerIdentifier` matches the
+	//   account number of the data share ARN.
+	// - `consumer_arn` is set and `ConsumerIdentifier` matches its value.
+	// - `consumer_region` is set and `ConsumerRegion` matches its value.
+	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
+		accountIDFromARN := func(s string) string {
+			v, err := arn.Parse(s)
+			if err != nil {
+				return ""
+			}
+			return v.AccountID
+		}
+
+		return v.Status == awstypes.DataShareStatusActive &&
+			((associateEntireAccount == "true" && aws.ToString(v.ConsumerIdentifier) == accountIDFromARN(dataShareARN)) ||
+				(consumerARN != "" && aws.ToString(v.ConsumerIdentifier) == consumerARN) ||
+				(consumerRegion != "" && aws.ToString(v.ConsumerRegion) == consumerRegion))
 	}))
 
 	if err != nil {
