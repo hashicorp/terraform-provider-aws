@@ -11,4 +11,5 @@ var (
 
 	FindAssessmentTargetByARN   = findAssessmentTargetByARN
 	FindAssessmentTemplateByARN = findAssessmentTemplateByARN
+	FindResourceGroupByARN      = findResourceGroupByARN
 )
