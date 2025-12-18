@@ -5,7 +5,9 @@ package customerprofiles
 
 // Exports for use in tests only.
 var (
+	ResourceDomain  = resourceDomain
 	ResourceProfile = resourceProfile
 
+	FindDomainByDomainName  = findDomainByDomainName
 	FindProfileByTwoPartKey = findProfileByTwoPartKey
 )
