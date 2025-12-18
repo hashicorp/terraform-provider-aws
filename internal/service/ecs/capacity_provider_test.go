@@ -883,7 +883,7 @@ resource "aws_ecs_capacity_provider" "test" {
     propagate_tags          = "NONE"
 
     instance_launch_template {
-	  capacity_option_type     = "SPOT"
+	  	capacity_option_type     = "SPOT"
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
