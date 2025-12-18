@@ -23,6 +23,7 @@ The Terraform AWS provider should switch to the latest minor version for the nex
 
 #### To Upgrade Major Version
 
+* Review [release notes](https://go.dev/doc/devel/release) for breaking changes and security fixes
 * Edit `.go-version`
 * Edit each `go.mod`, e.g. `find . -name 'go.mod' -exec sed -i '' 's/go 1.24.10/go 1.25.5/' {} +`
 * Run smoke tests, e.g. `make sane`
@@ -34,6 +35,7 @@ Support for new language and standard library features should be done in separat
 
 #### To Upgrade Minor Version
 
+* Review [release notes](https://go.dev/doc/devel/release) for breaking changes and security fixes
 * Edit `.go-version`
 * Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.24.11")'`
 * Run smoke tests, e.g. `make sane`
