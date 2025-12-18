@@ -129,6 +129,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					Attributes: map[string]schema.Attribute{
 						"analysis_scheme": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
 						},
 						names.AttrDefaultValue: schema.StringAttribute{
 							Optional: true,
@@ -137,11 +138,22 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 							Optional: true,
 							Computed: true,
 							Default:  booldefault.StaticBool(false),
+							Validators: []validator.Bool{
+								invalidForFieldTypes("facet", "text", "text-array"),
+							},
 						},
 						"highlight": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
 							Default:  booldefault.StaticBool(false),
+							Validators: []validator.Bool{
+								invalidForFieldTypes("highlight",
+									"literal", "literal-array",
+									"int", "int-array",
+									"double", "double-array",
+									"date", "date-array",
+									"latlon"),
+							},
 						},
 						names.AttrName: schema.StringAttribute{
 							Required: true,
@@ -158,11 +170,17 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 							Optional: true,
 							Computed: true,
 							Default:  booldefault.StaticBool(false),
+							Validators: []validator.Bool{
+								invalidForFieldTypes("search", "text", "text-array"),
+							},
 						},
 						"sort": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
 							Default:  booldefault.StaticBool(false),
+							Validators: []validator.Bool{
+								invalidForFieldTypes("sort", "int-array", "double-array", "literal-array", "date-array", "text-array"),
+							},
 						},
 						"source_fields": schema.StringAttribute{
 							Optional: true,
