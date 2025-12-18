@@ -352,7 +352,6 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   default_root_object = "index.html"
   http_version        = "http2"
 
-  # Single custom origin (remove S3 origin that might be causing issues)
   origin {
     domain_name = "example.com"
     id          = "custom-origin"
