@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -25,9 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -342,7 +342,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -388,7 +388,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 		serviceName := aws.ToString(vpce.ServiceName)
 
 		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				d.Set("cidr_blocks", nil)
 			} else {
 				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)

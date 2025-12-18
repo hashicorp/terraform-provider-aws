@@ -60,15 +60,31 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `allocation_id` - ID of the EIP allocated to the selected NAT Gateway.
-* `association_id` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
+* `allocation_id` - (zonal NAT gateways only) ID of the EIP allocated to the selected NAT Gateway.
+* `association_id` - (zonal NAT gateways only) The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
+* `auto_provision_zones` - (regional NAT gateways only) Indicates whether AWS automatically manages AZ coverage.
+* `auto_scaling_ips` - (regional NAT gateways only) Indicates whether AWS automatically allocates additional Elastic IP addresses (EIPs) in an AZ when the NAT gateway needs more ports due to increased concurrent connections to a single destination from that AZ.
+* `availability_mode` - Specifies whether to create a zonal (single-AZ) or regional (multi-AZ) NAT gateway.
+* `availability_zone_address` - (regional NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway.
+    * `allocation_ids` - List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
+    * `availability_zone` - Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active.
+    * `availability_zone_id` - Availability Zone ID (e.g. `usw2-az2`) where this specific NAT gateway configuration will be active
 * `connectivity_type` - Connectivity type of the NAT Gateway.
-* `network_interface_id` - The ID of the ENI allocated to the selected NAT Gateway.
-* `private_ip` - Private IP address of the selected NAT Gateway.
-* `public_ip` - Public IP (EIP) address of the selected NAT Gateway.
-* `secondary_allocation_ids` - Secondary allocation EIP IDs for the selected NAT Gateway.
-* `secondary_private_ip_address_count` - The number of secondary private IPv4 addresses assigned to the selected NAT Gateway.
-* `secondary_private_ip_addresses` - Secondary private IPv4 addresses assigned to the selected NAT Gateway.
+* `network_interface_id` - (zonal NAT gateways only) The ID of the ENI allocated to the selected NAT Gateway.
+* `private_ip` - (zonal NAT gateways only) Private IP address of the selected NAT Gateway.
+* `public_ip` - (zonal NAT gateways only) Public IP (EIP) address of the selected NAT Gateway.
+* `regional_nat_gateway_address` - (regional NAT gateways only) Repeatable blocks for information about the IP addresses and network interface associated with the regional NAT gateway.
+    * `allocation_id` - Allocation ID of the Elastic IP address.
+    * `association_id` - Association ID of the Elastic IP address.
+    * `availability_zone` - Availability Zone where this specific NAT gateway configuration is active.
+    * `availability_zone_id` - Availability Zone ID where this specific NAT gateway configuration is active
+    * `network_interface_id` - ID of the network interface.
+    * `public_ip` - Public IP address.
+    * `status` - Status of the NAT gateway address.
+* `route_table_id` - (regional NAT gateways only) ID of the automatically created route table.
+* `secondary_allocation_ids` - (zonal NAT gateways only) Secondary allocation EIP IDs for the selected NAT Gateway.
+* `secondary_private_ip_address_count` - (zonal NAT gateways only) The number of secondary private IPv4 addresses assigned to the selected NAT Gateway.
+* `secondary_private_ip_addresses` - (zonal NAT gateways only) Secondary private IPv4 addresses assigned to the selected NAT Gateway.
 
 ## Timeouts
 

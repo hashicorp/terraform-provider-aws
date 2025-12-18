@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot
@@ -23,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -184,7 +185,7 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 
 	output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -321,7 +322,7 @@ func findTeamsChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -349,11 +350,11 @@ const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
+func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -365,7 +366,7 @@ func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, 
 }
 
 func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{teamsChannelConfigurationAvailable},
 		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
@@ -384,7 +385,7 @@ func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 }
 
 func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{teamsChannelConfigurationAvailable},
 		Target:     []string{},
 		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),

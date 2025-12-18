@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_kms_ciphertext: Add `plaintext_wo` and `plaintext_wo_version` arguments to support write-only input
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk
@@ -20,7 +20,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +28,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -317,7 +318,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -564,7 +565,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Environment must be Ready before it can be deleted.
 	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -603,7 +604,7 @@ func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 	}
 
 	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -611,7 +612,7 @@ func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 
 	// Eventual consistency check.
 	if aws.ToString(output.EnvironmentId) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -697,11 +698,11 @@ func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elast
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -714,7 +715,7 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id st
 }
 
 func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusLaunching, awstypes.EnvironmentStatusUpdating),
 		Target:       enum.Slice(awstypes.EnvironmentStatusReady),
 		Refresh:      statusEnvironment(ctx, conn, id),
@@ -734,7 +735,7 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
 		Target:       []string{},
 		Refresh:      statusEnvironment(ctx, conn, id),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -45,6 +45,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -1238,7 +1239,7 @@ func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any
 
 	instance, err := findInstanceByID(ctx, conn, rd.Id())
 
-	if !rd.IsNewResource() && tfresource.NotFound(err) {
+	if !rd.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Instance %s not found, removing from state", rd.Id())
 		rd.SetId("")
 		return diags
@@ -3894,7 +3895,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 
 	name, defaultVersion, latestVersion, err := findLaunchTemplateNameAndVersions(ctx, conn, launchTemplateID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil, nil
 	}
 
@@ -3915,7 +3916,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 
 	_, err = findLaunchTemplateVersionByTwoPartKey(ctx, conn, launchTemplateID, currentLaunchTemplateVersion)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return []any{tfMap}, nil
 	}
 

@@ -17,6 +17,7 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
+Application Recovery Controller Zonal Shift
 Application Resilience Controller Region Switch
 Application Signals
 Athena
@@ -163,6 +164,7 @@ Lightsail
 Location
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana

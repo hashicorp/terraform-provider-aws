@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT003
 
 The AWSAT003 analyzer reports hardcoded AWS regions. Tests that are hardcoded

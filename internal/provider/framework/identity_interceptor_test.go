@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -134,9 +134,7 @@ func create(ctx context.Context, interceptor identityInterceptor, resourceSchema
 	}
 
 	interceptor.create(ctx, opts)
-	if response.Diagnostics.HasError() {
-		return nil, response.Diagnostics
-	}
+
 	return response.Identity, response.Diagnostics
 }
 
@@ -157,9 +155,151 @@ func read(ctx context.Context, interceptor identityInterceptor, resourceSchema s
 	}
 
 	interceptor.read(ctx, opts)
-	if response.Diagnostics.HasError() {
-		return nil, response.Diagnostics
+
+	return response.Identity, response.Diagnostics
+}
+
+func TestIdentityInterceptor_OnError(t *testing.T) {
+	t.Parallel()
+
+	accountID := "123456789012"
+	region := "us-west-2" //lintignore:AWSAT003
+	name := "a_name"
+
+	resourceSchema := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"region": resourceattribute.Region(),
+			"type": schema.StringAttribute{
+				Optional: true,
+			},
+		},
 	}
+
+	client := mockClient{
+		accountID: accountID,
+		region:    region,
+	}
+
+	testOperations := map[string]struct {
+		operation  func(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics)
+		stateAttrs map[string]string
+	}{
+		"create": {
+			operation: createOnError,
+			stateAttrs: map[string]string{
+				"name":   name,
+				"region": region,
+				"type":   "some_type",
+			},
+		},
+		"update": {
+			operation: updateOnError,
+			stateAttrs: map[string]string{
+				"name":   name,
+				"region": region,
+				"type":   "some_type",
+			},
+		},
+	}
+
+	for tname, tc := range testOperations {
+		t.Run(tname, func(t *testing.T) {
+			t.Parallel()
+
+			operation := tc.operation
+			stateAttrs := tc.stateAttrs
+
+			testCases := map[string]struct {
+				attrName     string
+				identitySpec inttypes.Identity
+			}{
+				"same names": {
+					attrName:     "name",
+					identitySpec: regionalSingleParameterIdentitySpec("name"),
+				},
+				"name mapped": {
+					attrName:     "resource_name",
+					identitySpec: regionalSingleParameterIdentitySpecNameMapped("resource_name", "name"),
+				},
+			}
+
+			for tname, tc := range testCases {
+				t.Run(tname, func(t *testing.T) {
+					t.Parallel()
+					ctx := t.Context()
+
+					identitySchema := identity.NewIdentitySchema(tc.identitySpec)
+
+					interceptor := newIdentityInterceptor(tc.identitySpec.Attributes)
+
+					identity := emtpyIdentityFromSchema(ctx, &identitySchema)
+
+					responseIdentity, _ := operation(ctx, interceptor, resourceSchema, stateAttrs, identity, client)
+
+					if e, a := accountID, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root("account_id")); e != a {
+						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					}
+					if e, a := region, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root("region")); e != a {
+						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
+					}
+					if e, a := name, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root(tc.attrName)); e != a {
+						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+					}
+				})
+			}
+		})
+	}
+}
+
+func createOnError(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.CreateRequest{
+		Config:   configFromSchema(ctx, resourceSchema, stateAttrs),
+		Plan:     planFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.CreateResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic("summary", "detail"),
+		},
+	}
+	opts := interceptorOptions[resource.CreateRequest, resource.CreateResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     OnError,
+	}
+
+	interceptor.create(ctx, opts)
+
+	return response.Identity, response.Diagnostics
+}
+
+func updateOnError(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.UpdateRequest{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.UpdateResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic("summary", "detail"),
+		},
+	}
+	opts := interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     OnError,
+	}
+
+	interceptor.update(ctx, opts)
+
 	return response.Identity, response.Diagnostics
 }
 

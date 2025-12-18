@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -238,6 +238,43 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccOrganizationConfig_enabledPolicyTypeWithServiceAccessPrincipals(string(awstypes.PolicyTypeInspectorPolicy), "inspector2.amazonaws.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "inspector2.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeInspectorPolicy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeS3Policy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeS3Policy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeBedrockPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeBedrockPolicy)),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -374,7 +411,7 @@ func testAccCheckOrganizationDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tforganizations.FindOrganization(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

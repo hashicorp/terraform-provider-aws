@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Provider Checks
 
 on:
@@ -37,11 +40,11 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         id: cache-go-pkg-mod
         timeout-minutes: 2
@@ -54,59 +57,103 @@ jobs:
   go_build:
     name: go build
     needs: [go_mod_download]
-    runs-on: custom-ubuntu-22.04-medium
+    runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        continue-on-error: true
-        id: cache-terraform-plugin-dir
-        timeout-minutes: 2
-        with:
-          path: terraform-plugin-dir
-          key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
-      - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        name: go env
+      - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
+      # Restore build cache with daily rotation to prevent unbounded growth
+      # Falls back to yesterday's cache if today's doesn't exist
+      - name: Restore Go Build Cache
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        id: cache-go-build
+        continue-on-error: true
+        timeout-minutes: 3
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
+            ${{ runner.os }}-go-build-
+
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        name: go build
+
+      - name: go build
         run: make go-build
+
+      - name: Upload provider binary
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: terraform-plugin-dir
+          path: terraform-plugin-dir/
+
+      # Aggressively clean cache before saving to prevent extraction failures
+      # Large caches (>5GB) can fail silently during tar extraction
+      - name: Cleanup Build Cache Before Save
+        if: always()
+        run: |
+          if [ -d "$GOCACHE" ]; then
+            echo "Cache size before cleanup:"
+            du -sh $GOCACHE
+
+            # Remove test binaries
+            find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
+
+            # Remove entries older than 1 day
+            find $GOCACHE -type f -mtime +1 -delete 2>/dev/null || true
+            find $GOCACHE -type d -empty -delete 2>/dev/null || true
+
+            echo "Cache size after cleanup:"
+            du -sh $GOCACHE
+          fi
+
+      # Save build cache for reuse by go_test and future runs
+      - name: Save Go Build Cache
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        if: always() && steps.cache-go-build.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
 
   go_generate:
     name: go generate
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
+      # Reuse build cache from go_build
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          key: ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-${{ hashFiles('go.sum') }}-
+            ${{ runner.os }}-go-build-
+
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -121,54 +168,102 @@ jobs:
             (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
   go_test:
-    name: go test
+    name: go test (shard ${{ matrix.shard }})
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-xl
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+        total-shards: [4]
+    env:
+      GOMAXPROCS: 8
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
+      # Reuse build cache from go_build job to avoid recompilation
+      # This is the key optimization - tests reuse production build artifacts
+      - name: Restore Go Build Cache
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        id: cache-go-build
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - name: Go Test
-        run: go test ./...
+
+      - name: Go Test Shard ${{ matrix.shard }}
+        run: make test-shard SHARD=${{ matrix.shard }} TOTAL_SHARDS=${{ matrix.total-shards }}
+
+      # Only shard 0 needs cleanup since it's the only one that saves cache
+      - name: Cleanup Test Artifacts
+        if: always() && matrix.shard == 0
+        run: |
+          if [ -d "$GOCACHE" ]; then
+            echo "Cache size before cleanup:"
+            du -sh $GOCACHE
+
+            # Remove test binaries (*.test files) - they're huge and rarely reused
+            find $GOCACHE -name "*.test" -type f -delete 2>/dev/null || true
+
+            # Remove entries older than 1 day
+            find $GOCACHE -type f -mtime +1 -delete 2>/dev/null || true
+            find $GOCACHE -type d -empty -delete 2>/dev/null || true
+
+            echo "Cache size after cleanup:"
+            du -sh $GOCACHE
+          fi
+
+      # Save updated cache with test compilation (but cleaned)
+      # Only shard 0 saves to avoid race conditions
+      - name: Save Go Build Cache
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        if: always() && matrix.shard == 0 && steps.cache-go-build.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
 
   import-lint:
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -185,23 +280,25 @@ jobs:
     needs: [go_build]
     runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -217,7 +314,7 @@ jobs:
             (echo; echo "Expected `strings` to detect sweeper function names in sweeper binary."; exit 1)
 
       # Use cached provider or rebuild
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         continue-on-error: true
         id: cache-terraform-plugin-dir
         timeout-minutes: 2
@@ -243,8 +340,8 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         id: cache-terraform-providers-schema
         timeout-minutes: 2
@@ -252,11 +349,13 @@ jobs:
           path: terraform-providers-schema
           key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        timeout-minutes: 2
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6.0.0
         with:
+          name: terraform-plugin-dir
           path: terraform-plugin-dir
-          key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+        name: Make provider binary executable
+        run: chmod +x terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/*/terraform-provider-aws
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
@@ -276,9 +375,9 @@ jobs:
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
@@ -286,14 +385,14 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/YakDriver/tfproviderdocs
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         timeout-minutes: 2
         with:
           path: terraform-providers-schema
@@ -303,10 +402,45 @@ jobs:
           terraform -v
           make tfproviderdocs
 
+  cache-info:
+    runs-on: custom-ubuntu-22.04-medium
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version-file: go.mod
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - name: Local Cache Info
+        run: make cache-info
+      - name: GitHub Actions Cache List
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo ""
+          echo "=== GitHub Actions Cache Entries ==="
+          gh cache list --limit 100 --json key,ref,sizeInBytes,createdAt,lastAccessedAt | \
+            jq -r '.[] | "\(.key) | \(.ref) | \(.sizeInBytes / 1024 / 1024 | floor)MB | Created: \(.createdAt) | Accessed: \(.lastAccessedAt)"' | \
+            column -t -s '|' || echo "Failed to list caches"
+          echo ""
+          echo "=== Cache Usage Summary ==="
+          gh cache list --limit 100 --json sizeInBytes | \
+            jq '[.[].sizeInBytes] | add / 1024 / 1024 / 1024 | "Total cache size: \(. | floor)GB"' -r || echo "Failed to calculate total"
+
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "."
@@ -315,11 +449,11 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 3
         with:

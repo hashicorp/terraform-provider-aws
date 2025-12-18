@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -19,6 +19,7 @@ var (
 	ResourcePublicKey                   = resourcePublicKey
 	ResourceRealtimeLogConfig           = resourceRealtimeLogConfig
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
+	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
 	FindCachePolicyByID                        = findCachePolicyByID
@@ -35,6 +36,8 @@ var (
 	FindPublicKeyByID                          = findPublicKeyByID
 	FindRealtimeLogConfigByARN                 = findRealtimeLogConfigByARN
 	FindResponseHeadersPolicyByID              = findResponseHeadersPolicyByID
+	FindTrustStoreByID                         = findTrustStoreByID
 	FindVPCOriginByID                          = findVPCOriginByID
-	WaitDistributionDeployed                   = waitDistributionDeployed
+
+	WaitDistributionDeployed = waitDistributionDeployed
 )

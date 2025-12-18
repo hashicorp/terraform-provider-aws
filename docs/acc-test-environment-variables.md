@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Acceptance Testing Environment Variable Dictionary
 
 Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `internal/acctest` package.
@@ -60,6 +63,10 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT`                        | Concurrency limit for Verified Access acceptance tests. [Default is 5](https://docs.aws.amazon.com/verified-access/latest/ug/verified-access-quotas.html) if not specified.                      |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID`                               | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests.                                                   |
 | `AWS_GUARDDUTY_MEMBER_EMAIL`                                    | Email address for GuardDuty Member testing. **DEPRECATED:** It may be possible to use a placeholder email address instead.                                                                       |
+| `AWS_IDENTITY_STORE_GROUP_ID`                                      | ID of a valid AWS Identity Store group.                                                                         |
+| `AWS_IDENTITY_STORE_GROUP_NAME`                                    | Name of a valid AWS Identity Store group.                                                                         |
+| `AWS_IDENTITY_STORE_USER_ID`                                       | ID of a valid AWS Identity Store user.                                                                          |
+| `AWS_IDENTITY_STORE_USER_NAME`                                     | Name of a valid AWS Identity Store user.                                                                          |
 | `AWS_LAMBDA_IMAGE_LATEST_ID`                                    | ECR repository image URI (tagged as `latest`) for Lambda container image acceptance tests.                                                                                                       |
 | `AWS_LAMBDA_IMAGE_V1_ID`                                        | ECR repository image URI (tagged as `v1`) for Lambda container image acceptance tests.                                                                                                           |
 | `AWS_LAMBDA_IMAGE_V2_ID`                                        | ECR repository image URI (tagged as `v2`) for Lambda container image acceptance tests.                                                                                                           |
@@ -106,6 +113,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_AWS_CONTROLTOWER_CONTROL_OU_NAME`                           | Organizational unit name to be targeted by the Control Tower control.                                                                                                                            |
 | `TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN`              | Enable baseline ARN.                                                                                                                                                                             |
 | `TF_AWS_DATAEXCHANGE_DATA_SET_ID`                               | ID of DataExchange Data Set to use for testing.                                                                                                                                                  |
+| `TF_AWS_KENDRA_INDEX_ARN`                               | ARN of Kendra Index to use for testing.                                                                                                                                                  |
 | `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION`                      | Region where a License Manager license is imported.                                                                                                                                              |
 | `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN`                      | ARN for a License Manager license imported into the current account.                                                                                                                             |
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL`                        | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit.                                                                          |
