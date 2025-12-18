@@ -17,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,6 +31,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -152,7 +155,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-
 			"custom_error_response": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customErrorResponseModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -183,9 +185,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"compress": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
+							Default:  booldefault.StaticBool(false),
 						},
 						"field_level_encryption_id": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(""),
 						},
 						"origin_request_policy_id": schema.StringAttribute{
 							Optional: true,
@@ -294,9 +299,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"compress": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
+							Default:  booldefault.StaticBool(false),
 						},
 						"field_level_encryption_id": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(""),
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
 							},
@@ -416,6 +424,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"origin_path": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(""),
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
@@ -648,6 +658,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"minimum_protocol_version": schema.StringAttribute{
 							Optional:   true,
 							Computed:   true,
+							Default:    stringdefault.StaticString(string(awstypes.MinimumProtocolVersionTLSv1)),
 							CustomType: fwtypes.StringEnumType[awstypes.MinimumProtocolVersion](),
 						},
 						"ssl_support_method": schema.StringAttribute{
@@ -765,6 +776,10 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 func (r *multiTenantDistributionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new multiTenantDistributionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -781,7 +796,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 	}
 
 	// Check if distribution config needs updating (anything other than tags)
-	if !distributionConfigEqual(old, new) {
+	if mtDistributionHasChanges(old, new) {
 		// Get current distribution to get ETag for update
 		output, err := findDistributionByID(ctx, conn, new.ID.ValueString())
 		if err != nil {
@@ -789,13 +804,14 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
-		// Prepare update input
-		input := &cloudfront.UpdateDistributionInput{
-			Id:      new.ID.ValueStringPointer(),
-			IfMatch: output.ETag,
+		// Prepare update input - start with existing config to preserve all fields
+		input := cloudfront.UpdateDistributionInput{
+			Id:                 new.ID.ValueStringPointer(),
+			IfMatch:            output.ETag,
+			DistributionConfig: output.Distribution.DistributionConfig,
 		}
 
-		// Expand the new configuration
+		// Expand the new configuration over the existing config
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input.DistributionConfig)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -805,7 +821,7 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
 
 		// Update the distribution
-		updateOutput, err := conn.UpdateDistribution(ctx, input)
+		updateOutput, err := conn.UpdateDistribution(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError("updating CloudFront Multi-tenant Distribution", err.Error())
 			return
@@ -844,22 +860,21 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-// distributionConfigEqual checks if distribution configuration has changed (excluding tags)
-func distributionConfigEqual(old, new multiTenantDistributionResourceModel) bool {
-	// Compare key fields that would require UpdateDistribution API call
-	return old.Comment.Equal(new.Comment) &&
-		old.DefaultRootObject.Equal(new.DefaultRootObject) &&
-		old.Enabled.Equal(new.Enabled) &&
-		old.HTTPVersion.Equal(new.HTTPVersion) &&
-		old.WebACLID.Equal(new.WebACLID) &&
-		old.CacheBehavior.Equal(new.CacheBehavior) &&
-		old.CustomErrorResponse.Equal(new.CustomErrorResponse) &&
-		old.DefaultCacheBehavior.Equal(new.DefaultCacheBehavior) &&
-		old.Origin.Equal(new.Origin) &&
-		old.OriginGroup.Equal(new.OriginGroup) &&
-		old.Restrictions.Equal(new.Restrictions) &&
-		old.TenantConfig.Equal(new.TenantConfig) &&
-		old.ViewerCertificate.Equal(new.ViewerCertificate)
+// mtDistributionHasChanges checks if distribution configuration has changed (excluding tags)
+func mtDistributionHasChanges(old, new multiTenantDistributionResourceModel) bool {
+	return !old.Comment.Equal(new.Comment) ||
+		!old.DefaultRootObject.Equal(new.DefaultRootObject) ||
+		!old.Enabled.Equal(new.Enabled) ||
+		!old.HTTPVersion.Equal(new.HTTPVersion) ||
+		!old.WebACLID.Equal(new.WebACLID) ||
+		!old.CacheBehavior.Equal(new.CacheBehavior) ||
+		!old.CustomErrorResponse.Equal(new.CustomErrorResponse) ||
+		!old.DefaultCacheBehavior.Equal(new.DefaultCacheBehavior) ||
+		!old.Origin.Equal(new.Origin) ||
+		!old.OriginGroup.Equal(new.OriginGroup) ||
+		!old.Restrictions.Equal(new.Restrictions) ||
+		!old.TenantConfig.Equal(new.TenantConfig) ||
+		!old.ViewerCertificate.Equal(new.ViewerCertificate)
 }
 
 func (r *multiTenantDistributionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -870,27 +885,115 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
+	id := data.ID.ValueString()
 
-	input := cloudfront.DeleteDistributionInput{
-		Id:      data.ID.ValueStringPointer(),
-		IfMatch: data.ETag.ValueStringPointer(),
-	}
-	_, err := conn.DeleteDistribution(ctx, &input)
-
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
+	// 1. Start by waiting for deployment (returns immediate if already deployed)
+	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil && !retry.NotFound(err) && !errs.IsA[*awstypes.NoSuchDistribution](err) {
+		response.Diagnostics.AddError("waiting for CloudFront Multi-tenant Distribution deploy before delete", err.Error())
 		return
 	}
+
+	// 2. Try delete
+	err := deleteMultiTenantDistribution(ctx, conn, id)
+
+	// 3. Return early for success
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
+		return
+	}
+
+	// 4. If not disabled error, disable, wait for deploy, delete
+	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
+		disableErr := disableMultiTenantDistribution(ctx, conn, id)
+		if disableErr == nil || retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
+			return
+		}
+		if disableErr != nil {
+			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
+			return
+		}
+
+		err = deleteMultiTenantDistribution(ctx, conn, id)
+	}
+
+	// 5. If precondition/invalidifmatchversion, retry delete
+	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+		const timeout = 1 * time.Minute
+		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
+			return nil, deleteMultiTenantDistribution(ctx, conn, id)
+		})
+	}
+
+	// 6. Return early for success
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
+		return
+	}
+
+	// 7. If err != nil, add error
+	response.Diagnostics.AddError("deleting CloudFront Multi-tenant Distribution", err.Error())
+}
+
+func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
+	etag, err := distroETag(ctx, conn, id)
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting CloudFront Multi-tenant Distribution", err.Error())
-		return
+		return err
 	}
 
-	if err := waitDistributionDeleted(ctx, conn, data.ID.ValueString()); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Multi-tenant Distribution (%s) delete", data.ID.ValueString()), err.Error())
-
-		return
+	input := cloudfront.DeleteDistributionInput{
+		Id:      aws.String(id),
+		IfMatch: aws.String(etag),
 	}
+
+	_, err = conn.DeleteDistribution(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("deleting CloudFront Multi-tenant Distribution (%s): %w", id, err)
+	}
+
+	if err := waitDistributionDeleted(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Multi-tenant Distribution (%s) delete: %w", id, err)
+	}
+
+	return nil
+}
+
+func disableMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
+	output, err := findDistributionByID(ctx, conn, id)
+
+	if err != nil {
+		return fmt.Errorf("reading CloudFront Multi-tenant Distribution (%s): %w", id, err)
+	}
+
+	if aws.ToString(output.Distribution.Status) == distributionStatusInProgress {
+		output, err = waitDistributionDeployed(ctx, conn, id)
+
+		if err != nil {
+			return fmt.Errorf("waiting for CloudFront Multi-tenant Distribution (%s) deploy: %w", id, err)
+		}
+	}
+
+	if !aws.ToBool(output.Distribution.DistributionConfig.Enabled) {
+		return nil
+	}
+
+	input := cloudfront.UpdateDistributionInput{
+		DistributionConfig: output.Distribution.DistributionConfig,
+		Id:                 aws.String(id),
+		IfMatch:            output.ETag,
+	}
+	input.DistributionConfig.Enabled = aws.Bool(false)
+
+	_, err = conn.UpdateDistribution(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("updating CloudFront Multi-tenant Distribution (%s): %w", id, err)
+	}
+
+	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Multi-tenant Distribution (%s) deploy: %w", id, err)
+	}
+
+	return nil
 }
 
 type multiTenantDistributionResourceModel struct {
@@ -925,12 +1028,12 @@ type multiTenantDistributionResourceModel struct {
 type originModel struct {
 	ConnectionAttempts        types.Int32                                              `tfsdk:"connection_attempts"`
 	ConnectionTimeout         types.Int32                                              `tfsdk:"connection_timeout"`
-	CustomHeader              fwtypes.ListNestedObjectValueOf[customHeaderModel]       `tfsdk:"custom_header" autoflex:",xmlwrapper=Items,omitempty"`
+	CustomHeader              fwtypes.ListNestedObjectValueOf[customHeaderModel]       `tfsdk:"custom_header" autoflex:",xmlwrapper=Items"`
 	CustomOriginConfig        fwtypes.ListNestedObjectValueOf[customOriginConfigModel] `tfsdk:"custom_origin_config" autoflex:",omitempty"`
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
-	OriginPath                types.String                                             `tfsdk:"origin_path" autoflex:",omitempty"`
+	OriginPath                types.String                                             `tfsdk:"origin_path"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
 	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
@@ -980,9 +1083,9 @@ type defaultCacheBehaviorModel struct {
 	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
 	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
 	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id" autoflex:",omitempty"`
+	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
 	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
 	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
 	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
@@ -1001,9 +1104,9 @@ type cacheBehaviorModel struct {
 	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
 	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
 	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id" autoflex:",omitempty"`
+	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
 	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
 	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
 	PathPattern               types.String                                                    `tfsdk:"path_pattern"`
 	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
