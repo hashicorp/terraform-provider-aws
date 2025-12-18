@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceAssessmentTemplate,
+			Factory:  resourceAssessmentTemplate,
 			TypeName: "aws_inspector_assessment_template",
 			Name:     "Assessment Template",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
