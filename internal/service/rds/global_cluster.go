@@ -547,10 +547,11 @@ func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClu
 // either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
 // perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
 // of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
-// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
-// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
-// as more than just an error; it guides our decision between major and minor upgrades.
-
+// a minor version upgrade isn't supported ("InvalidParameterValue"/"doesn't support minor version upgrades"),
+// we infer that a minor upgrade was intended, and should be therefore be performed on individual cluster
+// members instead. It's crucial to recognize that this error serves as more than just an error; it guides
+// our decision between major and minor upgrades.
+//
 // IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
 // logic, including the handling of errors that signify the need for a minor version upgrade.
 func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d *schema.ResourceData, timeout time.Duration) error {
@@ -558,7 +559,7 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d 
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -593,7 +594,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err
 			}
 
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 

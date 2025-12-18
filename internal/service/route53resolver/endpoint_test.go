@@ -264,6 +264,43 @@ func TestAccRoute53ResolverEndpoint_resolverEndpointType(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverEndpoint_detailedMetrics(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep awstypes.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_detailedMetrics(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "rni_enhanced_metrics_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "target_name_server_metrics_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfig_detailedMetrics(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "rni_enhanced_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "target_name_server_metrics_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
@@ -649,4 +686,31 @@ resource "aws_route53_resolver_endpoint" "test" {
   resolver_endpoint_type = %[2]q
 }
 `, rName, resolverEndpointType))
+}
+
+func testAccEndpointConfig_detailedMetrics(rName string, rniEnhancedMetricsEnabled, targetNameServerMetricsEnabled bool) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "OUTBOUND"
+
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  rni_enhanced_metrics_enabled       = %[1]t
+  target_name_server_metrics_enabled = %[2]t
+}
+`, rniEnhancedMetricsEnabled, targetNameServerMetricsEnabled))
 }

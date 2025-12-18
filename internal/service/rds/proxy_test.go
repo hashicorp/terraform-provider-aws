@@ -55,10 +55,12 @@ func TestAccRDSProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_auth_scheme", string(types.DefaultAuthSchemeNone)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_network_type", string(types.EndpointNetworkTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
 					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_connection_network_type", string(types.TargetConnectionNetworkTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
@@ -533,6 +535,72 @@ func TestAccRDSProxy_defaultAuthScheme(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSProxy_endpointNetworkTypeDual(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBProxy
+	resourceName := "aws_db_proxy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyConfig_endpointNetworkTypeDual(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_network_type", string(types.EndpointNetworkTypeDual)),
+					resource.TestCheckResourceAttr(resourceName, "target_connection_network_type", string(types.TargetConnectionNetworkTypeIpv4)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSProxy_endpointNetworkTypeIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBProxy
+	resourceName := "aws_db_proxy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyConfig_endpointNetworkTypeIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_network_type", string(types.EndpointNetworkTypeIpv6)),
+					resource.TestCheckResourceAttr(resourceName, "target_connection_network_type", string(types.TargetConnectionNetworkTypeIpv6)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1094,6 +1162,161 @@ resource "aws_db_proxy" "test" {
   }
 
   default_auth_scheme = "NONE"
+}
+`, rName))
+}
+
+// Similar to testAccProxyConfig_base but without VPC/Subnet setup
+func testAccProxyConfig_endpointNetworkType_base(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+# Secrets Manager setup
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "{\"username\":\"db_user\",\"password\":\"db_user_password\"}"
+}
+
+# IAM setup
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["rds.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "secretsmanager:GetRandomPassword",
+      "secretsmanager:CreateSecret",
+      "secretsmanager:ListSecrets",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    actions   = ["secretsmanager:*"]
+    resources = [aws_secretsmanager_secret.test.arn]
+  }
+}
+`, rName)
+}
+
+func testAccProxyConfig_endpointNetworkTypeDual(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProxyConfig_endpointNetworkType_base(rName),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = %[1]q
+  debug_logging          = false
+  engine_family          = "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test[*].id
+
+  endpoint_network_type = "DUAL"
+
+  auth {
+    auth_scheme = "SECRETS"
+    description = "test"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccProxyConfig_endpointNetworkTypeIPv6(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProxyConfig_endpointNetworkType_base(rName),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Subnets with IPv6 only
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  ipv6_native     = true
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = %[1]q
+  debug_logging          = false
+  engine_family          = "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test[*].id
+
+  endpoint_network_type = "IPV6"
+
+  target_connection_network_type = "IPV6"
+
+  auth {
+    auth_scheme = "SECRETS"
+    description = "test"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.test.arn
+  }
 }
 `, rName))
 }

@@ -37,6 +37,19 @@
   },
   {
     "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey]",
+    "autoflex.target.path": "MapBlock",
+    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement",
+    "target_kind": "map",
+    "target_type": "map[string]flex.awsMapBlockElement",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
+  },
+  {
+    "@level": "trace",
     "@message": "Skipping map block key",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "MapBlockKey",
