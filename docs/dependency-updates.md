@@ -36,7 +36,7 @@ Support for new language and standard library features should be done in separat
 
 * Edit `.go-version`
 * Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.24.11")'`
-* Run a smoke tests, e.g. `make sane`
+* Run smoke tests, e.g. `make sane`
 * Create a PR with the changes. See [#45379](https://github.com/hashicorp/terraform-provider-aws/pull/45379) for a recent example
 
 ## AWS Go SDK Updates
