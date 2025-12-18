@@ -2,22 +2,42 @@
 
 Generally, dependency updates are handled by maintainers.
 
-## Go Default Version Update
+## Go Version Update
 
-This project typically upgrades its Go version for development and testing shortly after release to get the latest and greatest Go functionality. Before beginning the update process, ensure that you review the new version release notes to look for any areas of possible friction when updating.
+The Terraform AWS provider is written in Go and is compiled into an executable binary that communicates with [Terraform Core over a local RPC interface](https://developer.hashicorp.com/terraform/plugin).
 
-Create an issue to cover the update noting down any areas of particular interest or friction.
+A new version of Go is [released every 6 months](https://go.dev/wiki/Go-Release-Cycle#overview). [Minor releases](https://go.dev/wiki/MinorReleases), fixing serious problems and security issues, are done [regularly](https://go.dev/doc/devel/release) for the current and previous versions.
 
-Ensure that the following steps are tracked within the issue and completed within the resulting pull request.
+### When To Upgrade Major Version
 
-- Update go version in `go.mod`
-- Verify `make test lint` works as expected
-- Verify `goenv` support for the new version
-- Update `docs/development-environment.md`
-- Update `.go-version`
-- Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
+The Terraform AWS provider aims to switch to the newest Go version after 1 or 2 minor releases of that version, unless there is an urgent reason to upgrade sooner.
 
-See [#9992](https://github.com/hashicorp/terraform-provider-aws/issues/9992) / [#10206](https://github.com/hashicorp/terraform-provider-aws/pull/10206)  for a recent example.
+* Upgrading too soon risks supporting tooling not supporting the new Go version
+* Upgrading too late risks supporting tooling not supporting the old Go version
+
+### When To Upgrade Minor Version
+
+The Terraform AWS provider should switch to the latest minor version for the next scheduled provider release. If the minor release addresses a critical security issue then a patch release of the provider can be considered.
+
+### To Upgrade The Go Version
+
+#### To Upgrade Major Version
+
+* Edit `.go-version`
+* Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.25.5")'`
+* Run a smoke tests, e.g. `make sane`
+* If a new version of [`modernize`](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize) has been released supporting the new Go version, update the `make modern-check` and `make modern-fix` [makefile targets](https://hashicorp.github.io/terraform-provider-aws/makefile-cheat-sheet/#cheat-sheet) and fix any new issues
+* Create a PR with the changes. See [#](https://github.com/hashicorp/terraform-provider-aws/pull/41743) for a recent example
+* Note any material changes, such as Go dropping support for very old OS versions, in a CHANGLOG entry
+
+Support for new language and standard library features should be done in separate PRs.
+
+#### To Upgrade Minor Version
+
+* Edit `.go-version`
+* Edit each `go.mod`, e.g. `find . -name 'go.mod' -print | xargs ruby -p -i -e 'gsub(/go 1.24.10/, "go 1.24.11")'`
+* Run a smoke tests, e.g. `make sane`
+* Create a PR with the changes. See [#45379](https://github.com/hashicorp/terraform-provider-aws/pull/45379) for a recent example
 
 ## AWS Go SDK Updates
 
