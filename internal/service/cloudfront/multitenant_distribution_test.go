@@ -157,7 +157,6 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
@@ -166,7 +165,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey1: acctest.CtValue1}),
+				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey1: acctest.CtValue1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -180,7 +179,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"etag"},
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey1: acctest.CtValue1Updated, acctest.CtKey2: acctest.CtValue2}),
+				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey1: acctest.CtValue1Updated, acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -189,7 +188,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMultiTenantDistributionConfig_tags(rName, map[string]string{acctest.CtKey2: acctest.CtValue2}),
+				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -361,7 +360,6 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled             = false
   comment             = %[2]q
   default_root_object = %[3]q
-  http_version        = "http2"
 
   origin {
     domain_name = "example.com"
@@ -444,7 +442,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 `, rName, comment, defaultRootObject, compress)
 }
 
-func testAccMultiTenantDistributionConfig_tags(rName string, tags map[string]string) string {
+func testAccMultiTenantDistributionConfig_tags(tags map[string]string) string {
 	var tagLines []string
 	for key, value := range tags {
 		tagLines = append(tagLines, fmt.Sprintf("    %q = %q", key, value))

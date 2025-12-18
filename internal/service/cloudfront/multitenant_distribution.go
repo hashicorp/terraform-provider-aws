@@ -260,7 +260,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Optional: true,
 										Computed: true,
 									},
-									"lambda_arn": schema.StringAttribute{
+									"lambda_function_arn": schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -374,7 +374,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Optional: true,
 										Computed: true,
 									},
-									"lambda_arn": schema.StringAttribute{
+									"lambda_function_arn": schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -1148,9 +1148,9 @@ type functionAssociationModel struct {
 }
 
 type lambdaFunctionAssociationModel struct {
-	EventType   fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
-	IncludeBody types.Bool                             `tfsdk:"include_body"`
-	LambdaARN   types.String                           `tfsdk:"lambda_arn"`
+	EventType         fwtypes.StringEnum[awstypes.EventType] `tfsdk:"event_type"`
+	IncludeBody       types.Bool                             `tfsdk:"include_body"`
+	LambdaFunctionARN types.String                           `tfsdk:"lambda_function_arn"`
 }
 
 type tenantConfigModel struct {
