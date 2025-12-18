@@ -32,7 +32,7 @@ var (
 	FindAuthenticationProfileByID               = findAuthenticationProfileByID
 	FindClusterByID                             = findClusterByID
 	FindClusterSnapshotByID                     = findClusterSnapshotByID
-	FindDataShareAuthorizationByID              = findDataShareAuthorizationByID
+	FindDataShareAuthorizationByTwoPartKey      = findDataShareAuthorizationByTwoPartKey
 	FindDataShareConsumerAssociationByID        = findDataShareConsumerAssociationByID
 	FindEndpointAccessByName                    = findEndpointAccessByName
 	FindEndpointAuthorizationByTwoPartKey       = findEndpointAuthorizationByTwoPartKey

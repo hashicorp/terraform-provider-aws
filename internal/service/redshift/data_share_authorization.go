@@ -16,15 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,10 +101,7 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 
 	id, err := intflex.FlattenResourceId(parts, dataShareAuthorizationIDPartCount, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionFlatteningResourceId, ResNameDataShareAuthorization, dataShareARN, err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
 		return
 	}
 	plan.ID = types.StringValue(id)
@@ -135,8 +131,8 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	plan.ManagedBy = flex.StringToFramework(ctx, out.ManagedBy)
-	plan.ProducerARN = flex.StringToFrameworkARN(ctx, out.ProducerArn)
+	plan.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
+	plan.ProducerARN = fwflex.StringToFrameworkARN(ctx, out.ProducerArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -150,20 +146,17 @@ func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	parts, err := intflex.ExpandResourceId(state.ID.ValueString(), dataShareAuthorizationIDPartCount, false)
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
+	parts, err := intflex.ExpandResourceId(id, dataShareAuthorizationIDPartCount, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionExpandingResourceId, ResNameDataShareAuthorization, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
-	// split ID and write constituent parts to state to support import
-	state.DataShareARN = fwtypes.ARNValue(parts[0])
-	state.ConsumerIdentifier = types.StringValue(parts[1])
 
-	out, err := findDataShareAuthorizationByID(ctx, conn, state.ID.ValueString())
+	dataShareARN, consumerID := parts[0], parts[1]
+	out, err := findDataShareAuthorizationByTwoPartKey(ctx, conn, dataShareARN, consumerID)
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -175,8 +168,10 @@ func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ManagedBy = flex.StringToFramework(ctx, out.ManagedBy)
-	state.ProducerARN = flex.StringToFrameworkARN(ctx, out.ProducerArn)
+	state.ConsumerIdentifier = fwflex.StringValueToFramework(ctx, consumerID)
+	state.DataShareARN = fwtypes.ARNValue(dataShareARN)
+	state.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
+	state.ProducerARN = fwflex.StringToFrameworkARN(ctx, out.ProducerArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -211,53 +206,6 @@ func (r *dataShareAuthorizationResource) Delete(ctx context.Context, req resourc
 			err.Error(),
 		)
 		return
-	}
-}
-
-func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.DataShare, error) {
-	parts, err := intflex.ExpandResourceId(id, dataShareAuthorizationIDPartCount, false)
-	if err != nil {
-		return nil, err
-	}
-
-	in := &redshift.DescribeDataSharesInput{
-		DataShareArn: aws.String(parts[0]),
-	}
-
-	out, err := conn.DescribeDataShares(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
-		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	if out == nil || len(out.DataShares) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-	if len(out.DataShares) != 1 {
-		return nil, tfresource.NewTooManyResultsError(len(out.DataShares), in)
-	}
-
-	// Verify a share with the expected consumer identifier is present and the
-	// status is one of "AUTHORIZED" or "ACTIVE".
-	share := out.DataShares[0]
-	for _, assoc := range share.DataShareAssociations {
-		if aws.ToString(assoc.ConsumerIdentifier) == parts[1] {
-			switch assoc.Status {
-			case awstypes.DataShareStatusAuthorized, awstypes.DataShareStatusActive:
-				return &share, nil
-			}
-		}
-	}
-
-	return nil, &sdkretry.NotFoundError{
-		LastError:   err,
-		LastRequest: in,
 	}
 }
 

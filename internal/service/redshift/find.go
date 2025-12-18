@@ -818,3 +818,60 @@ func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *reds
 		return aws.ToString(v.ClusterIdentifier) == clusterID
 	}))
 }
+
+func findDataShares(ctx context.Context, conn *redshift.Client, input *redshift.DescribeDataSharesInput) ([]awstypes.DataShare, error) {
+	var output []awstypes.DataShare
+
+	pages := redshift.NewDescribeDataSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DataShares...)
+	}
+
+	return output, nil
+}
+
+func findDataShare(ctx context.Context, conn *redshift.Client, input *redshift.DescribeDataSharesInput) (*awstypes.DataShare, error) {
+	output, err := findDataShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.Client, arn, consumerID string) (*awstypes.DataShare, error) {
+	input := redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(arn),
+	}
+	output, err := findDataShare(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify a share with the expected consumer identifier is present and the
+	// status is one of "AUTHORIZED" or "ACTIVE".
+	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
+		return aws.ToString(v.ConsumerIdentifier) == consumerID && (v.Status == awstypes.DataShareStatusAuthorized || v.Status == awstypes.DataShareStatusActive)
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
