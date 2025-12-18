@@ -52,6 +52,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -236,6 +237,7 @@ func registerSweepers() {
 	configservice.RegisterSweepers()
 	connect.RegisterSweepers()
 	cur.RegisterSweepers()
+	customerprofiles.RegisterSweepers()
 	dataexchange.RegisterSweepers()
 	datasync.RegisterSweepers()
 	datazone.RegisterSweepers()
