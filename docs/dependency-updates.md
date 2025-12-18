@@ -12,8 +12,8 @@ A new version of Go is [released every 6 months](https://go.dev/wiki/Go-Release-
 
 The Terraform AWS provider aims to switch to the newest Go version after 1 or 2 minor releases of that version, unless there is an urgent reason to upgrade sooner.
 
-* Upgrading too soon risks supporting tooling not supporting the new Go version
-* Upgrading too late risks supporting tooling not supporting the old Go version
+* Upgrading too soon risks supporting tooling incompatible with the new Go version
+* Upgrading too late risks supporting tooling incompatible with the old Go version
 
 ### When To Upgrade Minor Version
 
