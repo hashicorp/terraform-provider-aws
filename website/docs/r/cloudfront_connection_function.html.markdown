@@ -23,6 +23,18 @@ resource "aws_cloudfront_connection_function" "example" {
 }
 ```
 
+### With Publish Enabled
+
+```terraform
+resource "aws_cloudfront_connection_function" "example" {
+  name    = "example-connection-function"
+  runtime = "cloudfront-js-2.0"
+  comment = "Example connection function with publish enabled"
+  code    = "function handler(event) { return event.request; }"
+  publish = true
+}
+```
+
 ### With Key Value Store Associations
 
 ```terraform
@@ -56,7 +68,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `comment` - (Optional) Comment to describe the function.
-* `key_value_store_associations` - (Optional) Configuration for key value store associations. See [Key Value Store Associations](#key-value-store-associations) below.
+* `key_value_store_associations` - (Optional) Configuration for key value store associations. See [Key Value Store Associations](#key-value-store-associations) below. AWS limits associations to one key value store per function.
+* `publish` - (Optional) Whether to publish the function to the `LIVE` stage after creation or update. Defaults to `false`.
 
 ### Key Value Store Associations
 
@@ -72,8 +85,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `etag` - ETag of the connection function.
 * `id` - ID of the connection function.
 * `last_modified_time` - Date and time when the connection function was last modified.
+* `live_stage_etag` - ETag of the function's LIVE stage. Will be empty if the function has not been published.
 * `location` - Location of the connection function.
-* `stage` - Stage of the connection function. Valid values are `DEVELOPMENT` and `LIVE`.
 * `status` - Status of the connection function.
 
 ## Timeouts

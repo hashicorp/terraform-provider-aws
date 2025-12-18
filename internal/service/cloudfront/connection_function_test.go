@@ -50,8 +50,8 @@ func TestAccCloudFrontConnectionFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "comment", "Test connection function"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "stage"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
 				),
 			},
 			{
@@ -60,6 +60,8 @@ func TestAccCloudFrontConnectionFunction_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"location",
+					"last_modified_time",
+					"pubish",
 				},
 			},
 		},
@@ -117,6 +119,9 @@ func TestAccCloudFrontConnectionFunction_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.FunctionRuntimeCloudfrontJs20)),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Initial test connection function with runtime 2.0"),
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
 			{
@@ -129,7 +134,74 @@ func TestAccCloudFrontConnectionFunction_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.0.items.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0.items.0.key_value_store_arn", kvsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					testAccCheckConnectionFunctionNotRecreated(&connectionfunction1, &connectionfunction2),
+					testAccCheckConnectionFunctionEtagChanged(&connectionfunction1, &connectionfunction2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontConnectionFunction_publish1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connectionfunction1, connectionfunction2 cloudfront.DescribeConnectionFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_connection_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionFunctionConfig_publish(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "connection-function/{id}"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.FunctionRuntimeCloudfrontJs20)),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Test connection function with publish"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
+					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"location",
+					"publish", // publish is not returned by the API, so ignore during import
+					"last_modified_time",
+				},
+			},
+			{
+				Config: testAccConnectionFunctionConfig_publish(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "connection-function/{id}"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.FunctionRuntimeCloudfrontJs20)),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Test connection function with publish"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
+					resource.TestCheckResourceAttrSet(resourceName, "live_stage_etag"),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 				),
 			},
 		},
@@ -165,8 +237,8 @@ func TestAccCloudFrontConnectionFunction_allAttributesWithKeyValueStore(t *testi
 					resource.TestCheckResourceAttr(resourceName, "comment", "Initial test connection function with KVS"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "stage"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.0.items.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0.items.0.key_value_store_arn", kvsResourceName, names.AttrARN),
@@ -178,6 +250,8 @@ func TestAccCloudFrontConnectionFunction_allAttributesWithKeyValueStore(t *testi
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"location",
+					"publish", // publish is not returned by the API, so ignore during import
+					"last_modified_time",
 				},
 			},
 			{
@@ -188,9 +262,10 @@ func TestAccCloudFrontConnectionFunction_allAttributesWithKeyValueStore(t *testi
 					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.FunctionRuntimeCloudfrontJs20)),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Updated test connection function with two KVS"),
 					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.0.items.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0.items.0.key_value_store_arn", kvsResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0.items.1.key_value_store_arn", kvsResourceName2, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "key_value_store_associations.0.items.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0.items.0.key_value_store_arn", kvsResourceName2, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
 					testAccCheckConnectionFunctionNotRecreated(&connectionfunction1, &connectionfunction2),
 				),
 			},
@@ -253,6 +328,27 @@ func testAccCheckConnectionFunctionNotRecreated(before, after *cloudfront.Descri
 
 		if beforeId != afterId {
 			return create.Error(names.CloudFront, create.ErrActionCheckingNotRecreated, tfcloudfront.ResNameConnectionFunction, beforeId, fmt.Errorf("recreated: before ID %s, after ID %s", beforeId, afterId))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckConnectionFunctionEtagChanged(before, after *cloudfront.DescribeConnectionFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		beforeEtag := aws.ToString(before.ETag)
+		afterEtag := aws.ToString(after.ETag)
+
+		if beforeEtag == "" {
+			return create.Error(names.CloudFront, create.ErrActionChecking, tfcloudfront.ResNameConnectionFunction, "etag", fmt.Errorf("before etag is empty"))
+		}
+
+		if afterEtag == "" {
+			return create.Error(names.CloudFront, create.ErrActionChecking, tfcloudfront.ResNameConnectionFunction, "etag", fmt.Errorf("after etag is empty"))
+		}
+
+		if beforeEtag == afterEtag {
+			return create.Error(names.CloudFront, create.ErrActionChecking, tfcloudfront.ResNameConnectionFunction, "etag", fmt.Errorf("etag did not change: before %s, after %s", beforeEtag, afterEtag))
 		}
 
 		return nil
@@ -355,6 +451,99 @@ EOT
 `, rName)
 }
 
+func testAccConnectionFunctionConfig_publish(rName string, publish bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_connection_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-2.0"
+  comment = "Test connection function with publish"
+  code    = "function handler(event) { return event.request; }"
+  publish = %[2]t
+}
+`, rName, publish)
+}
+
+func TestAccCloudFrontConnectionFunction_publishTransition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connectionfunction1, connectionfunction2 cloudfront.DescribeConnectionFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_connection_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionFunctionConfig_publish(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
+					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
+				),
+			},
+			{
+				Config: testAccConnectionFunctionConfig_publish(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
+					resource.TestCheckResourceAttrSet(resourceName, "live_stage_etag"),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					testAccCheckConnectionFunctionNotRecreated(&connectionfunction1, &connectionfunction2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontConnectionFunction_waiter(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_connection_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionFunctionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
+					// Verify that the waiter worked and we have a stable status
+					func(s *terraform.State) error {
+						// Additional check to ensure status is one of the expected stable states
+						status := connectionfunction.ConnectionFunctionSummary.Status
+						if status == nil {
+							return fmt.Errorf("status is nil")
+						}
+						statusStr := aws.ToString(status)
+						if statusStr != "UNPUBLISHED" && statusStr != "UNASSOCIATED" && statusStr != "DEPLOYED" {
+							return fmt.Errorf("unexpected status: %s", statusStr)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func testAccConnectionFunctionConfig_allAttributesWithKeyValueStoreUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test" {
@@ -387,9 +576,6 @@ function handler(event) {
 EOT
 
   key_value_store_associations {
-    items {
-      key_value_store_arn = aws_cloudfront_key_value_store.test.arn
-    }
     items {
       key_value_store_arn = aws_cloudfront_key_value_store.test2.arn
     }

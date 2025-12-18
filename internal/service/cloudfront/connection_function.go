@@ -80,6 +80,9 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+			"live_stage_etag": schema.StringAttribute{
+				Computed: true,
+			},
 			"location": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -92,14 +95,14 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"publish": schema.BoolAttribute{
+				Optional: true,
+			},
 			"runtime": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.FunctionRuntime](),
 				},
-			},
-			"stage": schema.StringAttribute{
-				Computed: true,
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
@@ -193,10 +196,67 @@ func (r *resourceConnectionFunction) Create(ctx context.Context, req resource.Cr
 	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
 	data.Location = fwflex.StringToFramework(ctx, out.Location)
 
-	// Populate the resource model from CreateConnectionFunctionOutput
-	populateConnectionFunctionModel(ctx, out.ConnectionFunctionSummary, out.ConnectionFunctionSummary.ConnectionFunctionConfig, &data)
+	// Publish the function if requested
+	if !data.Publish.IsNull() && data.Publish.ValueBool() {
+		publishInput := &cloudfront.PublishConnectionFunctionInput{
+			Id:      data.ID.ValueStringPointer(),
+			IfMatch: data.Etag.ValueStringPointer(),
+		}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
+		_, err := conn.PublishConnectionFunction(ctx, publishInput)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.String())
+			return
+		}
+	}
+
+	// Read the function to get the current state including live_stage_etag
+	err = r.readConnectionFunction(ctx, conn, data.ID.ValueString(), &data)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.String())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
+}
+
+// readConnectionFunction reads the connection function from both development and live stages
+// and populates the provided model with the complete state information.
+func (r *resourceConnectionFunction) readConnectionFunction(ctx context.Context, conn *cloudfront.Client, id string, model *resourceConnectionFunctionModel) error {
+	// Read DEVELOPMENT stage first to get most attributes
+	outputDF, err := findConnectionFunctionByTwoPartKey(ctx, conn, id, awstypes.FunctionStageDevelopment)
+	if err != nil {
+		return err
+	}
+
+	model.Etag = fwflex.StringToFramework(ctx, outputDF.ETag)
+
+	// Populate the resource model from DescribeConnectionFunctionOutput
+	populateConnectionFunctionModel(ctx, outputDF.ConnectionFunctionSummary, outputDF.ConnectionFunctionSummary.ConnectionFunctionConfig, model)
+
+	// Use GetConnectionFunction to get the code from development stage
+	inputGF := cloudfront.GetConnectionFunctionInput{
+		Identifier: aws.String(id),
+		Stage:      awstypes.FunctionStageDevelopment,
+	}
+	outputGF, err := conn.GetConnectionFunction(ctx, &inputGF)
+	if err != nil {
+		return err
+	}
+
+	model.Code = types.StringValue(string(outputGF.ConnectionFunctionCode))
+
+	// Read LIVE stage to get live_stage_etag
+	outputLive, err := findConnectionFunctionByTwoPartKey(ctx, conn, id, awstypes.FunctionStageLive)
+	if retry.NotFound(err) {
+		model.LiveStageEtag = types.StringValue("")
+	} else if err != nil {
+		return err
+	} else {
+		model.LiveStageEtag = fwflex.StringToFramework(ctx, outputLive.ETag)
+	}
+
+	return nil
 }
 
 func (r *resourceConnectionFunction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -208,8 +268,7 @@ func (r *resourceConnectionFunction) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	// Use DescribeConnectionFunction to get metadata
-	outputDF, err := findConnectionFunctionByTwoPartKey(ctx, conn, state.ID.ValueString(), awstypes.FunctionStageDevelopment)
+	err := r.readConnectionFunction(ctx, conn, state.ID.ValueString(), &state)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -219,24 +278,6 @@ func (r *resourceConnectionFunction) Read(ctx context.Context, req resource.Read
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
-
-	state.Etag = fwflex.StringToFramework(ctx, outputDF.ETag)
-
-	// Populate the resource model from DescribeConnectionFunctionOutput
-	populateConnectionFunctionModel(ctx, outputDF.ConnectionFunctionSummary, outputDF.ConnectionFunctionSummary.ConnectionFunctionConfig, &state)
-
-	// Use GetConnectionFunction to get the code
-	inputGF := cloudfront.GetConnectionFunctionInput{
-		Identifier: aws.String(state.ID.ValueString()),
-		Stage:      awstypes.FunctionStageDevelopment,
-	}
-	outputGF, err := conn.GetConnectionFunction(ctx, &inputGF)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	state.Code = types.StringValue(string(outputGF.ConnectionFunctionCode))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -306,8 +347,26 @@ func (r *resourceConnectionFunction) Update(ctx context.Context, req resource.Up
 
 	plan.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
-	// Populate the resource model from UpdateConnectionFunctionOutput
-	populateConnectionFunctionModel(ctx, out.ConnectionFunctionSummary, out.ConnectionFunctionSummary.ConnectionFunctionConfig, &plan)
+	// Publish the function if requested
+	if !plan.Publish.IsNull() && plan.Publish.ValueBool() {
+		publishInput := &cloudfront.PublishConnectionFunctionInput{
+			Id:      plan.ID.ValueStringPointer(),
+			IfMatch: plan.Etag.ValueStringPointer(),
+		}
+
+		_, err := conn.PublishConnectionFunction(ctx, publishInput)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+	}
+
+	// Read the function to get the current state including live_stage_etag
+	err = r.readConnectionFunction(ctx, conn, plan.ID.ValueString(), &plan)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -375,10 +434,11 @@ type resourceConnectionFunctionModel struct {
 	ID                        types.String                                                    `tfsdk:"id"`
 	KeyValueStoreAssociations fwtypes.ListNestedObjectValueOf[keyValueStoreAssociationsModel] `tfsdk:"key_value_store_associations"`
 	LastModifiedTime          timetypes.RFC3339                                               `tfsdk:"last_modified_time"`
+	LiveStageEtag             types.String                                                    `tfsdk:"live_stage_etag"`
 	Location                  types.String                                                    `tfsdk:"location"`
 	Name                      types.String                                                    `tfsdk:"name"`
+	Publish                   types.Bool                                                      `tfsdk:"publish"`
 	Runtime                   types.String                                                    `tfsdk:"runtime"`
-	Stage                     types.String                                                    `tfsdk:"stage"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
 }
@@ -399,7 +459,6 @@ func populateConnectionFunctionModel(ctx context.Context, summary *awstypes.Conn
 		model.ID = fwflex.StringToFramework(ctx, summary.Id)
 		model.LastModifiedTime = fwflex.TimeToFramework(ctx, summary.LastModifiedTime)
 		model.Name = fwflex.StringToFramework(ctx, summary.Name)
-		model.Stage = fwflex.StringValueToFramework(ctx, string(summary.Stage))
 		model.Status = fwflex.StringToFramework(ctx, summary.Status)
 	}
 
