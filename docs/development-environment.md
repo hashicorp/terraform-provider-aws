@@ -1,9 +1,12 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Development Environment Setup
 
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.26+ (to run acceptance tests)
-- [Go](https://golang.org/doc/install) 1.23+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) (to build the provider plugin). Check `.go-version` for the required version
 - Mac, Linux or WSL (to build the provider plugin)
 
 ## Quick Start

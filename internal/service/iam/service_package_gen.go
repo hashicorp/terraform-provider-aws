@@ -396,7 +396,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_user",
 			Name:     "User",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "User",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),

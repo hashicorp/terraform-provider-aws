@@ -50,6 +50,10 @@ func (d *dataSourceCloudVmCluster) Schema(ctx context.Context, req datasource.Sc
 				Computed:    true,
 				Description: "The ID of the Cloud Exadata Infrastructure.",
 			},
+			"cloud_exadata_infrastructure_arn": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ARN of the Cloud Exadata Infrastructure.",
+			},
 			names.AttrClusterName: schema.StringAttribute{
 				Computed:    true,
 				Description: "The name of the Grid Infrastructure (GI) cluster.",
@@ -137,6 +141,10 @@ func (d *dataSourceCloudVmCluster) Schema(ctx context.Context, req datasource.Sc
 			"odb_network_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the ODB network.",
+			},
+			"odb_network_arn": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ARN of the ODB network.",
 			},
 			"percent_progress": schema.Float64Attribute{
 				Computed:    true,
@@ -254,47 +262,49 @@ func (d *dataSourceCloudVmCluster) Read(ctx context.Context, req datasource.Read
 
 type dataSourceCloudVmClusterModel struct {
 	framework.WithRegionModel
-	CloudExadataInfrastructureId types.String                                                             `tfsdk:"cloud_exadata_infrastructure_id"`
-	CloudVmClusterArn            types.String                                                             `tfsdk:"arn"`
-	CloudVmClusterId             types.String                                                             `tfsdk:"id"`
-	ClusterName                  types.String                                                             `tfsdk:"cluster_name"`
-	CpuCoreCount                 types.Int32                                                              `tfsdk:"cpu_core_count"`
-	DataCollectionOptions        fwtypes.ListNestedObjectValueOf[dataCollectionOptionsVMCDataSourceModel] `tfsdk:"data_collection_options"`
-	DataStorageSizeInTBs         types.Float64                                                            `tfsdk:"data_storage_size_in_tbs"`
-	DbNodeStorageSizeInGBs       types.Int32                                                              `tfsdk:"db_node_storage_size_in_gbs"`
-	DbServers                    fwtypes.ListValueOf[types.String]                                        `tfsdk:"db_servers"`
-	DiskRedundancy               fwtypes.StringEnum[odbtypes.DiskRedundancy]                              `tfsdk:"disk_redundancy"`
-	DisplayName                  types.String                                                             `tfsdk:"display_name"`
-	Domain                       types.String                                                             `tfsdk:"domain"`
-	GiVersion                    types.String                                                             `tfsdk:"gi_version"`
-	HostnamePrefixComputed       types.String                                                             `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
-	IormConfigCache              fwtypes.ListNestedObjectValueOf[exadataIormConfigVMCDataSourceModel]     `tfsdk:"iorm_config_cache"`
-	IsLocalBackupEnabled         types.Bool                                                               `tfsdk:"is_local_backup_enabled"`
-	IsSparseDiskGroupEnabled     types.Bool                                                               `tfsdk:"is_sparse_disk_group_enabled"`
-	LastUpdateHistoryEntryId     types.String                                                             `tfsdk:"last_update_history_entry_id"`
-	LicenseModel                 fwtypes.StringEnum[odbtypes.LicenseModel]                                `tfsdk:"license_model"`
-	ListenerPort                 types.Int32                                                              `tfsdk:"listener_port"`
-	MemorySizeInGbs              types.Int32                                                              `tfsdk:"memory_size_in_gbs"`
-	NodeCount                    types.Int32                                                              `tfsdk:"node_count"`
-	Ocid                         types.String                                                             `tfsdk:"ocid"`
-	OciResourceAnchorName        types.String                                                             `tfsdk:"oci_resource_anchor_name"`
-	OciUrl                       types.String                                                             `tfsdk:"oci_url"`
-	OdbNetworkId                 types.String                                                             `tfsdk:"odb_network_id"`
-	PercentProgress              types.Float64                                                            `tfsdk:"percent_progress"`
-	ScanDnsName                  types.String                                                             `tfsdk:"scan_dns_name"`
-	ScanDnsRecordId              types.String                                                             `tfsdk:"scan_dns_record_id"`
-	ScanIpIds                    fwtypes.ListValueOf[types.String]                                        `tfsdk:"scan_ip_ids"`
-	Shape                        types.String                                                             `tfsdk:"shape"`
-	SshPublicKeys                fwtypes.ListValueOf[types.String]                                        `tfsdk:"ssh_public_keys"`
-	Status                       fwtypes.StringEnum[odbtypes.ResourceStatus]                              `tfsdk:"status"`
-	StatusReason                 types.String                                                             `tfsdk:"status_reason"`
-	StorageSizeInGBs             types.Int32                                                              `tfsdk:"storage_size_in_gbs"`
-	SystemVersion                types.String                                                             `tfsdk:"system_version"`
-	Timezone                     types.String                                                             `tfsdk:"timezone"`
-	VipIds                       fwtypes.ListValueOf[types.String]                                        `tfsdk:"vip_ids"`
-	CreatedAt                    timetypes.RFC3339                                                        `tfsdk:"created_at"`
-	ComputeModel                 fwtypes.StringEnum[odbtypes.ComputeModel]                                `tfsdk:"compute_model"`
-	Tags                         tftags.Map                                                               `tfsdk:"tags"`
+	CloudExadataInfrastructureId  types.String                                                             `tfsdk:"cloud_exadata_infrastructure_id"`
+	CloudExadataInfrastructureArn types.String                                                             `tfsdk:"cloud_exadata_infrastructure_arn" autoflex:"-"`
+	CloudVmClusterArn             types.String                                                             `tfsdk:"arn"`
+	CloudVmClusterId              types.String                                                             `tfsdk:"id"`
+	ClusterName                   types.String                                                             `tfsdk:"cluster_name"`
+	CpuCoreCount                  types.Int32                                                              `tfsdk:"cpu_core_count"`
+	DataCollectionOptions         fwtypes.ListNestedObjectValueOf[dataCollectionOptionsVMCDataSourceModel] `tfsdk:"data_collection_options"`
+	DataStorageSizeInTBs          types.Float64                                                            `tfsdk:"data_storage_size_in_tbs"`
+	DbNodeStorageSizeInGBs        types.Int32                                                              `tfsdk:"db_node_storage_size_in_gbs"`
+	DbServers                     fwtypes.ListValueOf[types.String]                                        `tfsdk:"db_servers"`
+	DiskRedundancy                fwtypes.StringEnum[odbtypes.DiskRedundancy]                              `tfsdk:"disk_redundancy"`
+	DisplayName                   types.String                                                             `tfsdk:"display_name"`
+	Domain                        types.String                                                             `tfsdk:"domain"`
+	GiVersion                     types.String                                                             `tfsdk:"gi_version"`
+	HostnamePrefixComputed        types.String                                                             `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
+	IormConfigCache               fwtypes.ListNestedObjectValueOf[exadataIormConfigVMCDataSourceModel]     `tfsdk:"iorm_config_cache"`
+	IsLocalBackupEnabled          types.Bool                                                               `tfsdk:"is_local_backup_enabled"`
+	IsSparseDiskGroupEnabled      types.Bool                                                               `tfsdk:"is_sparse_disk_group_enabled"`
+	LastUpdateHistoryEntryId      types.String                                                             `tfsdk:"last_update_history_entry_id"`
+	LicenseModel                  fwtypes.StringEnum[odbtypes.LicenseModel]                                `tfsdk:"license_model"`
+	ListenerPort                  types.Int32                                                              `tfsdk:"listener_port"`
+	MemorySizeInGbs               types.Int32                                                              `tfsdk:"memory_size_in_gbs"`
+	NodeCount                     types.Int32                                                              `tfsdk:"node_count"`
+	Ocid                          types.String                                                             `tfsdk:"ocid"`
+	OciResourceAnchorName         types.String                                                             `tfsdk:"oci_resource_anchor_name"`
+	OciUrl                        types.String                                                             `tfsdk:"oci_url"`
+	OdbNetworkId                  types.String                                                             `tfsdk:"odb_network_id"`
+	OdbNetworkArn                 types.String                                                             `tfsdk:"odb_network_arn" autoflex:"-"`
+	PercentProgress               types.Float64                                                            `tfsdk:"percent_progress"`
+	ScanDnsName                   types.String                                                             `tfsdk:"scan_dns_name"`
+	ScanDnsRecordId               types.String                                                             `tfsdk:"scan_dns_record_id"`
+	ScanIpIds                     fwtypes.ListValueOf[types.String]                                        `tfsdk:"scan_ip_ids"`
+	Shape                         types.String                                                             `tfsdk:"shape"`
+	SshPublicKeys                 fwtypes.ListValueOf[types.String]                                        `tfsdk:"ssh_public_keys"`
+	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                              `tfsdk:"status"`
+	StatusReason                  types.String                                                             `tfsdk:"status_reason"`
+	StorageSizeInGBs              types.Int32                                                              `tfsdk:"storage_size_in_gbs"`
+	SystemVersion                 types.String                                                             `tfsdk:"system_version"`
+	Timezone                      types.String                                                             `tfsdk:"timezone"`
+	VipIds                        fwtypes.ListValueOf[types.String]                                        `tfsdk:"vip_ids"`
+	CreatedAt                     timetypes.RFC3339                                                        `tfsdk:"created_at"`
+	ComputeModel                  fwtypes.StringEnum[odbtypes.ComputeModel]                                `tfsdk:"compute_model"`
+	Tags                          tftags.Map                                                               `tfsdk:"tags"`
 }
 
 type dataCollectionOptionsVMCDataSourceModel struct {

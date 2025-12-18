@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Request Net New Functionality
 description: Choose this option to request an entirely new resource, data source, ephemeral resource/data source, function, or AWS service be added to the provider.
 body:

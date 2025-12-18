@@ -1176,6 +1176,7 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "0"),
 				),
 			},
 			{
@@ -1190,6 +1191,10 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "TestTableGSI",
+					}),
 				),
 			},
 		},
@@ -1275,6 +1280,7 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "att1-index",
 						"on_demand_throughput.0.max_read_request_units":  "5",
 						"on_demand_throughput.0.max_write_request_units": "5",
 					}),
@@ -1292,6 +1298,7 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "att1-index",
 						"on_demand_throughput.0.max_read_request_units":  "10",
 						"on_demand_throughput.0.max_write_request_units": "10",
 					}),

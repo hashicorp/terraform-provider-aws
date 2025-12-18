@@ -209,6 +209,37 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/45520.
+func TestAccS3Bucket_Basic_skipCredentialsValidationAndRequestingAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigSkipCredentialsValidationAndRequestingAccountID(),
+					testAccBucketConfig_basic(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
@@ -889,6 +920,61 @@ func TestAccS3Bucket_tags_fallbackS3API(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigAssumeRole(),
+					testAccBucketConfig_tags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_tags_skipCredentialsValidationAndRequestingAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigSkipCredentialsValidationAndRequestingAccountID(),
+					testAccBucketConfig_tags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigSkipCredentialsValidationAndRequestingAccountID(),
+					testAccBucketConfig_updatedTags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigSkipCredentialsValidationAndRequestingAccountID(),
 					testAccBucketConfig_tags(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
