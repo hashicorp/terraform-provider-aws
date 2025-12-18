@@ -53,6 +53,11 @@ func resourceTargetGroupAttachment() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"quic_server_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -75,6 +80,10 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
 	}
 
 	const (
@@ -116,6 +125,10 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
+	}
+
 	_, err := findTargetHealthDescription(ctx, conn, input)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -149,6 +162,10 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
