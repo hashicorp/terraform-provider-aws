@@ -445,7 +445,6 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 		state.KmsAccess = fwtypes.StringEnumValue(readKmsAccessStatus)
 		state.KmsPolicyDocument = types.StringPointerValue(out.ManagedServices.KmsAccess.KmsPolicyDocument)
-
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
