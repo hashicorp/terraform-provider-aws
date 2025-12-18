@@ -407,6 +407,10 @@ func resourceFunction() *schema.Resource {
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -862,6 +866,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
@@ -1837,6 +1842,17 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 		Region:    c.Region(ctx),
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
+	}.String()
+}
+
+// See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
+func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
+	return arn.ARN{
+		Partition: c.Partition(ctx),
+		Service:   "apigateway",
+		Region:    c.Region(ctx),
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2021-11-15/functions/%s/response-streaming-invocations", functionOrAliasARN),
 	}.String()
 }
 
