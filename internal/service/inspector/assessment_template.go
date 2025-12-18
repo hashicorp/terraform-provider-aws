@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -265,6 +267,10 @@ func findAssessmentTemplates(ctx context.Context, conn *inspector.Client, input 
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if err := failedItemsError(output.FailedItems); err != nil {
+		return nil, err
+	}
+
 	return output.AssessmentTemplates, nil
 }
 
@@ -283,7 +289,19 @@ func findAssessmentTemplateByARN(ctx context.Context, conn *inspector.Client, ar
 		AssessmentTemplateArns: []string{arn},
 	}
 
-	return findAssessmentTemplate(ctx, conn, &input)
+	output, err := findAssessmentTemplate(ctx, conn, &input)
+
+	if tfawserr.ErrMessageContains(err, string(awstypes.FailedItemErrorCodeItemDoesNotExist), arn) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findSubscriptions(ctx context.Context, conn *inspector.Client, input *inspector.ListEventSubscriptionsInput) ([]awstypes.Subscription, error) {
