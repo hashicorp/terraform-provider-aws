@@ -11,7 +11,7 @@ require (
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
-	github.com/aws/aws-sdk-go-v2 v1.40.0
+	github.com/aws/aws-sdk-go-v2 v1.41.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.14
@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.274.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.5
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.69.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/eks v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.4
@@ -273,11 +273,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.5
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.12
-	github.com/aws/smithy-go v1.23.2
+	github.com/aws/smithy-go v1.24.0
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.3.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
@@ -329,8 +328,8 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.3 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.14 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.14 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.3 // indirect
