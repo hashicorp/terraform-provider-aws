@@ -219,6 +219,10 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrRole: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -421,6 +425,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
