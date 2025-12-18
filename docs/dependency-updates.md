@@ -8,6 +8,10 @@ The Terraform AWS provider is written in Go and is compiled into an executable b
 
 A new version of Go is [released every 6 months](https://go.dev/wiki/Go-Release-Cycle#overview). [Minor releases](https://go.dev/wiki/MinorReleases), fixing serious problems and security issues, are done [regularly](https://go.dev/doc/devel/release) for the current and previous versions.
 
+!!! note
+
+    Go versions differ from [semver](https://semver.org/spec/v2.0.0.html). Major versions of Go differ in the second component (upgrading from 1.24.11 to 1.25.5 is a major version upgrade), while minor versions of Go differ just in the third component (upgrading from 1.24.10 to 1.24.11 is a minor version upgrade).
+
 ### When To Upgrade Major Version
 
 The Terraform AWS provider aims to switch to the newest Go version after 1 or 2 minor releases of that version, unless there is an urgent reason to upgrade sooner.
