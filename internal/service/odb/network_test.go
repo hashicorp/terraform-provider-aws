@@ -28,7 +28,7 @@ type oracleDBNetworkResourceTest struct {
 }
 
 var oracleDBNetworkResourceTestEntity = oracleDBNetworkResourceTest{
-	displayNamePrefix: "tf-ora-net",
+	displayNamePrefix: "Ofake-tf-ora-net",
 }
 
 // Basic test with bare minimum input
@@ -429,8 +429,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr          = "10.2.1.0/24"
   s3_access                   = "DISABLED"
   zero_etl_access             = "DISABLED"
-  sts_access            = "DISABLED"
-  kms_access      = "DISABLED"
+  sts_access                  = "DISABLED"
+  kms_access                  = "DISABLED"
   delete_associated_resources = true
 }
 

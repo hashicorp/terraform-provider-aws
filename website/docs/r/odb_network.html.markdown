@@ -51,8 +51,6 @@ The following arguments are required:
 * `backup_subnet_cidr` - (Required) The CIDR range of the backup subnet for the ODB network. Changing this will force terraform to create new resource.
 * `s3_access` - (Required) Specifies the configuration for Amazon S3 access from the ODB network.
 * `zero_etl_access` - (Required) Specifies the configuration for Zero-ETL access from the ODB network.
-* `sts_access` - (Required) Specifies the configuration for STS access from the ODB network.
-* `kms_access` - (Required) Specifies the configuration for KMS access from the ODB network.
 
 The following arguments are optional:
 
@@ -63,6 +61,8 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delete_associated_resources` - (Optional) If set to true deletes associated OCI resources. Default false.
+* `sts_access` - (Optional) Specifies the configuration for STS access from the ODB network.
+* `kms_access` - (Optional) Specifies the configuration for KMS access from the ODB network.
 * `sts_policy_document` - (Optional) Specifies the endpoint policy for STS access from the ODB network.
 * `kms_policy_document` - (Optional) Specifies the endpoint policy for KMS access from the ODB network.
 
