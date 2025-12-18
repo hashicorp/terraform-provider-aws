@@ -130,6 +130,9 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"analysis_scheme": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								AnalysisSchemeDefault(),
+							},
 						},
 						names.AttrDefaultValue: schema.StringAttribute{
 							Optional: true,

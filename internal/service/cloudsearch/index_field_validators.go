@@ -9,7 +9,9 @@ import (
 	"slices"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -82,4 +84,50 @@ func invalidForFieldTypes(attributeName string, fieldTypes ...string) indexField
 		attributeName:     attributeName,
 		invalidFieldTypes: fieldTypes,
 	}
+}
+
+// analysisSchemeDefaultPlanModifier sets the default analysis_scheme for text fields
+// AWS CloudSearch returns "_en_default_" for text/text-array fields when not configured,
+// so we need to set this in the plan to avoid "does not correlate" errors.
+type analysisSchemeDefaultPlanModifier struct{}
+
+func (m analysisSchemeDefaultPlanModifier) Description(ctx context.Context) string {
+	return "Sets default analysis_scheme for text fields"
+}
+
+func (m analysisSchemeDefaultPlanModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m analysisSchemeDefaultPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// If the config value is set (not null), use it as-is
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+
+	// If we have a state value, use it (UseStateForUnknown behavior)
+	if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
+		resp.PlanValue = req.StateValue
+		return
+	}
+
+	// Get the "type" attribute from the same index_field block
+	var fieldType fwtypes.StringEnum[awstypes.IndexFieldType]
+	diags := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName("type"), &fieldType)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() || fieldType.IsNull() || fieldType.IsUnknown() {
+		return
+	}
+
+	// For text and text-array fields, AWS returns "_en_default_" when not configured
+	fieldTypeStr := string(fieldType.ValueEnum())
+	if fieldTypeStr == "text" || fieldTypeStr == "text-array" {
+		resp.PlanValue = types.StringValue("_en_default_")
+	}
+}
+
+// AnalysisSchemeDefault returns a plan modifier that sets the default analysis_scheme for text fields
+func AnalysisSchemeDefault() planmodifier.String {
+	return analysisSchemeDefaultPlanModifier{}
 }
