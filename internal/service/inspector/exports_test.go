@@ -5,7 +5,9 @@ package inspector
 
 // Exports for use in tests only.
 var (
+	ResourceAssessmentTarget   = resourceAssessmentTarget
 	ResourceAssessmentTemplate = resourceAssessmentTemplate
 
+	FindAssessmentTargetByARN   = findAssessmentTargetByARN
 	FindAssessmentTemplateByARN = findAssessmentTemplateByARN
 )

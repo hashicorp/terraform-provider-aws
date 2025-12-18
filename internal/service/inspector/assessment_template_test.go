@@ -135,7 +135,6 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	event1 := "ASSESSMENT_RUN_STARTED"
 	event1Updated := "ASSESSMENT_RUN_COMPLETED"
 	event2 := "ASSESSMENT_RUN_STATE_CHANGED"

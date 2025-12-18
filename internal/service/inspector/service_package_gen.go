@@ -42,7 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAssessmentTarget,
+			Factory:  resourceAssessmentTarget,
 			TypeName: "aws_inspector_assessment_target",
 			Name:     "Assessment Target",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
