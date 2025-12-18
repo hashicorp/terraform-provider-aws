@@ -129,6 +129,17 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `response_headers_policy_id` - (Optional) Identifier for a response headers policy.
 * `trusted_key_groups` - (Optional) List of key group IDs that CloudFront can use to validate signed URLs or signed cookies.
 
+### Function Association
+
+* `event_type` - (Required) Specific event to trigger this function. Valid values: `viewer-request`, `origin-request`, `viewer-response`, `origin-response`.
+* `function_arn` - (Required) ARN of the CloudFront function.
+
+### Lambda Function Association
+
+* `event_type` - (Required) Specific event to trigger this function. Valid values: `viewer-request`, `origin-request`, `viewer-response`, `origin-response`.
+* `include_body` - (Optional) When set to true, the request body is exposed to the Lambda function. Default: `false`.
+* `lambda_arn` - (Required) ARN of the Lambda function.
+
 ### Origin
 
 * `domain_name` - (Required) DNS domain name of either the S3 bucket, or web site of your custom origin.
@@ -140,7 +151,51 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `origin_access_control_id` - (Optional) CloudFront origin access control identifier to associate with the origin.
 * `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
+* `response_completion_timeout` - (Optional) Number of seconds that CloudFront waits for a response after forwarding a request to the origin. Default: 30.
 * `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
+
+### Custom Header
+
+* `header_name` - (Required) Name of the header.
+* `header_value` - (Required) Value for the header.
+
+### Custom Origin Config
+
+* `http_port` - (Required) HTTP port the custom origin listens on.
+* `https_port` - (Required) HTTPS port the custom origin listens on.
+* `ip_address_type` - (Optional) Type of IP addresses used by your origins. Valid values are `ipv4` and `dualstack`.
+* `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. Default: 5.
+* `origin_read_timeout` - (Optional) Custom read timeout, in seconds. Default: 30.
+* `origin_protocol_policy` - (Required) Origin protocol policy to apply to your origin. Valid values are `http-only`, `https-only`, and `match-viewer`.
+* `origin_ssl_protocols` - (Required) List of SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS.
+
+### Origin Shield
+
+* `enabled` - (Required) Whether Origin Shield is enabled.
+* `origin_shield_region` - (Optional) AWS Region for Origin Shield. Required when `enabled` is `true`.
+
+### Origin Group
+
+* `origin_id` - (Required) Unique identifier for the origin group.
+* `failover_criteria` - (Required) Failover criteria for when to failover to the secondary origin. See [Failover Criteria](#failover-criteria) below.
+* `member` - (Required) List of origins in this origin group. Must contain exactly 2 members. See [Origin Group Member](#origin-group-member) below.
+
+### Failover Criteria
+
+* `status_codes` - (Required) List of HTTP status codes that trigger a failover to the secondary origin.
+
+### Origin Group Member
+
+* `origin_id` - (Required) Unique identifier of an origin in the origin group.
+
+### Restrictions
+
+* `geo_restriction` - (Required) Geographic restriction configuration. See [Geo Restriction](#geo-restriction) below.
+
+### Geo Restriction
+
+* `restriction_type` - (Required) Method to restrict distribution of your content by country. Valid values are `none`, `whitelist`, and `blacklist`.
+* `items` - (Optional) List of ISO 3166-1-alpha-2 country codes for which you want CloudFront either to distribute your content (`whitelist`) or not distribute your content (`blacklist`). Required when `restriction_type` is `whitelist` or `blacklist`.
 
 ### Active Trusted Key Groups
 
@@ -182,6 +237,14 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 * `required` - (Required) Whether the parameter is required.
 * `comment` - (Optional) Comment describing the parameter.
+* `default_value` - (Optional) Default value for the parameter.
+
+### Viewer Certificate
+
+* `acm_certificate_arn` - (Optional) ARN of the AWS Certificate Manager certificate that you wish to use with this distribution. Required when using a custom SSL certificate.
+* `cloudfront_default_certificate` - (Optional) Whether to use the CloudFront default certificate. Cannot be used with `acm_certificate_arn`.
+* `minimum_protocol_version` - (Optional) Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Default: `TLSv1`.
+* `ssl_support_method` - (Optional) How you want CloudFront to serve HTTPS requests. Valid values are `sni-only` and `vip`. Required when `acm_certificate_arn` is specified.
 
 ## Attribute Reference
 
@@ -198,6 +261,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `active_trusted_key_groups` - List of key groups that CloudFront can use to validate signed URLs or signed cookies. See [Active Trusted Key Groups](#active-trusted-key-groups) below.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
