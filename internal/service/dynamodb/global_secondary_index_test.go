@@ -25,6 +25,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	warmThroughputOnDemandMixReadUnitsPerSecond  = 12_000
+	warmThroughputOnDemandMixWriteUnitsPerSecond = 4_000
+)
+
 func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
 
@@ -76,7 +81,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 							"write_capacity_units": knownvalue.Int64Exact(1),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(1),
+						"write_units_per_second": knownvalue.Int64Exact(1),
+					})),
 				},
 			},
 			{
@@ -194,7 +202,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_basic(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -243,7 +254,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -270,6 +284,11 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	const (
+		capacityUnitsInitial = 2
+		capacityUnitsUpdated = 4
+	)
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
@@ -277,7 +296,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, capacityUnitsInitial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
@@ -288,11 +307,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"read_capacity_units":  knownvalue.Int64Exact(2),
-							"write_capacity_units": knownvalue.Int64Exact(2),
+							"read_capacity_units":  knownvalue.Int64Exact(capacityUnitsInitial),
+							"write_capacity_units": knownvalue.Int64Exact(capacityUnitsInitial),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(capacityUnitsInitial),
+						"write_units_per_second": knownvalue.Int64Exact(capacityUnitsInitial),
+					})),
 				},
 			},
 			{
@@ -303,7 +325,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, 4),
+				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacity(rNameTable, rName, capacityUnitsUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PROVISIONED"),
@@ -314,11 +336,14 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"read_capacity_units":  knownvalue.Int64Exact(4),
-							"write_capacity_units": knownvalue.Int64Exact(4),
+							"read_capacity_units":  knownvalue.Int64Exact(capacityUnitsUpdated),
+							"write_capacity_units": knownvalue.Int64Exact(capacityUnitsUpdated),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(capacityUnitsUpdated),
+						"write_units_per_second": knownvalue.Int64Exact(capacityUnitsUpdated),
+					})),
 				},
 			},
 			{
@@ -367,7 +392,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(2),
+						"write_units_per_second": knownvalue.Int64Exact(2),
+					})),
 				},
 			},
 			{
@@ -393,7 +421,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(2),
+						"write_units_per_second": knownvalue.Int64Exact(2),
+					})),
 				},
 			},
 			{
@@ -445,7 +476,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(2),
+						"write_units_per_second": knownvalue.Int64Exact(2),
+					})),
 				},
 			},
 			{
@@ -474,7 +508,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiSame
 							"write_capacity_units": knownvalue.Int64Exact(4),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(4),
+						"write_units_per_second": knownvalue.Int64Exact(4),
+					})),
 				},
 			},
 			{
@@ -526,7 +563,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 							"write_capacity_units": knownvalue.Int64Exact(4),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(4),
+						"write_units_per_second": knownvalue.Int64Exact(4),
+					})),
 				},
 			},
 			{
@@ -555,7 +595,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_changeTableCapacity_gsiDiff
 							"write_capacity_units": knownvalue.Int64Exact(6),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(6),
+						"write_units_per_second": knownvalue.Int64Exact(6),
+					})),
 				},
 			},
 			{
@@ -604,7 +647,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -630,7 +676,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -679,7 +728,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -705,7 +757,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -749,11 +804,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_bas
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"read_units_per_second":  knownvalue.Int64Exact(15000),
-							"write_units_per_second": knownvalue.Int64Exact(5000),
-						}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(15000),
+						"write_units_per_second": knownvalue.Int64Exact(5000),
 					})),
 				},
 			},
@@ -799,11 +852,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"read_units_per_second":  knownvalue.Int64Exact(12000),
-							"write_units_per_second": knownvalue.Int64Exact(4000),
-						}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
 					})),
 				},
 			},
@@ -819,7 +870,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_exp
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_updateUnspecified(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_updateFromUnspecified(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
 
 	ctx := acctest.Context(t)
@@ -849,7 +900,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -870,11 +924,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput_upd
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"read_units_per_second":  knownvalue.Int64Exact(15000),
-							"write_units_per_second": knownvalue.Int64Exact(5000),
-						}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(15000),
+						"write_units_per_second": knownvalue.Int64Exact(5000),
 					})),
 				},
 			},
@@ -959,7 +1011,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -985,7 +1040,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(2),
+						"write_units_per_second": knownvalue.Int64Exact(2),
+					})),
 				},
 			},
 			{
@@ -999,6 +1057,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 	})
 }
 
+// TODO: Add provisioned_to_payPerRequest_unspecifiedCapacity
+
+// TODO: Rename to provisioned_to_payPerRequest_specifiedCapacity
 func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
 
@@ -1034,7 +1095,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 							"write_capacity_units": knownvalue.Int64Exact(2),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(2),
+						"write_units_per_second": knownvalue.Int64Exact(2),
+					})),
 				},
 			},
 			{
@@ -1060,7 +1124,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
+						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
+					})),
 				},
 			},
 			{
@@ -1832,7 +1899,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importcmd(t *testing.T) 
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(1),
+						"write_units_per_second": knownvalue.Int64Exact(1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -1893,7 +1963,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_single_importblock(t *testing.T
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(1),
+						"write_units_per_second": knownvalue.Int64Exact(1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -2022,7 +2095,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(1),
+						"write_units_per_second": knownvalue.Int64Exact(1),
+					})),
 
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("key_schema"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2032,7 +2108,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple_importblock(t *testing
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"read_units_per_second":  knownvalue.Int64Exact(1),
+						"write_units_per_second": knownvalue.Int64Exact(1),
+					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -2620,7 +2699,7 @@ resource "aws_dynamodb_global_secondary_index" "test" {
     key_type       = "RANGE"
   }
 
-  warm_throughput {
+  warm_throughput = {
     read_units_per_second  = %[3]d
     write_units_per_second = %[4]d
   }

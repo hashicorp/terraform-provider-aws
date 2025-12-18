@@ -93,6 +93,12 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
+			"warm_throughput": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[warmThroughputModel](ctx),
+				Optional:   true,
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"key_schema": schema.ListNestedBlock{
@@ -188,27 +194,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 							Computed: true,
 						},
 						"write_capacity_units": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"warm_throughput": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[warmThroughputModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"read_units_per_second": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-						},
-						"write_units_per_second": schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
 						},
@@ -637,7 +622,7 @@ type resourceGlobalSecondaryIndexModel struct {
 	OnDemandThroughput    fwtypes.ListNestedObjectValueOf[onDemandThroughputModel]    `tfsdk:"on_demand_throughput"`
 	Projection            fwtypes.ListNestedObjectValueOf[projectionModel]            `tfsdk:"projection"`
 	ProvisionedThroughput fwtypes.ListNestedObjectValueOf[provisionedThroughputModel] `tfsdk:"provisioned_throughput"`
-	WarmThroughput        fwtypes.ListNestedObjectValueOf[warmThroughputModel]        `tfsdk:"warm_throughput"`
+	WarmThroughput        fwtypes.ObjectValueOf[warmThroughputModel]                  `tfsdk:"warm_throughput"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
@@ -649,7 +634,6 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 		fwflex.WithFieldNamePrefix("Index"),
 		fwflex.WithIgnoredFieldNamesAppend("KeySchema"),
 		fwflex.WithIgnoredFieldNamesAppend("ProvisionedThroughput"),
-		fwflex.WithIgnoredFieldNamesAppend("WarmThroughput"),
 	)...)
 
 	data.TableName = fwflex.StringToFramework(ctx, table.TableName)
@@ -683,28 +667,6 @@ func flattenGlobalSecondaryIndex(ctx context.Context, data *resourceGlobalSecond
 			data.ProvisionedThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []provisionedThroughputModel{ptM})
 		}
 	}
-
-	// Warm Throughput is not properly supported in `PROVISIONED` mode by `aws_dynamodb_table`,
-	// so temporarily disabling it here, too.
-	// Note: the logic in `aws_dynamodb_table` is incorrect, as small values in Warm Throughput are for `PROVISIONED` tables.
-	// billingMode := awstypes.BillingModeProvisioned
-	// if table.BillingModeSummary != nil {
-	// 	billingMode = table.BillingModeSummary.BillingMode
-	// }
-	// if billingMode == awstypes.BillingModeProvisioned {
-	// 	data.WarmThroughput = fwtypes.NewListNestedObjectValueOfNull[warmThroughputModel](ctx)
-	// } else {
-	// 	// Only set Warm Throughput values if explicitly configured. Prevents "inconsistent result" errors.
-	// 	if !data.WarmThroughput.IsNull() && len(data.WarmThroughput.Elements()) != 0 {
-	// 		var wtM warmThroughputModel
-	// 		d := fwflex.Flatten(ctx, index.WarmThroughput, &wtM)
-	// 		diags.Append(d...)
-	// 		if diags.HasError() {
-	// 			return diags
-	// 		}
-	// 		data.WarmThroughput = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{wtM})
-	// 	}
-	// }
 
 	return diags
 }
