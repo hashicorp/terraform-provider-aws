@@ -65,6 +65,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionResponseStreamingInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
@@ -2998,6 +2999,13 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 	return func(s *terraform.State) error {
 		arn := aws.ToString(function.Configuration.FunctionArn)
 		return acctest.CheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
+	}
+}
+
+func testAccCheckFunctionResponseStreamingInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arn := aws.ToString(function.Configuration.FunctionArn)
+		return acctest.CheckResourceAttrRegionalARNAccountID(name, "response_streaming_invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2021-11-15/functions/%s/response-streaming-invocations", arn))(s)
 	}
 }
 
