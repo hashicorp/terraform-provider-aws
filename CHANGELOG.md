@@ -1,5 +1,9 @@
 ## 6.28.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
+
 ENHANCEMENTS:
 
 * data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
