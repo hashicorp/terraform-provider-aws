@@ -2106,14 +2106,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 
 func TestAccDynamoDBGlobalSecondaryIndex_featureFlagNotSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf awstypes.TableDescription
-	var gsi awstypes.GlobalSecondaryIndexDescription
 
 	// Explicitly clear `TF_AWS_EXPERIMENT_dynamodb_global_secondary_index`
 	t.Setenv(tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar, "")
-
-	resourceNameTable := "aws_dynamodb_table.test"
-	resourceName := "aws_dynamodb_global_secondary_index.test"
 
 	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
