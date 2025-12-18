@@ -44,7 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceProfile,
+			Factory:  resourceProfile,
 			TypeName: "aws_customerprofiles_profile",
 			Name:     "Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
