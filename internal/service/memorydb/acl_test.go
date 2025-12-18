@@ -6,7 +6,6 @@ package memorydb_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -338,14 +337,6 @@ func testAccCheckACLExists(ctx context.Context, n string) resource.TestCheckFunc
 }
 
 func testAccACLConfigUsers(names ...string) string {
-	var userNames strings.Builder
-	for i, name := range names {
-		if i > 0 {
-			userNames.WriteString(", ")
-		}
-		userNames.WriteString(fmt.Sprintf("%q", name))
-	}
-
 	return fmt.Sprintf(`
 locals {
   user_names = [%[1]s]
@@ -361,18 +352,10 @@ resource "aws_memorydb_user" "test" {
     passwords = ["aaaaaaaaaaaaaaaa"]
   }
 }
-`, userNames.String())
+`, acctest.ListOfStrings(names...))
 }
 
 func testAccACLConfig_basic(rName string, userNames []string, usersInACL []string) string {
-	var userNamesInACL strings.Builder
-	for i, userName := range usersInACL {
-		if i > 0 {
-			userNamesInACL.WriteString(", ")
-		}
-		userNamesInACL.WriteString(fmt.Sprintf("%q", userName))
-	}
-
 	return acctest.ConfigCompose(
 		testAccACLConfigUsers(userNames...),
 		fmt.Sprintf(`
@@ -386,7 +369,7 @@ resource "aws_memorydb_acl" "test" {
     Test = "test"
   }
 }
-`, rName, userNamesInACL.String()),
+`, rName, acctest.ListOfStrings(usersInACL...)),
 	)
 }
 

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -779,13 +778,6 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString strings.Builder
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString.WriteString(", ")
-		}
-		hiddenAppTypesString.WriteString(fmt.Sprintf("%q", appType))
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -799,17 +791,10 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenAppTypesString.String()))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString strings.Builder
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString.WriteString(", ")
-		}
-		hiddenMlToolsString.WriteString(fmt.Sprintf("%q", mlTool))
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -823,5 +808,5 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenMlToolsString.String()))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }

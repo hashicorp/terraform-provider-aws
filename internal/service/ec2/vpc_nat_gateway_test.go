@@ -1437,7 +1437,7 @@ func testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName string, eip
 	var localsStr strings.Builder
 	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr.WriteString(fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]")))
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
 	}
 	localsStr.WriteString("  ]\n}\n\n")
 
@@ -1471,7 +1471,7 @@ func testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName strin
 	var localsStr strings.Builder
 	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr.WriteString(fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]")))
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.ReplaceAll(fmt.Sprint(eipIndexes), " ", ", "), "[]"))
 	}
 	localsStr.WriteString("  ]\n}\n\n")
 
