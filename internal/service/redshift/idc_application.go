@@ -6,7 +6,6 @@ package redshift
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -92,7 +91,9 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 			"redshift_idc_application_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
-				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"redshift_idc_application_name": schema.StringAttribute{
 				Required: true,
@@ -343,7 +344,7 @@ func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.Delete
 
 	_, err := conn.DeleteRedshiftIdcApplication(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
 			return
 		}
 
@@ -415,12 +416,10 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 	switch {
 	case !m.LakeFormation.IsNull():
 		lakeFormationData, d := m.LakeFormation.ToPtr(ctx)
-		fmt.Print(m)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
-		fmt.Print(lakeFormationData)
 
 		var r awstypes.ServiceIntegrationsUnionMemberLakeFormation
 		diags.Append(flex.Expand(ctx, lakeFormationData, &r.Value)...)
