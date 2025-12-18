@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -31,6 +32,7 @@ func resourceCertificateExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateExportCreate,
 		ReadWithoutTimeout:   resourceCertificateExportRead,
+		UpdateWithoutTimeout: resourceCertificateExportUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Schema: map[string]*schema.Schema{
@@ -50,7 +52,6 @@ func resourceCertificateExport() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			names.AttrCertificate: {
 				Type:      schema.TypeString,
@@ -73,6 +74,17 @@ func resourceCertificateExport() *schema.Resource {
 				Sensitive: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.HasChange("decrypt_private_key") {
+					if err := d.SetNewComputed("decrypted_private_key"); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -136,6 +148,34 @@ func resourceCertificateExportRead(ctx context.Context, d *schema.ResourceData, 
 	// Note: We cannot re-export the certificate on read without the passphrase stored in state
 	// The sensitive values are already stored in state from the create operation
 	// We only verify the certificate still exists
+
+	return diags
+}
+
+func resourceCertificateExportUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Only decrypt_private_key can change
+	if d.HasChange("decrypt_private_key") {
+		if d.Get("decrypt_private_key").(bool) {
+			// Decrypt the existing encrypted key from state
+			encryptedKey := d.Get(names.AttrPrivateKey).(string)
+			passphrase := d.Get("passphrase").(string)
+			
+			decryptedKey, err := decryptPKCS8PrivateKey(encryptedKey, passphrase)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "decrypting private key: %s", err)
+			}
+			if err := d.Set("decrypted_private_key", decryptedKey); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting decrypted_private_key: %s", err)
+			}
+		} else {
+			// Clear the decrypted key
+			if err := d.Set("decrypted_private_key", ""); err != nil {
+				return sdkdiag.AppendErrorf(diags, "clearing decrypted_private_key: %s", err)
+			}
+		}
+	}
 
 	return diags
 }
