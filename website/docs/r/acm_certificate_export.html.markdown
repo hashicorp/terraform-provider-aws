@@ -22,10 +22,8 @@ This resource is useful for:
 
 ## Example Usage
 
-### Export an Imported Certificate
-
 ```terraform
-resource "aws_acm_certificate" "imported" {
+resource "aws_acm_certificate" "example" {
   certificate_body = file("certificate.pem")
   private_key      = file("private_key.pem")
 
@@ -35,70 +33,19 @@ resource "aws_acm_certificate" "imported" {
 }
 
 resource "aws_acm_certificate_export" "example" {
-  certificate_arn = aws_acm_certificate.imported.arn
-  passphrase      = "my-secure-passphrase-123"
+  certificate_arn     = aws_acm_certificate.example.arn
+  passphrase          = var.certificate_passphrase
+  decrypt_private_key = true
 }
 
-# Use the exported certificate in outputs
 output "certificate" {
   value     = aws_acm_certificate_export.example.certificate
   sensitive = true
 }
 
-output "private_key" {
-  value     = aws_acm_certificate_export.example.private_key
+output "decrypted_private_key" {
+  value     = aws_acm_certificate_export.example.decrypted_private_key
   sensitive = true
-}
-```
-
-### Export a Private CA Certificate
-
-```terraform
-resource "aws_acm_certificate" "private_cert" {
-  domain_name               = "example.com"
-  certificate_authority_arn = aws_acmpca_certificate_authority.example.arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_acm_certificate_export" "private_cert" {
-  certificate_arn = aws_acm_certificate.private_cert.arn
-  passphrase      = var.certificate_passphrase
-}
-```
-
-### Export and Store in AWS Secrets Manager
-
-```terraform
-resource "aws_acm_certificate" "example" {
-  certificate_body = file("certificate.pem")
-  private_key      = file("private_key.pem")
-}
-
-resource "aws_acm_certificate_export" "example" {
-  certificate_arn = aws_acm_certificate.example.arn
-  passphrase      = random_password.passphrase.result
-}
-
-resource "random_password" "passphrase" {
-  length  = 32
-  special = true
-}
-
-resource "aws_secretsmanager_secret" "cert" {
-  name = "example-certificate"
-}
-
-resource "aws_secretsmanager_secret_version" "cert" {
-  secret_id = aws_secretsmanager_secret.cert.id
-  secret_string = jsonencode({
-    certificate       = aws_acm_certificate_export.example.certificate
-    certificate_chain = aws_acm_certificate_export.example.certificate_chain
-    private_key       = aws_acm_certificate_export.example.private_key
-    passphrase        = random_password.passphrase.result
-  })
 }
 ```
 
@@ -108,6 +55,7 @@ This resource supports the following arguments:
 
 * `certificate_arn` - (Required) ARN of the certificate to export. The certificate must be exportable.
 * `passphrase` - (Required) Passphrase used to encrypt the private key. The private key is encrypted using AES-256-CBC. Must be at least 4 characters long.
+* `decrypt_private_key` - (Optional) Whether to decrypt the private key. When set to `true`, the encrypted private key will be decrypted using PKCS#8 and made available in the `decrypted_private_key` attribute. Defaults to `false`.
 
 ## Attribute Reference
 
@@ -116,9 +64,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Unique identifier for the export (a hash of the certificate ARN and passphrase).
 * `certificate` - PEM-encoded certificate.
 * `certificate_chain` - PEM-encoded certificate chain. This is empty if the certificate was a self-signed certificate.
-* `private_key` - Encrypted PEM-encoded private key. The private key is encrypted with the passphrase using AES-256-CBC encryption.
+* `private_key` - Encrypted PEM-encoded private key in PKCS#8 format. The private key is encrypted with the passphrase using PBES2 (PBKDF2 + AES-256-CBC).
+* `decrypted_private_key` - (Available when `decrypt_private_key = true`) Decrypted PEM-encoded private key in PKCS#8 format.
 
-~> **NOTE:** All exported attributes (`certificate`, `certificate_chain`, and `private_key`) are marked as sensitive and will not be displayed in Terraform output unless explicitly configured to do so.
+~> **NOTE:** All exported attributes (`certificate`, `certificate_chain`, `private_key`, and `decrypted_private_key`) are marked as sensitive and will not be displayed in Terraform output unless explicitly configured to do so.
+
+~> **Security Warning:** The `decrypted_private_key` attribute contains the unencrypted private key and will be stored in Terraform state. Ensure your state backend is properly secured with encryption at rest and in transit. Consider using the encrypted `private_key` attribute and decrypting it outside of Terraform when possible.
 
 ## Import
 
