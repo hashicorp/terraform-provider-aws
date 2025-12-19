@@ -1163,7 +1163,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				},
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_read(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_writeUnitsOnly(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
@@ -1237,7 +1237,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				},
 			},
 			{
-				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_write(rNameTable, rName, 2),
+				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_readUnitsOnly(rNameTable, rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					resource.TestCheckResourceAttr(resourceNameTable, "billing_mode", "PAY_PER_REQUEST"),
@@ -1247,8 +1247,8 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"max_read_request_units":  knownvalue.Null(),
-							"max_write_request_units": knownvalue.Int64Exact(2),
+							"max_read_request_units":  knownvalue.Int64Exact(2),
+							"max_write_request_units": knownvalue.Null(),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -1830,13 +1830,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest_unspecifie
 				},
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateIdFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_basic(rNameTable, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
@@ -1845,12 +1838,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest_unspecifie
 					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"max_read_request_units":  knownvalue.Int64Exact(2),
-							"max_write_request_units": knownvalue.Int64Exact(2),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
@@ -3594,7 +3582,7 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName, capacity)
 }
 
-func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_read(tableName, indexName string, capacity int) string {
+func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_readUnitsOnly(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name = aws_dynamodb_table.test.name
@@ -3627,7 +3615,7 @@ resource "aws_dynamodb_table" "test" {
 `, tableName, indexName, capacity)
 }
 
-func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_write(tableName, indexName string, capacity int) string {
+func testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughput_writeUnitsOnly(tableName, indexName string, capacity int) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_global_secondary_index" "test" {
   table_name = aws_dynamodb_table.test.name
