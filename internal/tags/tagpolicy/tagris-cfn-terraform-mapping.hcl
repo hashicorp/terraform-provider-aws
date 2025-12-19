@@ -973,7 +973,10 @@ tagtype "elasticloadbalancing:listener" {
 }
 
 tagtype "elasticloadbalancing:listener-rule" {
-  terraform_resource_types = ["aws_lb_listener_rule"]
+  terraform_resource_types = [
+    "aws_alb_listener_rule",
+    "aws_lb_listener_rule",
+  ]
 }
 
 tagtype "elasticloadbalancing:loadbalancer" {

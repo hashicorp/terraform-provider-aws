@@ -588,6 +588,7 @@ var Lookup = map[string][]string{
 		"aws_lb_listener",
 	},
 	"elasticloadbalancing:listener-rule": {
+		"aws_alb_listener_rule",
 		"aws_lb_listener_rule",
 	},
 	"elasticloadbalancing:loadbalancer": {
