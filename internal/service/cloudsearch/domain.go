@@ -202,6 +202,108 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 	}
 }
 
+func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// No modifications during resource destruction
+	if request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan, config domainResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Get state - may be null during create
+	var stateFields []*indexFieldModel
+	if !request.State.Raw.IsNull() {
+		var state domainResourceModel
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if !state.IndexFields.IsNull() {
+			var diags diag.Diagnostics
+			stateFields, diags = state.IndexFields.ToSlice(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+
+	// Handle analysis_scheme for text/text-array fields in index_field set
+	// Plan modifiers don't work reliably for set element attributes because sets are identified
+	// by their full value. When elements change, Terraform sees delete+create, not update,
+	// making it impossible for attribute-level modifiers to access prior state.
+	if !plan.IndexFields.IsNull() && !plan.IndexFields.IsUnknown() {
+		planFields, diags := plan.IndexFields.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		configFields, diags := config.IndexFields.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Build lookup maps by name
+		configByName := make(map[string]*indexFieldModel)
+		for _, f := range configFields {
+			configByName[f.Name.ValueString()] = f
+		}
+
+		stateByName := make(map[string]*indexFieldModel)
+		for _, f := range stateFields {
+			stateByName[f.Name.ValueString()] = f
+		}
+
+		modified := false
+		for _, planField := range planFields {
+			fieldName := planField.Name.ValueString()
+			fieldType := planField.Type.ValueString()
+
+			// Only process text/text-array fields
+			if fieldType != "text" && fieldType != "text-array" {
+				continue
+			}
+
+			configField := configByName[fieldName]
+
+			// If config specifies analysis_scheme, use it (already in plan)
+			if configField != nil && !configField.AnalysisScheme.IsNull() {
+				continue
+			}
+
+			// Config doesn't specify analysis_scheme - set default behavior
+			if planField.AnalysisScheme.IsNull() || planField.AnalysisScheme.IsUnknown() {
+				// Check if we have state for this field
+				if stateField := stateByName[fieldName]; stateField != nil && !stateField.AnalysisScheme.IsNull() {
+					// Use state value (preserves existing AWS value)
+					planField.AnalysisScheme = stateField.AnalysisScheme
+				} else {
+					// No state - set AWS default
+					planField.AnalysisScheme = types.StringValue("_en_default_")
+				}
+				modified = true
+			}
+		}
+
+		if modified {
+			newIndexFields, diags := fwtypes.NewSetNestedObjectValueOfSlice(ctx, planFields, indexFieldSemanticEquality)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("index_field"), newIndexFields)...)
+		}
+	}
+}
+
 func (r *domainResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data domainResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -843,24 +945,6 @@ func indexFieldSemanticEquality(ctx context.Context, oldValue, newValue fwtypes.
 // Different field types support different options, so we only compare the
 // attributes that are relevant for the specific field type.
 // See: https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_IndexField.html
-// analysisSchemeEqual compares analysis_scheme values, treating null as equivalent to AWS's default "_en_default_"
-func analysisSchemeEqual(a, b types.String) bool {
-	// If both are null or both have the same value, they're equal
-	if a.Equal(b) {
-		return true
-	}
-
-	// AWS automatically sets "_en_default_" for text fields when not specified
-	// Treat null and "_en_default_" as semantically equivalent
-	aVal := a.ValueString()
-	bVal := b.ValueString()
-
-	aIsDefault := a.IsNull() || aVal == "_en_default_"
-	bIsDefault := b.IsNull() || bVal == "_en_default_"
-
-	return aIsDefault && bIsDefault
-}
-
 func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 	// Name and type must always match
 	if !a.Name.Equal(b.Name) || !a.Type.Equal(b.Type) {
@@ -872,7 +956,7 @@ func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 	switch fieldType {
 	case "text":
 		// text: analysis_scheme, default_value, highlight, return, sort, source_fields
-		return analysisSchemeEqual(a.AnalysisScheme, b.AnalysisScheme) &&
+		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
 			a.DefaultValue.Equal(b.DefaultValue) &&
 			a.Highlight.Equal(b.Highlight) &&
 			a.Return.Equal(b.Return) &&
@@ -880,7 +964,7 @@ func indexFieldsSemanticEqual(a, b *indexFieldModel) bool {
 			a.SourceFields.Equal(b.SourceFields)
 	case "text-array":
 		// text-array: analysis_scheme, default_value, highlight, return, source_fields
-		return analysisSchemeEqual(a.AnalysisScheme, b.AnalysisScheme) &&
+		return a.AnalysisScheme.Equal(b.AnalysisScheme) &&
 			a.DefaultValue.Equal(b.DefaultValue) &&
 			a.Highlight.Equal(b.Highlight) &&
 			a.Return.Equal(b.Return) &&
