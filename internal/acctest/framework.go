@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,28 +34,28 @@ import (
 // instead.
 func CheckFrameworkResourceDisappears(
 	ctx context.Context,
-	provo *schema.Provider,
+	t *testing.T,
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error),
 	n string,
 ) resource.TestCheckFunc {
-	return deleteFrameworkResource(ctx, provo, factory, n, rootStringStateFunc())
+	return deleteFrameworkResource(ctx, ProviderMeta(ctx, t), factory, n, rootStringStateFunc())
 }
 
 // CheckFrameworkResourceDisappearsWithStateFunc destroys an existing resource
 // out of band, constructing state from the provided state function
 func CheckFrameworkResourceDisappearsWithStateFunc(
 	ctx context.Context,
-	provo *schema.Provider,
+	t *testing.T,
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error),
 	n string,
 	stateFunc func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error,
 ) resource.TestCheckFunc {
-	return deleteFrameworkResource(ctx, provo, factory, n, stateFunc)
+	return deleteFrameworkResource(ctx, ProviderMeta(ctx, t), factory, n, stateFunc)
 }
 
 func deleteFrameworkResource(
 	ctx context.Context,
-	provo *schema.Provider,
+	providerMeta *conns.AWSClient,
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error),
 	n string,
 	stateFunc func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error,
@@ -74,7 +75,7 @@ func deleteFrameworkResource(
 			return err
 		}
 
-		resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: provo.Meta()}, &fwresource.ConfigureResponse{})
+		resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: providerMeta}, &fwresource.ConfigureResponse{})
 
 		schemaResp := fwresource.SchemaResponse{}
 		resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
