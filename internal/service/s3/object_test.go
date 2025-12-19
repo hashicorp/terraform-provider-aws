@@ -1533,6 +1533,68 @@ func TestAccS3Object_objectLockRetentionStartWithSet(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_skipVersionDeletion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_skipVersionDeletion(rName, "initial content"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "initial content"),
+					resource.TestCheckResourceAttr(resourceName, "skip_version_deletion", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_skipVersionDeletionBucketOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectDeleteMarkerExists(ctx, rName, "test-key"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_skipVersionDeletionWithObjectLock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_skipVersionDeletionWithObjectLock(rName, "protected content"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "protected content"),
+					resource.TestCheckResourceAttr(resourceName, "skip_version_deletion", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_skipVersionDeletionWithObjectLockBucketOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectDeleteMarkerExists(ctx, rName, "test-key"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectBucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -2266,6 +2328,49 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckObjectDeleteMarkerExists(ctx context.Context, bucket, key string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		input := &s3.ListObjectVersionsInput{
+			Bucket: aws.String(bucket),
+			Prefix: aws.String(key),
+		}
+
+		output, err := conn.ListObjectVersions(ctx, input)
+		if err != nil {
+			return fmt.Errorf("listing object versions: %w", err)
+		}
+
+		hasDeleteMarker := false
+		hasVersions := false
+
+		for _, dm := range output.DeleteMarkers {
+			if aws.ToString(dm.Key) == key && aws.ToBool(dm.IsLatest) {
+				hasDeleteMarker = true
+				break
+			}
+		}
+
+		for _, v := range output.Versions {
+			if aws.ToString(v.Key) == key {
+				hasVersions = true
+				break
+			}
+		}
+
+		if !hasDeleteMarker {
+			return fmt.Errorf("expected delete marker for object %s/%s, but none found", bucket, key)
+		}
+
+		if !hasVersions {
+			return fmt.Errorf("expected object versions to be preserved for %s/%s, but none found", bucket, key)
+		}
 
 		return nil
 	}
@@ -3192,6 +3297,137 @@ resource "aws_s3_object" "object" {
   object_lock_retain_until_date = %[3]q
 }
 `, rName, content, retainUntilDate)
+}
+
+func testAccObjectConfig_skipVersionDeletion(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "object" {
+  depends_on = [aws_s3_bucket_versioning.test]
+  
+  bucket                = aws_s3_bucket.test.bucket
+  key                   = "test-key"
+  content               = %[2]q
+  skip_version_deletion = true
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_skipVersionDeletionWithObjectLock(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket              = %[1]q
+  force_destroy       = true
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyDeleteNonCurrentVersions"
+        Effect = "Deny"
+        Principal = "*"
+        Action = [
+          "s3:DeleteObjectVersion",
+        ]
+        Resource = "${aws_s3_bucket.test.arn}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "object" {
+  depends_on = [
+    aws_s3_bucket_versioning.test,
+    aws_s3_bucket_policy.test,
+  ]
+  
+  bucket                = aws_s3_bucket.test.bucket
+  key                   = "test-key"
+  content               = %[2]q
+  skip_version_deletion = true
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_skipVersionDeletionBucketOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+`, rName)
+}
+
+func testAccObjectConfig_skipVersionDeletionWithObjectLockBucketOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket              = %[1]q
+  force_destroy       = true
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyDeleteNonCurrentVersions"
+        Effect = "Deny"
+        Principal = "*"
+        Action = [
+          "s3:DeleteObjectVersion",
+        ]
+        Resource = "${aws_s3_bucket.test.arn}/*"
+      }
+    ]
+  })
+}
+`, rName)
 }
 
 func testAccObjectConfig_nonVersioned(rName string, source string) string {

@@ -147,6 +147,12 @@ func resourceObject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"skip_version_deletion": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{names.AttrForceDestroy},
+			},
 			"etag": {
 				Type: schema.TypeString,
 				// This will conflict with SSE-C and SSE-KMS encryption and multi-part upload
@@ -157,9 +163,10 @@ func resourceObject() *schema.Resource {
 				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
 			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"skip_version_deletion"},
 			},
 			names.AttrKey: {
 				Type:         schema.TypeString,
@@ -424,7 +431,10 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 
 	var err error
-	if _, ok := d.GetOk("version_id"); ok {
+	if d.Get("skip_version_deletion").(bool) {
+		// deleteObjectVersion creates delete marker instead of permanently deleting versions if the versioning is enabled.
+		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
+	} else if _, ok := d.GetOk("version_id"); ok {
 		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
