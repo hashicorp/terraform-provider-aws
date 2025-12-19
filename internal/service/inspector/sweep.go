@@ -14,6 +14,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_inspector_assessment_target", sweepAssesmentTargets)
+	awsv2.Register("aws_inspector_assessment_template", sweepAssesmentTemplates)
 }
 
 func sweepAssesmentTargets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -31,6 +32,31 @@ func sweepAssesmentTargets(ctx context.Context, client *conns.AWSClient) ([]swee
 
 		for _, v := range page.AssessmentTargetArns {
 			r := resourceAssessmentTarget()
+			d := r.Data(nil)
+			d.SetId(v)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAssesmentTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input inspector.ListAssessmentTemplatesInput
+	conn := client.InspectorClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := inspector.NewListAssessmentTemplatesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AssessmentTemplateArns {
+			r := resourceAssessmentTemplate()
 			d := r.Data(nil)
 			d.SetId(v)
 
