@@ -26,6 +26,7 @@ files:
     - ".xml"
     - ".hcl"
     - ".tf"
+    - ".tfvars"
 
   comment_styles:
     go: "//"
@@ -35,6 +36,7 @@ files:
     py: "#"
     sh: "#"
     tf: "#"
+    tfvars: "#"
     xml: "<!--"
     yaml: "#"
     yml: "#"
