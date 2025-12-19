@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -1836,24 +1835,12 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "apigateway",
-		Region:    c.Region(ctx),
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
-	}.String()
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
 }
 
 // See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
 func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "apigateway",
-		Region:    c.Region(ctx),
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2021-11-15/functions/%s/response-streaming-invocations", functionOrAliasARN),
-	}.String()
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
