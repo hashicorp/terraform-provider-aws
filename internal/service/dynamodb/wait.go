@@ -34,7 +34,7 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 		Target:                    enum.Slice(awstypes.TableStatusActive),
 		Refresh:                   statusTable(conn, tableName),
 		Timeout:                   max(createTableTimeout, timeout),
-		Delay:                     5 * time.Second,
+		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}
 

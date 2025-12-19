@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -98,6 +99,9 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				CustomType: fwtypes.NewObjectTypeOf[warmThroughputModel](ctx),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -316,19 +320,13 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		},
 	}
 
-	output, err := conn.UpdateTable(ctx, &input)
+	_, err = conn.UpdateTable(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
 		return
 	}
 
-	_, err = findGSIFromTable(output.TableDescription, data.IndexName.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, data.TableName.ValueString(), "index_name", data.IndexName.ValueString())
-		return
-	}
-
-	if _, err = waitTableActive(ctx, conn, data.TableName.ValueString(), createTimeout); err != nil {
+	if table, err = waitTableActive(ctx, conn, data.TableName.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Error while waiting for table "%s" to be active`, data.TableName.ValueString()),
 			err.Error(),
@@ -347,7 +345,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, index, output.TableDescription)...)
+	response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &data, index, table)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -422,11 +420,11 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		return
 	}
 
-	hasUpdate := !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput) ||
-		!new.OnDemandThroughput.Equal(old.OnDemandThroughput) ||
-		!new.WarmThroughput.Equal(old.WarmThroughput)
+	updateProvisionedThroughput := !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput)
+	updateOnDemandThroughput := !new.OnDemandThroughput.Equal(old.OnDemandThroughput)
+	updateWarmThroughput := !new.WarmThroughput.Equal(old.WarmThroughput)
 
-	if hasUpdate {
+	if updateProvisionedThroughput || updateOnDemandThroughput || updateWarmThroughput {
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		conn := r.Meta().DynamoDBClient(ctx)
 
@@ -450,35 +448,45 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		}
 
+		input := dynamodb.UpdateTableInput{
+			TableName:                   new.TableName.ValueStringPointer(),
+			GlobalSecondaryIndexUpdates: make([]awstypes.GlobalSecondaryIndexUpdate, 1),
+		}
+
 		var action awstypes.UpdateGlobalSecondaryIndexAction
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &action)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input := dynamodb.UpdateTableInput{
-			TableName: new.TableName.ValueStringPointer(),
-			GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
-				{
-					Update: &action,
-				},
-			},
+		if updateProvisionedThroughput || updateOnDemandThroughput {
+			innerAction := action
+			innerAction.WarmThroughput = nil
+
+			input.GlobalSecondaryIndexUpdates[0].Update = &innerAction
+
+			_, err := conn.UpdateTable(ctx, &input)
+			if err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+				return
+			}
 		}
 
-		output, err := conn.UpdateTable(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
-			return
-		}
-		table = output.TableDescription
+		if updateWarmThroughput {
+			innerAction := action
+			innerAction.OnDemandThroughput = nil
+			innerAction.ProvisionedThroughput = nil
 
-		_, err = findGSIFromTable(output.TableDescription, new.IndexName.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
-			return
+			input.GlobalSecondaryIndexUpdates[0].Update = &innerAction
+
+			_, err := conn.UpdateTable(ctx, &input)
+			if err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+				return
+			}
 		}
 
-		if _, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
+		if table, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
 			return
 		}
