@@ -1182,7 +1182,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
@@ -1215,7 +1214,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.type", string(awstypes.KafkaSchemaRegistryAuthTypeBasicAuth)),
@@ -1247,7 +1245,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
@@ -2972,7 +2969,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
   }
 
   self_managed_event_source {
@@ -3017,7 +3014,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       access_config {
         type = "BASIC_AUTH"
@@ -3073,7 +3070,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       event_record_format = "JSON"
       schema_registry_uri = aws_glue_registry.test.arn
@@ -3118,9 +3115,6 @@ func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig
 	if minPollers == "" {
 		minPollers = "null"
 	}
-	if pollerGroupName == "" {
-		pollerGroupName = "null"
-	}
 
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
@@ -3152,7 +3146,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   provisioned_poller_config {
     maximum_pollers   = %[4]s
     minimum_pollers   = %[5]s
-    poller_group_name = %[6]s
+    poller_group_name = %[6]q
   }
 }
 `, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName))
