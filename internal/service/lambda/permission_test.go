@@ -735,7 +735,7 @@ func TestAccLambdaPermission_FunctionURLs_invokedViaFunctionURL(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowInvokeFromWithoutAuth"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "invoked_via_function_url", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invoked_via_function_url", acctest.CtTrue),
 				),
 			},
 			{
