@@ -414,6 +414,7 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `elasticloadbalancing:listener` | `aws_lb_listener` |
 | `elasticloadbalancing:listener-rule` | `aws_lb_listener_rule` |
 | `elasticloadbalancing:loadbalancer` | `aws_lb` |
+| `elasticloadbalancing:loadbalancer` | `aws_alb` |
 | `elasticloadbalancing:targetgroup` | `aws_lb_target_group` |
 | `elasticloadbalancing:truststore` | `aws_lb_trust_store` |
 | `elasticmapreduce:cluster` | `aws_emr_cluster` |

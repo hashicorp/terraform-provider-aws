@@ -591,6 +591,7 @@ var Lookup = map[string][]string{
 	},
 	"elasticloadbalancing:loadbalancer": {
 		"aws_lb",
+		"aws_alb",
 	},
 	"elasticloadbalancing:targetgroup": {
 		"aws_lb_target_group",
