@@ -25,6 +25,7 @@ files:
     - ".md"
     - ".xml"
     - ".hcl"
+    - ".tf"
 
   comment_styles:
     go: "//"
