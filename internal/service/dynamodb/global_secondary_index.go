@@ -424,6 +424,23 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	updateOnDemandThroughput := !new.OnDemandThroughput.Equal(old.OnDemandThroughput)
 	updateWarmThroughput := !new.WarmThroughput.Equal(old.WarmThroughput)
 
+	if updateOnDemandThroughput {
+		newOnDemandThroughput, d := new.OnDemandThroughput.ToPtr(ctx)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if newOnDemandThroughput.MaxReadRequestUnits.IsNull() || newOnDemandThroughput.MaxReadRequestUnits.IsUnknown() {
+			newOnDemandThroughput.MaxReadRequestUnits = types.Int64Value(-1)
+		}
+		if newOnDemandThroughput.MaxWriteRequestUnits.IsNull() || newOnDemandThroughput.MaxWriteRequestUnits.IsUnknown() {
+			newOnDemandThroughput.MaxWriteRequestUnits = types.Int64Value(-1)
+		}
+
+		new.OnDemandThroughput = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, newOnDemandThroughput)
+	}
+
 	if updateProvisionedThroughput || updateOnDemandThroughput || updateWarmThroughput {
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		conn := r.Meta().DynamoDBClient(ctx)
