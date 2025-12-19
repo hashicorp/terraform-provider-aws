@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -99,9 +98,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				CustomType: fwtypes.NewObjectTypeOf[warmThroughputModel](ctx),
 				Optional:   true,
 				Computed:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -408,24 +404,30 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 }
 
 func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceGlobalSecondaryIndexModel
+	var state, plan, config resourceGlobalSecondaryIndexModel
 
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	updateProvisionedThroughput := !new.ProvisionedThroughput.Equal(old.ProvisionedThroughput)
-	updateOnDemandThroughput := !new.OnDemandThroughput.Equal(old.OnDemandThroughput)
-	updateWarmThroughput := !new.WarmThroughput.Equal(old.WarmThroughput)
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	updateProvisionedThroughput := !plan.ProvisionedThroughput.Equal(state.ProvisionedThroughput)
+	updateOnDemandThroughput := !plan.OnDemandThroughput.Equal(state.OnDemandThroughput)
+	// Need to ignore `warm_throughput` when it's not set in config
+	updateWarmThroughput := !config.WarmThroughput.IsNull() && !plan.WarmThroughput.Equal(state.WarmThroughput)
 
 	if updateOnDemandThroughput {
-		newOnDemandThroughput, d := new.OnDemandThroughput.ToPtr(ctx)
+		newOnDemandThroughput, d := plan.OnDemandThroughput.ToPtr(ctx)
 		response.Diagnostics.Append(d...)
 		if response.Diagnostics.HasError() {
 			return
@@ -438,21 +440,21 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			newOnDemandThroughput.MaxWriteRequestUnits = types.Int64Value(-1)
 		}
 
-		new.OnDemandThroughput = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, newOnDemandThroughput)
+		plan.OnDemandThroughput = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, newOnDemandThroughput)
 	}
 
 	if updateProvisionedThroughput || updateOnDemandThroughput || updateWarmThroughput {
-		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		conn := r.Meta().DynamoDBClient(ctx)
 
-		table, err := waitAllGSIActive(ctx, conn, new.TableName.ValueString(), updateTimeout)
+		table, err := waitAllGSIActive(ctx, conn, plan.TableName.ValueString(), updateTimeout)
 		if err != nil {
 			if retry.NotFound(err) {
 				response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 				response.State.RemoveResource(ctx)
 			} else {
 				response.Diagnostics.AddError(
-					fmt.Sprintf(`Unable to read table "%s"`, new.TableName.ValueString()),
+					fmt.Sprintf(`Unable to read table "%s"`, plan.TableName.ValueString()),
 					err.Error(),
 				)
 			}
@@ -460,18 +462,18 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		}
 
-		response.Diagnostics.Append(validateNewGSIAttributes(ctx, new, table)...)
+		response.Diagnostics.Append(validateNewGSIAttributes(ctx, plan, table)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		input := dynamodb.UpdateTableInput{
-			TableName:                   new.TableName.ValueStringPointer(),
+			TableName:                   plan.TableName.ValueStringPointer(),
 			GlobalSecondaryIndexUpdates: make([]awstypes.GlobalSecondaryIndexUpdate, 1),
 		}
 
 		var action awstypes.UpdateGlobalSecondaryIndexAction
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &action)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &action)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -484,7 +486,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 			_, err := conn.UpdateTable(ctx, &input)
 			if err != nil {
-				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, plan.TableName.ValueString(), "index_name", plan.IndexName.ValueString())
 				return
 			}
 		}
@@ -498,34 +500,34 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 			_, err := conn.UpdateTable(ctx, &input)
 			if err != nil {
-				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+				smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, plan.TableName.ValueString(), "index_name", plan.IndexName.ValueString())
 				return
 			}
 		}
 
-		if table, err = waitTableActive(ctx, conn, new.TableName.ValueString(), updateTimeout); err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+		if table, err = waitTableActive(ctx, conn, plan.TableName.ValueString(), updateTimeout); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, plan.TableName.ValueString(), "index_name", plan.IndexName.ValueString())
 			return
 		}
 
-		if err = waitGSIWarmThroughputActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+		if err = waitGSIWarmThroughputActive(ctx, conn, plan.TableName.ValueString(), plan.IndexName.ValueString(), updateTimeout); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, plan.TableName.ValueString(), "index_name", plan.IndexName.ValueString())
 			return
 		}
 
-		index, err := waitGSIActive(ctx, conn, new.TableName.ValueString(), new.IndexName.ValueString(), updateTimeout)
+		index, err := waitGSIActive(ctx, conn, plan.TableName.ValueString(), plan.IndexName.ValueString(), updateTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, new.TableName.ValueString(), "index_name", new.IndexName.ValueString())
+			smerr.AddError(ctx, &response.Diagnostics, err, names.AttrTableName, plan.TableName.ValueString(), "index_name", plan.IndexName.ValueString())
 			return
 		}
 
-		response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &new, index, table)...)
+		response.Diagnostics.Append(flattenGlobalSecondaryIndex(ctx, &plan, index, table)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
