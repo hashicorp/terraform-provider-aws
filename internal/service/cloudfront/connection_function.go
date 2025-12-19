@@ -67,7 +67,7 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 			"code": schema.StringAttribute{
 				Required: true,
 			},
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 			},
 			"etag": schema.StringAttribute{
@@ -392,10 +392,6 @@ func (r *resourceConnectionFunction) Delete(ctx context.Context, req resource.De
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
-}
-
-func (r *resourceConnectionFunction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findConnectionFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, id string, stage awstypes.FunctionStage) (*cloudfront.DescribeConnectionFunctionOutput, error) {

@@ -78,26 +78,26 @@ resource "aws_cloudfront_connection_function" "example" {
 The following arguments are required:
 
 * `code` - (Required) Code for the connection function. Maximum length is 40960 characters.
-* `name` - (Required) Name for the connection function. Must be 1-64 characters and can contain letters, numbers, hyphens, and underscores.
+* `name` - (Required) Name for the connection function. Must be 1-64 characters and can contain letters, numbers, hyphens, and underscores. Changing this forces a new resource to be created.
 * `runtime` - (Required) Runtime environment for the function. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
 The following arguments are optional:
 
 * `comment` - (Optional) Comment to describe the function.
-* `key_value_store_associations` - (Optional) Configuration for key value store associations. See [Key Value Store Associations](#key-value-store-associations) below. AWS limits associations to one key value store per function.
+* `key_value_store_associations` - (Optional) Configuration block for key value store associations. See [`key_value_store_associations`](#key_value_store_associations) below.
 * `publish` - (Optional) Whether to publish the function to the `LIVE` stage after creation or update. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Key Value Store Associations
+### key_value_store_associations
 
-* `items` - (Optional) List of key value store associations.
+* `items` - (Required) List of key value store associations.
     * `key_value_store_arn` - (Required) ARN of the key value store.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Connection Function.
+* `arn` - ARN of the connection function.
 * `etag` - ETag of the connection function.
 * `id` - ID of the connection function.
 * `live_stage_etag` - ETag of the function's LIVE stage. Will be empty if the function has not been published.
