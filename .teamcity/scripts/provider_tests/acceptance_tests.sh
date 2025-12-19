@@ -65,6 +65,7 @@ TF_ACC=1 go test \
     ./internal/smerr/... \
     ./internal/smithy/... \
     ./internal/sweep/... \
+    ./internal/sync/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
