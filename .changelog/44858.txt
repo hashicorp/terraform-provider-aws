@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_lambda_permission: Add invoked_via_function_url attribute now required by function URLs
+resource/aws_lambda_permission: Add `invoked_via_function_url` argument
 ```
 
 ```release-note:enhancement
-resource/aws_lambda_function_url: Automatically attach lambda:InvokedViaFunctionUrl policy on creation to match lambda:FunctionUrlAuthType behaviour
+resource/aws_lambda_function_url: Automatically adds the `lambda:InvokeFunction` permission, with the `InvokedViaFunctionUrl` flag set to `true`, to the function on creation when `authorization_type` is `NONE`
 ```
