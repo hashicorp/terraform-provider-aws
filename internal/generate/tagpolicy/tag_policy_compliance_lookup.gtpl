@@ -2,8 +2,8 @@
 |Tag Resource Type|Terraform Resource Type|
 |-----------------|-----------------------|
 {{- range $tagType := .TagTypes }}
-{{- if $tagType.TerraformResourceTypes }}
-  {{- range $tagType.TerraformResourceTypes }}
+{{- if $tagType.TerraformTypes }}
+  {{- range $tagType.TerraformTypes }}
 | `{{ $tagType.Name }}` | `{{ . }}` |
   {{- end }}
 {{- end }}

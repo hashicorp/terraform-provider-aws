@@ -18,8 +18,8 @@ import (
 var tmpl string
 
 type TagType struct {
-	Name                   string   `hcl:"name,label"`
-	TerraformResourceTypes []string `hcl:"terraform_resource_types"`
+	Name           string   `hcl:"name,label"`
+	TerraformTypes []string `hcl:"terraform_types"`
 }
 
 type Config struct {

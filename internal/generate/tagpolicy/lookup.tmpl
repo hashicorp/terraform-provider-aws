@@ -8,9 +8,9 @@ package tagpolicy
 // Terraform resource type(s)
 var Lookup = map[string][]string{
   {{- range .TagTypes }}
-  {{- if .TerraformResourceTypes }}
+  {{- if .TerraformTypes }}
   "{{ .Name }}": {
-    {{- range .TerraformResourceTypes }}
+    {{- range .TerraformTypes }}
     "{{ . }}",
     {{- end }}
   },
