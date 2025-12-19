@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudsearch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/YakDriver/regexache"
 )
 
 func TestAccCloudSearchDomain_basic(t *testing.T) {

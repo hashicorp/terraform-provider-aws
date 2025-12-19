@@ -186,12 +186,12 @@ func TestInvalidForFieldTypes(t *testing.T) {
 
 			// Create a mock config with the type field
 			attrs := map[string]tftypes.Value{
-				names.AttrName:      tftypes.NewValue(tftypes.String, "test_field"),
-				names.AttrType:      tftypes.NewValue(tftypes.String, test.fieldType),
-				"facet":     tftypes.NewValue(tftypes.Bool, nil),
-				"search":    tftypes.NewValue(tftypes.Bool, nil),
-				"sort":      tftypes.NewValue(tftypes.Bool, nil),
-				"highlight": tftypes.NewValue(tftypes.Bool, nil),
+				names.AttrName: tftypes.NewValue(tftypes.String, "test_field"),
+				names.AttrType: tftypes.NewValue(tftypes.String, test.fieldType),
+				"facet":        tftypes.NewValue(tftypes.Bool, nil),
+				"search":       tftypes.NewValue(tftypes.Bool, nil),
+				"sort":         tftypes.NewValue(tftypes.Bool, nil),
+				"highlight":    tftypes.NewValue(tftypes.Bool, nil),
 			}
 
 			// Set the attribute being tested
