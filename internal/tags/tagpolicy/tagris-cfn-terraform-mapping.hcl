@@ -2010,7 +2010,11 @@ tagtype "rds:cluster" {
 }
 
 tagtype "rds:db" {
-  terraform_resource_types = ["aws_db_instance"]
+  terraform_resource_types = [
+    "aws_db_instance",
+    "aws_docdb_cluster_instance",
+    "aws_neptune_cluster_instance",
+  ]
 }
 
 tagtype "rds:db-proxy" {

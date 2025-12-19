@@ -992,6 +992,8 @@ var Lookup = map[string][]string{
 	},
 	"rds:db": {
 		"aws_db_instance",
+		"aws_docdb_cluster_instance",
+		"aws_neptune_cluster_instance",
 	},
 	"rds:db-proxy": {
 		"aws_db_proxy",

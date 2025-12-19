@@ -549,6 +549,8 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `rds:cluster` | `aws_neptune_cluster` |
 | `rds:cluster` | `aws_rds_cluster` |
 | `rds:db` | `aws_db_instance` |
+| `rds:db` | `aws_docdb_cluster_instance` |
+| `rds:db` | `aws_neptune_cluster_instance` |
 | `rds:db-proxy` | `aws_db_proxy` |
 | `rds:db-proxy-endpoint` | `aws_db_proxy_endpoint` |
 | `rds:es` | `aws_db_event_subscription` |
