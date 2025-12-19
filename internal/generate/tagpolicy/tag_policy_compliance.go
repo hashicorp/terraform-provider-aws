@@ -31,7 +31,7 @@ type Config struct {
 
 func main() {
 	const (
-		source   = `../../../internal/tags/tagpolicy/tagris-cfn-terraform-mapping.hcl`
+		source   = `../../../internal/tags/tagpolicy/tagris-terraform-mapping.hcl`
 		filename = `../../../website/docs/guides/tag-policy-compliance.html.markdown`
 	)
 	g := common.NewGenerator()

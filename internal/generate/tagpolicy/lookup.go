@@ -28,7 +28,7 @@ type Config struct {
 
 func main() {
 	const (
-		source   = `../../../internal/tags/tagpolicy/tagris-cfn-terraform-mapping.hcl`
+		source   = `../../../internal/tags/tagpolicy/tagris-terraform-mapping.hcl`
 		filename = `../../../internal/tags/tagpolicy/lookup_gen.go`
 	)
 	g := common.NewGenerator()
