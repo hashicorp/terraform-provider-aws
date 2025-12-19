@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +41,7 @@ func TestAccCloudFrontDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_v1_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -153,6 +154,45 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.s3_distribution", &distribution),
 					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", "logging_v1_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudfront_distribution.s3_distribution",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_includeCookieWhenV1loggingDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_includeCookiesWhenV1loggingDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.s3_distribution", &distribution),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", "logging_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", "logging_config.0.include_cookies", acctest.CtTrue),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", "logging_v1_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1661,7 +1701,7 @@ func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc
 
 			output, err := tfcloudfront.FindDistributionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1892,6 +1932,66 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     include_cookies = false
     bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
     prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[1]s
+}
+`, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_includeCookiesWhenV1loggingDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		originBucket(rName),
+		logBucket(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
+  origin {
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "myS3Origin"
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = true
   }
 
   default_cache_behavior {

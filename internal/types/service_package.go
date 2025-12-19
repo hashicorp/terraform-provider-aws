@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -130,17 +130,21 @@ type ServicePackageSDKListResource struct {
 }
 
 type Identity struct {
-	IsGlobalResource       bool   // All
-	IsSingleton            bool   // Singleton
-	IsARN                  bool   // ARN
-	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
-	IDAttrShadowsAttr      string
-	Attributes             []IdentityAttribute
-	IdentityDuplicateAttrs []string
-	IsSingleParameter      bool
-	IsMutable              bool
-	IsSetOnUpdate          bool
+	IsGlobalResource           bool   // All
+	IsSingleton                bool   // Singleton
+	IsARN                      bool   // ARN
+	IsGlobalARNFormat          bool   // ARN
+	IdentityAttribute          string // ARN
+	IDAttrShadowsAttr          string
+	Attributes                 []IdentityAttribute
+	IdentityDuplicateAttrs     []string
+	IsSingleParameter          bool
+	IsMutable                  bool
+	IsSetOnUpdate              bool
+	IsCustomInherentRegion     bool
+	customInherentRegionParser RegionalCustomInherentRegionIdentityFunc
+	version                    int64
+	sdkv2IdentityUpgraders     []schema.IdentityUpgrader
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -153,7 +157,22 @@ func (i Identity) HasInherentRegion() bool {
 	if i.IsARN && !i.IsGlobalARNFormat {
 		return true
 	}
+	if i.IsCustomInherentRegion {
+		return true
+	}
 	return false
+}
+
+func (i Identity) Version() int64 {
+	return i.version
+}
+
+func (i Identity) SDKv2IdentityUpgraders() []schema.IdentityUpgrader {
+	return i.sdkv2IdentityUpgraders
+}
+
+func (i Identity) CustomInherentRegionParser() RegionalCustomInherentRegionIdentityFunc {
+	return i.customInherentRegionParser
 }
 
 func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
@@ -245,6 +264,31 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 
 	return identity
 }
+
+func RegionalCustomInherentRegionIdentity(name string, parser RegionalCustomInherentRegionIdentityFunc, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource:  false,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute(name, true),
+		},
+		IsCustomInherentRegion:     true,
+		customInherentRegionParser: parser,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+type BaseIdentity struct {
+	AccountID string
+	Region    string
+}
+
+type RegionalCustomInherentRegionIdentityFunc func(value string) (BaseIdentity, error)
 
 func RegionalResourceWithGlobalARNFormat(opts ...IdentityOptsFunc) Identity {
 	return RegionalResourceWithGlobalARNFormatNamed(names.AttrARN, opts...)
@@ -410,6 +454,18 @@ func WithIdentityFix() IdentityOptsFunc {
 func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
+	}
+}
+
+func WithVersion(version int64) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.version = version
+	}
+}
+
+func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.sdkv2IdentityUpgraders = identityUpgraders
 	}
 }
 

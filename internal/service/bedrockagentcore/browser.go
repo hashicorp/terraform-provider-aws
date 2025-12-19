@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -107,7 +107,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"network_mode_config": schema.ListNestedBlock{
+						names.AttrVPCConfig: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -199,7 +199,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 
 func (r *browserResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data browserResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -207,7 +207,7 @@ func (r *browserResource) Create(ctx context.Context, request resource.CreateReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var input bedrockagentcorecontrol.CreateBrowserInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -241,7 +241,7 @@ func (r *browserResource) Create(ctx context.Context, request resource.CreateReq
 
 	browserID := aws.ToString(out.BrowserId)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -251,12 +251,12 @@ func (r *browserResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data browserResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -265,8 +265,8 @@ func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest
 
 	browserID := fwflex.StringValueFromFramework(ctx, data.BrowserID)
 	out, err := findBrowserByID(ctx, conn, browserID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -275,17 +275,17 @@ func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *browserResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data browserResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -352,7 +352,7 @@ func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 func statusBrowser(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findBrowserByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -409,7 +409,7 @@ type browserResourceModel struct {
 
 type browserNetworkConfigurationModel struct {
 	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"network_mode_config"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"vpc_config"`
 }
 
 type recordingConfigModel struct {

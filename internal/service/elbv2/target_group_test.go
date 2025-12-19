@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2708,110 +2708,188 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_albTargetControlPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumInstance), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumInstance)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumIp), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumIp)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 	t.Parallel()
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		expectedMatcher            string
 		expectedPath               string
 		expectedTimeout            string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidHealthCheckProtocol: true,
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidHealthCheckProtocol: true,
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
 				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
 				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
 				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
 				expectedTimeout: "10",
@@ -2823,9 +2901,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -2834,7 +2911,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -2852,7 +2929,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumInstance)),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
@@ -2860,7 +2937,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						)
@@ -2885,79 +2962,103 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		matcher                    string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
@@ -2968,9 +3069,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -2979,7 +3079,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -2998,11 +3098,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.matcher),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3025,79 +3125,103 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		path                       string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
@@ -3108,9 +3232,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -3119,7 +3242,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3138,11 +3261,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3163,92 +3286,120 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		matcher                    string
 		validRange                 string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "500",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "500",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
@@ -3259,9 +3410,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -3270,7 +3420,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3308,22 +3458,22 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		expectedMatcher string
 		expectedPath    string
 		expectedTimeout string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			expectedMatcher: "200-399",
 			expectedPath:    "/",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			expectedMatcher: "200-399",
 			expectedPath:    "/",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			expectedMatcher: "",
 			expectedPath:    "",
 			expectedTimeout: "5",
@@ -3331,7 +3481,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3358,7 +3508,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"), // Should be 80
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						),
@@ -3374,33 +3524,33 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		expectedMatcher            string
 		expectedPath               string
 		expectedTimeout            string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			expectedMatcher: "12",
 			expectedPath:    "/AWS.ALB/healthcheck",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			expectedMatcher: "12",
 			expectedPath:    "/AWS.ALB/healthcheck",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3417,7 +3567,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
@@ -3426,7 +3576,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						)
@@ -3451,29 +3601,29 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		path                       string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			path: "/path",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			path: "/path",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidConfig: true,
 			path:          "/path",
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3492,11 +3642,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3517,27 +3667,27 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		matcher                    string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			matcher: "101",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			matcher: "101",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3573,25 +3723,31 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		validConfig bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTls): {
+		awstypes.ProtocolEnumTls: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumUdp): {
+		awstypes.ProtocolEnumUdp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			validConfig: false,
 		},
 	}
@@ -3600,9 +3756,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			protocolCase, ok := testcases[protocol]
 			if !ok {
 				t.Fatalf("missing case for target protocol %q", protocol)
@@ -3646,25 +3801,31 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		validConfig bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTls): {
+		awstypes.ProtocolEnumTls: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumUdp): {
+		awstypes.ProtocolEnumUdp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			validConfig: false,
 		},
 	}
@@ -3673,9 +3834,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			protocolCase, ok := testcases[protocol]
 			if !ok {
 				t.Fatalf("missing case for target protocol %q", protocol)
@@ -4103,23 +4263,23 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		warning                    bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -4161,23 +4321,23 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		warning                    bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -4278,7 +4438,7 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -5065,6 +5225,32 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, protocol, interval)
+}
+
+func testAccTargetGroupConfig_albTargetControlPort(rName, targetType string, targetControlPort int) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  target_type = %[2]q
+
+  target_control_port = %[3]d
+
+  tags = {
+    TestName = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, targetType, targetControlPort)
 }
 
 func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {
@@ -6012,7 +6198,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -6032,7 +6218,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -6053,7 +6239,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -6074,7 +6260,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheckGeneve_basic(healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealthCheckGeneve_basic(healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 6081
@@ -6094,7 +6280,7 @@ resource "aws_vpc" "test" {
 `, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6115,7 +6301,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol, path string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol awstypes.ProtocolEnum, path string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6137,7 +6323,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, path)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6159,7 +6345,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_protocolVersion(protocol, protocolVersion string) string {
+func testAccTargetGroupConfig_Instance_protocolVersion(protocol awstypes.ProtocolEnum, protocolVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   target_type = "instance"
@@ -6241,7 +6427,7 @@ resource "aws_lb_target_group" "test" {
 `
 }
 
-func testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   target_type = "lambda"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -18,7 +18,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,9 +26,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -431,7 +432,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -475,7 +476,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		// Don't block a refresh for a bad image.
 		rootDeviceName = ""
 	} else if err != nil {
@@ -772,7 +773,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}
@@ -819,7 +820,7 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.LaunchConfigurationName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -864,7 +865,7 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID stri
 	}
 
 	if rootDeviceName == "" {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("finding root device name for EC2 AMI (%s)", imageID),
 		}
 	}

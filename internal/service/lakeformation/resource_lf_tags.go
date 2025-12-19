@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,11 +42,10 @@ func ResourceResourceLFTags() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+				Type:     schema.TypeString,
+				Computed: true,
+				ForceNew: true,
+				Optional: true,
 			},
 			names.AttrDatabase: {
 				Type:     schema.TypeList,
@@ -63,11 +61,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -119,11 +116,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -167,11 +163,10 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -109,7 +110,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 		err = findAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -179,7 +180,7 @@ func findAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Cli
 		return nil
 	}
 
-	return &retry.NotFoundError{
+	return &sdkretry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
 	}
 }
@@ -195,7 +196,7 @@ func findAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Clien
 		return nil
 	}
 
-	return &retry.NotFoundError{
+	return &sdkretry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
 	}
 }

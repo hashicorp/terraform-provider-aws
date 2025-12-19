@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package qldb
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/qldb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +123,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	ledger, err := findLedgerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QLDB Ledger %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -134,8 +135,9 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set(names.AttrARN, ledger.Arn)
 	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
-	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	encryptionDescription := ledger.EncryptionDescription
+	if encryptionDescription != nil {
+		d.Set(names.AttrKMSKey, encryptionDescription.KmsKeyArn)
 	} else {
 		d.Set(names.AttrKMSKey, nil)
 	}
@@ -214,7 +216,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	output, err := conn.DescribeLedger(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -229,7 +231,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	}
 
 	if state := output.State; state == types.LedgerStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -238,11 +240,11 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	return output, nil
 }
 
-func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retry.StateRefreshFunc {
+func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLedgerByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -255,7 +257,7 @@ func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retr
 }
 
 func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateCreating),
 		Target:     enum.Slice(types.LedgerStateActive),
 		Refresh:    statusLedgerState(ctx, conn, name),
@@ -273,7 +275,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, time
 }
 
 func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),

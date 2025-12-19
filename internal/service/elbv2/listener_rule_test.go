@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1278,6 +1278,57 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRule_jwtValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+	listenerResourceName := "aws_lb_listener.test"
+	targetGroupResourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_jwtValidation(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "jwt-validation"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.jwks_endpoint", "https://example.com/.well-known/jwks.json"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.additional_claim.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "string-array",
+						names.AttrName:   "claim_name1",
+						"values.#":       "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "single-string",
+						names.AttrName:   "claim_name2",
+						"values.#":       "1",
+						"values.0":       acctest.CtValue1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
@@ -2227,6 +2278,86 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRule_transform(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_transform(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
+						"host_header_rewrite_config.#":                   "1",
+						"host_header_rewrite_config.0.rewrite.#":         "1",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_transformUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
+						"host_header_rewrite_config.#":                   "1",
+						"host_header_rewrite_config.0.rewrite.#":         "1",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).com$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp2/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_transformRemoveOneEntry(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp2/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				// Remove all transforms
+				Config: testAccListenerRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *awstypes.Rule, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newActions []awstypes.Action
@@ -2307,7 +2438,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3922,6 +4053,68 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
+func testAccListenerRuleConfig_jwtValidation(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
 func testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -4891,4 +5084,114 @@ condition {
   }
 }
 `, lbName)
+}
+
+func testAccListenerRuleConfig_transform(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleConfig_transformUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp2/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite2-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleConfig_transformRemoveOneEntry(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp2/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
+`)
 }

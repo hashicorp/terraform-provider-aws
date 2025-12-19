@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -337,7 +338,7 @@ func resourceDistribution() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrBucket: {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"include_cookies": {
 							Type:     schema.TypeBool,
@@ -351,6 +352,10 @@ func resourceDistribution() *schema.Resource {
 						},
 					},
 				},
+			},
+			"logging_v1_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -952,7 +957,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findDistributionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -995,11 +1000,17 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
-	if distributionConfig.Logging != nil && aws.ToBool(distributionConfig.Logging.Enabled) {
-		if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	if distributionConfig.Logging != nil {
+		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
+		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
+			if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+			}
+		} else {
+			d.Set("logging_config", []any{})
 		}
 	} else {
+		d.Set("logging_v1_enabled", false)
 		d.Set("logging_config", []any{})
 	}
 	if distributionConfig.CacheBehaviors != nil {
@@ -1099,18 +1110,18 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		err := disableContinuousDeploymentPolicy(ctx, conn, v)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return sdkdiag.AppendFromErr(diags, err)
 		default:
-			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
+			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !retry.NotFound(err) {
 				return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
 			}
 		}
 	}
 
 	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -1124,7 +1135,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	err := deleteDistribution(ctx, conn, d.Id())
 
-	if err == nil || tfresource.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return diags
 	}
 
@@ -1133,7 +1144,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return diags
 			}
 
@@ -1159,7 +1170,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return diags
 			}
 
@@ -1198,7 +1209,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionDeleted(ctx, conn, id); err != nil {
+	if err := waitDistributionDeleted(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution (%s) delete: %w", id, err)
 	}
 
@@ -1268,7 +1279,7 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	output, err := conn.GetDistribution(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1285,11 +1296,11 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[any, string] {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1309,7 +1320,7 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      30 * time.Second,
@@ -1324,23 +1335,19 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	return nil, err
 }
 
-func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
+func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
@@ -2651,8 +2658,13 @@ func expandLoggingConfig(tfMap map[string]any) *awstypes.LoggingConfig {
 	apiObject := &awstypes.LoggingConfig{}
 
 	if tfMap != nil {
-		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
-		apiObject.Enabled = aws.Bool(true)
+		if v, ok := tfMap[names.AttrBucket]; ok && v.(string) != "" {
+			apiObject.Bucket = aws.String(v.(string))
+			apiObject.Enabled = aws.Bool(true)
+		} else {
+			apiObject.Bucket = aws.String("")
+			apiObject.Enabled = aws.Bool(false)
+		}
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
 		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {

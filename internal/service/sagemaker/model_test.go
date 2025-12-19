@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -10,11 +10,15 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -363,10 +367,97 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 				Config: testAccModelConfig_vpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(2),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_vpcBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(2),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccModelConfig_vpcSubnetsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(3),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccModelConfig_vpcSecurityGroupsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(3),
+							names.AttrSubnets:          knownvalue.SetSizeExact(3),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -467,7 +558,7 @@ func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindModelByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -490,7 +581,7 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker model ID is set")
+			return fmt.Errorf("No sagemaker model ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -571,6 +662,35 @@ func TestAccSageMakerModel_primaryContainerMultiModelConfigModelCacheSetting(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.multi_model_config.0.model_cache_setting", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_primaryContainerAdditionalModelDataSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerAdditionalModelDataSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.channel_name", "test-channel"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
 				),
 			},
 			{
@@ -887,25 +1007,8 @@ resource "aws_sagemaker_model" "test" {
 `, rName))
 }
 
-func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_sagemaker_model" "test" {
-  name               = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
-
-  primary_container {
-    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_source {
-      s3_data_source {
-        s3_data_type     = "S3Prefix"
-        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
-        compression_type = "None"
-      }
-    }
-  }
-}
-
-
+func testAccModelConfig_s3DataSourceBase(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name        = %[1]q
   description = "Allow SageMaker AI to create model"
@@ -963,6 +1066,55 @@ resource "aws_s3_object" "test" {
   key     = "model/inference.py"
   content = "some-data"
 }
+`, rName)
+}
+
+func testAccModelConfig_primaryContainerAdditionalModelDataSource(rName string) string {
+	return acctest.ConfigCompose(
+		testAccModelConfig_base(rName),
+		testAccModelConfig_s3DataSourceBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_url = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+
+    additional_model_data_source {
+      channel_name = "test-channel"
+      s3_data_source {
+        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
+        s3_data_type     = "S3Prefix"
+        compression_type = "None"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
+	return acctest.ConfigCompose(
+		testAccModelConfig_base(rName),
+		testAccModelConfig_s3DataSourceBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_source {
+      s3_data_source {
+        s3_data_type     = "S3Prefix"
+        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
+        compression_type = "None"
+      }
+    }
+  }
+}
 `, rName))
 }
 
@@ -1016,6 +1168,66 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_security_group" "test" {
   count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_vpcSubnetsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = true
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+  }
+
+  vpc_config {
+    subnets            = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
+  }
+}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_vpcSecurityGroupsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = true
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+  }
+
+  vpc_config {
+    subnets            = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
+  }
+}
+
+resource "aws_security_group" "test" {
+  count = 3
 
   name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id

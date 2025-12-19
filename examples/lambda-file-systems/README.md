@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Lambda Example
 
 This examples shows how to deploy an AWS Lambda function connected with an EFS file system using Terraform only.

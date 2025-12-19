@@ -1,23 +1,23 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
 
 // Exports for use in tests only.
 var (
+	ResourceAuthorizeVPCEndpointAccess = newAuthorizeVPCEndpointAccessResource
 	ResourceDomainSAMLOptions          = resourceDomainSAMLOptions
 	ResourceInboundConnectionAccepter  = resourceInboundConnectionAccepter
 	ResourceOutboundConnection         = resourceOutboundConnection
 	ResourcePackage                    = resourcePackage
 	ResourcePackageAssociation         = resourcePackageAssociation
 	ResourceVPCEndpoint                = resourceVPCEndpoint
-	ResourceAuthorizeVPCEndpointAccess = newAuthorizeVPCEndpointAccessResource
 
-	FindDomainByName                     = findDomainByName
-	FindPackageByID                      = findPackageByID
-	FindPackageAssociationByTwoPartKey   = findPackageAssociationByTwoPartKey
-	FindVPCEndpointByID                  = findVPCEndpointByID
-	FindAuthorizeVPCEndpointAccessByName = findAuthorizeVPCEndpointAccessByName
+	FindAuthorizeVPCEndpointAccessByTwoPartKey = findAuthorizeVPCEndpointAccessByTwoPartKey
+	FindDomainByName                           = findDomainByName
+	FindPackageByID                            = findPackageByID
+	FindPackageAssociationByTwoPartKey         = findPackageAssociationByTwoPartKey
+	FindVPCEndpointByID                        = findVPCEndpointByID
 
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput

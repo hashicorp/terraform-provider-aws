@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -111,7 +111,9 @@ const (
 	instanceStatusStarting                                     = "starting"
 	instanceStatusStopped                                      = "stopped"
 	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageConfigUpgrade                         = "storage-config-upgrade"
 	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageInitialization                        = "storage-initialization"
 	instanceStatusStorageOptimization                          = "storage-optimization"
 	instanceStatusUpgrading                                    = "upgrading"
 )

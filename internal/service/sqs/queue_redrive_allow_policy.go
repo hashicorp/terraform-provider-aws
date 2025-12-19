@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs
@@ -11,10 +11,12 @@ import (
 )
 
 // @SDKResource("aws_sqs_queue_redrive_allow_policy", name="Queue Redrive Allow Policy")
-// @IdentityAttribute("queue_url")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("queue_url", "parseQueueURL")
 // @Testing(preIdentityVersion="v6.9.0")
-// @Testing(idAttrDuplicates="queue_url")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueueRedriveAllowPolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedriveAllowPolicy,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -18,9 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +30,6 @@ func TestAccGlueJob_basic(t *testing.T) {
 	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
-	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -41,18 +41,26 @@ func TestAccGlueJob_basic(t *testing.T) {
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
-					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "execution_class", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
-					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("glue", fmt.Sprintf("job/%s", rName))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("command"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapExact(map[string]knownvalue.Check{
+						names.AttrName:    knownvalue.StringExact("glueetl"),
+						"python_version":  knownvalue.NotNull(),
+						"runtime":         knownvalue.NotNull(),
+						"script_location": knownvalue.StringExact("testscriptlocation"),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glue_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("job_mode"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(2880)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -92,7 +100,6 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
-	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -104,17 +111,26 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 				Config: testAccJobConfig_requiredStreaming(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.name", "gluestreaming"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
-					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("glue", fmt.Sprintf("job/%s", rName))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("command"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapExact(map[string]knownvalue.Check{
+						names.AttrName:    knownvalue.StringExact("gluestreaming"),
+						"python_version":  knownvalue.NotNull(),
+						"runtime":         knownvalue.NotNull(),
+						"script_location": knownvalue.StringExact("testscriptlocation"),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glue_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("job_mode"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_type"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -585,7 +601,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 	})
 }
 
-func TestAccGlueJob_streamingTimeout(t *testing.T) {
+func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -598,23 +614,128 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_timeout(rName, 1),
+				Config: testAccJobConfig_streamingTimeout(rName, "500"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
-			},
-			{
-				Config: testAccJobConfig_timeout(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(500)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(1500)),
+				},
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(0)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, "500"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(500)),
+				},
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(1500)),
+				},
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(0)),
+				},
 			},
 		},
 	})
@@ -636,20 +757,34 @@ func TestAccGlueJob_timeout(t *testing.T) {
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
-			},
-			{
-				Config: testAccJobConfig_timeout(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(1)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_timeout(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(2)),
+				},
 			},
 		},
 	})
@@ -863,13 +998,66 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 				Config: testAccJobConfig_rayJob(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueray"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.runtime", "Ray2.4"),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_rayJobUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_rayJobWithDescription(rName, "Initial job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial job")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
+			},
+			{
+				Config: testAccJobConfig_rayJobWithDescription(rName, "Updated job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated job")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
 			},
 		},
 	})
@@ -1022,10 +1210,6 @@ func testAccCheckJobExists(ctx context.Context, n string, v *awstypes.Job) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Glue Job ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		output, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
@@ -1051,7 +1235,7 @@ func testAccCheckJobDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1412,6 +1596,28 @@ resource "aws_glue_job" "test" {
 `, rName, timeout))
 }
 
+func testAccJobConfig_streamingTimeout(rName, timeout string) string {
+	if timeout == "" {
+		timeout = "null"
+	}
+
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = %[1]q
+  role_arn     = aws_iam_role.test.arn
+  timeout      = %[2]s
+
+  command {
+    name            = "gluestreaming"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, timeout))
+}
+
 func testAccJobConfig_securityConfiguration(rName string, securityConfiguration string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
@@ -1500,6 +1706,28 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
+}
+
+func testAccJobConfig_rayJobWithDescription(rName, description string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  glue_version      = "4.0"
+  name              = %[1]q
+  description       = %[2]q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "Z.2X"
+  number_of_workers = 10
+
+  command {
+    name            = "glueray"
+    python_version  = "3.9"
+    runtime         = "Ray2.4"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, description))
 }
 
 func testAccJobConfig_maxCapacity(rName string, maxCapacity float64) string {

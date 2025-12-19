@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -158,6 +158,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -2388,6 +2389,114 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_identityCenterOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckIAMServiceLinkedRole(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Enable identity_center_options with explicit roles_key and subject_key
+				Config: testAccDomainConfig_identityCenterOptionsFull(rName, true, string(awstypes.RolesKeyIdCOptionGroupName), string(awstypes.SubjectKeyIdCOptionUserName)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_options.0.identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.roles_key", string(awstypes.RolesKeyIdCOptionGroupName)),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.subject_key", string(awstypes.SubjectKeyIdCOptionUserName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+			{
+				// Update identity_center_options with different explicit roles_key and subject_key
+				Config: testAccDomainConfig_identityCenterOptionsFull(rName, true, string(awstypes.RolesKeyIdCOptionGroupId), string(awstypes.SubjectKeyIdCOptionUserId)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_options.0.identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.roles_key", string(awstypes.RolesKeyIdCOptionGroupId)),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.subject_key", string(awstypes.SubjectKeyIdCOptionUserId)),
+				),
+			},
+			{
+				// Disable identity_center_options by setting enabled_api_access to false, leaving other attributes unchanged
+				Config: testAccDomainConfig_identityCenterOptionsFull(rName, false, string(awstypes.RolesKeyIdCOptionGroupId), string(awstypes.SubjectKeyIdCOptionUserId)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtFalse),
+				),
+			},
+			{
+				// Re-enable identity_center_options with roles_key and subject_key unspecified to test defaults
+				Config: testAccDomainConfig_identityCenterOptionsDefault(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_options.0.identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.roles_key", string(awstypes.RolesKeyIdCOptionGroupId)),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.subject_key", string(awstypes.SubjectKeyIdCOptionUserId)),
+				),
+			},
+			{
+				// Disable identity_center_options by just specifying enabled_api_access as false, with other attributes unspecified
+				Config: testAccDomainConfig_identityCenterOptionsEnabledFalse(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtFalse),
+				),
+			},
+			{
+				// Re-enable identity_center_options
+				Config: testAccDomainConfig_identityCenterOptionsDefault(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_options.0.identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.roles_key", string(awstypes.RolesKeyIdCOptionGroupId)),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.subject_key", string(awstypes.SubjectKeyIdCOptionUserId)),
+				),
+			},
+			{
+				// Disable identity_center_options by removing the block entirely
+				Config: testAccDomainConfig_identityCenterOptionsRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_options.0.enabled_api_access", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2660,7 +2769,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3241,6 +3350,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3273,7 +3386,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3286,6 +3399,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3326,7 +3443,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3339,6 +3456,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3379,7 +3500,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3391,6 +3512,10 @@ func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3426,7 +3551,7 @@ data "aws_iam_policy_document" "role" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -4078,6 +4203,10 @@ func testAccDomainConfig_baseLogPublishingOptions(rName string, nLogGroups int) 
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "opensearch" {
+  service_name = "opensearch"
+}
+
 resource "aws_cloudwatch_log_group" "test" {
   count = %[2]d
 
@@ -4093,7 +4222,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "es.${data.aws_partition.current.dns_suffix}",
+          data.aws_service_principal.opensearch.name,
         ]
       }
       Action = [
@@ -4230,6 +4359,10 @@ func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "opensearch" {
+  service_name = "es"
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
@@ -4262,7 +4395,7 @@ data "aws_iam_policy_document" "test" {
     principals {
       type = "Service"
       identifiers = [
-        "es.${data.aws_partition.current.dns_suffix}",
+        data.aws_service_principal.opensearch.name,
       ]
     }
   }
@@ -4285,6 +4418,7 @@ resource "aws_opensearch_domain" "test" {
 
   depends_on = [
     aws_cognito_user_pool_domain.test,
+    aws_iam_role_policy_attachment.test,
     aws_iam_role_policy_attachment.test,
   ]
 }
@@ -4379,4 +4513,188 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, desiredState, S3VecotrsEnabled)
+}
+
+func testAccDomainConfig_identityCenterOptionsFull(rName string, enableAPIAccess bool, rolesKey, subjectKey string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  identity_center_options {
+    enabled_api_access           = %[2]t
+    identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+    roles_key                    = %[3]q
+    subject_key                  = %[4]q
+  }
+}
+`, rName, enableAPIAccess, rolesKey, subjectKey)
+}
+
+func testAccDomainConfig_identityCenterOptionsDefault(rName string, enableAPIAccess bool) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  identity_center_options {
+    enabled_api_access           = %[2]t
+    identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  }
+}
+`, rName, enableAPIAccess)
+}
+
+func testAccDomainConfig_identityCenterOptionsEnabledFalse(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  identity_center_options {
+    enabled_api_access = false
+  }
+}
+`, rName)
+}
+
+func testAccDomainConfig_identityCenterOptionsRemoved(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+}
+`, rName)
 }

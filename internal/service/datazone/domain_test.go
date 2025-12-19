@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +44,7 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrSet(resourceName, "root_domain_unit_id"),
 				),
 			},
 			{
@@ -51,6 +52,20 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
+			},
+			{
+				Config: testAccDomainConfig_description(rName, "test_description"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "portal_url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrSet(resourceName, "root_domain_unit_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test_description"),
+				),
 			},
 		},
 	})
@@ -281,7 +296,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdatazone.FindDomainByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

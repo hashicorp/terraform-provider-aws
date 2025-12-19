@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -28,6 +28,7 @@ const (
 type autoFlexer interface {
 	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
+	handleXMLWrapperCollapse(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, reflect.Type, reflect.Type, map[string]bool) diag.Diagnostics
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
@@ -166,8 +167,10 @@ func autoflexTags(field reflect.StructField) (string, tagOptions) {
 }
 
 type fieldOpts struct {
-	legacy    bool
-	omitempty bool
+	legacy          bool
+	omitempty       bool
+	xmlWrapper      bool
+	xmlWrapperField string
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

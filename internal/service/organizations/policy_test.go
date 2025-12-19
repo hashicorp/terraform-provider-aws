@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -409,6 +409,234 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_SecurityHub(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_security_hub_syntax.html
+	inspectorPolicyContent := `{
+    "securityhub" : {
+      "enable_in_regions" : {
+        "@@assign" : [
+          "ALL_SUPPORTED"
+        ]
+      },
+      "disable_in_regions" : {
+        "@@assign" : []
+      }
+    }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Inspector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_inspector_syntax.html
+	//lintignore:AWSAT003
+	inspectorPolicyContent := `{
+    "inspector" : {
+      "enablement" : {
+        "ec2_scanning" : {
+          "enable_in_regions" : {
+            "@@assign" : ["us-east-1", "us-west-2"]
+          },
+          "disable_in_regions" : {
+            "@@assign" : ["eu-west-1"]
+          }
+        }
+      }
+    }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeInspectorPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeInspectorPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_UpgradeRollout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_upgrade_syntax.html
+	upgradeRolloutPolicyContent := `{
+      "upgrade_rollout" : {
+        "default" : {
+          "patch_order" : {
+            "@@assign" : "last"
+          }
+        },
+        "tags" : {
+          "my_patch_order_tag" : {
+            "tag_values" : {
+              "tag1" : {
+                "patch_order" : {
+                  "@@assign" : "first"
+                }
+              },
+              "tag2" : {
+                "patch_order" : {
+                  "@@assign" : "second"
+                }
+              },
+              "tag3" : {
+                "patch_order" : {
+                  "@@assign" : "last"
+                }
+              }
+            }
+          }
+        }
+      }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, upgradeRolloutPolicyContent, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_S3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_s3_syntax.html
+	s3PolicyContent := `{
+    "s3_attributes": {
+        "public_access_block_configuration": {
+            "@@assign": "all"
+        }
+    }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, s3PolicyContent, string(awstypes.PolicyTypeS3Policy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeS3Policy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Bedrock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_Bedrock(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeBedrockPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_importManagedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_policy.test"
@@ -446,7 +674,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -626,6 +854,104 @@ resource "aws_organizations_policy" "test" {
   type    = %[3]q
 }
 `, strconv.Quote(content), rName, policyType)
+}
+
+func testAccPolicyConfig_type_Bedrock(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+
+  contextual_grounding_policy_config {
+    filters_config {
+      threshold = 0.4
+      type      = "GROUNDING"
+    }
+  }
+
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "NAME"
+    }
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "DRIVER_ID"
+    }
+    pii_entities_config {
+      action = "ANONYMIZE"
+      type   = "USERNAME"
+    }
+    regexes_config {
+      action      = "BLOCK"
+      description = "example regex"
+      name        = "regex_example"
+      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+    }
+  }
+
+  topic_policy_config {
+    topics_config {
+      name       = "investment_topic"
+      examples   = ["Where should I invest my money ?"]
+      type       = "DENY"
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+  }
+
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
+}
+
+resource "aws_bedrock_guardrail_version" "test" {
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+}
+
+resource "aws_organizations_policy" "test" {
+  # Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_bedrock_syntax.html
+  content = jsonencode({
+    "bedrock" : {
+      "guardrail_inference" : {
+        (data.aws_region.current.region) : {
+          "config_1" : {
+            "identifier" : {
+              "@@assign" : "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
+            },
+            "input_tags" : {
+              "@@assign" : "honor"
+            }
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "BEDROCK_POLICY"
+}
+`, rName)
 }
 
 func testAccPolicyConfig_skipDestroy(rName, content string) string {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer_test
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -358,6 +359,29 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/45136.
+func testAccAnalyzer_nullInResourceTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_nullInResourceTags(rName),
+				// Error, but no crash.
+				ExpectError: regexache.MustCompile(`External Access analyzers cannot be created with the configuration`),
+			},
+		},
+	})
+}
+
 func testAccCheckAnalyzerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).AccessAnalyzerClient(ctx)
@@ -595,6 +619,33 @@ resource "aws_accessanalyzer_analyzer" "test" {
           resource_tags = [
             { key1 = "value1" },
             { key2 = "value2" },
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_nullInResourceTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+
+  configuration {
+    unused_access {
+      unused_access_age = 180
+      analysis_rule {
+        exclusion {
+          account_ids = [
+            "123456789012",
+            "234567890123",
+          ]
+        }
+        exclusion {
+          resource_tags = [
+            { key1 = null },
           ]
         }
       }
