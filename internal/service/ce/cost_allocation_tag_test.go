@@ -80,7 +80,7 @@ func TestAccCECostAllocationTag_disappears(t *testing.T) {
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceCostAllocationTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceCostAllocationTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

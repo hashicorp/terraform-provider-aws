@@ -57,7 +57,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 				Config: testAccResourceDataSyncConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceResourceDataSync(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

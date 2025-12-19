@@ -115,7 +115,7 @@ func TestAccKafkaVPCConnection_disappears(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceVPCConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceVPCConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

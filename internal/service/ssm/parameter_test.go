@@ -565,7 +565,7 @@ func TestAccSSMParameter_disappears(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceParameter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -94,7 +94,7 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceTargetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

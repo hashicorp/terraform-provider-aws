@@ -199,7 +199,7 @@ func TestAccDeployDeploymentGroup_disappears(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceDeploymentGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodedeploy.ResourceDeploymentGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -223,7 +223,7 @@ func TestAccDeployDeploymentGroup_Disappears_app(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceApp(), "aws_codedeploy_app.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodedeploy.ResourceApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

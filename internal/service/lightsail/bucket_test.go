@@ -129,7 +129,7 @@ func TestAccLightsailBucket_disappears(t *testing.T) {
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucket(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

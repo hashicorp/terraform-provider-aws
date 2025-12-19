@@ -102,7 +102,7 @@ func TestAccDocDBEventSubscription_disappears(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceEventSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -133,7 +133,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_basic(rName, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceCustomDataIdentifier(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceCustomDataIdentifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

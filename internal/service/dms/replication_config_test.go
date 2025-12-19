@@ -94,7 +94,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 				Config: testAccReplicationConfigConfig_basic(rName, "cdc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

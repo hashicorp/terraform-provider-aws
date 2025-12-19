@@ -77,7 +77,7 @@ func TestAccVPCLatticeService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

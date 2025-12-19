@@ -500,7 +500,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmq.ResourceBroker(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmq.ResourceBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

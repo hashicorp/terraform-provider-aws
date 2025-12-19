@@ -103,7 +103,7 @@ func TestAccElasticBeanstalkEnvironment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticbeanstalk.ResourceEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

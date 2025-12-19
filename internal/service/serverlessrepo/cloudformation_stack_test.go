@@ -97,7 +97,7 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccCloudFormationStackConfig_basic(stackName, appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfserverlessrepo.ResourceCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

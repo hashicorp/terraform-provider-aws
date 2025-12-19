@@ -659,7 +659,7 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

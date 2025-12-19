@@ -66,7 +66,7 @@ func TestAccSFNActivity_disappears(t *testing.T) {
 				Config: testAccActivityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceActivity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceActivity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

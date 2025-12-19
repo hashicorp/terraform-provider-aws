@@ -143,7 +143,7 @@ func TestAccAMPResourcePolicy_disappears_Workspace(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), workspaceResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamp.ResourceWorkspace(), workspaceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

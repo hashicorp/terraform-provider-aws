@@ -254,7 +254,7 @@ func TestAccAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, t, resourceName, &scalingPlan),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscalingplans.ResourceScalingPlan(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscalingplans.ResourceScalingPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

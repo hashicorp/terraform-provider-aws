@@ -82,7 +82,7 @@ func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImagePipeline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

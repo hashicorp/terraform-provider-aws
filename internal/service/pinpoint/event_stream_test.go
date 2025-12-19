@@ -75,7 +75,7 @@ func TestAccPinpointEventStream_disappears(t *testing.T) {
 				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEventStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

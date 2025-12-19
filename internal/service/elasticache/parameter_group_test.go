@@ -98,7 +98,7 @@ func TestAccElastiCacheParameterGroup_disappears(t *testing.T) {
 				Config: testAccParameterGroupConfig_Redis_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

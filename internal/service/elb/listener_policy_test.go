@@ -114,7 +114,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceListenerPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceListenerPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

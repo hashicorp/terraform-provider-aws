@@ -73,7 +73,7 @@ func TestAccIPAMScope_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-nam
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMScope(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

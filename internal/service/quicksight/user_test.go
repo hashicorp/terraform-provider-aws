@@ -131,7 +131,7 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

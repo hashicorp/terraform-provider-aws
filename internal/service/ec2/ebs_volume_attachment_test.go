@@ -194,7 +194,7 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
 					testAccCheckVolumeExists(ctx, "aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

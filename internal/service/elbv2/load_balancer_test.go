@@ -210,7 +210,7 @@ func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceLoadBalancer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceLoadBalancer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

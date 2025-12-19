@@ -86,7 +86,7 @@ func testAccBranch_disappears(t *testing.T) {
 				Config: testAccBranchConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceBranch(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceBranch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

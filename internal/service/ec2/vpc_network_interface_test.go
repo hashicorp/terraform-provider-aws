@@ -318,7 +318,7 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &networkInterface),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterface(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

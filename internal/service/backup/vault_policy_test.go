@@ -94,7 +94,7 @@ func TestAccBackupVaultPolicy_disappears(t *testing.T) {
 				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVaultPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +119,7 @@ func TestAccBackupVaultPolicy_Disappears_vault(t *testing.T) {
 				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVault(), vaultResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVault(), vaultResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -100,7 +100,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), sgResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), sgResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,7 +128,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

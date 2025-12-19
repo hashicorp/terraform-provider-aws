@@ -121,7 +121,7 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

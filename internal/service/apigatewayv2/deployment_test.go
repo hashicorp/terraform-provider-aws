@@ -74,7 +74,7 @@ func TestAccAPIGatewayV2Deployment_disappears(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceDeployment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceDeployment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
