@@ -57,13 +57,13 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 	clusterIdentifier := d.Get(names.AttrClusterIdentifier).(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 	id := snapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier)
-	input := &redshift.ModifyClusterSnapshotScheduleInput{
+	input := redshift.ModifyClusterSnapshotScheduleInput{
 		ClusterIdentifier:    aws.String(clusterIdentifier),
-		ScheduleIdentifier:   aws.String(scheduleIdentifier),
 		DisassociateSchedule: aws.Bool(false),
+		ScheduleIdentifier:   aws.String(scheduleIdentifier),
 	}
 
-	_, err := conn.ModifyClusterSnapshotSchedule(ctx, input)
+	_, err := conn.ModifyClusterSnapshotSchedule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Schedule Association (%s): %s", id, err)
@@ -115,11 +115,13 @@ func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Snapshot Schedule Association: %s", d.Id())
-	_, err = conn.ModifyClusterSnapshotSchedule(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
+	input := redshift.ModifyClusterSnapshotScheduleInput{
 		ClusterIdentifier:    aws.String(clusterIdentifier),
-		ScheduleIdentifier:   aws.String(scheduleIdentifier),
 		DisassociateSchedule: aws.Bool(true),
-	})
+		ScheduleIdentifier:   aws.String(scheduleIdentifier),
+	}
+	_, err = conn.ModifyClusterSnapshotSchedule(ctx, &input)
+
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.SnapshotScheduleNotFoundFault](err) {
 		return diags
 	}
@@ -152,22 +154,6 @@ func snapshotScheduleAssociationParseResourceID(id string) (string, string, erro
 	}
 
 	return parts[0], parts[1], nil
-}
-
-func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.ScheduleAssociationState), nil
-	}
 }
 
 func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) {

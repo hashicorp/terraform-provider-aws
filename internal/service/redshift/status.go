@@ -76,6 +76,26 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) sd
 	}
 }
 
+func statusClusterRestoration(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findClusterByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.RestoreStatus == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.ToString(output.RestoreStatus.Status), nil
+	}
+}
+
 func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
@@ -121,5 +141,21 @@ func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) s
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ScheduleAssociationState), nil
 	}
 }

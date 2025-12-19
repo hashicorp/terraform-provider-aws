@@ -1053,26 +1053,6 @@ func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, 
 	return nil, err
 }
 
-func statusClusterRestoration(conn *redshift.Client, id string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findClusterByID(ctx, conn, id)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output.RestoreStatus == nil {
-			return nil, "", nil
-		}
-
-		return output, aws.ToString(output.RestoreStatus.Status), nil
-	}
-}
-
 func clusterARN(ctx context.Context, c *conns.AWSClient, id string) string {
 	return c.RegionalARN(ctx, names.Redshift, "cluster:"+id)
 }
