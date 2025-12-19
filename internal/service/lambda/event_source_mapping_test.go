@@ -3056,7 +3056,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByGlue(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEventSourceMappingConfig_kafkaBase(rName),
-		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), `
+		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 100
   enabled           = false
@@ -3102,7 +3102,7 @@ resource "aws_lambda_event_source_mapping" "test" {
     uri  = aws_security_group.test.id
   }
 }
-`)
+`, rName))
 }
 
 func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName string) string {
