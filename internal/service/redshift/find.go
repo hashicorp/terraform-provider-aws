@@ -916,3 +916,27 @@ func findDataShareConsumerAssociationByFourPartKey(ctx context.Context, conn *re
 
 	return output, nil
 }
+
+func findClusterParameters(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParametersInput) ([]awstypes.Parameter, error) {
+	var output []awstypes.Parameter
+
+	pages := redshift.NewDescribeClusterParametersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Parameters...)
+	}
+
+	return output, nil
+}

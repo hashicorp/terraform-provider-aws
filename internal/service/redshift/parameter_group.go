@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -97,14 +96,14 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &redshift.CreateClusterParameterGroupInput{
+	input := redshift.CreateClusterParameterGroupInput{
 		Description:          aws.String(d.Get(names.AttrDescription).(string)),
 		ParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		ParameterGroupName:   aws.String(name),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateClusterParameterGroup(ctx, input)
+	_, err := conn.CreateClusterParameterGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Parameter Group (%s): %s", name, err)
@@ -113,12 +112,12 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(name)
 
 	if v := d.Get(names.AttrParameter).(*schema.Set); v.Len() > 0 {
-		input := &redshift.ModifyClusterParameterGroupInput{
+		input := redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
 			Parameters:         expandParameters(v.List()),
 		}
 
-		_, err := conn.ModifyClusterParameterGroup(ctx, input)
+		_, err := conn.ModifyClusterParameterGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
@@ -130,7 +129,8 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	parameterGroup, err := findParameterGroupByName(ctx, conn, d.Id())
 
@@ -144,32 +144,24 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, parameterGroupARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, parameterGroup.Description)
 	d.Set(names.AttrFamily, parameterGroup.ParameterGroupFamily)
 	d.Set(names.AttrName, parameterGroup.ParameterGroupName)
 
 	setTagsOut(ctx, parameterGroup.Tags)
 
-	input := &redshift.DescribeClusterParametersInput{
+	input := redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
 		Source:             aws.String("user"),
 	}
-
-	output, err := conn.DescribeClusterParameters(ctx, input)
+	parameters, err := findClusterParameters(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
+	d.Set(names.AttrParameter, flattenParameters(parameters))
 
 	return diags
 }
@@ -180,23 +172,15 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange(names.AttrParameter) {
 		o, n := d.GetChange(names.AttrParameter)
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		parameters := expandParameters(ns.Difference(os).List())
-		if len(parameters) > 0 {
-			input := &redshift.ModifyClusterParameterGroupInput{
+		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
+			input := redshift.ModifyClusterParameterGroupInput{
 				ParameterGroupName: aws.String(d.Id()),
 				Parameters:         parameters,
 			}
 
-			_, err := conn.ModifyClusterParameterGroup(ctx, input)
+			_, err := conn.ModifyClusterParameterGroup(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
@@ -212,9 +196,11 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Parameter Group: %s", d.Id())
-	_, err := conn.DeleteClusterParameterGroup(ctx, &redshift.DeleteClusterParameterGroupInput{
+	input := redshift.DeleteClusterParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteClusterParameterGroup(ctx, &input)
+
 	if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
 		return diags
 	}
@@ -236,36 +222,42 @@ func resourceParameterHash(v any) int {
 	return create.StringHashcode(buf.String())
 }
 
-func expandParameters(configured []any) []awstypes.Parameter {
-	var parameters []awstypes.Parameter
+func expandParameters(tfList []any) []awstypes.Parameter {
+	var apiObjects []awstypes.Parameter
 
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]any)
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
-		if data[names.AttrName].(string) == "" {
+		if tfMap[names.AttrName].(string) == "" {
 			continue
 		}
 
-		p := awstypes.Parameter{
-			ParameterName:  aws.String(data[names.AttrName].(string)),
-			ParameterValue: aws.String(data[names.AttrValue].(string)),
+		apiObject := awstypes.Parameter{
+			ParameterName:  aws.String(tfMap[names.AttrName].(string)),
+			ParameterValue: aws.String(tfMap[names.AttrValue].(string)),
 		}
 
-		parameters = append(parameters, p)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func flattenParameters(list []awstypes.Parameter) []map[string]any {
-	result := make([]map[string]any, 0, len(list))
-	for _, i := range list {
-		result = append(result, map[string]any{
-			names.AttrName:  aws.ToString(i.ParameterName),
-			names.AttrValue: aws.ToString(i.ParameterValue),
+func flattenParameters(apiObjects []awstypes.Parameter) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			names.AttrName:  aws.ToString(apiObject.ParameterName),
+			names.AttrValue: aws.ToString(apiObject.ParameterValue),
 		})
 	}
-	return result
+
+	return tfList
+}
+
+func parameterGroupARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "parametergroup:"+id)
 }
