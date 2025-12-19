@@ -922,12 +922,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		setTagsOut(ctx, output.Tags)
 	}
 
-	// Currently, this functionality is only enabled in AWS Commercial partition
-	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
-	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1868,6 +1867,8 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.EuNorth1RegionID:     {},
 		endpoints.MeSouth1RegionID:     {},
 		endpoints.SaEast1RegionID:      {},
+		endpoints.UsGovEast1RegionID:   {},
+		endpoints.UsGovWest1RegionID:   {},
 	}
 	_, ok := availableRegions[region]
 
