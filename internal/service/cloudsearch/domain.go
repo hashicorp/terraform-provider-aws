@@ -216,9 +216,9 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 	}
 
 	// Get state - may be null during create
+	var state domainResourceModel
 	var stateFields []*indexFieldModel
 	if !request.State.Raw.IsNull() {
-		var state domainResourceModel
 		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -300,6 +300,55 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 				return
 			}
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("index_field"), newIndexFields)...)
+		}
+	}
+
+	// Handle scaling_parameters count fields: preserve 0 from state when config has null.
+	// AWS returns 0 for "not set by user", and SDKv2 stored 0 (couldn't distinguish from null).
+	// When migrating from SDKv2, plan would show 0 -> null diff. By preserving 0, we maintain
+	// semantic equivalence (both mean "not configured by user").
+	if !request.State.Raw.IsNull() && !plan.ScalingParameters.IsNull() && !plan.ScalingParameters.IsUnknown() {
+		planScaling, diags := plan.ScalingParameters.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		stateScaling, diags := state.ScalingParameters.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		configScaling, diags := config.ScalingParameters.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if planScaling != nil && stateScaling != nil {
+			scalingModified := false
+
+			// If user doesn't configure desired_partition_count but state has 0, preserve it
+			if configScaling == nil || configScaling.DesiredPartitionCount.IsNull() {
+				if planScaling.DesiredPartitionCount.IsNull() && !stateScaling.DesiredPartitionCount.IsNull() && stateScaling.DesiredPartitionCount.ValueInt64() == 0 {
+					planScaling.DesiredPartitionCount = stateScaling.DesiredPartitionCount
+					scalingModified = true
+				}
+			}
+
+			// If user doesn't configure desired_replication_count but state has 0, preserve it
+			if configScaling == nil || configScaling.DesiredReplicationCount.IsNull() {
+				if planScaling.DesiredReplicationCount.IsNull() && !stateScaling.DesiredReplicationCount.IsNull() && stateScaling.DesiredReplicationCount.ValueInt64() == 0 {
+					planScaling.DesiredReplicationCount = stateScaling.DesiredReplicationCount
+					scalingModified = true
+				}
+			}
+
+			if scalingModified {
+				newScalingParameters := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, planScaling)
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("scaling_parameters"), newScalingParameters)...)
+			}
 		}
 	}
 }
