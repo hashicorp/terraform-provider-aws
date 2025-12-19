@@ -604,9 +604,8 @@ func TestAccELBV2TargetGroup_quic(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
-
 			ctx := acctest.Context(t)
 			var conf awstypes.TargetGroup
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

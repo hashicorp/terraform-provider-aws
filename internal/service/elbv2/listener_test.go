@@ -1386,7 +1386,7 @@ func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var conf awstypes.Listener
