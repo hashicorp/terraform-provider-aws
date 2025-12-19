@@ -1076,7 +1076,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 			if add.Len() > 0 {
 				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
-					// transitioning to RBAC
+					// Transitioning to RBAC.
 					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
 				}
 				input.UserGroupIdsToAdd = flex.ExpandStringValueSet(add)
@@ -1105,7 +1105,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChanges("auth_token", "auth_token_update_strategy") {
-			//AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC
+			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
 			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
 				authInput := elasticache.ModifyReplicationGroupInput{
 					ApplyImmediately:        aws.Bool(true),
@@ -1606,26 +1606,18 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 	_, tokenOk := diff.GetOk("auth_token")
 
 	if strategyOk {
-		if awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+		if !tokenOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 			return nil
 		} else {
-			if tokenOk {
-				return nil
+			if !tokenOk {
+				// AuthTokenUpdateStrategyTypeDelete can only be used when migrating to RBAC,
+				// auth_token should not be provided in this case.
+				return errors.New(`"auth_token_update_strategy": all of "auth_token,auth_token_update_strategy" must be specified. When "auth_token_update_strategy" has value DELETE, allowed only when transitioning to RBAC, "auth_token" is not required`)
 			}
 		}
 	}
 
-	if !tokenOk && !strategyOk {
-		return nil
-	}
-
-	if tokenOk && !strategyOk {
-		return nil
-	}
-
-	//AuthTokenUpdateStrategyTypeDelete can only be there while migrating to RBAC
-	//auth_token should not be provided in this case
-	return errors.New(`"auth_token_update_strategy": all of "auth_token,auth_token_update_strategy" must be specified. Except when "auth_token_update_strategy" is DELETE, allowed only when transitioning to RBAC`)
+	return nil
 }
 
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
