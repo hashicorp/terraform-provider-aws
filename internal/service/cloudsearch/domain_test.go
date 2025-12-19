@@ -597,7 +597,7 @@ func TestAccCloudSearchDomain_indexFieldValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainConfig_invalidTextArrayFacet(),
-				ExpectError: regexp.MustCompile(`cannot be set for 'text-array' field types`),
+				ExpectError: regexache.MustCompile(`cannot be set for 'text-array' field types`),
 			},
 		},
 	})

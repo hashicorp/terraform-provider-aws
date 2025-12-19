@@ -412,7 +412,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	if !config.MultiAZ.IsNull() {
 		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
 			DomainName: aws.String(name),
-			MultiAZ:    aws.Bool(data.MultiAZ.ValueBool()),
+			MultiAZ:    data.MultiAZ.ValueBoolPointer(),
 		}
 
 		_, err := conn.UpdateAvailabilityOptions(ctx, multiAZInput)
@@ -579,7 +579,7 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) endpoint options", domainName), err.Error())
 		return diags
 	}
-	data.EndpointOptions = flattenEndpointOptionsModel(ctx, endpointOptions)
+	data.EndpointOptions = newEndpointOptionsModelFrom(ctx, endpointOptions)
 
 	// Read scaling parameters - always populate from API for the same reason.
 	scalingParameters, err := findScalingParametersByName(ctx, conn, domainName)
@@ -587,7 +587,7 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 		diags.AddError(fmt.Sprintf("reading CloudSearch Domain (%s) scaling parameters", domainName), err.Error())
 		return diags
 	}
-	data.ScalingParameters = flattenScalingParametersModel(ctx, scalingParameters)
+	data.ScalingParameters = newScalingParametersModelFrom(ctx, scalingParameters)
 
 	// Read index fields
 	indexInput := &cloudsearch.DescribeIndexFieldsInput{
@@ -599,7 +599,7 @@ func (r *domainResource) readDomain(ctx context.Context, data *domainResourceMod
 		return diags
 	}
 
-	indexFields, d := flattenIndexFieldModels(ctx, indexResults.IndexFields)
+	indexFields, d := newIndexFieldModelsFrom(ctx, indexResults.IndexFields)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -680,7 +680,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 	if !config.MultiAZ.IsNull() && !new.MultiAZ.Equal(old.MultiAZ) {
 		multiAZInput := &cloudsearch.UpdateAvailabilityOptionsInput{
 			DomainName: aws.String(domainName),
-			MultiAZ:    aws.Bool(new.MultiAZ.ValueBool()),
+			MultiAZ:    new.MultiAZ.ValueBoolPointer(),
 		}
 
 		output, err := conn.UpdateAvailabilityOptions(ctx, multiAZInput)
@@ -879,7 +879,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	domainName := data.ID.ValueString()
 
 	tflog.Debug(ctx, "Deleting CloudSearch Domain", map[string]any{
-		"domain_name": domainName,
+		names.AttrDomainName: domainName,
 	})
 
 	input := &cloudsearch.DeleteDomainInput{
@@ -897,10 +897,6 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) delete", domainName), err.Error())
 		return
 	}
-}
-
-func (r *domainResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 // Model types
@@ -1123,7 +1119,7 @@ func expandEndpointOptionsModel(m *endpointOptionsModel) *awstypes.DomainEndpoin
 	opts := &awstypes.DomainEndpointOptions{}
 
 	if !m.EnforceHTTPS.IsNull() && !m.EnforceHTTPS.IsUnknown() {
-		opts.EnforceHTTPS = aws.Bool(m.EnforceHTTPS.ValueBool())
+		opts.EnforceHTTPS = m.EnforceHTTPS.ValueBoolPointer()
 	}
 
 	if !m.TLSSecurityPolicy.IsNull() && !m.TLSSecurityPolicy.IsUnknown() {
@@ -1161,7 +1157,7 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 	}
 
 	apiObject := &awstypes.IndexField{
-		IndexFieldName: aws.String(m.Name.ValueString()),
+		IndexFieldName: m.Name.ValueStringPointer(),
 		IndexFieldType: m.Type.ValueEnum(),
 	}
 
@@ -1213,11 +1209,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1231,11 +1227,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			options.SourceFields = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1258,7 +1254,7 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1280,7 +1276,7 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			options.SourceFields = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1303,7 +1299,7 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1325,7 +1321,7 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			options.SourceFields = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1340,11 +1336,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1359,11 +1355,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1377,11 +1373,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			options.SourceFields = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1399,11 +1395,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceField = aws.String(m.SourceFields.ValueString())
+			options.SourceField = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1420,11 +1416,11 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 		}
 
 		if !m.DefaultValue.IsNull() && !m.DefaultValue.IsUnknown() && m.DefaultValue.ValueString() != "" {
-			options.DefaultValue = aws.String(m.DefaultValue.ValueString())
+			options.DefaultValue = m.DefaultValue.ValueStringPointer()
 		}
 
 		if !m.SourceFields.IsNull() && !m.SourceFields.IsUnknown() && m.SourceFields.ValueString() != "" {
-			options.SourceFields = aws.String(m.SourceFields.ValueString())
+			options.SourceFields = m.SourceFields.ValueStringPointer()
 			sourceFieldsConfigured = true
 		}
 
@@ -1437,9 +1433,12 @@ func expandIndexFieldModel(m *indexFieldModel) (*awstypes.IndexField, bool, erro
 	return apiObject, sourceFieldsConfigured, nil
 }
 
-// Flatten functions - convert AWS API types to Framework models
+// newXxxModelFrom functions - convert AWS API types to Framework models
+// Note: These functions use the "newXxxModelFrom" naming convention instead of "flattenXxx"
+// because they return framework-specific wrapper types (ListNestedObjectValueOf, SetNestedObjectValueOf)
+// rather than using the generic flex.Flatten approach.
 
-func flattenEndpointOptionsModel(ctx context.Context, apiObject *awstypes.DomainEndpointOptions) fwtypes.ListNestedObjectValueOf[endpointOptionsModel] {
+func newEndpointOptionsModelFrom(ctx context.Context, apiObject *awstypes.DomainEndpointOptions) fwtypes.ListNestedObjectValueOf[endpointOptionsModel] {
 	if apiObject == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[endpointOptionsModel](ctx)
 	}
@@ -1452,7 +1451,7 @@ func flattenEndpointOptionsModel(ctx context.Context, apiObject *awstypes.Domain
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, m)
 }
 
-func flattenScalingParametersModel(ctx context.Context, apiObject *awstypes.ScalingParameters) fwtypes.ListNestedObjectValueOf[scalingParametersModel] {
+func newScalingParametersModelFrom(ctx context.Context, apiObject *awstypes.ScalingParameters) fwtypes.ListNestedObjectValueOf[scalingParametersModel] {
 	if apiObject == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[scalingParametersModel](ctx)
 	}
@@ -1466,7 +1465,7 @@ func flattenScalingParametersModel(ctx context.Context, apiObject *awstypes.Scal
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, m)
 }
 
-func flattenIndexFieldModels(ctx context.Context, apiObjects []awstypes.IndexFieldStatus) (fwtypes.SetNestedObjectValueOf[indexFieldModel], diag.Diagnostics) {
+func newIndexFieldModelsFrom(ctx context.Context, apiObjects []awstypes.IndexFieldStatus) (fwtypes.SetNestedObjectValueOf[indexFieldModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(apiObjects) == 0 {

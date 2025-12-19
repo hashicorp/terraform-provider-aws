@@ -37,7 +37,7 @@ func (v indexFieldAttributeValidator) ValidateBool(ctx context.Context, req vali
 	// Get the "type" attribute from the same index_field block
 	// Must use fwtypes.StringEnum to match the schema's CustomType
 	var fieldType fwtypes.StringEnum[awstypes.IndexFieldType]
-	diags := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName("type"), &fieldType)
+	diags := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName(names.AttrType), &fieldType)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() || fieldType.IsNull() || fieldType.IsUnknown() {

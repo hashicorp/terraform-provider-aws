@@ -24,10 +24,10 @@ func TestInvalidForFieldTypes(t *testing.T) {
 	// Must use CustomType for "type" to match the real schema
 	indexFieldSchema := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.IndexFieldType](),
 			},
@@ -185,8 +185,8 @@ func TestInvalidForFieldTypes(t *testing.T) {
 
 			// Create a mock config with the type field
 			attrs := map[string]tftypes.Value{
-				"name":      tftypes.NewValue(tftypes.String, "test_field"),
-				"type":      tftypes.NewValue(tftypes.String, test.fieldType),
+				names.AttrName:      tftypes.NewValue(tftypes.String, "test_field"),
+				names.AttrType:      tftypes.NewValue(tftypes.String, test.fieldType),
 				"facet":     tftypes.NewValue(tftypes.Bool, nil),
 				"search":    tftypes.NewValue(tftypes.Bool, nil),
 				"sort":      tftypes.NewValue(tftypes.Bool, nil),
