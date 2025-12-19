@@ -1560,7 +1560,7 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
-func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+func CheckSDKResourceDisappears(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
