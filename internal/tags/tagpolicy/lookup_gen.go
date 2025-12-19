@@ -625,6 +625,9 @@ var Lookup = map[string][]string{
 		"aws_fsx_openzfs_file_system",
 		"aws_fsx_windows_file_system",
 	},
+	"fsx:snapshot": {
+		"aws_fsx_openzfs_snapshot",
+	},
 	"fsx:storage-virtual-machine": {
 		"aws_fsx_ontap_storage_virtual_machine",
 	},

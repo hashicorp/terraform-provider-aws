@@ -427,6 +427,7 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `fsx:file-system` | `aws_fsx_ontap_file_system` |
 | `fsx:file-system` | `aws_fsx_openzfs_file_system` |
 | `fsx:file-system` | `aws_fsx_windows_file_system` |
+| `fsx:snapshot` | `aws_fsx_openzfs_snapshot` |
 | `fsx:storage-virtual-machine` | `aws_fsx_ontap_storage_virtual_machine` |
 | `fsx:volume` | `aws_fsx_ontap_volume` |
 | `fsx:volume` | `aws_fsx_openzfs_volume` |

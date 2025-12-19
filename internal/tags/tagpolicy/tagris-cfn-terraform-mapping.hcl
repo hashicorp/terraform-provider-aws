@@ -1075,7 +1075,7 @@ tagtype "fsx:file-system" {
 }
 
 tagtype "fsx:snapshot" {
-  terraform_resource_types = []
+  terraform_resource_types = ["aws_fsx_openzfs_snapshot"]
 }
 
 tagtype "fsx:storage-virtual-machine" {
