@@ -13,14 +13,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-)
-
-const (
-	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
-
-	clusterRelocationStatusResolvedTimeout = 1 * time.Minute
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
@@ -82,11 +77,14 @@ func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Cluster, error) { //nolint:unparam
+	const (
+		timeout = 1 * time.Minute
+	)
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
 		Refresh: statusClusterAvailabilityZoneRelocation(ctx, conn, id),
-		Timeout: clusterRelocationStatusResolvedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -129,6 +127,25 @@ func waitClusterAquaApplied(ctx context.Context, conn *redshift.Client, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
+	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{clusterRestoreStatusStarting, clusterRestoreStatusRestoring},
+		Target:     []string{clusterRestoreStatusCompleted},
+		Refresh:    statusClusterRestoration(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -273,6 +290,49 @@ func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn stri
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) {
+	const (
+		timeout = 75 * time.Minute
+	)
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ScheduleStateModifying),
+		Target:     enum.Slice(awstypes.ScheduleStateActive),
+		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) { //nolint:unparam
+	const (
+		timeout = 75 * time.Minute
+	)
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ScheduleStateModifying, awstypes.ScheduleStateActive),
+		Target:     []string{},
+		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
 		return output, err
 	}
 

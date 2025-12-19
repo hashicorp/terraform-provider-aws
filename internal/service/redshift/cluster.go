@@ -35,6 +35,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
+)
+
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
@@ -1032,25 +1036,6 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 	default:
 		return false, fmt.Errorf("unexpected MultiAZ value %q returned by API", multiAZStatus)
 	}
-}
-
-func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{clusterRestoreStatusStarting, clusterRestoreStatusRestoring},
-		Target:     []string{clusterRestoreStatusCompleted},
-		Refresh:    statusClusterRestoration(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
-		return output, err
-	}
-
-	return nil, err
 }
 
 func clusterARN(ctx context.Context, c *conns.AWSClient, id string) string {

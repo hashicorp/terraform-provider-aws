@@ -8,16 +8,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -154,47 +151,4 @@ func snapshotScheduleAssociationParseResourceID(id string) (string, string, erro
 	}
 
 	return parts[0], parts[1], nil
-}
-
-func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) {
-	const (
-		timeout = 75 * time.Minute
-	)
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.ScheduleStateModifying),
-		Target:     enum.Slice(awstypes.ScheduleStateActive),
-		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) (*awstypes.ClusterAssociatedToSchedule, error) { //nolint:unparam
-	const (
-		timeout = 75 * time.Minute
-	)
-	stateConf := &sdkretry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.ScheduleStateModifying, awstypes.ScheduleStateActive),
-		Target:     []string{},
-		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
-		return output, err
-	}
-
-	return nil, err
 }
