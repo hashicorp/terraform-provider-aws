@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // indexFieldAttributeValidator validates that an attribute is only set for compatible field types
