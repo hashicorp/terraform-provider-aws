@@ -44,7 +44,6 @@ const (
 	minNumberOfHashes = 1
 	maxNumberOfHashes = 4
 
-	minNumberOfRanges = 4
 	maxNumberOfRanges = 4
 )
 
@@ -128,7 +127,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					},
 				},
 				Validators: []validator.List{
-					listvalidator.SizeBetween(1, 8),
+					globalSecondaryIndexKeySchemaListValidator{},
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -762,49 +761,6 @@ func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryI
 
 	var kss []keySchemaModel
 	diags.Append(data.KeySchema.ElementsAs(ctx, &kss, false)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	var hashKeys []string
-	var rangeKeys []string
-	for _, ks := range kss {
-		switch ks.KeyType.ValueEnum() {
-		case awstypes.KeyTypeHash:
-			hashKeys = append(hashKeys, ks.AttributeName.ValueString())
-		case awstypes.KeyTypeRange:
-			rangeKeys = append(rangeKeys, ks.AttributeName.ValueString())
-		default:
-			diags.AddError(
-				"Unknown key type in key_schema",
-				fmt.Sprintf(
-					`Uknown value "%s" for key_type in key_schema with name "%s"`,
-					ks.KeyType.ValueString(),
-					ks.AttributeName.ValueString(),
-				),
-			)
-		}
-	}
-	if len(hashKeys) < minNumberOfHashes || len(hashKeys) > maxNumberOfHashes {
-		diags.AddError(
-			"Unsupported number of hash keys",
-			fmt.Sprintf(
-				`Number of hash keys must be between %d and %d`,
-				minNumberOfHashes,
-				maxNumberOfHashes,
-			),
-		)
-	}
-	if len(rangeKeys) > maxNumberOfRanges {
-		diags.AddError(
-			"Unsupported number of range keys",
-			fmt.Sprintf(
-				`Number of range keys must be between %d and %d`,
-				minNumberOfRanges,
-				maxNumberOfRanges,
-			),
-		)
-	}
 	if diags.HasError() {
 		return diags
 	}

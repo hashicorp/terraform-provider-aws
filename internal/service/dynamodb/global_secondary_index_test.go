@@ -1673,7 +1673,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_throughputChanges(t *test
 	}
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_attributeValidation(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_validate_Attributes(t *testing.T) {
 	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
 
 	ctx := acctest.Context(t)
@@ -1691,17 +1691,35 @@ func TestAccDynamoDBGlobalSecondaryIndex_attributeValidation(t *testing.T) {
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_missmatchedType(rNameTable, rName),
 				ExpectError: regexache.MustCompile(`Changing already existing attribute`),
 			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_validate_KeySchemas(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
+
+	ctx := acctest.Context(t)
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 0, 0),
-				ExpectError: regexache.MustCompile(`Unsupported number of hash keys`),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with a\s+"key_type" of "HASH", got: 0`),
 			},
 			{
-				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 8, 0),
-				ExpectError: regexache.MustCompile(`Unsupported number of hash keys`),
+				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 5, 0),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with a\s+"key_type" of "HASH", got: 5`),
 			},
 			{
-				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 0, 8),
-				ExpectError: regexache.MustCompile(`Unsupported number of range keys`),
+				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 1, 5),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at most 4 elements with a "key_type" of\s+"RANGE", got: 5`),
 			},
 		},
 	})
@@ -3783,12 +3801,6 @@ resource "aws_dynamodb_global_secondary_index" "test" {
     key_type       = "HASH"
   }
 
-  key_schema {
-    attribute_name = %[2]q
-    attribute_type = "S"
-    key_type       = "RANGE"
-  }
-
   on_demand_throughput {
     max_read_request_units  = 1
     max_write_request_units = 1
@@ -3799,11 +3811,6 @@ resource "aws_dynamodb_table" "test" {
   name         = %[1]q
   hash_key     = %[1]q
   billing_mode = "PAY_PER_REQUEST"
-
-  on_demand_throughput {
-    max_read_request_units  = 1
-    max_write_request_units = 1
-  }
 
   attribute {
     name = %[1]q
@@ -3840,11 +3847,6 @@ resource "aws_dynamodb_global_secondary_index" "test" {
 
   # ranges
   %[4]s
-
-  on_demand_throughput {
-    max_read_request_units  = 1
-    max_write_request_units = 1
-  }
 }
 
 resource "aws_dynamodb_table" "test" {
