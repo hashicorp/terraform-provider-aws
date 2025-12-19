@@ -5,11 +5,9 @@ package redshift
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -84,7 +82,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
-	input := &redshift.CreateSnapshotScheduleInput{
+	input := redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringValueSet(d.Get("definitions").(*schema.Set)),
 		Tags:                getTagsIn(ctx),
@@ -94,7 +92,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 		input.ScheduleDescription = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateSnapshotSchedule(ctx, input)
+	output, err := conn.CreateSnapshotSchedule(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Schedule (%s): %s", identifier, err)
@@ -107,7 +105,8 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	snapshotSchedule, err := findSnapshotScheduleByID(ctx, conn, d.Id())
 
@@ -121,14 +120,7 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, snapshotScheduleARN(ctx, c, d.Id()))
 	d.Set("definitions", snapshotSchedule.ScheduleDefinitions)
 	d.Set(names.AttrDescription, snapshotSchedule.ScheduleDescription)
 	d.Set(names.AttrIdentifier, snapshotSchedule.ScheduleIdentifier)
@@ -144,12 +136,12 @@ func resourceSnapshotScheduleUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.HasChange("definitions") {
-		input := &redshift.ModifySnapshotScheduleInput{
+		input := redshift.ModifySnapshotScheduleInput{
 			ScheduleDefinitions: flex.ExpandStringValueSet(d.Get("definitions").(*schema.Set)),
 			ScheduleIdentifier:  aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifySnapshotSchedule(ctx, input)
+		_, err := conn.ModifySnapshotSchedule(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Redshift Snapshot Schedule (%s): %s", d.Id(), err)
@@ -164,7 +156,7 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.Get(names.AttrForceDestroy).(bool) {
-		diags = append(diags, snapshotScheduleDisassociateAll(ctx, conn, d.Id())...)
+		diags = append(diags, disassociateAllSnaphotSchedules(ctx, conn, d.Id())...)
 
 		if diags.HasError() {
 			return diags
@@ -172,9 +164,10 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Snapshot Schedule: %s", d.Id())
-	_, err := conn.DeleteSnapshotSchedule(ctx, &redshift.DeleteSnapshotScheduleInput{
+	input := redshift.DeleteSnapshotScheduleInput{
 		ScheduleIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSnapshotSchedule(ctx, &input)
 
 	if errs.IsA[*awstypes.SnapshotScheduleNotFoundFault](err) {
 		return diags
@@ -187,7 +180,7 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Client, id string) diag.Diagnostics {
+func disassociateAllSnaphotSchedules(ctx context.Context, conn *redshift.Client, id string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	snapshotSchedule, err := findSnapshotScheduleByID(ctx, conn, id)
@@ -199,9 +192,9 @@ func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Client,
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
 		clusterIdentifier := aws.ToString(associatedCluster.ClusterIdentifier)
 		_, err = conn.ModifyClusterSnapshotSchedule(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
+			DisassociateSchedule: aws.Bool(true),
 			ClusterIdentifier:    aws.String(clusterIdentifier),
 			ScheduleIdentifier:   aws.String(id),
-			DisassociateSchedule: aws.Bool(true),
 		})
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.SnapshotScheduleNotFoundFault](err) {
@@ -221,4 +214,8 @@ func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Client,
 	}
 
 	return diags
+}
+
+func snapshotScheduleARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "snapshotschedule:"+id)
 }
