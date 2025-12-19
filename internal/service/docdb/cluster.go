@@ -310,9 +310,10 @@ func resourceCluster() *schema.Resource {
 				},
 			},
 			"serverless_v2_scaling_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrMaxCapacity: {
@@ -322,6 +323,15 @@ func resourceCluster() *schema.Resource {
 								validation.FloatBetween(1.0, 256.0),
 								validateServerlessCapacity,
 							),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								config := d.GetRawConfig()
+								raw := config.GetAttr("serverless_v2_scaling_configuration")
+
+								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
+									return true
+								}
+								return false
+							},
 						},
 						"min_capacity": {
 							Type:     schema.TypeFloat,
@@ -330,6 +340,15 @@ func resourceCluster() *schema.Resource {
 								validation.FloatBetween(0.5, 256.0),
 								validateServerlessCapacity,
 							),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								config := d.GetRawConfig()
+								raw := config.GetAttr("serverless_v2_scaling_configuration")
+
+								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
@@ -379,18 +398,6 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-		CustomizeDiff: customdiff.All(
-			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
-			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
-				func(_ context.Context, old, new, meta any) bool {
-					o := old != nil && len(old.([]any)) > 0
-					n := new != nil && len(new.([]any)) > 0
-					if (o && n) || (!o && !n) {
-						return false
-					}
-					return true
-				}),
-		),
 	}
 }
 
