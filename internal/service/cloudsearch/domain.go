@@ -494,7 +494,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 	// Wait for domain to become active
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err := waitDomainActive(ctx, conn, name, createTimeout); err != nil {
+	if err := waitDomainActive(ctx, conn, name, createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) create", name), err.Error())
 		return
 	}
@@ -854,7 +854,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	// Wait for domain to become active
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	if _, err := waitDomainActive(ctx, conn, domainName, updateTimeout); err != nil {
+	if err := waitDomainActive(ctx, conn, domainName, updateTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudSearch Domain (%s) update", domainName), err.Error())
 		return
 	}
@@ -1988,23 +1988,7 @@ func statusDomainDeleting(conn *cloudsearch.Client, name string) retry.StateRefr
 	}
 }
 
-func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findDomainByName(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, flex.BoolToStringValue(output.Processing), nil
-	}
-}
-
-func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*awstypes.DomainStatus, error) {
+func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
@@ -2034,13 +2018,9 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DomainStatus); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*awstypes.DomainStatus, error) {
