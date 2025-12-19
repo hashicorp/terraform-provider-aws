@@ -584,6 +584,7 @@ var Lookup = map[string][]string{
 		"aws_efs_file_system",
 	},
 	"elasticloadbalancing:listener": {
+		"aws_alb_listener",
 		"aws_lb_listener",
 	},
 	"elasticloadbalancing:listener-rule": {

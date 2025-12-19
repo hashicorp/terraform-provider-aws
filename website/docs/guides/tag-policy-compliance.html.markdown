@@ -411,6 +411,7 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `elasticbeanstalk:environment` | `aws_elastic_beanstalk_environment` |
 | `elasticfilesystem:access-point` | `aws_efs_access_point` |
 | `elasticfilesystem:file-system` | `aws_efs_file_system` |
+| `elasticloadbalancing:listener` | `aws_alb_listener` |
 | `elasticloadbalancing:listener` | `aws_lb_listener` |
 | `elasticloadbalancing:listener-rule` | `aws_lb_listener_rule` |
 | `elasticloadbalancing:loadbalancer` | `aws_lb` |

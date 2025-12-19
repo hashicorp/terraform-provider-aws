@@ -966,7 +966,10 @@ tagtype "elasticfilesystem:file-system" {
 }
 
 tagtype "elasticloadbalancing:listener" {
-  terraform_resource_types = ["aws_lb_listener"]
+  terraform_resource_types = [
+    "aws_alb_listener",
+    "aws_lb_listener",
+  ]
 }
 
 tagtype "elasticloadbalancing:listener-rule" {
