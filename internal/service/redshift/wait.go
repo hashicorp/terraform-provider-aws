@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -19,16 +18,15 @@ import (
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
-		Refresh:    statusClusterAvailability(ctx, conn, id),
+		Refresh:    statusClusterAvailability(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -39,15 +37,14 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying},
 		Target:  []string{},
-		Refresh: statusClusterAvailability(ctx, conn, id),
+		Refresh: statusClusterAvailability(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -58,15 +55,14 @@ func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, t
 }
 
 func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:  []string{clusterAvailabilityStatusAvailable},
-		Refresh: statusClusterAvailability(ctx, conn, id),
+		Refresh: statusClusterAvailability(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -80,15 +76,14 @@ func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Cli
 	const (
 		timeout = 1 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
-		Refresh: statusClusterAvailabilityZoneRelocation(ctx, conn, id),
+		Refresh: statusClusterAvailabilityZoneRelocation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		return output, err
 	}
@@ -97,16 +92,15 @@ func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Cli
 }
 
 func waitClusterRebooted(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterStatusRebooting, clusterStatusModifying},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -117,16 +111,15 @@ func waitClusterRebooted(ctx context.Context, conn *redshift.Client, id string, 
 }
 
 func waitClusterAquaApplied(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.AquaStatusApplying),
 		Target:     enum.Slice(awstypes.AquaStatusDisabled, awstypes.AquaStatusEnabled),
-		Refresh:    statusClusterAqua(ctx, conn, id),
+		Refresh:    statusClusterAqua(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
@@ -156,17 +149,16 @@ func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, 
 }
 
 func waitEndpointAccessActive(ctx context.Context, conn *redshift.Client, id string) (*awstypes.EndpointAccess, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusCreating, endpointAccessStatusModifying},
 		Target:     []string{endpointAccessStatusActive},
-		Refresh:    statusEndpointAccess(ctx, conn, id),
+		Refresh:    statusEndpointAccess(conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.EndpointStatus)))
 
@@ -177,17 +169,16 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshift.Client, id str
 }
 
 func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Client, id string) (*awstypes.EndpointAccess, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEndpointAccess(ctx, conn, id),
+		Refresh:    statusEndpointAccess(conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.EndpointStatus)))
 
@@ -198,17 +189,16 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Client, id st
 }
 
 func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
-		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Refresh:    statusClusterSnapshot(conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
 
@@ -219,17 +209,16 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Client, id s
 }
 
 func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusAvailable},
 		Target:     []string{},
-		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Refresh:    statusClusterSnapshot(conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
 
@@ -240,15 +229,14 @@ func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id s
 }
 
 func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusCreating, awstypes.ZeroETLIntegrationStatusModifying),
 		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
@@ -259,15 +247,14 @@ func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn stri
 }
 
 func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusModifying),
 		Target:  enum.Slice(awstypes.ZeroETLIntegrationStatusActive),
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
@@ -278,15 +265,14 @@ func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn stri
 }
 
 func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ZeroETLIntegrationStatusDeleting, awstypes.ZeroETLIntegrationStatusActive),
 		Target:  []string{},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
 		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
@@ -300,17 +286,16 @@ func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying),
 		Target:     enum.Slice(awstypes.ScheduleStateActive),
-		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
+		Refresh:    statusSnapshotScheduleAssociation(conn, clusterIdentifier, scheduleIdentifier),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
 		return output, err
 	}
@@ -322,16 +307,15 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying, awstypes.ScheduleStateActive),
 		Target:     []string{},
-		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
+		Refresh:    statusSnapshotScheduleAssociation(conn, clusterIdentifier, scheduleIdentifier),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.ClusterAssociatedToSchedule); ok {
 		return output, err
 	}

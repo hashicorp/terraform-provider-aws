@@ -8,12 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterAvailability(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -28,8 +27,8 @@ func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id st
 	}
 }
 
-func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterAvailabilityZoneRelocation(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -44,8 +43,8 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 	}
 }
 
-func statusCluster(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -60,8 +59,8 @@ func statusCluster(ctx context.Context, conn *redshift.Client, id string) sdkret
 	}
 }
 
-func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterAqua(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -96,8 +95,8 @@ func statusClusterRestoration(conn *redshift.Client, id string) retry.StateRefre
 	}
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpointAccess(conn *redshift.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -112,8 +111,8 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name strin
 	}
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterSnapshot(conn *redshift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -128,8 +127,8 @@ func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string
 	}
 }
 
-func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntegration(conn *redshift.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -144,8 +143,8 @@ func statusIntegration(ctx context.Context, conn *redshift.Client, arn string) s
 	}
 }
 
-func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshotScheduleAssociation(conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 		if retry.NotFound(err) {
