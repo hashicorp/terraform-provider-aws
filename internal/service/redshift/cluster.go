@@ -1073,6 +1073,6 @@ func statusClusterRestoration(conn *redshift.Client, id string) retry.StateRefre
 	}
 }
 
-func clusterARN(ctx context.Context, c *conns.AWSClient, clusterID string) string {
-	return c.RegionalARN(ctx, names.Redshift, "cluster:"+clusterID)
+func clusterARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "cluster:"+id)
 }
