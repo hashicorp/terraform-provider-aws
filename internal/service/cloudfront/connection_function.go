@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -33,11 +33,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudfront_connection_function", name="Connection Function")
+// @Tags(identifierAttribute="arn")
 func newResourceConnectionFunction(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConnectionFunction{}
 
@@ -68,26 +70,12 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 			"comment": schema.StringAttribute{
 				Optional: true,
 			},
-			"created_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			"live_stage_etag": schema.StringAttribute{
 				Computed: true,
-			},
-			"location": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -97,6 +85,8 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 			},
 			"publish": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			"runtime": schema.StringAttribute{
 				Required: true,
@@ -107,6 +97,8 @@ func (r *resourceConnectionFunction) Schema(ctx context.Context, req resource.Sc
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"key_value_store_associations": schema.ListNestedBlock{
@@ -186,6 +178,13 @@ func (r *resourceConnectionFunction) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
+	// Additional fields.
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
+	}
+
 	out, err := conn.CreateConnectionFunction(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
@@ -194,10 +193,9 @@ func (r *resourceConnectionFunction) Create(ctx context.Context, req resource.Cr
 
 	data.ID = fwflex.StringToFramework(ctx, out.ConnectionFunctionSummary.Id)
 	data.Etag = fwflex.StringToFramework(ctx, out.ETag)
-	data.Location = fwflex.StringToFramework(ctx, out.Location)
 
 	// Publish the function if requested
-	if !data.Publish.IsNull() && data.Publish.ValueBool() {
+	if data.Publish.ValueBool() {
 		publishInput := &cloudfront.PublishConnectionFunctionInput{
 			Id:      data.ID.ValueStringPointer(),
 			IfMatch: data.Etag.ValueStringPointer(),
@@ -348,7 +346,7 @@ func (r *resourceConnectionFunction) Update(ctx context.Context, req resource.Up
 	plan.Etag = fwflex.StringToFramework(ctx, out.ETag)
 
 	// Publish the function if requested
-	if !plan.Publish.IsNull() && plan.Publish.ValueBool() {
+	if plan.Publish.ValueBool() {
 		publishInput := &cloudfront.PublishConnectionFunctionInput{
 			Id:      plan.ID.ValueStringPointer(),
 			IfMatch: plan.Etag.ValueStringPointer(),
@@ -429,17 +427,16 @@ type resourceConnectionFunctionModel struct {
 	ARN                       types.String                                                    `tfsdk:"arn"`
 	Code                      types.String                                                    `tfsdk:"code"`
 	Comment                   types.String                                                    `tfsdk:"comment"`
-	CreatedTime               timetypes.RFC3339                                               `tfsdk:"created_time"`
 	Etag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
 	KeyValueStoreAssociations fwtypes.ListNestedObjectValueOf[keyValueStoreAssociationsModel] `tfsdk:"key_value_store_associations"`
-	LastModifiedTime          timetypes.RFC3339                                               `tfsdk:"last_modified_time"`
 	LiveStageEtag             types.String                                                    `tfsdk:"live_stage_etag"`
-	Location                  types.String                                                    `tfsdk:"location"`
 	Name                      types.String                                                    `tfsdk:"name"`
 	Publish                   types.Bool                                                      `tfsdk:"publish"`
 	Runtime                   types.String                                                    `tfsdk:"runtime"`
 	Status                    types.String                                                    `tfsdk:"status"`
+	Tags                      tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
 }
 
@@ -455,9 +452,7 @@ type keyValueStoreAssociationModel struct {
 func populateConnectionFunctionModel(ctx context.Context, summary *awstypes.ConnectionFunctionSummary, config *awstypes.FunctionConfig, model *resourceConnectionFunctionModel) {
 	if summary != nil {
 		model.ARN = fwflex.StringToFramework(ctx, summary.ConnectionFunctionArn)
-		model.CreatedTime = fwflex.TimeToFramework(ctx, summary.CreatedTime)
 		model.ID = fwflex.StringToFramework(ctx, summary.Id)
-		model.LastModifiedTime = fwflex.TimeToFramework(ctx, summary.LastModifiedTime)
 		model.Name = fwflex.StringToFramework(ctx, summary.Name)
 		model.Status = fwflex.StringToFramework(ctx, summary.Status)
 	}

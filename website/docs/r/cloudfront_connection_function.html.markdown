@@ -57,6 +57,22 @@ resource "aws_cloudfront_connection_function" "example" {
 }
 ```
 
+### With Tags
+
+```terraform
+resource "aws_cloudfront_connection_function" "example" {
+  name    = "example-connection-function"
+  runtime = "cloudfront-js-2.0"
+  comment = "Example connection function with tags"
+  code    = "function handler(event) { return event.request; }"
+
+  tags = {
+    Environment = "production"
+    Team        = "web"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -70,6 +86,7 @@ The following arguments are optional:
 * `comment` - (Optional) Comment to describe the function.
 * `key_value_store_associations` - (Optional) Configuration for key value store associations. See [Key Value Store Associations](#key-value-store-associations) below. AWS limits associations to one key value store per function.
 * `publish` - (Optional) Whether to publish the function to the `LIVE` stage after creation or update. Defaults to `false`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Key Value Store Associations
 
@@ -81,13 +98,11 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Connection Function.
-* `created_time` - Date and time when the connection function was created.
 * `etag` - ETag of the connection function.
 * `id` - ID of the connection function.
-* `last_modified_time` - Date and time when the connection function was last modified.
 * `live_stage_etag` - ETag of the function's LIVE stage. Will be empty if the function has not been published.
-* `location` - Location of the connection function.
 * `status` - Status of the connection function.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
