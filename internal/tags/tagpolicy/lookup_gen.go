@@ -596,6 +596,7 @@ var Lookup = map[string][]string{
 		"aws_alb",
 	},
 	"elasticloadbalancing:targetgroup": {
+		"aws_alb_target_group",
 		"aws_lb_target_group",
 	},
 	"elasticloadbalancing:truststore": {

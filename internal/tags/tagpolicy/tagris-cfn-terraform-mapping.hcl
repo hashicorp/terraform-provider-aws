@@ -987,7 +987,10 @@ tagtype "elasticloadbalancing:loadbalancer" {
 }
 
 tagtype "elasticloadbalancing:targetgroup" {
-  terraform_resource_types = ["aws_lb_target_group"]
+  terraform_resource_types = [
+    "aws_alb_target_group",
+    "aws_lb_target_group",
+  ]
 }
 
 tagtype "elasticloadbalancing:truststore" {
