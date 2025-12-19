@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisvideo
@@ -247,7 +247,7 @@ func statusStream(conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc 
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

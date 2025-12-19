@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1604,6 +1604,139 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogsPrefix(t *te
 	})
 }
 
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtTrue),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(false, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtFalse),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtTrue),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogsNoBlocks(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtFalse),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_healthCheckLogsPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(true, rName, "prefix1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtTrue),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtTrue),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albHealthCheckLogs(true, rName, "prefix1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.enabled", acctest.CtTrue),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "health_check_logs.s3.prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check_logs.0.prefix", "prefix1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
@@ -2408,7 +2541,7 @@ func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfelbv2.FindLoadBalancerByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3447,6 +3580,32 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_albConnectionLogsNoBlocks(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+  subnets  = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_albHealthCheckLogs(enabled bool, rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+  subnets  = aws_subnet.test[*].id
+
+  health_check_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = %[2]t
+    prefix  = %[3]q
+  }
+}
+`, rName, enabled, bucketPrefix))
+}
+
+func testAccLoadBalancerConfig_albHealthCheckLogsNoBlocks(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true

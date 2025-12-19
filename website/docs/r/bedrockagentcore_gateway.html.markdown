@@ -75,6 +75,40 @@ resource "aws_bedrockagentcore_gateway" "example" {
 }
 ```
 
+### Gateway with Interceptor Configuration
+
+```terraform
+resource "aws_lambda_function" "interceptor" {
+  filename      = "interceptor.zip"
+  function_name = "gateway-interceptor"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_bedrockagentcore_gateway" "example" {
+  name     = "gateway-with-interceptor"
+  role_arn = aws_iam_role.example.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST", "RESPONSE"]
+
+    interceptor {
+      lambda {
+        arn = aws_lambda_function.interceptor.arn
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -90,6 +124,7 @@ The following arguments are optional:
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
+* `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -107,6 +142,32 @@ The `custom_jwt_authorizer` block supports the following:
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+
+### `interceptor_configuration`
+
+The `interceptor_configuration` block supports the following:
+
+* `interception_points` - (Required) Set of interception points. Valid values: `REQUEST`, `RESPONSE`.
+* `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor) below.
+* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration) below.
+
+### `interceptor`
+
+The `interceptor` block supports the following:
+
+* `lambda` - (Required) Lambda function configuration for the interceptor. See [`lambda`](#lambda) below.
+
+### `lambda`
+
+The `lambda` block supports the following:
+
+* `arn` - (Required) ARN of the Lambda function to invoke for the interceptor.
+
+### `input_configuration`
+
+The `input_configuration` block supports the following:
+
+* `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
 
 ### `protocol_configuration`
 
