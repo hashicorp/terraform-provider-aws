@@ -49,10 +49,6 @@ files:
     yaml: "#"
     yml: "#"
 
-  # below_frontmatter: # deprecated, use placement_exceptions.frontmatter
-  #  - ".md"
-  #  - ".html.markdown"
-
   placement_exceptions:
     xml_declaration: true
     markdown_heading: true
