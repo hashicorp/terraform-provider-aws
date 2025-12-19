@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2014, 2025
+# SPDX-License-Identifier: MPL-2.0
 
 PROJECT_NUMBER=196
 PROJECT_ID="PVT_kwDOAAuecM4AF-7h"
