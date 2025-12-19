@@ -8,13 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
@@ -28,8 +26,6 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -46,8 +42,6 @@ func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -64,8 +58,6 @@ func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -102,8 +94,6 @@ func waitClusterRebooted(ctx context.Context, conn *redshift.Client, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -121,8 +111,6 @@ func waitClusterAquaApplied(ctx context.Context, conn *redshift.Client, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -140,8 +128,6 @@ func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
-
 		return output, err
 	}
 
@@ -160,8 +146,6 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshift.Client, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.EndpointStatus)))
-
 		return output, err
 	}
 
@@ -180,8 +164,6 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Client, id st
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.EndpointStatus)))
-
 		return output, err
 	}
 
@@ -200,8 +182,6 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Client, id s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
-
 		return output, err
 	}
 
@@ -220,8 +200,6 @@ func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Client, id s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
-
 		return output, err
 	}
 
@@ -238,7 +216,7 @@ func waitIntegrationCreated(ctx context.Context, conn *redshift.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
@@ -256,7 +234,7 @@ func waitIntegrationUpdated(ctx context.Context, conn *redshift.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
@@ -274,7 +252,7 @@ func waitIntegrationDeleted(ctx context.Context, conn *redshift.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
