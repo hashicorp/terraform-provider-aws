@@ -3553,7 +3553,7 @@ func TestAccDynamoDBTable_Replica_MRSC_Create(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test_mrsc"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -3596,7 +3596,7 @@ func TestAccDynamoDBTable_Replica_MRSC_Create_witness(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test_mrsc"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -3636,7 +3636,7 @@ func TestAccDynamoDBTable_Replica_MRSC_Create_witness_too_many_replicas(t *testi
 	}
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -3844,7 +3844,7 @@ func TestAccDynamoDBTable_Replica_MRSC_pitr(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -3913,7 +3913,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitr(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4258,7 +4258,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_updateIsPropagated_oneOfTwo(t *testi
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4329,7 +4329,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_oneOfTwo(
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4400,7 +4400,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_updateIsPropagated_twoOfTwo(t *testi
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4479,7 +4479,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_twoOfTwo(
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4550,7 +4550,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_propagateToAddedReplica(t *testing.T
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4621,7 +4621,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_propagateToAddedReplica(t *t
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4686,7 +4686,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_notPropagatedToAddedReplica(
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4750,7 +4750,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_nonPropagatedTagsAreUnmanaged(t *tes
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4829,7 +4829,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_nonPropagatedTagsAreUnmanage
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -4900,7 +4900,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tagsUpdate(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
@@ -5052,7 +5052,7 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
