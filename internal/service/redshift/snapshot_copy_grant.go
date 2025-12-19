@@ -5,12 +5,10 @@ package redshift
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -64,7 +62,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	name := d.Get("snapshot_copy_grant_name").(string)
-	input := &redshift.CreateSnapshotCopyGrantInput{
+	input := redshift.CreateSnapshotCopyGrantInput{
 		SnapshotCopyGrantName: aws.String(name),
 		Tags:                  getTagsIn(ctx),
 	}
@@ -73,7 +71,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateSnapshotCopyGrant(ctx, input)
+	_, err := conn.CreateSnapshotCopyGrant(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Copy Grant (%s): %s", name, err)
@@ -81,7 +79,10 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
+	const (
+		timeout = 3 * time.Minute
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
@@ -94,7 +95,8 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	grant, err := findSnapshotCopyGrantByName(ctx, conn, d.Id())
 
@@ -108,14 +110,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Copy Grant (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("snapshotcopygrant:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, snapshotCopyGrantARN(ctx, c, d.Id()))
 	d.Set(names.AttrKMSKeyID, grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 
@@ -137,9 +132,10 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Snapshot Copy Grant: %s", d.Id())
-	_, err := conn.DeleteSnapshotCopyGrant(ctx, &redshift.DeleteSnapshotCopyGrantInput{
+	input := redshift.DeleteSnapshotCopyGrantInput{
 		SnapshotCopyGrantName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSnapshotCopyGrant(ctx, &input)
 
 	if errs.IsA[*awstypes.SnapshotCopyGrantNotFoundFault](err) {
 		return diags
@@ -149,7 +145,10 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Copy Grant (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
+	const (
+		timeout = 3 * time.Minute
+	)
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
@@ -158,4 +157,8 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func snapshotCopyGrantARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "snapshotcopygrant:"+id)
 }
