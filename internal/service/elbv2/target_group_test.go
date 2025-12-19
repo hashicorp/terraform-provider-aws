@@ -585,7 +585,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_parallelQuic(t *testing.T) {
+func TestAccELBV2TargetGroup_quic(t *testing.T) {
 	const (
 		resourceName = "aws_lb_target_group.test"
 	)
