@@ -300,13 +300,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 				},
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateIdFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
 				Config: testAccGlobalSecondaryIndexConfig_provisioned_withCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
@@ -326,6 +319,11 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_capacityChange_ignoreChange
 						"read_units_per_second":  knownvalue.Int64Exact(2),
 						"write_units_per_second": knownvalue.Int64Exact(2),
 					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 			{
@@ -1086,13 +1084,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				},
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateIdFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
@@ -1112,6 +1103,11 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"read_units_per_second":  knownvalue.Int64Exact(warmThroughputOnDemandMixReadUnitsPerSecond),
 						"write_units_per_second": knownvalue.Int64Exact(warmThroughputOnDemandMixWriteUnitsPerSecond),
 					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 			{
