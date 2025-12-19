@@ -238,7 +238,7 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroup(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroupRemoval(t *testing.T) {
+func TestAccElastiCacheServerlessCache_updateWithUserGroupRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -248,6 +248,9 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroupRemoval(t *testin
 	userId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	userGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless_cache.test"
+	userResourceName := "aws_elasticache_user.test"
+	userGroupResourceName := "aws_elasticache_user_group.test"
+
 	var serverlessElasticCache awstypes.ServerlessCache
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -259,7 +262,7 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroupRemoval(t *testin
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_redisUpdateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis),
+				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis, tfelasticache.EngineRedis, tfelasticache.EngineRedis),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
@@ -267,10 +270,12 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroupRemoval(t *testin
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineRedis),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", userGroupId),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(userGroupResourceName, names.AttrEngine, tfelasticache.EngineRedis),
 				),
 			},
 			{
-				Config: testAccServerlessCacheConfig_redisUpdateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineValkey),
+				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis, tfelasticache.EngineRedis, tfelasticache.EngineValkey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
@@ -278,10 +283,38 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroupRemoval(t *testin
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", userGroupId),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(userGroupResourceName, names.AttrEngine, tfelasticache.EngineRedis),
 				),
 			},
 			{
-				Config: testAccServerlessCacheConfig_redisUpdateWithUserIdUserGroupRemoval(rName, "test description", userId, userGroupId, tfelasticache.EngineValkey),
+				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis, tfelasticache.EngineValkey, tfelasticache.EngineValkey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", userGroupId),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrEngine, tfelasticache.EngineRedis),
+					resource.TestCheckResourceAttr(userGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineValkey, tfelasticache.EngineValkey, tfelasticache.EngineValkey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", userGroupId),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(userGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroupRemoval(rName, "test description", userId, userGroupId, tfelasticache.EngineValkey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
@@ -909,24 +942,24 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, description))
 }
 
-func testAccServerlessCacheConfig_redisUpdateWithUserIdUserGroup(rName, description string, userId string, userGroupId string, engine string) string {
+func testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, description string, userId string, userGroupId string, userEngine string, userGroupEngine string, engine string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[3]q
   user_name     = "default"
   access_string = "on ~* +@all"
-  engine        = "redis"
+  engine        = %[5]q
   passwords     = ["password123456789"]
 }
 
 resource "aws_elasticache_user_group" "test" {
-  engine        = "redis"
+  engine        = %[6]q
   user_group_id = %[4]q
   user_ids      = [aws_elasticache_user.test.user_id]
 }
 
 resource "aws_elasticache_serverless_cache" "test" {
-  engine = %[5]q
+  engine = %[7]q
   name   = %[1]q
   cache_usage_limits {
     data_storage {
@@ -943,10 +976,10 @@ resource "aws_elasticache_serverless_cache" "test" {
   snapshot_retention_limit = 1
   user_group_id            = aws_elasticache_user_group.test.id
 }
-`, rName, description, userId, userGroupId, engine))
+`, rName, description, userId, userGroupId, userEngine, userGroupEngine, engine))
 }
 
-func testAccServerlessCacheConfig_redisUpdateWithUserIdUserGroupRemoval(rName, description string, userId string, userGroupId string, engine string) string {
+func testAccServerlessCacheConfig_updateWithUserIdUserGroupRemoval(rName, description string, userId string, userGroupId string, engine string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[3]q
