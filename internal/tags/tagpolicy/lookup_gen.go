@@ -987,6 +987,8 @@ var Lookup = map[string][]string{
 	},
 	"rds:cluster": {
 		"aws_docdb_cluster",
+		"aws_neptune_cluster",
+		"aws_rds_cluster",
 	},
 	"rds:db": {
 		"aws_db_instance",

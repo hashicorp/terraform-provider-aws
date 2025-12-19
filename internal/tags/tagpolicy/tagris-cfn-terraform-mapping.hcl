@@ -2002,7 +2002,11 @@ tagtype "rds:cev" {
 }
 
 tagtype "rds:cluster" {
-  terraform_resource_types = ["aws_docdb_cluster"]
+  terraform_resource_types = [
+    "aws_docdb_cluster",
+    "aws_neptune_cluster",
+    "aws_rds_cluster",
+  ]
 }
 
 tagtype "rds:db" {
