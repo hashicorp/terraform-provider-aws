@@ -792,7 +792,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_throughputChanges(t *testin
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var conf awstypes.TableDescription
@@ -1605,7 +1605,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_throughputChanges(t *test
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var conf awstypes.TableDescription
