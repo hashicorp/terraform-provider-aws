@@ -554,6 +554,8 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `rds:db-proxy` | `aws_db_proxy` |
 | `rds:db-proxy-endpoint` | `aws_db_proxy_endpoint` |
 | `rds:es` | `aws_db_event_subscription` |
+| `rds:global-cluster` | `aws_docdb_global_cluster` |
+| `rds:global-cluster` | `aws_neptune_global_cluster` |
 | `rds:global-cluster` | `aws_rds_global_cluster` |
 | `rds:og` | `aws_db_option_group` |
 | `rds:pg` | `aws_db_parameter_group` |

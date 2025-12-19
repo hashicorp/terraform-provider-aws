@@ -2030,7 +2030,11 @@ tagtype "rds:es" {
 }
 
 tagtype "rds:global-cluster" {
-  terraform_resource_types = ["aws_rds_global_cluster"]
+  terraform_resource_types = [
+    "aws_docdb_global_cluster",
+    "aws_neptune_global_cluster",
+    "aws_rds_global_cluster",
+  ]
 }
 
 tagtype "rds:og" {

@@ -1005,6 +1005,8 @@ var Lookup = map[string][]string{
 		"aws_db_event_subscription",
 	},
 	"rds:global-cluster": {
+		"aws_docdb_global_cluster",
+		"aws_neptune_global_cluster",
 		"aws_rds_global_cluster",
 	},
 	"rds:og": {
