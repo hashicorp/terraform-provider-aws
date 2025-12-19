@@ -23,21 +23,29 @@ files:
     - ".yml"
     - ".yaml"
     - ".md"
+    - ".xml"
+    - ".hcl"
 
   comment_styles:
     go: "//"
-    sh: "#"
-    py: "#"
     hcl: "#"
-    tf: "#"
-    yml: "#"
-    yaml: "#"
-    md: "<!--"
     html_markdown: "<!--"
+    md: "<!--"
+    py: "#"
+    sh: "#"
+    tf: "#"
+    xml: "<!--"
+    yaml: "#"
+    yml: "#"
 
-  below_frontmatter:
+  below_frontmatter: # deprecated, use placement_exceptions.frontmatter
     - ".md"
     - ".html.markdown"
+
+  placement_exceptions:
+    xml_declaration: true
+    markdown_heading: true
+    frontmatter: [".md", ".html.markdown"]
 
 detection:
   skip_generated: false
