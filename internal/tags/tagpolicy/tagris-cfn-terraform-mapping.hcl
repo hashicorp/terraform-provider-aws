@@ -1066,7 +1066,12 @@ tagtype "fsx:association" {
 }
 
 tagtype "fsx:file-system" {
-  terraform_resource_types = []
+  terraform_resource_types = [
+    "aws_fsx_lustre_file_system",
+    "aws_fsx_ontap_file_system",
+    "aws_fsx_openzfs_file_system",
+    "aws_fsx_windows_file_system",
+  ]
 }
 
 tagtype "fsx:snapshot" {

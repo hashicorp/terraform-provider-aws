@@ -619,6 +619,12 @@ var Lookup = map[string][]string{
 	"fsx:association": {
 		"aws_fsx_data_repository_association",
 	},
+	"fsx:file-system": {
+		"aws_fsx_lustre_file_system",
+		"aws_fsx_ontap_file_system",
+		"aws_fsx_openzfs_file_system",
+		"aws_fsx_windows_file_system",
+	},
 	"fsx:storage-virtual-machine": {
 		"aws_fsx_ontap_storage_virtual_machine",
 	},
