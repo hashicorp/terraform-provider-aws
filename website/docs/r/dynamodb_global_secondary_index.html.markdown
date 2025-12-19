@@ -188,13 +188,27 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
-* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
+* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the index.
+  See [`on_demand_throughput` below](#on_demand_throughput).
+  Only valid if the table's `billing_mode` is `PAY_PER_REQUEST`.
 * `provisioned_throughput` - (Optional) Provisioned throughput for the index.
   See [`provisioned_throughput` below](#provisioned_throughput).
   Required if the table's `billing_mode` is `PROVISIONED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
+* `warm_throughput` - (Optional) Sets the number of warm read and write units for this index.
+  See [`warm_throughput` below](#warm_throughput).
+
+### `key_schema`
+
+* `attribute_name` - (Required) Name of the attribute
+* `attribute_type` - (Required) Type of the attribute in the index.
+  Valid values are `S` (string), `N` (number), `B` (binary).
+* `key_type` - (Required) Key type. Valid values are `HASH`, `RANGE`.
+
+### `on_demand_throughput`
+
+* `max_read_request_units` - (Optional) Maximum number of read request units for this index.
+* `max_write_request_units` - (Optional) Maximum number of write request units for this index.
 
 ### `projection`
 
@@ -208,17 +222,16 @@ The following arguments are optional:
 * `read_capacity_units` - (Required) Number of read capacity units for this index.
 * `write_capacity_units` - (Required) Number of write capacity units for this index.
 
+### `warm_throughput`
+
+* `read_units_per_second` - (Required) Number of read operations this index can instantaneously support.
+* `write_units_per_second` - (Required) Number of write operations this index can instantaneously support.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the GSI
-
-### `key_schema`
-
-* `attribute_name` - (Required) Name of the attribute
-* `attribute_type` - (Required) Type of the attribute in the index; Valid values are `S` (string), `N` (number), `B` (binary).
-* `key_type` - (Required) Key type. Valid values are `HASH`, `RANGE`.
 
 ## Import
 
