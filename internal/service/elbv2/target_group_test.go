@@ -585,6 +585,61 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_parallelQuic(t *testing.T) {
+	const (
+		resourceName = "aws_lb_target_group.test"
+	)
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		quicProtocol string
+	}{
+		"quic": {
+			quicProtocol: "QUIC",
+		},
+
+		"tcp_quic": {
+			quicProtocol: "TCP_QUIC",
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+
+			ctx := acctest.Context(t)
+			var conf awstypes.TargetGroup
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccTargetGroupConfig_basicQuic(rName, testcase.quicProtocol),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, testcase.quicProtocol),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+							resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccELBV2TargetGroup_udp(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TargetGroup
@@ -5012,6 +5067,34 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, appSstickinessBlock)
+}
+
+func testAccTargetGroupConfig_basicQuic(rName, protocol string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "TCP"
+    port     = 443
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, protocol)
 }
 
 func testAccTargetGroupConfig_basicUdp(rName string) string {
