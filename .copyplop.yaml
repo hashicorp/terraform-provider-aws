@@ -29,10 +29,12 @@ files:
     - ".tfvars"
     - ".sh"
     - ".py"
+    - ".html"
 
   comment_styles:
     go: "//"
     hcl: "#"
+    html: "<!--"
     html_markdown: "<!--"
     md: "<!--"
     py: "#"
