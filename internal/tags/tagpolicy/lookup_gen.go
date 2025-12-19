@@ -630,6 +630,7 @@ var Lookup = map[string][]string{
 	},
 	"fsx:volume": {
 		"aws_fsx_ontap_volume",
+		"aws_fsx_openzfs_volume",
 	},
 	"gamelift:alias": {
 		"aws_gamelift_alias",

@@ -429,6 +429,7 @@ This may be useful to determine which Terraform resource types are impacted by a
 | `fsx:file-system` | `aws_fsx_windows_file_system` |
 | `fsx:storage-virtual-machine` | `aws_fsx_ontap_storage_virtual_machine` |
 | `fsx:volume` | `aws_fsx_ontap_volume` |
+| `fsx:volume` | `aws_fsx_openzfs_volume` |
 | `gamelift:alias` | `aws_gamelift_alias` |
 | `gamelift:build` | `aws_gamelift_build` |
 | `gamelift:fleet` | `aws_gamelift_fleet` |

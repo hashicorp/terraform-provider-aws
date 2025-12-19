@@ -1083,7 +1083,10 @@ tagtype "fsx:storage-virtual-machine" {
 }
 
 tagtype "fsx:volume" {
-  terraform_resource_types = ["aws_fsx_ontap_volume"]
+  terraform_resource_types = [
+    "aws_fsx_ontap_volume",
+    "aws_fsx_openzfs_volume",
+  ]
 }
 
 tagtype "gamelift:alias" {
