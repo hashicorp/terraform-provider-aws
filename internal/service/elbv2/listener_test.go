@@ -1367,6 +1367,66 @@ func TestAccELBV2Listener_attributes_alb_HTTPSRequestHeaders(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
+	const (
+		resourceName = "aws_lb_listener.test"
+	)
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		quicProtocol string
+	}{
+		"quic": {
+			quicProtocol: "QUIC",
+		},
+
+		"tcp_quic": {
+			quicProtocol: "TCP_QUIC",
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var conf awstypes.Listener
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckListenerDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccListenerConfig_protocolQuic(rName, testcase.quicProtocol),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckListenerExists(ctx, resourceName, &conf),
+							resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, testcase.quicProtocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+							resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+						),
+					},
+					{
+						ResourceName:      resourceName,
+						ImportState:       true,
+						ImportStateVerify: true,
+						ImportStateVerifyIgnore: []string{
+							"default_action.0.forward",
+						},
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -4380,6 +4440,45 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_protocolQuic(rName, quicProtocol string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "443"
+  protocol          = %[2]q
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName, quicProtocol))
 }
 
 func testAccListenerConfig_redirect(rName string) string {
