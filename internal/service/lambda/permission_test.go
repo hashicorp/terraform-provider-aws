@@ -711,7 +711,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 	})
 }
 
-func TestAccLambdaPermission_FunctionURLs_InvokedViaFunctionUrl(t *testing.T) {
+func TestAccLambdaPermission_FunctionURLs_invokedViaFunctionURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var statement tflambda.PolicyStatement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -753,10 +753,6 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *tflambda.Pol
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lambda Permission ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -1120,10 +1116,10 @@ resource "aws_lambda_permission" "test" {
 func testAccPermissionConfig_functionURLsNone_invokeFunction(rName string) string {
 	return acctest.ConfigCompose(testAccPermissionConfig_base(rName), `
 resource "aws_lambda_permission" "test" {
-  statement_id           = "AllowInvokeFromWithoutAuth"
-  action                 = "lambda:InvokeFunction"
-  function_name          = aws_lambda_function.test.function_name
-  principal              = aws_iam_role.test.arn
+  statement_id             = "AllowInvokeFromWithoutAuth"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.test.function_name
+  principal                = aws_iam_role.test.arn
   invoked_via_function_url = true
 }
 `)
