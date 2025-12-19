@@ -100,7 +100,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMembershipExists(ctx, resourceName, &membership),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceMembership, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcleanrooms.ResourceMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

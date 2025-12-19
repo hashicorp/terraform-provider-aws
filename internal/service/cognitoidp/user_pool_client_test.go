@@ -947,7 +947,7 @@ func TestAccCognitoIDPUserPoolClient_disappears(t *testing.T) {
 				Config: testAccUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolClient, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolClient, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

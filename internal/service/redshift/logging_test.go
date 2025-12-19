@@ -90,7 +90,7 @@ func TestAccRedshiftLogging_disappears(t *testing.T) {
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceLogging, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceLogging, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

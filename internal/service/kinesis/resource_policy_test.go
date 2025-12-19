@@ -61,7 +61,7 @@ func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkinesis.ResourceResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkinesis.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

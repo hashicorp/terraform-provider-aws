@@ -70,7 +70,7 @@ func testAccPhoneNumberContactFlowAssociation_disappears(t *testing.T) {
 				Config: testAccPhoneNumberContactFlowAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPhoneNumberContactFlowAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfconnect.ResourcePhoneNumberContactFlowAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfconnect.ResourcePhoneNumberContactFlowAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -83,7 +83,7 @@ func TestAccRedshiftSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotCopy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

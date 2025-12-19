@@ -75,7 +75,7 @@ func testAccTransitGatewayDefaultRouteTablePropagation_disappears(t *testing.T, 
 				Config: testAccTransitgatewayDefaultRouteTablePropagationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTablePropagationExists(ctx, resourceName, &transitgateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayDefaultRouteTablePropagation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayDefaultRouteTablePropagation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

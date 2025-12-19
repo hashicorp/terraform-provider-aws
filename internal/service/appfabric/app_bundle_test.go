@@ -86,7 +86,7 @@ func testAccAppBundle_disappears(t *testing.T) {
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppBundle, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppBundle, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

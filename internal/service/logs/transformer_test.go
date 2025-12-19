@@ -73,7 +73,7 @@ func TestAccLogsTransformer_disappears(t *testing.T) {
 				Config: testAccTransformerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceTransformer, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceTransformer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

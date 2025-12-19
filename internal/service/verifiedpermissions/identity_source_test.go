@@ -130,7 +130,7 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceIdentitySource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourceIdentitySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

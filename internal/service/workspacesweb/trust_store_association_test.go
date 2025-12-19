@@ -87,7 +87,7 @@ func TestAccWorkSpacesWebTrustStoreAssociation_disappears(t *testing.T) {
 				Config: testAccTrustStoreAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceTrustStoreAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceTrustStoreAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

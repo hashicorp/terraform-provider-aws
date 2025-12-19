@@ -93,7 +93,7 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceAssetType, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceAssetType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

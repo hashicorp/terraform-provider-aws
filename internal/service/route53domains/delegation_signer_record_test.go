@@ -62,7 +62,7 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSignerAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53domains.ResourceDelegationSignerRecord, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53domains.ResourceDelegationSignerRecord, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

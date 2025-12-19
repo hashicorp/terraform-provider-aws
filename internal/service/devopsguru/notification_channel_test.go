@@ -76,7 +76,7 @@ func testAccNotificationChannel_disappears(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdevopsguru.ResourceNotificationChannel, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceNotificationChannel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
