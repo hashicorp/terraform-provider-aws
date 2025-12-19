@@ -130,9 +130,9 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"analysis_scheme": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								AnalysisSchemeDefault(),
-							},
+							// No plan modifier - defaults handled by resource-level ModifyPlan.
+							// Attribute-level modifiers don't work reliably for set elements because
+							// sets are identified by value; element changes appear as delete+create.
 						},
 						names.AttrDefaultValue: schema.StringAttribute{
 							Optional: true,
