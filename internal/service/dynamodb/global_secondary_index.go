@@ -738,14 +738,14 @@ type keySchemaModel struct {
 func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryIndexModel, table *awstypes.TableDescription) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	counts := map[string]int{}
+	keySchemaRefCounts := map[string]int{}
 	for _, ks := range table.KeySchema {
-		counts[aws.ToString(ks.AttributeName)] = counts[aws.ToString(ks.AttributeName)] + 1
+		keySchemaRefCounts[aws.ToString(ks.AttributeName)]++
 	}
 
 	for _, l := range table.LocalSecondaryIndexes {
 		for _, ks := range l.KeySchema {
-			counts[aws.ToString(ks.AttributeName)] = counts[aws.ToString(ks.AttributeName)] + 1
+			keySchemaRefCounts[aws.ToString(ks.AttributeName)]++
 		}
 	}
 
@@ -755,52 +755,29 @@ func validateNewGSIAttributes(ctx context.Context, data resourceGlobalSecondaryI
 		}
 
 		for _, ks := range g.KeySchema {
-			counts[aws.ToString(ks.AttributeName)] = counts[aws.ToString(ks.AttributeName)] + 1
+			keySchemaRefCounts[aws.ToString(ks.AttributeName)]++
 		}
 	}
 
-	var kss []keySchemaModel
-	diags.Append(data.KeySchema.ElementsAs(ctx, &kss, false)...)
-	if diags.HasError() {
-		return diags
-	}
+	keySchemaPath := path.Root("key_schema")
 
-	var ads []keySchemaModel
-	diags.Append(data.KeySchema.ElementsAs(ctx, &ads, false)...)
-	if diags.HasError() {
-		return diags
-	}
+	for i, keySchema := range fwdiag.Must(data.KeySchema.ToSlice(ctx)) {
+		attributeName := keySchema.AttributeName.ValueString()
+		gsiAttributeType := keySchema.AttributeType.ValueEnum()
 
-	for _, ad := range ads {
-		name := ad.AttributeName.ValueString()
-		typ := ad.AttributeType.ValueEnum()
-		if name == "" {
-			continue
-		}
-
-		existing := ""
-		for _, ad := range table.AttributeDefinitions {
-			if aws.ToString(ad.AttributeName) == name {
-				existing = string(ad.AttributeType)
+		var tableAttributeType awstypes.ScalarAttributeType
+		for _, tableAttribute := range table.AttributeDefinitions {
+			if aws.ToString(tableAttribute.AttributeName) == attributeName {
+				tableAttributeType = tableAttribute.AttributeType
 			}
 		}
 
-		if existing == "" {
-			continue
-		}
-
-		if existing != string(typ) && counts[name] > 0 {
-			diags.AddError(
-				"Changing already existing attribute",
-				fmt.Sprintf(
-					`creation of index "%s" on table "%s" is attempting to change already existing attribute "%s" from type "%s" to "%s"`,
-					data.IndexName.ValueString(),
-					data.TableName.ValueString(),
-					name,
-					existing,
-					typ,
-				),
-			)
+		if tableAttributeType != gsiAttributeType && keySchemaRefCounts[attributeName] > 0 {
+			diags.Append(diag.NewAttributeErrorDiagnostic(
+				keySchemaPath.AtListIndex(i).AtMapKey("attribute_type"),
+				"Invalid Key Schema Type Change",
+				fmt.Sprintf(`The "attribute_type" of the key schema attribute %q was previously defined as %q. It cannot be redefined as %q.`, attributeName, tableAttributeType, gsiAttributeType),
+			))
 		}
 	}
 

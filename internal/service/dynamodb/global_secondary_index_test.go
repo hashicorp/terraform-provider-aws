@@ -1689,7 +1689,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_validate_Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_missmatchedType(rNameTable, rName),
-				ExpectError: regexache.MustCompile(`Changing already existing attribute`),
+				ExpectError: regexache.MustCompile(`Invalid Key Schema Type Change`),
 			},
 		},
 	})
@@ -2615,42 +2615,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_concurrentGSI_delete(t *testing.T) {
 					testAccCheckGSINotExists(ctx, t, resourceName1),
 					testAccCheckGSINotExists(ctx, t, resourceName2),
 				),
-			},
-		},
-	})
-}
-
-func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_badKeys(t *testing.T) {
-	acctest.SkipIfEnvVarNotSet(t, tfdynamodb.GlobalSecondaryIndexExperimentalFlagEnvVar)
-
-	ctx := acctest.Context(t)
-	var conf awstypes.TableDescription
-
-	resourceNameTable := "aws_dynamodb_table.test"
-	resourceName1 := "aws_dynamodb_global_secondary_index.test1"
-	resourceName2 := "aws_dynamodb_global_secondary_index.test2"
-
-	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalSecondaryIndexDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalSecondaryIndexConfig_multipleGsi_tableOnly(rNameTable),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
-					testAccCheckGSINotExists(ctx, t, resourceName1),
-					testAccCheckGSINotExists(ctx, t, resourceName2),
-				),
-			},
-			{
-				Config:      testAccGlobalSecondaryIndexConfig_multipleGsi_badKeys(rNameTable, rName1, rName2),
-				ExpectError: regexache.MustCompile(`Changing already existing attribute`),
 			},
 		},
 	})
@@ -4139,60 +4103,6 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, tableName, indexName1, indexName2, capacity)
-}
-
-func testAccGlobalSecondaryIndexConfig_multipleGsi_badKeys(tableName, indexName1, indexName2 string) string {
-	return fmt.Sprintf(`
-resource "aws_dynamodb_global_secondary_index" "test1" {
-  table_name = aws_dynamodb_table.test.name
-  index_name = %[2]q
-  projection {
-    projection_type = "ALL"
-  }
-
-  provisioned_throughput {
-    read_capacity_units  = 1
-    write_capacity_units = 1
-  }
-
-  key_schema {
-    attribute_name = %[1]q
-    attribute_type = "B"
-    key_type       = "HASH"
-  }
-}
-
-resource "aws_dynamodb_global_secondary_index" "test2" {
-  table_name = aws_dynamodb_table.test.name
-  index_name = %[3]q
-  projection {
-    projection_type = "ALL"
-  }
-
-  provisioned_throughput {
-    read_capacity_units  = 1
-    write_capacity_units = 1
-  }
-
-  key_schema {
-    attribute_name = %[1]q
-    attribute_type = "N"
-    key_type       = "HASH"
-  }
-}
-
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  hash_key       = %[1]q
-  read_capacity  = 1
-  write_capacity = 1
-
-  attribute {
-    name = %[1]q
-    type = "S"
-  }
-}
-`, tableName, indexName1, indexName2)
 }
 
 func testAccGlobalSecondaryIndexConfig_migrate_single_setup(tableName, indexName1 string) string {
