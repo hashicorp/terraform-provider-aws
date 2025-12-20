@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +37,7 @@ func CheckFrameworkResourceDisappears(
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error),
 	n string,
 ) resource.TestCheckFunc {
-	return deleteFrameworkResource(ctx, ProviderMeta(ctx, t), factory, n, rootStringStateFunc())
+	return deleteFrameworkResource(ctx, t, factory, n, rootStringStateFunc())
 }
 
 // CheckFrameworkResourceDisappearsWithStateFunc destroys an existing resource
@@ -50,12 +49,12 @@ func CheckFrameworkResourceDisappearsWithStateFunc(
 	n string,
 	stateFunc func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error,
 ) resource.TestCheckFunc {
-	return deleteFrameworkResource(ctx, ProviderMeta(ctx, t), factory, n, stateFunc)
+	return deleteFrameworkResource(ctx, t, factory, n, stateFunc)
 }
 
 func deleteFrameworkResource(
 	ctx context.Context,
-	providerMeta *conns.AWSClient,
+	t *testing.T,
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error),
 	n string,
 	stateFunc func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error,
@@ -75,7 +74,7 @@ func deleteFrameworkResource(
 			return err
 		}
 
-		resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: providerMeta}, &fwresource.ConfigureResponse{})
+		resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: ProviderMeta(ctx, t)}, &fwresource.ConfigureResponse{})
 
 		schemaResp := fwresource.SchemaResponse{}
 		resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
