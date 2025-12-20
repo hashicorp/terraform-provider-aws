@@ -971,7 +971,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					if node.Container != nil {
+						diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					}
 				}
 				input.NodeProperties = props
 			}
