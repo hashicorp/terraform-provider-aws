@@ -175,6 +175,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.9
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.0
+	github.com/aws/aws-sdk-go-v2/service/mpa v1.5.8
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.4
