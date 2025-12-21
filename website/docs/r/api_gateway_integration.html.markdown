@@ -131,6 +131,24 @@ resource "aws_iam_role" "role" {
 }
 ```
 
+## Lambda integration with response streaming
+
+All other resources and data sources are the same as in [the previous example](#lambda-integration); only the integration configuration differs.
+Note that the `timeout` of the `aws_lambda_function` may need to be adjusted.
+
+```terraform
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.lambda.response_streaming_invoke_arn
+  response_transfer_mode  = "STREAM"
+  timeout_milliseconds    = 900000
+}
+```
+
 ## VPC Link
 
 ```terraform
