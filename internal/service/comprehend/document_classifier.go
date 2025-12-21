@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -49,7 +50,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
 // @Testing(preCheck="testAccPreCheck")
-func ResourceDocumentClassifier() *schema.Resource {
+func resourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
 		ReadWithoutTimeout:   resourceDocumentClassifierRead,
@@ -295,7 +296,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
-	out, err := FindDocumentClassifierByID(ctx, conn, d.Id())
+	out, err := findDocumentClassifierByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Comprehend Document Classifier (%s) not found, removing from state", d.Id())
@@ -317,7 +318,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("volume_kms_key_id", out.VolumeKmsKeyId)
 
 	// DescribeDocumentClassifier() doesn't return the model name
-	name, err := DocumentClassifierParseARN(aws.ToString(out.DocumentClassifierArn))
+	name, err := documentClassifierParseARN(aws.ToString(out.DocumentClassifierArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
@@ -390,14 +391,14 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "waiting for Comprehend Document Classifier (%s) to be stopped: %s", d.Id(), err)
 	}
 
-	name, err := DocumentClassifierParseARN(d.Id())
+	name, err := documentClassifierParseARN(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting Comprehend Document Classifier (%s)", name)
 
-	versions, err := ListDocumentClassifierVersionsByName(ctx, conn, name)
+	versions, err := findDocumentClassifierVersionsByName(ctx, conn, name)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Document Classifier (%s): %s", name, err)
 	}
@@ -594,20 +595,22 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	return diags
 }
 
-func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id string) (*types.DocumentClassifierProperties, error) {
-	in := &comprehend.DescribeDocumentClassifierInput{
+func findDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id string) (*types.DocumentClassifierProperties, error) {
+	in := comprehend.DescribeDocumentClassifierInput{
 		DocumentClassifierArn: aws.String(id),
 	}
 
-	out, err := conn.DescribeDocumentClassifier(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
+	return findDocumentClassifier(ctx, conn, &in)
+}
 
+func findDocumentClassifier(ctx context.Context, conn *comprehend.Client, in *comprehend.DescribeDocumentClassifierInput) (*types.DocumentClassifierProperties, error) {
+	out, err := conn.DescribeDocumentClassifier(ctx, in)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+	if err != nil {
 		return nil, err
 	}
 
@@ -618,24 +621,31 @@ func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id
 	return out.DocumentClassifierProperties, nil
 }
 
-func ListDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.Client, name string) ([]types.DocumentClassifierProperties, error) {
-	results := []types.DocumentClassifierProperties{}
-
-	input := &comprehend.ListDocumentClassifiersInput{
+func findDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.Client, name string) ([]types.DocumentClassifierProperties, error) {
+	input := comprehend.ListDocumentClassifiersInput{
 		Filter: &types.DocumentClassifierFilter{
 			DocumentClassifierName: aws.String(name),
 		},
 	}
-	paginator := comprehend.NewListDocumentClassifiersPaginator(conn, input)
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
+
+	return findDocumentClassifierVersions(ctx, conn, &input)
+}
+
+func findDocumentClassifierVersions(ctx context.Context, conn *comprehend.Client, input *comprehend.ListDocumentClassifiersInput) ([]types.DocumentClassifierProperties, error) {
+	output := []types.DocumentClassifierProperties{}
+
+	pages := comprehend.NewListDocumentClassifiersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
-			return []types.DocumentClassifierProperties{}, err
+			return nil, err
 		}
-		results = append(results, output.DocumentClassifierPropertiesList...)
+
+		output = append(output, page.DocumentClassifierPropertiesList...)
 	}
 
-	return results, nil
+	return output, nil
 }
 
 func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
@@ -698,7 +708,7 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 
 func statusDocumentClassifier(conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := FindDocumentClassifierByID(ctx, conn, id)
+		out, err := findDocumentClassifierByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -807,7 +817,7 @@ func expandDocumentClassifierOutputDataConfig(tfList []any) *types.DocumentClass
 	return a
 }
 
-func DocumentClassifierParseARN(arnString string) (string, error) {
+func documentClassifierParseARN(arnString string) (string, error) {
 	arn, err := arn.Parse(arnString)
 	if err != nil {
 		return "", err
@@ -822,11 +832,11 @@ func DocumentClassifierParseARN(arnString string) (string, error) {
 	return name, nil
 }
 
-const DocumentClassifierLabelSeparatorDefault = "|"
+const documentClassifierLabelSeparatorDefault = "|"
 
 func documentClassifierLabelSeparators() []string {
 	return []string{
-		DocumentClassifierLabelSeparatorDefault,
+		documentClassifierLabelSeparatorDefault,
 		"~",
 		"!",
 		"@",

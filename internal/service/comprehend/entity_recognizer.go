@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -46,7 +47,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.EntityRecognizerProperties")
 // @Testing(preCheck="testAccPreCheck")
-func ResourceEntityRecognizer() *schema.Resource {
+func resourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
 		ReadWithoutTimeout:   resourceEntityRecognizerRead,
@@ -329,7 +330,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
-	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
+	out, err := findEntityRecognizerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Comprehend Entity Recognizer (%s) not found, removing from state", d.Id())
@@ -350,7 +351,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("volume_kms_key_id", out.VolumeKmsKeyId)
 
 	// DescribeEntityRecognizer() doesn't return the model name
-	name, err := EntityRecognizerParseARN(aws.ToString(out.EntityRecognizerArn))
+	name, err := entityRecognizerParseARN(aws.ToString(out.EntityRecognizerArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
@@ -419,14 +420,14 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "waiting for Comprehend Entity Recognizer (%s) to be stopped: %s", d.Id(), err)
 	}
 
-	name, err := EntityRecognizerParseARN(d.Id())
+	name, err := entityRecognizerParseARN(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting Comprehend Entity Recognizer (%s)", name)
 
-	versions, err := ListEntityRecognizerVersionsByName(ctx, conn, name)
+	versions, err := findEntityRecognizerVersionsByName(ctx, conn, name)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
@@ -621,20 +622,22 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	return diags
 }
 
-func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id string) (*types.EntityRecognizerProperties, error) {
-	in := &comprehend.DescribeEntityRecognizerInput{
+func findEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id string) (*types.EntityRecognizerProperties, error) {
+	in := comprehend.DescribeEntityRecognizerInput{
 		EntityRecognizerArn: aws.String(id),
 	}
 
-	out, err := conn.DescribeEntityRecognizer(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
+	return findEntityRecognizer(ctx, conn, &in)
+}
 
+func findEntityRecognizer(ctx context.Context, conn *comprehend.Client, in *comprehend.DescribeEntityRecognizerInput) (*types.EntityRecognizerProperties, error) {
+	out, err := conn.DescribeEntityRecognizer(ctx, in)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+	if err != nil {
 		return nil, err
 	}
 
@@ -645,24 +648,31 @@ func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id s
 	return out.EntityRecognizerProperties, nil
 }
 
-func ListEntityRecognizerVersionsByName(ctx context.Context, conn *comprehend.Client, name string) ([]types.EntityRecognizerProperties, error) {
-	results := []types.EntityRecognizerProperties{}
-
-	input := &comprehend.ListEntityRecognizersInput{
+func findEntityRecognizerVersionsByName(ctx context.Context, conn *comprehend.Client, name string) ([]types.EntityRecognizerProperties, error) {
+	input := comprehend.ListEntityRecognizersInput{
 		Filter: &types.EntityRecognizerFilter{
 			RecognizerName: aws.String(name),
 		},
 	}
-	paginator := comprehend.NewListEntityRecognizersPaginator(conn, input)
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
+
+	return findEntityRecognizerVersions(ctx, conn, &input)
+}
+
+func findEntityRecognizerVersions(ctx context.Context, conn *comprehend.Client, input *comprehend.ListEntityRecognizersInput) ([]types.EntityRecognizerProperties, error) {
+	output := []types.EntityRecognizerProperties{}
+
+	pages := comprehend.NewListEntityRecognizersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
-			return []types.EntityRecognizerProperties{}, err
+			return nil, err
 		}
-		results = append(results, output.EntityRecognizerPropertiesList...)
+
+		output = append(output, page.EntityRecognizerPropertiesList...)
 	}
 
-	return results, nil
+	return output, nil
 }
 
 func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
@@ -725,7 +735,7 @@ func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, i
 
 func statusEntityRecognizer(conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := FindEntityRecognizerByID(ctx, conn, id)
+		out, err := findEntityRecognizerByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -941,7 +951,7 @@ func expandEntityList(tfList []any) *types.EntityRecognizerEntityList {
 	return a
 }
 
-func EntityRecognizerParseARN(arnString string) (string, error) {
+func entityRecognizerParseARN(arnString string) (string, error) {
 	arn, err := arn.Parse(arnString)
 	if err != nil {
 		return "", err
