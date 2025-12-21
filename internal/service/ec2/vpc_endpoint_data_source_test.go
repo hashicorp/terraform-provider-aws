@@ -305,9 +305,10 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = aws_vpc.test.id
-  service_name = aws_vpc_endpoint.test.service_name
-  state        = "available"
+  vpc_id         = aws_vpc.test.id
+  service_name   = aws_vpc_endpoint.test.service_name
+  service_region = data.aws_region.current.region
+  state          = "available"
 }
 `, rName)
 }
