@@ -44,7 +44,7 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
