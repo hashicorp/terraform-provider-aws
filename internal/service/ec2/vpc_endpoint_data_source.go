@@ -150,6 +150,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_endpoint_type": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrVPCID: {
@@ -172,6 +173,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 				"vpc-endpoint-state": d.Get(names.AttrState).(string),
 				"vpc-id":             d.Get(names.AttrVPCID).(string),
 				"service-name":       d.Get(names.AttrServiceName).(string),
+				"vpc-endpoint-type":  d.Get("vpc_endpoint_type").(string),
 			},
 		),
 	}
