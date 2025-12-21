@@ -133,6 +133,10 @@ func dataSourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -216,6 +220,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
 	serviceName := aws.ToString(vpce.ServiceName)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
