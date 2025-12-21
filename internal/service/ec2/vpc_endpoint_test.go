@@ -2125,10 +2125,7 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_gatewayLoadBalancer(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
+data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
@@ -2163,7 +2160,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
+  allowed_principals         = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
