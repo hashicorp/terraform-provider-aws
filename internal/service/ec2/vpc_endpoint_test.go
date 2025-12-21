@@ -2543,7 +2543,7 @@ resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = true
 
   dns_options {
-    private_dns_preference        = %[2]q
+    private_dns_preference = %[2]q
   }
 
   tags = {
@@ -2679,7 +2679,7 @@ resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = true
 
   dns_options {
-    private_dns_preference        = %[2]q
+    private_dns_preference = %[2]q
   }
 
   tags = {
