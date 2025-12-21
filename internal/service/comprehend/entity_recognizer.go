@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -432,9 +432,9 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
 
-	var g multierror.Group
+	var g tfsync.Group
 	for _, v := range versions {
-		g.Go(func() error {
+		g.Go(ctx, func(ctx context.Context) error {
 			input := comprehend.DeleteEntityRecognizerInput{
 				EntityRecognizerArn: v.EntityRecognizerArn,
 			}
@@ -461,7 +461,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			}
 
 			for _, v := range networkInterfaces {
-				g.Go(func() error {
+				g.Go(ctx, func(ctx context.Context) error {
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 					if v.Attachment != nil {
@@ -485,7 +485,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 		})
 	}
 
-	if err := g.Wait(); err != nil {
+	if err := g.Wait(ctx); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
 
@@ -553,11 +553,11 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	d.SetId(aws.ToString(out.EntityRecognizerArn))
 
-	var g multierror.Group
+	var g tfsync.Group
 	waitCtx, cancel := context.WithCancel(ctx)
 
-	g.Go(func() error {
-		_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), timeout)
+	g.Go(waitCtx, func(ctx context.Context) error {
+		_, err := waitEntityRecognizerCreated(ctx, conn, d.Id(), timeout)
 		cancel()
 		return err
 	})
@@ -573,7 +573,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	}
 
 	if in.VpcConfig != nil {
-		g.Go(func() error {
+		g.Go(ctx, func(ctx context.Context) error {
 			ec2Conn := awsClient.EC2Client(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
@@ -615,8 +615,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		})
 	}
 
-	err = g.Wait().ErrorOrNil()
-	if err != nil {
+	if err := g.Wait(ctx); err != nil {
 		diags = sdkdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
 	}
 
