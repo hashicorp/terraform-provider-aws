@@ -69,6 +69,17 @@ func dataSourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"private_dns_preference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"private_dns_specified_domains": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
