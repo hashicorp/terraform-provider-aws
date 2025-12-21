@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -604,9 +603,8 @@ func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -641,10 +639,10 @@ func ListDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.
 }
 
 func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
-		Refresh:      statusDocumentClassifier(ctx, conn, id),
+		Refresh:      statusDocumentClassifier(conn, id),
 		Delay:        documentClassifierCreatedDelay,
 		PollInterval: documentClassifierPollInterval,
 		Timeout:      timeout,
@@ -653,7 +651,7 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*types.DocumentClassifierProperties); ok {
 		if output.Status == types.ModelStatusInError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 		return output, err
 	}
@@ -662,10 +660,10 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
-		Refresh:      statusDocumentClassifier(ctx, conn, id),
+		Refresh:      statusDocumentClassifier(conn, id),
 		Delay:        documentClassifierStoppedDelay,
 		PollInterval: documentClassifierPollInterval,
 		Timeout:      timeout,
@@ -680,10 +678,10 @@ func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
-		Refresh:        statusDocumentClassifier(ctx, conn, id),
+		Refresh:        statusDocumentClassifier(conn, id),
 		Delay:          documentClassifierDeletedDelay,
 		PollInterval:   documentClassifierPollInterval,
 		NotFoundChecks: 3,
@@ -698,8 +696,8 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 	return nil, err
 }
 
-func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDocumentClassifier(conn *comprehend.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindDocumentClassifierByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

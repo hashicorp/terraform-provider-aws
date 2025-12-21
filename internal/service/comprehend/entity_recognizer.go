@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -631,9 +630,8 @@ func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id s
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -668,10 +666,10 @@ func ListEntityRecognizerVersionsByName(ctx context.Context, conn *comprehend.Cl
 }
 
 func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
-		Refresh:      statusEntityRecognizer(ctx, conn, id),
+		Refresh:      statusEntityRecognizer(conn, id),
 		Delay:        entityRegcognizerCreatedDelay,
 		PollInterval: entityRegcognizerPollInterval,
 		Timeout:      timeout,
@@ -689,10 +687,10 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 }
 
 func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
-		Refresh:      statusEntityRecognizer(ctx, conn, id),
+		Refresh:      statusEntityRecognizer(conn, id),
 		Delay:        entityRegcognizerStoppedDelay,
 		PollInterval: entityRegcognizerPollInterval,
 		Timeout:      timeout,
@@ -707,10 +705,10 @@ func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, i
 }
 
 func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
-		Refresh:        statusEntityRecognizer(ctx, conn, id),
+		Refresh:        statusEntityRecognizer(conn, id),
 		Delay:          entityRegcognizerDeletedDelay,
 		PollInterval:   entityRegcognizerPollInterval,
 		NotFoundChecks: 3,
@@ -725,8 +723,8 @@ func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, i
 	return nil, err
 }
 
-func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEntityRecognizer(conn *comprehend.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindEntityRecognizerByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
