@@ -135,6 +135,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 			},
 			"service_region": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrState: {
@@ -174,6 +175,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 				"vpc-id":             d.Get(names.AttrVPCID).(string),
 				"service-name":       d.Get(names.AttrServiceName).(string),
 				"vpc-endpoint-type":  d.Get("vpc_endpoint_type").(string),
+				"service-region":     d.Get("service_region").(string),
 			},
 		),
 	}
