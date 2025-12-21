@@ -4,6 +4,7 @@
 package sync
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -14,7 +15,6 @@ import (
 func TestGroup(t *testing.T) {
 	err1 := errors.New("group_test: 1")
 	err2 := errors.New("group_test: 2")
-
 	cases := []struct {
 		errs      []error
 		nilResult bool
@@ -25,16 +25,17 @@ func TestGroup(t *testing.T) {
 		{errs: []error{err1, nil}},
 		{errs: []error{err1, nil, err2}},
 	}
+	ctx := t.Context()
 
 	for _, tc := range cases {
 		var g Group
 
 		for _, err := range tc.errs {
-			g.Go(func() error { return err })
+			g.Go(ctx, func(context.Context) error { return err })
 
 		}
 
-		gErr := g.Wait()
+		gErr := g.Wait(ctx)
 		if gErr != nil {
 			for i := range tc.errs {
 				if tc.errs[i] != nil && !strings.Contains(gErr.Error(), tc.errs[i].Error()) {

@@ -4,6 +4,7 @@
 package sync
 
 import (
+	"context"
 	"errors"
 	"sync"
 )
@@ -19,21 +20,21 @@ type Group struct {
 // Go calls the given function in a new goroutine.
 //
 // If the function returns an error it is added to the group's errors.
-func (g *Group) Go(f func() error) {
+func (g *Group) Go(ctx context.Context, f func(context.Context) error) {
 	g.wg.Add(1)
-	go func() {
+	go func(ctx context.Context) {
 		defer g.wg.Done()
-		if err := f(); err != nil {
+		if err := f(ctx); err != nil {
 			g.mutex.Lock()
 			g.errs = append(g.errs, err)
 			g.mutex.Unlock()
 		}
-	}()
+	}(ctx)
 }
 
 // Wait blocks until all function calls from the Go method have returned,
 // then returns the group's errors wrapped via `errors.Join`.
-func (g *Group) Wait() error {
+func (g *Group) Wait(context.Context) error {
 	g.wg.Wait()
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
