@@ -556,8 +556,8 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	var g tfsync.Group
 	waitCtx, cancel := context.WithCancel(ctx)
 
-	g.Go(waitCtx, func(ctx context.Context) error {
-		_, err := waitEntityRecognizerCreated(ctx, conn, d.Id(), timeout)
+	g.Go(ctx, func(context.Context) error {
+		_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), timeout)
 		cancel()
 		return err
 	})

@@ -529,8 +529,8 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	var g tfsync.Group
 	waitCtx, cancel := context.WithCancel(ctx)
 
-	g.Go(waitCtx, func(ctx context.Context) error {
-		_, err := waitDocumentClassifierCreated(ctx, conn, d.Id(), timeout)
+	g.Go(ctx, func(context.Context) error {
+		_, err := waitDocumentClassifierCreated(waitCtx, conn, d.Id(), timeout)
 		cancel()
 		return err
 	})
