@@ -144,6 +144,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
