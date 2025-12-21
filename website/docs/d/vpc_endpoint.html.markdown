@@ -84,6 +84,8 @@ DNS options (for `dns_options`) support the following attributes:
 
 * `dns_record_ip_type` - The DNS records created for the endpoint.
 * `private_dns_only_for_inbound_resolver_endpoint` - Indicates whether to enable private DNS only for inbound endpoints.
+* `private_dns_preference` - Preference for which private domains have a private hosted zone created for and associated with the specified VPC.
+* `private_dns_specified_domains` - List of private domains to create private hosted zones for and associate with the specified VPC.
 
 ## Timeouts
 
