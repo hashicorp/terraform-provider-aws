@@ -5,7 +5,7 @@ package redshift
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -33,13 +32,12 @@ func newDataShareAuthorizationResource(_ context.Context) (resource.ResourceWith
 }
 
 const (
-	ResNameDataShareAuthorization = "Data Share Authorization"
-
 	dataShareAuthorizationIDPartCount = 2
 )
 
 type dataShareAuthorizationResource struct {
 	framework.ResourceWithModel[dataShareAuthorizationResourceModel]
+	framework.WithNoUpdate
 	framework.WithImportByID
 }
 
@@ -84,16 +82,14 @@ func (r *dataShareAuthorizationResource) Schema(ctx context.Context, req resourc
 }
 
 func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RedshiftClient(ctx)
-
 	var plan dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	conn := r.Meta().RedshiftClient(ctx)
 
-	dataShareARN := plan.DataShareARN.ValueString()
-	consumerIdentifier := plan.ConsumerIdentifier.ValueString()
+	dataShareARN, consumerIdentifier := fwflex.StringValueFromFramework(ctx, plan.DataShareARN), fwflex.StringValueFromFramework(ctx, plan.ConsumerIdentifier)
 	parts := []string{
 		dataShareARN,
 		consumerIdentifier,
@@ -104,9 +100,8 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 		resp.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
 		return
 	}
-	plan.ID = types.StringValue(id)
 
-	in := &redshift.AuthorizeDataShareInput{
+	in := redshift.AuthorizeDataShareInput{
 		DataShareArn:       aws.String(dataShareARN),
 		ConsumerIdentifier: aws.String(consumerIdentifier),
 	}
@@ -115,22 +110,14 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 
-	out, err := conn.AuthorizeDataShare(ctx, in)
+	out, err := conn.AuthorizeDataShare(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameDataShareAuthorization, id, err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameDataShareAuthorization, id, nil),
-			errors.New("empty output").Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("creating Redshift Data Share Authorization (%s)", id), err.Error())
 		return
 	}
 
+	// Set values for unknowns.
+	plan.ID = fwflex.StringValueToFramework(ctx, id)
 	plan.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
 	plan.ProducerARN = fwflex.StringToFrameworkARN(ctx, out.ProducerArn)
 
@@ -138,13 +125,13 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 }
 
 func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RedshiftClient(ctx)
-
 	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().RedshiftClient(ctx)
 
 	id := fwflex.StringValueFromFramework(ctx, state.ID)
 	parts, err := intflex.ExpandResourceId(id, dataShareAuthorizationIDPartCount, false)
@@ -161,13 +148,11 @@ func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionSetting, ResNameDataShareAuthorization, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading Redshift Data Share Authorization (%s)", id), err.Error())
 		return
 	}
 
+	// Set attributes for import.
 	state.ConsumerIdentifier = fwflex.StringValueToFramework(ctx, consumerID)
 	state.DataShareARN = fwtypes.ARNValue(dataShareARN)
 	state.ManagedBy = fwflex.StringToFramework(ctx, out.ManagedBy)
@@ -176,35 +161,35 @@ func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *dataShareAuthorizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Update is a no-op
-}
-
 func (r *dataShareAuthorizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RedshiftClient(ctx)
-
 	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &redshift.DeauthorizeDataShareInput{
-		DataShareArn:       state.DataShareARN.ValueStringPointer(),
-		ConsumerIdentifier: state.ConsumerIdentifier.ValueStringPointer(),
+	conn := r.Meta().RedshiftClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
+	parts, err := intflex.ExpandResourceId(id, dataShareAuthorizationIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+		return
 	}
 
-	_, err := conn.DeauthorizeDataShare(ctx, in)
+	dataShareARN, consumerID := parts[0], parts[1]
+	in := redshift.DeauthorizeDataShareInput{
+		ConsumerIdentifier: aws.String(consumerID),
+		DataShareArn:       aws.String(dataShareARN),
+	}
+	_, err = conn.DeauthorizeDataShare(ctx, &in)
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because you have already removed authorization from the data share.") {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
-			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
-			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because you have already removed authorization from the data share.") {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Redshift, create.ErrActionDeleting, ResNameDataShareAuthorization, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting Redshift Data Share Authorization (%s)", id), err.Error())
 		return
 	}
 }
