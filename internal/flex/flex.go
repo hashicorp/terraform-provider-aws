@@ -310,12 +310,17 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 
 // BoolToStringValue converts a bool pointer to a Go string value.
 func BoolToStringValue(v *bool) string {
-	return strconv.FormatBool(aws.ToBool(v))
+	return BoolValueToStringValue(aws.ToBool(v))
 }
 
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
-	return aws.String(strconv.FormatBool(v))
+	return aws.String(BoolValueToStringValue(v))
+}
+
+// BoolValueToStringValue converts a Go bool value to a string value.
+func BoolValueToStringValue(v bool) string {
+	return strconv.FormatBool(v)
 }
 
 // StringToBoolValue converts a string pointer to a Go bool value.
