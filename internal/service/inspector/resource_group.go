@@ -25,6 +25,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.ResourceGroup")
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(checkDestroyNoop=true)
+// @Testing(preCheck="testAccPreCheck")
 func resourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,

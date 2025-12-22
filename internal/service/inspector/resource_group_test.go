@@ -24,7 +24,10 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_inspector_resource_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -61,6 +64,10 @@ func testAccCheckResourceGroupExists(ctx context.Context, n string, v *awstypes.
 
 		return nil
 	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/inspector.amazonaws.com")
 }
 
 var testAccResourceGroupConfig_basic = `
