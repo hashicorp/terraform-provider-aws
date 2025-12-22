@@ -1497,6 +1497,86 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_Protocol_httpsTohttp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listener1 awstypes.Listener
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	resourceName := "aws_lb_listener.test"
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_https(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_iam_server_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationOff),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_httpsTohttp(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "application"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+					"alpn_policy",
+					names.AttrCertificateARN,
+					"routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_issuer_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_subject_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_validity_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_leaf_header_name",
+					"routing_http_request_x_amzn_mtls_clientcert_header_name",
+					"routing_http_request_x_amzn_tls_version_header_name",
+					"routing_http_request_x_amzn_tls_cipher_suite_header_name",
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -1788,6 +1868,69 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_Protocol_tlsTotcp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listener1 awstypes.Listener
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_protocolTLS(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+					resource.TestCheckResourceAttr(resourceName, "alpn_policy", tfelbv2.AlpnPolicyHTTP2Preferred),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_protocol_tlsTotcp(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "alpn_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+					"alpn_policy",
+					names.AttrCertificateARN,
 				},
 			},
 		},
@@ -3944,6 +4087,66 @@ resource "aws_internet_gateway" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
+func testAccListenerConfig_httpsTohttp(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "80"
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  internal                   = false
+  security_groups            = [aws_security_group.test.id]
+  subnets                    = aws_subnet.test[*].id
+  idle_timeout               = 30
+  enable_deletion_protection = false
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
 func testAccListenerConfig_mutualAuthentication(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
@@ -4354,8 +4557,8 @@ resource "aws_lb" "test" {
 
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
-  port     = 443
-  protocol = "TLS"
+  port     = 80
+  protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
   health_check {
@@ -4371,6 +4574,60 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_protocol_tlsTotcp(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "TCP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
