@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_instance: Add `public_dns_name_dualstack`, `public_dns_name_ipv6`, and `public_dns_name_ipv4` attributes
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `public_dns_name_dualstack`, `public_dns_name_ipv6`, and `public_dns_name_ipv4` attributes
+```
+
+```release-note:enhancement
+resource/aws_network_interface: Add `public_dns_names_ipv6` attribute
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Add `public_dns_names_ipv6` attribute
+```
