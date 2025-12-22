@@ -30,16 +30,15 @@ import (
 // @SDKResource("aws_cleanrooms_collaboration", name="Collaboration")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetCollaborationOutput")
+// @Testing(preIdentityVersion="v6.26.0")
 func ResourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
 		ReadWithoutTimeout:   resourceCollaborationRead,
 		UpdateWithoutTimeout: resourceCollaborationUpdate,
 		DeleteWithoutTimeout: resourceCollaborationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
