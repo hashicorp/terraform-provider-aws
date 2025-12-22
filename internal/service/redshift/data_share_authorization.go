@@ -94,7 +94,6 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 		dataShareARN,
 		consumerIdentifier,
 	}
-
 	id, err := intflex.FlattenResourceId(parts, dataShareAuthorizationIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
@@ -102,14 +101,10 @@ func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resourc
 	}
 
 	in := redshift.AuthorizeDataShareInput{
+		AllowWrites:        fwflex.BoolFromFramework(ctx, plan.AllowWrites),
 		DataShareArn:       aws.String(dataShareARN),
 		ConsumerIdentifier: aws.String(consumerIdentifier),
 	}
-
-	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
-	}
-
 	out, err := conn.AuthorizeDataShare(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("creating Redshift Data Share Authorization (%s)", id), err.Error())
