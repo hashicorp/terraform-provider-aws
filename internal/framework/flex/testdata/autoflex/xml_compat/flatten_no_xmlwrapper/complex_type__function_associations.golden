@@ -7,6 +7,16 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper"
   },
   {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigAWS",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper",
+    "source_type": "flex.DistributionConfigAWS"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
@@ -63,7 +73,45 @@
     "autoflex.source.size": 2,
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
     "autoflex.target.path": "FunctionAssociations.Items",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "source_type": "[]flex.FunctionAssociation",
+    "target_type": "ListNestedObjectTypeOf[flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: First element of nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "element_type": "flex.FunctionAssociation"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "field_name": "EventType",
+    "field_type": "string",
+    "is_nil": false,
+    "is_zero": false
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "field_name": "FunctionARN",
+    "field_type": "*string",
+    "is_nil": false,
+    "is_zero": false
   },
   {
     "@level": "trace",

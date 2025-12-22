@@ -7,6 +7,7 @@ package networkmanager
 var (
 	ResourceAttachmentAccepter                   = resourceAttachmentAccepter
 	ResourceConnectAttachment                    = resourceConnectAttachment
+	ResourceConnectPeer                          = resourceConnectPeer
 	ResourceConnection                           = resourceConnection
 	ResourceCoreNetwork                          = resourceCoreNetwork
 	ResourceCustomerGatewayAssociation           = resourceCustomerGatewayAssociation

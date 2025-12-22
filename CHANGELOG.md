@@ -1,3 +1,31 @@
+## 6.28.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
+
+ENHANCEMENTS:
+
+* data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+* data-source/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
+* data-source/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
+* data-source/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` attributes ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* data-source/aws_vpc_endpoint: Promote `service_region` and `vpc_endpoint_type` from attributes to arguments for filtering ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+* resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config.poller_group_name` argument ([#45313](https://github.com/hashicorp/terraform-provider-aws/issues/45313))
+* resource/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
+* resource/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
+* resource/aws_lambda_function_url: Automatically add the `lambda:InvokeFunction` permission, with the `InvokedViaFunctionUrl` flag set to `true`, to the function on creation when `authorization_type` is `NONE` ([#44858](https://github.com/hashicorp/terraform-provider-aws/issues/44858))
+* resource/aws_lambda_permission: Add `invoked_via_function_url` argument ([#44858](https://github.com/hashicorp/terraform-provider-aws/issues/44858))
+* resource/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` arguments ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* resource/aws_vpclattice_service_network_resource_association: Add `private_dns_enabled` argument ([#45673](https://github.com/hashicorp/terraform-provider-aws/issues/45673))
+
+BUG FIXES:
+
+* data-source/aws_vpc_endpoint: Add missing implementation for `service_region` attribute ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+
+## 6.27.0 (December 17, 2025)
 
 FEATURES:
 
@@ -22,8 +50,10 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional ([#44388](https://github.com/hashicorp/terraform-provider-aws/issues/44388))
 * resource/aws_codebuild_project: Add `cache.cache_namespace` argument ([#45584](https://github.com/hashicorp/terraform-provider-aws/issues/45584))
 * resource/aws_datazone_domain: Add `root_domain_unit_id` argument ([#44964](https://github.com/hashicorp/terraform-provider-aws/issues/44964))
+* resource/aws_lambda_function: `code_sha256` is now optional and computed ([#45618](https://github.com/hashicorp/terraform-provider-aws/issues/45618))
 * resource/aws_networkmanager_connect_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `bgp_options.peer_asn` ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
+* resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `configuration.bgp_configurations.peer_asn` ([#45639](https://github.com/hashicorp/terraform-provider-aws/issues/45639))
 * resource/aws_networkmanager_dx_gateway_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_networkmanager_site_to_site_vpn_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_networkmanager_transit_gateway_route_table_attachment: Add `routing_policy_label` argument ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
@@ -36,8 +66,13 @@ BUG FIXES:
 
 * data-source/aws_networkmanager_core_network_policy_document: Correct plan-time validation of `attachment_policies.conditions.type` to allow `account` instead of `account-id` ([#45246](https://github.com/hashicorp/terraform-provider-aws/issues/45246))
 * resource/aws_bedrockagent_knowledge_base: Mark `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` as `ForceNew` ([#45465](https://github.com/hashicorp/terraform-provider-aws/issues/45465))
+* resource/aws_dynamodb_table: Fix perpetual diff on `global_secondary_index` when using `ignore_changes` lifecycle meta-argument ([#41113](https://github.com/hashicorp/terraform-provider-aws/issues/41113))
+* resource/aws_iam_user: Fix `NoSuchEntity` errors when `name` and `tags` arguments are both updated ([#45608](https://github.com/hashicorp/terraform-provider-aws/issues/45608))
 * resource/aws_lakeformation_data_cells_filter: Fix `excluded_column_names` ordering causing "Provider produced inconsistent result after apply" errors ([#45453](https://github.com/hashicorp/terraform-provider-aws/issues/45453))
+* resource/aws_neptune_global_cluster: Fix a regression in the minor version upgrade workflow triggered by upstream changes to the API error response text ([#45605](https://github.com/hashicorp/terraform-provider-aws/issues/45605))
+* resource/aws_networkmanager_connect_peer: Change `bgp_options` and `bgp_options.peer_asn` to Optional, Computed and ForceNew ([#45639](https://github.com/hashicorp/terraform-provider-aws/issues/45639))
 * resource/aws_odb_cloud_vm_cluster: Enable deletion of vm cluster in resource shared account. ([#45552](https://github.com/hashicorp/terraform-provider-aws/issues/45552))
+* resource/aws_rds_global_cluster: Fix a regression in the minor version upgrade workflow triggered by upstream changes to the API error response text ([#45605](https://github.com/hashicorp/terraform-provider-aws/issues/45605))
 * resource/aws_s3_bucket: Fix ``endpoint rule error, AccountId must only contain a-z, A-Z, 0-9 and `-`​`` errors when the provider is configured with [`skip_requesting_account_id = true`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id-1). This fixes a regression introduced in [v6.23.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6230-november-26-2025) ([#45576](https://github.com/hashicorp/terraform-provider-aws/issues/45576))
 * resource/aws_verifiedpermissions_identity_source: Fixes error when updating resource ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))
 * resource/aws_verifiedpermissions_identity_source: Prevents eventual consistency error with associated Policy Store ([#45540](https://github.com/hashicorp/terraform-provider-aws/issues/45540))

@@ -65,6 +65,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionResponseStreamingInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
@@ -1945,7 +1946,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_localUpdate(t *testing.T) {
+func TestAccLambdaFunction_LocalUpdate_sourceCodeHash(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2002,6 +2003,146 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_LocalUpdate_codeSha256(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	path, zipFile, err := createTempFile("lambda_localUpdate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(path)
+
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	var timeBeforeUpdate time.Time
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
+				},
+				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish", "source_code_hash"},
+			},
+			{
+				PreConfig: func() {
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
+					timeBeforeUpdate = time.Now()
+				},
+				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					func(s *terraform.State) error {
+						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_LocalUpdate_sourceCodeHashToCodeSha256(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	path, zipFile, err := createTempFile("lambda_localUpdate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(path)
+
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	var timeBeforeUpdate time.Time
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
+				},
+				Config: testAccFunctionConfig_local(path, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish", "source_code_hash"},
+			},
+			// Switch from source_code_hash to code_sha256 for tracking source code changes
+			{
+				PreConfig: func() {
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
+					timeBeforeUpdate = time.Now()
+				},
+				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					func(s *terraform.State) error {
+						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -2811,6 +2952,42 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *lambda.GetFunc
 	}
 }
 
+func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
+
+	input := &signer.ListSigningPlatformsInput{}
+
+	pages := signer.NewListSigningPlatformsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		if page == nil {
+			t.Skip("skipping acceptance testing: empty response")
+		}
+
+		for _, platform := range page.Platforms {
+			if platform == (signertypes.SigningPlatform{}) {
+				continue
+			}
+
+			if aws.ToString(platform.PlatformId) == platformID {
+				return
+			}
+		}
+	}
+
+	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
+}
+
 func testAccCheckFunctionQualifiedInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		qualifiedArn := fmt.Sprintf("%s:%s", aws.ToString(function.Configuration.FunctionArn), aws.ToString(function.Configuration.Version))
@@ -2822,6 +2999,13 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 	return func(s *terraform.State) error {
 		arn := aws.ToString(function.Configuration.FunctionArn)
 		return acctest.CheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
+	}
+}
+
+func testAccCheckFunctionResponseStreamingInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arn := aws.ToString(function.Configuration.FunctionArn)
+		return acctest.CheckResourceAttrRegionalARNAccountID(name, "response_streaming_invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2021-11-15/functions/%s/response-streaming-invocations", arn))(s)
 	}
 }
 
@@ -4245,18 +4429,8 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_s3Simple(rName string) string {
+func testAccFunctionConfigBase_iamRole(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "lambda_code" {
-  bucket = aws_s3_bucket.lambda_bucket.bucket
-  key    = "lambdatest.zip"
-  source = "test-fixtures/lambdatest.zip"
-}
-
 resource "aws_iam_role" "iam_for_lambda" {
   name = %[1]q
 
@@ -4276,6 +4450,22 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+`, rName)
+}
+
+func testAccFunctionConfig_s3Simple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "lambda_bucket" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "lambda_code" {
+  bucket = aws_s3_bucket.lambda_bucket.bucket
+  key    = "lambdatest.zip"
+  source = "test-fixtures/lambdatest.zip"
+}
 
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_object.lambda_code.bucket
@@ -4285,31 +4475,13 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs20.x"
 }
-`, rName)
+`, rName))
 }
 
 func testAccFunctionConfig_local(filePath, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-  name = %[2]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename         = %[1]q
   source_code_hash = filebase64sha256(%[1]q)
@@ -4318,31 +4490,13 @@ resource "aws_lambda_function" "test" {
   handler          = "exports.example"
   runtime          = "nodejs20.x"
 }
-`, filePath, rName)
+`, filePath, rName))
 }
 
 func testAccFunctionConfig_localNameOnly(filePath, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-  name = %[2]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = %[1]q
   function_name = %[2]q
@@ -4350,31 +4504,13 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs20.x"
 }
-`, filePath, rName)
+`, filePath, rName))
 }
 
 func testAccFunctionConfig_localPublish(filePath, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-  name = %[2]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename         = %[1]q
   source_code_hash = filebase64sha256(%[1]q)
@@ -4388,11 +4524,28 @@ resource "aws_lambda_function" "test" {
     apply_on = "PublishedVersions"
   }
 }
-`, filePath, rName)
+`, filePath, rName))
+}
+
+func testAccFunctionConfig_local_codeSHA256(filePath, rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = %[1]q
+  code_sha256   = filebase64sha256(%[1]q)
+  function_name = %[2]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs20.x"
+}
+`, filePath, rName))
 }
 
 func testAccFunctionConfig_s3(key, path, rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = %[3]q
   force_destroy = true
@@ -4415,26 +4568,6 @@ resource "aws_s3_object" "o" {
   etag   = filemd5(%[2]q)
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
-  name = %[3]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_lambda_function" "test" {
   s3_bucket         = aws_s3_object.o.bucket
   s3_key            = aws_s3_object.o.key
@@ -4444,11 +4577,13 @@ resource "aws_lambda_function" "test" {
   handler           = "exports.example"
   runtime           = "nodejs20.x"
 }
-`, key, path, rName)
+`, key, path, rName))
 }
 
 func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccFunctionConfigBase_iamRole(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = %[1]q
   force_destroy = true
@@ -4461,26 +4596,6 @@ resource "aws_s3_object" "o" {
   etag   = filemd5(%[3]q)
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_object.o.bucket
   s3_key        = aws_s3_object.o.key
@@ -4489,7 +4604,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs20.x"
 }
-`, rName, key, path)
+`, rName, key, path))
 }
 
 func testAccFunctionConfig_runtime(rName, runtime string) string {
@@ -4653,7 +4768,9 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccFunctionConfig_skipDestroy(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -4690,7 +4807,9 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
-	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -4740,40 +4859,4 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName, descriptionLine, executionTimeout, retentionPeriod))
-}
-
-func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
-
-	input := &signer.ListSigningPlatformsInput{}
-
-	pages := signer.NewListSigningPlatformsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if acctest.PreCheckSkipError(err) {
-			t.Skipf("skipping acceptance testing: %s", err)
-		}
-
-		if err != nil {
-			t.Fatalf("unexpected PreCheck error: %s", err)
-		}
-
-		if page == nil {
-			t.Skip("skipping acceptance testing: empty response")
-		}
-
-		for _, platform := range page.Platforms {
-			if platform == (signertypes.SigningPlatform{}) {
-				continue
-			}
-
-			if aws.ToString(platform.PlatformId) == platformID {
-				return
-			}
-		}
-	}
-
-	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }
