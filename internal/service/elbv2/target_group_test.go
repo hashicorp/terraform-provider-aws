@@ -592,20 +592,9 @@ func TestAccELBV2TargetGroup_quic(t *testing.T) {
 
 	t.Parallel()
 
-	testcases := map[string]struct {
-		quicProtocol string
-	}{
-		"quic": {
-			quicProtocol: "QUIC",
-		},
-
-		"tcp_quic": {
-			quicProtocol: "TCP_QUIC",
-		},
-	}
-
-	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		t.Run(name, func(t *testing.T) {
+	testcases := []awstypes.ProtocolEnum{awstypes.ProtocolEnumQuic, awstypes.ProtocolEnumTcpQuic}
+	for _, testcase := range testcases { //nolint:paralleltest // false positive
+		t.Run(string(testcase), func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var conf awstypes.TargetGroup
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -617,14 +606,14 @@ func TestAccELBV2TargetGroup_quic(t *testing.T) {
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
-						Config: testAccTargetGroupConfig_basicQuic(rName, testcase.quicProtocol),
+						Config: testAccTargetGroupConfig_basicQUIC(rName, testcase),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, testcase.quicProtocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(testcase)),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
@@ -652,7 +641,7 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_basicUdp(rName),
+				Config: testAccTargetGroupConfig_basicUDP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
@@ -5068,7 +5057,7 @@ resource "aws_vpc" "test" {
 `, rName, appSstickinessBlock)
 }
 
-func testAccTargetGroupConfig_basicQuic(rName, protocol string) string {
+func testAccTargetGroupConfig_basicQUIC(rName string, protocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -5096,7 +5085,7 @@ resource "aws_vpc" "test" {
 `, rName, protocol)
 }
 
-func testAccTargetGroupConfig_basicUdp(rName string) string {
+func testAccTargetGroupConfig_basicUDP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q

@@ -1374,20 +1374,9 @@ func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
 
 	t.Parallel()
 
-	testcases := map[string]struct {
-		quicProtocol string
-	}{
-		"quic": {
-			quicProtocol: "QUIC",
-		},
-
-		"tcp_quic": {
-			quicProtocol: "TCP_QUIC",
-		},
-	}
-
-	for name, testcase := range testcases { //nolint:paralleltest // false positive
-		t.Run(name, func(t *testing.T) {
+	testcases := []awstypes.ProtocolEnum{awstypes.ProtocolEnumQuic, awstypes.ProtocolEnumTcpQuic}
+	for _, testcase := range testcases { //nolint:paralleltest // false positive
+		t.Run(string(testcase), func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var conf awstypes.Listener
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1399,12 +1388,12 @@ func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
 				CheckDestroy:             testAccCheckListenerDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
-						Config: testAccListenerConfig_protocolQuic(rName, testcase.quicProtocol),
+						Config: testAccListenerConfig_protocolQUIC(rName, testcase),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckListenerExists(ctx, resourceName, &conf),
 							resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
 							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, testcase.quicProtocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(testcase)),
 							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 							resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
@@ -1427,7 +1416,7 @@ func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
 	}
 }
 
-func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
+func TestAccELBV2Listener_Protocol_udp(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -1440,7 +1429,7 @@ func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_basicUdp(rName),
+				Config: testAccListenerConfig_basicUDP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -3831,7 +3820,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccListenerConfig_basicUdp(rName string) string {
+func testAccListenerConfig_basicUDP(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -4442,7 +4431,7 @@ resource "aws_acm_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_protocolQuic(rName, quicProtocol string) string {
+func testAccListenerConfig_protocolQUIC(rName string, protocol awstypes.ProtocolEnum) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -4478,7 +4467,7 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-`, rName, quicProtocol))
+`, rName, protocol))
 }
 
 func testAccListenerConfig_redirect(rName string) string {

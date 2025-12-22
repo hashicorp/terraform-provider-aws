@@ -110,12 +110,11 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroupAttachment_quicServerId_quic(t *testing.T) {
+func TestAccELBV2TargetGroupAttachment_quic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	protocol := "QUIC"
 	resourceName := "aws_lb_target_group_attachment.test"
-	quicServerId := testAccTargetGroupAttachment_generateQuicServerId()
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -124,10 +123,10 @@ func TestAccELBV2TargetGroupAttachment_quicServerId_quic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentConfig_QUICServerId(rName, protocol, quicServerId),
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumQuic, quicServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerId),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
 				),
 			},
 		},
@@ -137,9 +136,8 @@ func TestAccELBV2TargetGroupAttachment_quicServerId_quic(t *testing.T) {
 func TestAccELBV2TargetGroupAttachment_quicServerId_tcpQuic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	protocol := "TCP_QUIC"
 	resourceName := "aws_lb_target_group_attachment.test"
-	quicServerId := testAccTargetGroupAttachment_generateQuicServerId()
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -148,10 +146,10 @@ func TestAccELBV2TargetGroupAttachment_quicServerId_tcpQuic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupAttachmentConfig_QUICServerId(rName, protocol, quicServerId),
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumTcpQuic, quicServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerId),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
 				),
 			},
 		},
@@ -271,7 +269,7 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccTargetGroupAttachment_generateQuicServerId() string {
+func testAccTargetGroupAttachment_generateQUICServerID() string {
 	s := make([]byte, 8)
 	if _, err := rand.Read(s); err != nil {
 		return ""
@@ -326,7 +324,7 @@ resource "aws_lb_target_group_attachment" "test" {
 `, rName))
 }
 
-func testAccTargetGroupAttachmentConfig_QUICServerId(rName, protocol, quicServerId string) string {
+func testAccTargetGroupAttachmentConfig_quicServerID(rName string, protocol awstypes.ProtocolEnum, quicServerID string) string {
 	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -341,7 +339,7 @@ resource "aws_lb_target_group_attachment" "test" {
   port             = 443
   quic_server_id   = %[3]q
 }
-`, rName, protocol, quicServerId))
+`, rName, protocol, quicServerID))
 }
 
 func testAccTargetGroupAttachmentConfig_backwardsCompatibility(rName string) string {
