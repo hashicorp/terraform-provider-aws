@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
 * resource/aws_docdb_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_docdb_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
+* resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.capacity_option_type` argument ([#45667](https://github.com/hashicorp/terraform-provider-aws/issues/45667))
 * resource/aws_fsx_lustre_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_ontap_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_openzfs_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
@@ -30,6 +31,8 @@ ENHANCEMENTS:
 * resource/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * resource/aws_lambda_function_url: Automatically add the `lambda:InvokeFunction` permission, with the `InvokedViaFunctionUrl` flag set to `true`, to the function on creation when `authorization_type` is `NONE` ([#44858](https://github.com/hashicorp/terraform-provider-aws/issues/44858))
 * resource/aws_lambda_permission: Add `invoked_via_function_url` argument ([#44858](https://github.com/hashicorp/terraform-provider-aws/issues/44858))
+* resource/aws_lb_target_group_attachment: Add `quic_server_id` argument ([#45666](https://github.com/hashicorp/terraform-provider-aws/issues/45666))
+* resource/aws_lb_target_group_attachment: Add plan-time validation of `target_group_arn` ([#45666](https://github.com/hashicorp/terraform-provider-aws/issues/45666))
 * resource/aws_neptune_cluster: Enforce tag policy compliance for the `rds:cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_neptune_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_neptune_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
@@ -41,6 +44,7 @@ BUG FIXES:
 
 * data-source/aws_vpc_endpoint: Add missing implementation for `service_region` attribute ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 * resource/aws_batch_job_definition: Fix crash during update when `node_properties` has `NodeRangeProperties.ecsProperties` set ([#45676](https://github.com/hashicorp/terraform-provider-aws/issues/45676))
+* resource/aws_batch_job_definition: Fix handling of logically deleted results in List ([#45694](https://github.com/hashicorp/terraform-provider-aws/issues/45694))
 * resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 
 ## 6.27.0 (December 17, 2025)
