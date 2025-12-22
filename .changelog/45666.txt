@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_lb_target_group_attachment: Add `quic_server_id` argument to support for QUIC protocol for target groups (Network Load Balancer only)
+resource/aws_lb_target_group_attachment: Add `quic_server_id` argument
 ```
