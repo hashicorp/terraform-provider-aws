@@ -32,7 +32,6 @@ func TestGroup(t *testing.T) {
 
 		for _, err := range tc.errs {
 			g.Go(ctx, func(context.Context) error { return err })
-
 		}
 
 		gErr := g.Wait(ctx)
