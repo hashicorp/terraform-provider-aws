@@ -1,5 +1,5 @@
-# Tag Resource Type to Terraform Resource Type Mapping
-# Each alias block represents a Tag Policies resource type and its corresponding Terraform resource type(s)
+# Copyright IBM Corp. 2014, 2025
+# SPDX-License-Identifier: MPL-2.0
 
 tagtype "access-analyzer:analyzer" {
   terraform_types = ["aws_accessanalyzer_analyzer"]
