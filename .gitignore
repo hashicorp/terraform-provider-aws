@@ -7,6 +7,7 @@
 .terraform/
 .vagrant/
 .vscode
+.tool-versions
 *.backup
 *.bak
 *.dll
