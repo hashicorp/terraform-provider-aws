@@ -530,7 +530,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
 	passes=$$(( 17-$$fails1 )) ; \
-	echo "17 of 48 complete: $$passes passed, $$fails1 failed" ; \
+	echo "17 of 51 complete: $$passes passed, $$fails1 failed" ; \
 	logs=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -541,7 +541,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 33-$$tot_fails )) ; \
-	echo "33 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	echo "33 of 51 complete: $$passes passed, $$tot_fails failed" ; \
 	lambda=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -552,8 +552,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 48-$$tot_fails )) ; \
-	echo "48 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	passes=$$(( 51-$$tot_fails )) ; \
+	echo "51 of 51 complete: $$passes passed, $$tot_fails failed" ; \
 	if [ $$tot_fails -gt 0 ] ; then \
 		echo "Sanity tests failed"; \
 		exit 1; \
