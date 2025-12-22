@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.9
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.0
-	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.3.0
+	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.18
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.7
@@ -80,8 +80,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.16
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.9
-	github.com/aws/aws-sdk-go-v2/service/connect v1.151.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.7
+	github.com/aws/aws-sdk-go-v2/service/connect v1.152.0
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.62.0
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.4
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.12
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.37.7
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.17
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.15
 	github.com/aws/aws-sdk-go-v2/service/evs v1.5.12
@@ -138,13 +138,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.8
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.15
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.9
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.3
-	github.com/aws/aws-sdk-go-v2/service/iot v1.71.0
+	github.com/aws/aws-sdk-go-v2/service/iot v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.9
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.5
@@ -202,7 +202,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.15
 	github.com/aws/aws-sdk-go-v2/service/polly v1.54.9
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.10
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.17
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.99.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.18
@@ -273,7 +273,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.16
 	github.com/aws/smithy-go v1.24.0
 	github.com/beevik/etree v1.6.0
