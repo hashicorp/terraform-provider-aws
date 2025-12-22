@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * data-source/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * data-source/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` attributes ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 * data-source/aws_vpc_endpoint: Promote `service_region` and `vpc_endpoint_type` from attributes to arguments for filtering ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* resource/aws_cleanrooms_collaboration: Add resource identity support ([#45548](https://github.com/hashicorp/terraform-provider-aws/issues/45548))
 * resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
 * resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config.poller_group_name` argument ([#45313](https://github.com/hashicorp/terraform-provider-aws/issues/45313))
 * resource/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
@@ -23,6 +24,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_vpc_endpoint: Add missing implementation for `service_region` attribute ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* resource/aws_batch_job_definition: Fix crash during update when `node_properties` has `NodeRangeProperties.ecsProperties` set ([#45676](https://github.com/hashicorp/terraform-provider-aws/issues/45676))
 * resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 
 ## 6.27.0 (December 17, 2025)
