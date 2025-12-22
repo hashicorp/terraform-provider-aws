@@ -83,7 +83,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 
 	assessmentTarget, err := findAssessmentTargetByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

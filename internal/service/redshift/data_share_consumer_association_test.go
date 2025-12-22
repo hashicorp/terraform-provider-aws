@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -121,7 +121,7 @@ func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resour
 
 			_, err := tfredshift.FindDataShareConsumerAssociationByFourPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["associate_entire_account"], rs.Primary.Attributes["consumer_arn"], rs.Primary.Attributes["consumer_region"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -133,7 +133,7 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	template, err := findAssessmentTemplateByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] Inspector Classic Assessment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

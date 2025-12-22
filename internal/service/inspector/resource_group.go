@@ -71,7 +71,7 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	resourceGroup, err := findResourceGroupByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] Inspector Classic Resource Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
