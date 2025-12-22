@@ -120,7 +120,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Identity: inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL,
+			Identity: inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL, parseQueueURL,
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 				inttypes.WithVersion(1),
 			),
