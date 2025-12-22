@@ -13,6 +13,8 @@ import (
 // Copied from github.com/hashicorp/go-multierror.
 
 func TestGroup(t *testing.T) {
+	t.Parallel()
+
 	err1 := errors.New("group_test: 1")
 	err2 := errors.New("group_test: 2")
 	cases := []struct {
