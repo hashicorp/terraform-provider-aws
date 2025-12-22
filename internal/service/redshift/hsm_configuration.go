@@ -119,7 +119,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Redshift HSM Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, hsmClientCertificateARN(ctx, c, d.Id()))
+	d.Set(names.AttrARN, hsmConfigurationARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, hsmConfiguration.Description)
 	d.Set("hsm_configuration_identifier", hsmConfiguration.HsmConfigurationIdentifier)
 	d.Set("hsm_ip_address", hsmConfiguration.HsmIpAddress)
