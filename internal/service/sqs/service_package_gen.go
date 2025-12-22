@@ -7,6 +7,8 @@ package sqs
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -106,6 +108,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  queueResourceAsListResource,
+			TypeName: "aws_sqs_queue",
+			Name:     "Queue",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithVersion(1),
+			),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
