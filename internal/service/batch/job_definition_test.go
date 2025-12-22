@@ -928,7 +928,7 @@ func TestAccBatchJobDefinition_NodeProperties_withECS_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobDefinitionConfig_nodePropertiesECSUpdate(rName),
+				Config: testAccJobDefinitionConfig_nodePropertiesECS_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					resource.TestCheckResourceAttrSet(resourceName, "node_properties"),
@@ -1616,7 +1616,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_nodePropertiesECSUpdate(rName string) string {
+func testAccJobDefinitionConfig_nodePropertiesECS_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
