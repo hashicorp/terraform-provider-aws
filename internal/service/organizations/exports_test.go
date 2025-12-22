@@ -18,4 +18,5 @@ var (
 	FindPolicyAttachmentByTwoPartKey = findPolicyAttachmentByTwoPartKey
 	FindPolicyByID                   = findPolicyByID
 	FindResourcePolicy               = findResourcePolicy
+	FindTag                          = findTag
 )
