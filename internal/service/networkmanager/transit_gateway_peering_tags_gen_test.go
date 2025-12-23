@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,6 +27,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -200,6 +204,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -264,6 +271,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -324,6 +334,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -404,6 +417,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -491,6 +507,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -625,6 +644,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -711,6 +733,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -884,6 +909,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1038,6 +1066,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1208,6 +1239,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1295,6 +1329,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1383,6 +1420,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1448,6 +1488,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1503,6 +1546,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1563,6 +1609,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1623,6 +1672,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1676,6 +1728,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1770,6 +1825,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -1854,6 +1912,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),
@@ -2013,6 +2074,9 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_Resource
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy(ctx),

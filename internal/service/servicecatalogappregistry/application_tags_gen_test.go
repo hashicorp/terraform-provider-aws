@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,6 +26,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -207,6 +211,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_null(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -269,6 +276,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_EmptyMap(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -319,6 +329,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_AddOnUpdate(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -399,6 +412,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_EmptyTag_OnCreate(t *testi
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -489,6 +505,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_EmptyTag_OnUpdate_Add(t *t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -628,6 +647,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_EmptyTag_OnUpdate_Replace(
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -718,6 +740,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_providerOnly(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -899,6 +924,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_nonOverlapping
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1059,6 +1087,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_overlapping(t 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1235,6 +1266,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_updateToProvid
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1325,6 +1359,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_updateToResour
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1414,6 +1451,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_emptyResourceT
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1480,6 +1520,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_emptyProviderO
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1538,6 +1581,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_nullOverlappin
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1607,6 +1653,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_DefaultTags_nullNonOverlap
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1678,6 +1727,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_ComputedTag_OnCreate(t *te
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1733,6 +1785,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_ComputedTag_OnUpdate_Add(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1830,6 +1885,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_ComputedTag_OnUpdate_Repla
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1917,6 +1975,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_IgnoreTags_Overlap_Default
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -2079,6 +2140,9 @@ func TestAccServiceCatalogAppRegistryApplication_tags_IgnoreTags_Overlap_Resourc
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
