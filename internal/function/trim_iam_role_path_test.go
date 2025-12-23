@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -32,7 +31,7 @@ func TestTrimIAMRolePathFunction_valid(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +52,7 @@ func TestTrimIAMRolePathFunction_validWithPath(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +72,7 @@ func TestTrimIAMRolePathFunction_invalidARN(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +90,7 @@ func TestTrimIAMRolePathFunction_invalidService(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +108,7 @@ func TestTrimIAMRolePathFunction_invalidRegion(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +126,7 @@ func TestTrimIAMRolePathFunction_invalidResource(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(tfversion.Version1_8_0),
 		},
 		Steps: []resource.TestStep{
 			{

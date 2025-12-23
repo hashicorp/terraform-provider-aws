@@ -34,8 +34,7 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,8 +72,7 @@ func TestAccLambdaCapacityProvider_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,8 +105,7 @@ func TestAccLambdaCapacityProvider_instanceRequirements(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -166,8 +163,7 @@ func TestAccLambdaCapacityProvider_scalingConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -267,7 +263,7 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccCapacityProviderPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 	input := lambda.ListCapacityProvidersInput{}

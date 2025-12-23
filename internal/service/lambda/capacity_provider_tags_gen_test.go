@@ -31,7 +31,10 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -225,7 +228,10 @@ func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -293,7 +299,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -349,7 +358,10 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -435,7 +447,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -533,7 +548,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -680,7 +698,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -776,7 +797,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -969,7 +993,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1139,7 +1166,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1325,7 +1355,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1421,7 +1454,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1516,7 +1552,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1588,7 +1627,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *test
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1652,7 +1694,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1727,7 +1772,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTa
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1804,7 +1852,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1865,7 +1916,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1968,7 +2022,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2061,7 +2118,10 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2227,7 +2287,10 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
