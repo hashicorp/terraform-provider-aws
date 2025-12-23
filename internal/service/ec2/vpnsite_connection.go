@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -148,7 +148,7 @@ func resourceVPNConnection() *schema.Resource {
 			names.AttrTransitGatewayID: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				ConflictsWith: []string{"vpn_gateway_id", "vpn_concentrator_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
@@ -248,6 +248,19 @@ func resourceVPNConnection() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"bgp_log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"bgp_log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bgp_log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -464,6 +477,19 @@ func resourceVPNConnection() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"bgp_log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"bgp_log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bgp_log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -643,7 +669,13 @@ func resourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrTransitGatewayID},
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_concentrator_id"},
+			},
+			"vpn_concentrator_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_gateway_id"},
 			},
 		},
 
@@ -714,6 +746,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("vpn_concentrator_id"); ok {
+		input.VpnConcentratorId = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
@@ -737,7 +773,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	vpnConnection, err := findVPNConnectionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -753,6 +789,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
 	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
+	d.Set("vpn_concentrator_id", vpnConnection.VpnConcentratorId)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
@@ -873,7 +910,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_concentrator_id", "vpn_gateway_id") {
 		input := ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -1165,6 +1202,21 @@ func expandCloudWatchLogOptionsSpecification(tfMap map[string]any) *awstypes.Clo
 	}
 
 	apiObject := &awstypes.CloudWatchLogOptionsSpecification{}
+
+	if v, ok := tfMap["bgp_log_enabled"].(bool); ok {
+		apiObject.BgpLogEnabled = aws.Bool(v)
+	}
+
+	// No ARN or format if not enabled.
+	if aws.ToBool(apiObject.BgpLogEnabled) {
+		if v, ok := tfMap["bgp_log_group_arn"].(string); ok && v != "" {
+			apiObject.BgpLogGroupArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["bgp_log_output_format"].(string); ok && v != "" {
+			apiObject.BgpLogOutputFormat = aws.String(v)
+		}
+	}
 
 	if v, ok := tfMap["log_enabled"].(bool); ok {
 		apiObject.LogEnabled = aws.Bool(v)
@@ -1513,6 +1565,22 @@ func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[s
 	}
 
 	tfMap := map[string]any{}
+
+	if v := apiObject.BgpLogEnabled; v != nil {
+		enabled := aws.ToBool(v)
+		tfMap["bgp_log_enabled"] = enabled
+
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.BgpLogGroupArn; v != nil {
+				tfMap["bgp_log_group_arn"] = aws.ToString(v)
+			}
+
+			if v := apiObject.BgpLogOutputFormat; v != nil {
+				tfMap["bgp_log_output_format"] = aws.ToString(v)
+			}
+		}
+	}
 
 	if v := apiObject.LogEnabled; v != nil {
 		enabled := aws.ToBool(v)

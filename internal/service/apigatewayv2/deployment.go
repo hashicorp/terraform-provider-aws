@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -97,7 +98,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,7 +188,7 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	output, err := conn.GetDeployment(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -204,11 +205,11 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -224,7 +225,7 @@ func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.Client, apiI
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentStatusPending),
 		Target:  enum.Slice(awstypes.DeploymentStatusDeployed),
 		Refresh: statusDeployment(ctx, conn, apiID, deploymentID),

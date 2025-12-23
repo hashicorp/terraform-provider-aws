@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -172,7 +173,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	globalNetworkID := d.Get("global_network_id").(string)
 	link, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Link %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -289,7 +290,7 @@ func findLinks(ctx context.Context, conn *networkmanager.Client, input *networkm
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -319,7 +320,7 @@ func findLinkByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.LinkId) != linkID {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -327,11 +328,11 @@ func findLinkByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 	return output, nil
 }
 
-func statusLinkState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string) retry.StateRefreshFunc {
+func statusLinkState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, linkID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -344,7 +345,7 @@ func statusLinkState(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitLinkCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string, timeout time.Duration) (*awstypes.Link, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LinkStatePending),
 		Target:  enum.Slice(awstypes.LinkStateAvailable),
 		Timeout: timeout,
@@ -361,7 +362,7 @@ func waitLinkCreated(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitLinkDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string, timeout time.Duration) (*awstypes.Link, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LinkStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -378,7 +379,7 @@ func waitLinkDeleted(ctx context.Context, conn *networkmanager.Client, globalNet
 }
 
 func waitLinkUpdated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string, timeout time.Duration) (*awstypes.Link, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LinkStateUpdating),
 		Target:  enum.Slice(awstypes.LinkStateAvailable),
 		Timeout: timeout,

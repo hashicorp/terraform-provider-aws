@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -25,6 +25,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 1)
 
 resource "aws_subnet" "test" {
   count = 1

@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 # tflint-ignore: terraform_unused_declarations
@@ -19,6 +19,8 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 3)
 
 resource "aws_subnet" "test" {
   count = 3

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe
@@ -15,11 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -131,7 +132,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	out, err := FindVocabularyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,7 +218,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -239,7 +240,7 @@ func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -261,7 +262,7 @@ func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: vocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, id),
@@ -280,10 +281,10 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 	return nil, err
 }
 
-func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
+func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindVocabularyByName(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -304,7 +305,7 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

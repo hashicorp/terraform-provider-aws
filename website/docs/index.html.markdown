@@ -9,7 +9,7 @@ description: |-
 
 The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-With 1,564 resources and 630 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
+With 1,582 resources and 630 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
 Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -301,10 +301,62 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
+
+There are three ways to provide additional User-Agent information.
+
+1. The `user_agent` provider argument.
+1. The `TF_APPEND_USER_AGENT` environment variable.
+1. The [`provider_meta`](https://developer.hashicorp.com/terraform/internals/provider-meta) `user_agent` argument.
+
+-> The first two options will apply to all resources managed by the provider instance, while the `provider_meta` configuration applies only to resources in the module in which it is configured.
+
+### `user_agent` Provider Argument
+
+When using the `user_agent` provider argument, the items will be appended to the `User-Agent` header in order.
+The [`user_agent` provider-defined function](./functions/user_agent.html.markdown) can be used to format the name, version, and comment components.
+
+```terraform
+provider "aws" {
+  user_agent = [
+    provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+    "other-demo/0.0.2 (other comment)",
+  ]
+}
+```
+
+### `TF_APPEND_USER_AGENT` Environment Variable
+
+When using the environment variable, the provided value will be directly appended to the `User-Agent` header.
 
 ```console
 % export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
+### `provider_meta` `user_agent` Argument
+
+The AWS provider supports sending provider metadata via the [`provider_meta` block](https://developer.hashicorp.com/terraform/internals/provider-meta).
+This block allows module authors to provide additional information in the `User-Agent` header, scoped only to resources defined in a given module.
+
+-> In a module, `provider_meta` is defined within the `terraform` block.
+The `provider` block is inherited from the root module.
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  provider_meta "aws" {
+    user_agent = [
+      provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
+      "other-demo/0.0.2 (other comment)",
+    ]
+  }
+}
 ```
 
 ## Argument Reference
@@ -493,6 +545,12 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
+* `tag_policy_compliance` - (Optional) The severity with which to enforce organizational tagging policies on resources managed by this provider instance.
+  At this time this only includes compliance with required tag keys by resource type.
+  Valid values are `error`, `warning`, and `disabled`.
+  When unset or `disabled`, tag policy compliance will not be enforced by the provider.
+  Can also be configured with the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable.
+  See the [Tag Policy Compliance user guide](./guides/tag-policy-compliance.html.markdown) for additional details.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
 * `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
@@ -501,6 +559,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   This setting is ignored for any service with a custom endpoint specified.
   Note that not all services or regions have valid FIPS endpoints.
   The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
+* `user_agent` (Optional) Product details to append to the User-Agent string sent in all AWS API calls.
 
 ### assume_role Configuration Block
 

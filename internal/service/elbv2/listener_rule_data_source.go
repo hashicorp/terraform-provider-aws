@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -181,6 +181,38 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 												},
 												names.AttrWeight: schema.Int32Attribute{
 													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"jwt_validation": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[jwtValidationConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrIssuer: schema.StringAttribute{
+										Computed: true,
+									},
+									"jwks_endpoint": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"additional_claim": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[additionalClaimsModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrFormat: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrName: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrValues: schema.SetAttribute{
+													ElementType: types.StringType,
+													Computed:    true,
 												},
 											},
 										},
@@ -453,6 +485,7 @@ type actionModel struct {
 	AuthenticateOidcConfig    fwtypes.ListNestedObjectValueOf[authenticateOIDCActionConfigModel]    `tfsdk:"authenticate_oidc"`
 	FixedResponseConfig       fwtypes.ListNestedObjectValueOf[fixedResponseActionConfigModel]       `tfsdk:"fixed_response"`
 	ForwardConfig             fwtypes.ListNestedObjectValueOf[forwardActionConfigModel]             `tfsdk:"forward"`
+	JWTValidationConfig       fwtypes.ListNestedObjectValueOf[jwtValidationConfigModel]             `tfsdk:"jwt_validation"`
 	Order                     types.Int32                                                           `tfsdk:"order"`
 	RedirectConfig            fwtypes.ListNestedObjectValueOf[redirectActionConfigModel]            `tfsdk:"redirect"`
 }
@@ -570,4 +603,16 @@ type urlRewriteConfigModel struct {
 type rewriteConfigModel struct {
 	Regex   types.String `tfsdk:"regex"`
 	Replace types.String `tfsdk:"replace"`
+}
+
+type jwtValidationConfigModel struct {
+	Issuer           types.String                                          `tfsdk:"issuer"`
+	JwksEndpoint     types.String                                          `tfsdk:"jwks_endpoint"`
+	AdditionalClaims fwtypes.SetNestedObjectValueOf[additionalClaimsModel] `tfsdk:"additional_claim"`
+}
+
+type additionalClaimsModel struct {
+	Format types.String                     `tfsdk:"format"`
+	Name   types.String                     `tfsdk:"name"`
+	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }

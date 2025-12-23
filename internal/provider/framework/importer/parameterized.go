@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package importer
@@ -58,12 +58,30 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 			return
 		}
 
-		for attr, val := range parts {
-			attrPath := path.Root(attr)
-			response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, val)...)
+		for resourceAttr, val := range parts {
+			resourcePath := path.Root(resourceAttr)
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, val)...)
 
 			if identity := response.Identity; identity != nil {
-				response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, val)...)
+				var identityAttr string
+				for _, attr := range identitySpec.Attributes {
+					if attr.ResourceAttributeName() == resourceAttr {
+						identityAttr = attr.Name()
+						break
+					}
+				}
+				if identityAttr == "" {
+					response.Diagnostics.AddError(
+						"Unexpected Error",
+						"An unexpected error occurred while importing a resource. "+
+							"This is always an error in the provider. "+
+							"Please report the following to the provider developer:\n\n"+
+							fmt.Sprintf("No Resource Identity mapping found for attribute %q.", resourceAttr),
+					)
+					return
+				}
+				identityPath := path.Root(identityAttr)
+				response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, val)...)
 			}
 		}
 

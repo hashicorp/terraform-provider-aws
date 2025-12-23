@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package comprehend
@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -65,14 +65,13 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     enum.Slice(ec2types.NetworkInterfaceStatusInUse),
-		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
+		Refresh:    statusNetworkInterfaces(conn, initialENIIds, securityGroups, subnets),
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Timeout:    timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(ec2types.NetworkInterface); ok {
 		return &output, err
 	}
@@ -80,8 +79,8 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 	return nil, err
 }
 
-func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNetworkInterfaces(conn *ec2.Client, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findNetworkInterfaces(ctx, conn, securityGroups, subnets)
 		if err != nil {
 			return nil, "", err

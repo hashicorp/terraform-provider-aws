@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -25,6 +25,7 @@ type awsClient interface {
 	IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig
 	Partition(context.Context) string
 	ServicePackage(_ context.Context, name string) conns.ServicePackage
+	TagPolicyConfig(context.Context) *tftags.TagPolicyConfig
 	ValidateInContextRegionInPartition(ctx context.Context) error
 	AwsConfig(context.Context) aws.Config
 }
@@ -139,7 +140,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 	return func(ctx context.Context, rd *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 
-		ctx, err := bootstrapContext(ctx, rd.GetOk, meta)
+		ctx, err := bootstrapContext(ctx, rd.GetOk, rd.GetProviderMeta, meta)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -204,7 +205,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorInvocations interceptorInvocations, f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	// We run CustomizeDiff interceptors even if the resource has not defined a CustomizeDiff function.
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		ctx, err := bootstrapContext(ctx, d.GetOk, nil, meta)
 		if err != nil {
 			return err
 		}
@@ -279,7 +280,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 	}
 
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		ctx, err := bootstrapContext(ctx, d.GetOk, nil, meta)
 		if err != nil {
 			return nil, err
 		}

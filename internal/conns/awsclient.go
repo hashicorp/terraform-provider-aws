@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -42,6 +42,7 @@ type AWSClient struct {
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+	tagPolicyConfig           *tftags.TagPolicyConfig
 	terraformVersion          string // From provider configuration.
 }
 
@@ -79,6 +80,10 @@ func (c *AWSClient) DefaultTagsConfig(context.Context) *tftags.DefaultConfig {
 
 func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 	return c.ignoreTagsConfig
+}
+
+func (c *AWSClient) TagPolicyConfig(context.Context) *tftags.TagPolicyConfig {
+	return c.tagPolicyConfig
 }
 
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name

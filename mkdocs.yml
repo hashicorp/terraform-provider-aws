@@ -1,7 +1,10 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 site_name: Terraform AWS Provider - Contributor Guide
 site_description: 'Contributor documentation and reference for the
                    Terraform AWS Provider'
-copyright: HashiCorp
+copyright: IBM Corp.
 repo_name: hashicorp/terraform-provider-aws
 repo_url: https://github.com/hashicorp/terraform-provider-aws
 edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/main/docs"
