@@ -195,7 +195,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateDataLakeOutput, error) {
+	output, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateDataLakeOutput, error) {
 		return conn.CreateDataLake(ctx, input)
 	})
 
@@ -302,7 +302,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.UpdateDataLakeOutput, error) {
+		_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.UpdateDataLakeOutput, error) {
 			return conn.UpdateDataLake(ctx, input)
 		})
 
@@ -340,7 +340,7 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 		Regions: []string{region},
 	}
 
-	_, err = retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+	_, err = retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -580,19 +580,12 @@ type dataLakeReplicationConfigurationModel struct {
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
 }
 
-func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, error)) (T, error) {
+func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func(ctx context.Context) (T, error)) (T, error) {
 	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
 	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
 
-	const dataLakeTimeout = 2 * time.Minute
-
-	raw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, dataLakeTimeout, func(ctx context.Context) (any, error) {
-		return f()
-	})
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return raw.(T), err
+	const (
+		dataLakeTimeout = 2 * time.Minute
+	)
+	return tfresource.RetryWhenIsA[T, *awstypes.ConflictException](ctx, dataLakeTimeout, f)
 }

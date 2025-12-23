@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -44,8 +45,7 @@ func (t multisetTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (multisetTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("MultisetTypeOf[%T]", zero)
+	return fmt.Sprintf("MultisetTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t multisetTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
