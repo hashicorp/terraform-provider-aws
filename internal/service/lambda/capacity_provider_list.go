@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_lambda_capacity_provider")
@@ -80,8 +81,14 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 			}
 
 			data.Timeouts.Object = timeoutObject
-			data.Tags.MapValue = r.ListResourceTagsInit(ctx, result)
-			data.TagsAll.MapValue = r.ListResourceTagsInit(ctx, result)
+			//data.Tags.MapValue = r.ListResourceTagsInit(ctx, result)
+			//data.TagsAll.MapValue = r.ListResourceTagsInit(ctx, result)
+
+			if diags := r.InitDataFields(ctx, &data, result, names.AttrTags, names.AttrTagsAll, names.AttrTimeouts); diags.HasError() {
+				result.Diagnostics.Append(diags...)
+				yield(result)
+				return
+			}
 
 			params := listresource.InterceptorParams{
 				C:      awsClient,
