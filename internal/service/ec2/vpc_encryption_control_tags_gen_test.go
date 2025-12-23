@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,6 +27,9 @@ func TestAccVPCVPCEncryptionControl_tags(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -212,6 +216,9 @@ func TestAccVPCVPCEncryptionControl_tags_null(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -273,6 +280,9 @@ func TestAccVPCVPCEncryptionControl_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -322,6 +332,9 @@ func TestAccVPCVPCEncryptionControl_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -402,6 +415,9 @@ func TestAccVPCVPCEncryptionControl_tags_EmptyTag_OnCreate(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -494,6 +510,9 @@ func TestAccVPCVPCEncryptionControl_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -634,6 +653,9 @@ func TestAccVPCVPCEncryptionControl_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -724,6 +746,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_providerOnly(t *testing.T) 
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -909,6 +934,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_nonOverlapping(t *testing.T
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1072,6 +1100,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_overlapping(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1251,6 +1282,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_updateToProviderOnly(t *tes
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1341,6 +1375,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_updateToResourceOnly(t *tes
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1430,6 +1467,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_emptyResourceTag(t *testing
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1497,6 +1537,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1556,6 +1599,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_nullOverlappingResourceTag(
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1624,6 +1670,9 @@ func TestAccVPCVPCEncryptionControl_tags_DefaultTags_nullNonOverlappingResourceT
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1694,6 +1743,9 @@ func TestAccVPCVPCEncryptionControl_tags_ComputedTag_OnCreate(t *testing.T) {
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1750,6 +1802,9 @@ func TestAccVPCVPCEncryptionControl_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1847,6 +1902,9 @@ func TestAccVPCVPCEncryptionControl_tags_ComputedTag_OnUpdate_Replace(t *testing
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -1934,6 +1992,9 @@ func TestAccVPCVPCEncryptionControl_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),
@@ -2093,6 +2154,9 @@ func TestAccVPCVPCEncryptionControl_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	resourceName := "aws_vpc_encryption_control.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEncryptionControlDestroy(ctx, t),

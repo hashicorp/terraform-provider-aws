@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,6 +34,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -237,6 +241,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -316,6 +323,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -391,6 +401,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -486,6 +499,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -591,6 +607,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -746,6 +765,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -847,6 +869,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1050,6 +1075,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1228,6 +1256,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1422,6 +1453,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1524,6 +1558,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1627,6 +1664,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1704,6 +1744,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1771,6 +1814,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1843,6 +1889,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1915,6 +1964,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -1980,6 +2032,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -2089,6 +2144,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -2188,6 +2246,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
@@ -2362,6 +2423,9 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),

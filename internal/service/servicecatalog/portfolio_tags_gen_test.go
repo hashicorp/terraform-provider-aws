@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -33,6 +34,9 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -216,6 +220,9 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -284,6 +291,9 @@ func TestAccServiceCatalogPortfolio_tags_EmptyMap(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -348,6 +358,9 @@ func TestAccServiceCatalogPortfolio_tags_AddOnUpdate(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -432,6 +445,9 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -524,6 +540,9 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -664,6 +683,9 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -754,6 +776,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -936,6 +961,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1097,6 +1125,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1274,6 +1305,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1365,6 +1399,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToResourceOnly(t *tes
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1457,6 +1494,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyResourceTag(t *testing
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1525,6 +1565,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1583,6 +1626,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1646,6 +1692,9 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceT
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1709,6 +1758,9 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnCreate(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1765,6 +1817,9 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1863,6 +1918,9 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Replace(t *testing
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1951,6 +2009,9 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -2114,6 +2175,9 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	rName := sdkacctest.RandString(5)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
