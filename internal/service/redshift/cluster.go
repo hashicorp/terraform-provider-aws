@@ -591,17 +591,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if isEncrypted != aws.ToBool(cluster.Encrypted) {
+		const (
+			timeout = 3 * time.Minute
+		)
 		input := redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 			Encrypted:         aws.Bool(isEncrypted),
 		}
-		_, err := conn.ModifyCluster(ctx, &input)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
+			return conn.ModifyCluster(ctx, &input)
+		}, "Cluster cannot be resized when streaming restore is in progress")
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): modifying Encrypted(%t): %s", d.Id(), isEncrypted, err)
 		}
 
 		if _, err := waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): disabling encryption: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): modifying Encrypted(%t): %s", d.Id(), isEncrypted, err)
 		}
 	}
 
