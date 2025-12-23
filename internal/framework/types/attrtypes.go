@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
@@ -56,6 +57,5 @@ func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
 }
 
 func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
-	var zero T
-	return zero.Type(ctx)
+	return inttypes.Zero[T]().Type(ctx)
 }

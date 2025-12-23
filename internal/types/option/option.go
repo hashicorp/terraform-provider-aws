@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -44,8 +45,7 @@ func (o Option[T]) IsSome() bool {
 // MustUnwrap returns the contained value or an error.
 func (o Option[T]) Unwrap() (T, error) {
 	if o.IsNone() {
-		var zero T
-		return zero, errMissingValue
+		return inttypes.Zero[T](), errMissingValue
 	}
 	return o[value], nil
 }

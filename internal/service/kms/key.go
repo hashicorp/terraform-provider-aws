@@ -178,7 +178,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := waitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*kms.CreateKeyOutput, error) {
 		return conn.CreateKey(ctx, &input)
 	})
 

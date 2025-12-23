@@ -36,6 +36,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -589,9 +590,9 @@ func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, err
 	raw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, dataLakeTimeout, func(ctx context.Context) (any, error) {
 		return f()
 	})
+
 	if err != nil {
-		var zero T
-		return zero, err
+		return inttypes.Zero[T](), err
 	}
 
 	return raw.(T), err
