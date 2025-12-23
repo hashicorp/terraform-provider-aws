@@ -142,10 +142,11 @@ func testAccCheckOrganizationsTagDestroy(ctx context.Context) resource.TestCheck
 func testAccOrganizationsTagConfig(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 
+
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
-  name = %[1]q
+  name      = %[1]q
   parent_id = data.aws_organizations_organization.current.roots[0].id
 
   lifecycle {
@@ -155,8 +156,8 @@ resource "aws_organizations_organizational_unit" "test" {
 
 resource "aws_organizations_tag" "test" {
   resource_id = aws_organizations_organizational_unit.test.id
-  key          = %[2]q
-  value        = %[3]q
+  key         = %[2]q
+  value       = %[3]q
 }
 `, rName, key, value)
 }
