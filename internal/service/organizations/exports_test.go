@@ -12,6 +12,7 @@ var (
 	ResourcePolicy                 = resourcePolicy
 	ResourcePolicyAttachment       = resourcePolicyAttachment
 	ResourceResourcePolicy         = resourceResourcePolicy
+	ResourceTag                    = resourceTag
 
 	FindAccountByID                  = findAccountByID
 	FindOrganizationalUnitByID       = findOrganizationalUnitByID
