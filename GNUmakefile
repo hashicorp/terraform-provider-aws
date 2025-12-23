@@ -506,7 +506,7 @@ sane: prereq-go ## Run sane check
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -532,10 +532,10 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
-	passes=$$(( 17-$$fails1 )) ; \
-	echo "17 of 53 complete: $$passes passed, $$fails1 failed" ; \
+	passes=$$(( 18-$$fails1 )) ; \
+	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
 	logs=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -546,8 +546,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
-	passes=$$(( 34-$$tot_fails )) ; \
-	echo "34 of 53 complete: $$passes passed, $$tot_fails failed" ; \
+	passes=$$(( 35-$$tot_fails )) ; \
+	echo "35 of 54 complete: $$passes passed, $$tot_fails failed" ; \
 	lambda=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -559,8 +559,8 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 53-$$tot_fails )) ; \
-	echo "53 of 53 complete: $$passes passed, $$tot_fails failed" ; \
+	passes=$$(( 54-$$tot_fails )) ; \
+	echo "54 of 54 complete: $$passes passed, $$tot_fails failed" ; \
 	if [ $$tot_fails -gt 0 ] ; then \
 		echo "Sanity tests failed"; \
 		exit 1; \
