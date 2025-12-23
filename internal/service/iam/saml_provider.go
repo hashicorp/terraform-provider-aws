@@ -55,6 +55,10 @@ func resourceSAMLProvider() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1000, 10000000),
 			},
+			"saml_provider_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"valid_until": {
@@ -136,6 +140,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
+	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
