@@ -85,7 +85,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 			"pipeline_configuration_body": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 24000),
+					stringvalidator.LengthBetween(1, 2621440),
 				},
 			},
 			"pipeline_name": schema.StringAttribute{
