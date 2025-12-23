@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -373,20 +374,32 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_updateNodeCount(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_of_nodes"), knownvalue.Int64Exact(1)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_updateNodeCount(rName),
+				Config: testAccClusterConfig_updateNodeCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_of_nodes"), knownvalue.Int64Exact(2)),
+				},
 			},
 		},
 	})
@@ -408,15 +421,29 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 				Config: testAccClusterConfig_updateNodeType(rName, "ra3.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("node_type"), knownvalue.StringExact("ra3.large")),
+				},
 			},
 			{
 				Config: testAccClusterConfig_updateNodeType(rName, "ra3.xlplus"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.xlplus"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("node_type"), knownvalue.StringExact("ra3.xlplus")),
+				},
 			},
 		},
 	})
@@ -1376,7 +1403,21 @@ func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resour
 	}
 }
 
-func testAccClusterConfig_updateNodeCount(rName string) string {
+func testAccClusterConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_updateNodeCount(rName string, nodeCount int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier    = %[1]q
@@ -1386,10 +1427,16 @@ resource "aws_redshift_cluster" "test" {
   master_password       = "Mustbe8characters"
   node_type             = "ra3.large"
   allow_version_upgrade = false
-  number_of_nodes       = 2
+  number_of_nodes       = %[2]d
   skip_final_snapshot   = true
 }
-`, rName)
+
+# Take a snaphot to prevent "InvalidClusterState: No recent snapshot found for cluster ... Please create a snapshot first".
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
+}
+`, rName, nodeCount)
 }
 
 func testAccClusterConfig_updateNodeType(rName, nodeType string) string {
@@ -1405,21 +1452,13 @@ resource "aws_redshift_cluster" "test" {
   number_of_nodes       = 2
   skip_final_snapshot   = true
 }
-`, rName, nodeType)
-}
 
-func testAccClusterConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier    = %[1]q
-  database_name         = "mydb"
-  master_username       = "foo_test"
-  master_password       = "Mustbe8characters"
-  node_type             = "ra3.large"
-  allow_version_upgrade = false
-  skip_final_snapshot   = true
+# Take a snaphot to prevent "InvalidClusterState: No recent snapshot found for cluster ... Please create a snapshot first".
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
 }
-`, rName)
+`, rName, nodeType)
 }
 
 func testAccClusterConfig_aqua(rName, status string) string {
