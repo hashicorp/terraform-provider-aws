@@ -335,6 +335,7 @@ terraform {
   provider_meta "aws" {
     user_agent = [
       "test-module/0.0.1 (test comment)",
+      "github.com/hashicorp/terraform-provider-aws/v0.0.0-acctest",
     ]
   }
 }
