@@ -123,7 +123,7 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_organizations_tag" "test" {
-  resource_arn = aws_organizations_organizational_unit.test.id
+  resource_id = aws_organizations_organizational_unit.test.id
   key          = %[2]q
   value        = %[3]q
 }
