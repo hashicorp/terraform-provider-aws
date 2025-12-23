@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_inference_profile: Fixed import behavior for an existing resource. Previously, running `terraform import` on an existing `aws_bedrock_inference_profile` using the `id` resulted in a forced replacement because the `model_source` field was missing. Now, `model_source` is added later on as an attribute.
+```
