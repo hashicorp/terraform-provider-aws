@@ -868,7 +868,7 @@ func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.
 
 	// Verify a share with the expected consumer identifier is present and the
 	// status is one of "AUTHORIZED" or "ACTIVE".
-	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
+	_, err = tfresource.AssertFirstValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
 		return aws.ToString(v.ConsumerIdentifier) == consumerID && (v.Status == awstypes.DataShareStatusAuthorized || v.Status == awstypes.DataShareStatusActive)
 	}))
 
