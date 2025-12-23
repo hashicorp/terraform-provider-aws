@@ -47,6 +47,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_vpc_endpoint: Add missing implementation for `service_region` attribute ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
+* provider: Fix handling of `user_agent` values where the product name contains a forward slash ([#45715](https://github.com/hashicorp/terraform-provider-aws/issues/45715))
 * resource/aws_batch_job_definition: Fix crash during update when `node_properties` has `NodeRangeProperties.ecsProperties` set ([#45676](https://github.com/hashicorp/terraform-provider-aws/issues/45676))
 * resource/aws_batch_job_definition: Fix handling of logically deleted results in List ([#45694](https://github.com/hashicorp/terraform-provider-aws/issues/45694))
 * resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
