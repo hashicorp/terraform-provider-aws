@@ -27,7 +27,10 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -218,7 +221,10 @@ func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -283,7 +289,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -336,7 +345,10 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -419,7 +431,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -514,7 +529,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -658,7 +676,10 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -751,7 +772,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -941,7 +965,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1108,7 +1135,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1291,7 +1321,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1384,7 +1417,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1476,7 +1512,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1545,7 +1584,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1606,7 +1648,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1678,7 +1723,10 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTa
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1752,7 +1800,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1810,7 +1861,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1910,7 +1964,10 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2000,7 +2057,10 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2163,7 +2223,10 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
