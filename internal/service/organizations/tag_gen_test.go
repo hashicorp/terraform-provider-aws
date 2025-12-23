@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,100 +22,100 @@ import (
 )
 
 func TestAccOrganizationsTag_basic(t *testing.T) {
-    ctx := acctest.Context(t)
-    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-    resourceName := "aws_organizations_tag.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_tag.test"
 
-    resource.ParallelTest(t, resource.TestCase{
-        PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-        ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-        ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-        CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
-        Steps: []resource.TestStep{
-            {
-                Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckOrganizationsTagExists(ctx, resourceName),
-                    resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-                    resource.TestCheckResourceAttr(resourceName, "value", "value1"),
-                ),
-            },
-            {
-                ResourceName:      resourceName,
-                ImportState:       true,
-                ImportStateVerify: true,
-            },
-        },
-    })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationsTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccOrganizationsTag_disappears(t *testing.T) {
-    ctx := acctest.Context(t)
-    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-    resourceName := "aws_organizations_tag.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_tag.test"
 
-    resource.ParallelTest(t, resource.TestCase{
-        PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-        ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-        ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-        CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
-        Steps: []resource.TestStep{
-            {
-                Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckOrganizationsTagExists(ctx, resourceName),
-                    acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceTag(), resourceName),
-                ),
-                ExpectNonEmptyPlan: true,
-            },
-        },
-    })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationsTagExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceTag(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func TestAccOrganizationsTag_Value(t *testing.T) {
-    ctx := acctest.Context(t)
-    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-    resourceName := "aws_organizations_tag.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_tag.test"
 
-    resource.ParallelTest(t, resource.TestCase{
-        PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-        ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-        ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-        CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
-        Steps: []resource.TestStep{
-            {
-                Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckOrganizationsTagExists(ctx, resourceName),
-                    resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-                    resource.TestCheckResourceAttr(resourceName, "value", "value1"),
-                ),
-            },
-            {
-                ResourceName:      resourceName,
-                ImportState:       true,
-                ImportStateVerify: true,
-            },
-            {
-                Config: testAccOrganizationsTagConfig(rName, "key1", "value1updated"),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckOrganizationsTagExists(ctx, resourceName),
-                    resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-                    resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
-                ),
-            },
-        },
-    })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationsTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationsTagConfig(rName, "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationsTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+				),
+			},
+		},
+	})
 }
 
 func testAccOrganizationsTagConfig(rName string, key string, value string) string {
-    return fmt.Sprintf(`
+	return fmt.Sprintf(`
 
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
   name = %[1]q
-  parent_id = aws_organizations_organization.current.roots[0].id
+  parent_id = data.aws_organizations_organization.current.roots[0].id
 
   lifecycle {
     ignore_changes = [tags]
@@ -123,13 +123,12 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_organizations_tag" "test" {
-  resource_arn = aws_organizations_{thing}.test.arn
+  resource_arn = aws_organizations_organizational_unit.test.id
   key          = %[2]q
   value        = %[3]q
 }
 `, rName, key, value)
 }
-
 
 func testAccCheckOrganizationsTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
