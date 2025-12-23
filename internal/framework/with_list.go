@@ -9,11 +9,14 @@ import (
 	"reflect"
 	"slices"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -27,6 +30,7 @@ type Lister interface {
 var _ Lister = &WithList{}
 
 type WithList struct {
+	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor
 }
 
@@ -38,8 +42,13 @@ func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
 	return w.interceptors
 }
 
-func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, params listresource.InterceptorParams) diag.Diagnostics {
+func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
+	params := listresource.InterceptorParams{
+		C:      awsClient,
+		Result: result,
+	}
+
 	switch when {
 	case listresource.Before:
 		params.When = listresource.Before
@@ -102,33 +111,31 @@ func (w *WithList) InitDataFields(ctx context.Context, data any, result list.Lis
 			if field.Type() == reflect.TypeOf(tftags.Map{}) {
 				field.Set(reflect.ValueOf(tftags.NewMapValueNull()))
 			}
+		case basetypes.ObjectTypable:
+			if field.Type() == reflect.TypeOf(timeouts.Value{}) {
+				timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
+				nullObj, objDiags := newNullObject(timeoutsType)
+				diags.Append(objDiags...)
+				if diags.HasError() {
+					return diags
+				}
+
+				t := timeouts.Value{}
+				t.Object = nullObj
+				field.Set(reflect.ValueOf(t))
+			}
 		}
-		////case reflect.TypeFor[basetypes.ObjectType]():
-		////	typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
-		////	nullObj, objDiags := newNullObject(typ)
-		////	diags.Append(objDiags...)
-		////	if field.Kind() == reflect.Ptr {
-		////		field.Elem().Set(reflect.ValueOf(nullObj))
-		////	} else {
-		////		field.Set(reflect.ValueOf(nullObj))
-		////	}
-		// }
 	}
 
 	return diags
 }
 
-func (w *WithList) ListResourceTagsInit(ctx context.Context, result list.ListResult) basetypes.MapValue {
-	typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
-	tagsType := typ.(attr.TypeWithElementType)
+type withListResourceConfigSchema struct{}
 
-	return basetypes.NewMapNull(tagsType.ElementType())
-}
-
-func (w *WithList) ListResourceTimeoutInit(ctx context.Context, result list.ListResult) (basetypes.ObjectValue, diag.Diagnostics) {
-	timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
-
-	return newNullObject(timeoutsType)
+func (w *withListResourceConfigSchema) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
 }
 
 func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {

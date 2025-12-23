@@ -103,6 +103,8 @@ func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) dia
 		}
 	}
 
+	tagsInContext.TagsOut = nil
+
 	return diags
 }
 

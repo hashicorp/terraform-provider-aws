@@ -12,9 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
@@ -34,12 +33,6 @@ type listResourceCapacityProvider struct {
 	framework.WithList
 }
 
-func (r *listResourceCapacityProvider) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-	}
-}
-
 func (r *listResourceCapacityProvider) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	var query capacityProviderListModel
 
@@ -52,50 +45,26 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 
 	awsClient := r.Meta()
 	conn := awsClient.LambdaClient(ctx)
+	ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input lambda.ListCapacityProvidersInput
 		for capacityProvider, err := range listCapacityProviders(ctx, conn, &input) {
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: diag.Diagnostics{
-						diag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
 			var data resourceCapacityProviderModel
-			timeoutObject, d := r.ListResourceTimeoutInit(ctx, result)
-			result.Diagnostics.Append(d...)
-			if result.Diagnostics.HasError() {
-				result = list.ListResult{Diagnostics: result.Diagnostics}
-				yield(result)
-				return
-			}
-
-			data.Timeouts.Object = timeoutObject
-			//data.Tags.MapValue = r.ListResourceTagsInit(ctx, result)
-			//data.TagsAll.MapValue = r.ListResourceTagsInit(ctx, result)
-
 			if diags := r.InitDataFields(ctx, &data, result, names.AttrTags, names.AttrTagsAll, names.AttrTimeouts); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				yield(result)
 				return
 			}
 
-			params := listresource.InterceptorParams{
-				C:      awsClient,
-				Result: &result,
-			}
-
-			if diags := r.RunResultInterceptors(ctx, listresource.Before, params); diags.HasError() {
+			if diags := r.RunResultInterceptors(ctx, listresource.Before, awsClient, &result); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				yield(result)
 				return
@@ -109,14 +78,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 
 			cpARN, err := arn.Parse(data.ARN.ValueString())
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: diag.Diagnostics{
-						diag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
@@ -132,7 +94,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 
 			result.DisplayName = name
 
-			if diags := r.RunResultInterceptors(ctx, listresource.After, params); diags.HasError() {
+			if diags := r.RunResultInterceptors(ctx, listresource.After, awsClient, &result); diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				yield(result)
 				return
