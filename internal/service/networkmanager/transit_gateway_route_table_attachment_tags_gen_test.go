@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,6 +27,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -200,6 +204,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_null(t *testin
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -264,6 +271,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyMap(t *te
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -324,6 +334,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_AddOnUpdate(t 
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -404,6 +417,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnCre
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -491,6 +507,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnUpd
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -625,6 +644,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnUpd
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -711,6 +733,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_pr
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -884,6 +909,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_no
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1038,6 +1066,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_ov
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1208,6 +1239,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_up
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1295,6 +1329,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_up
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1383,6 +1420,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_em
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1448,6 +1488,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_em
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1503,6 +1546,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nu
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1563,6 +1609,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nu
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1623,6 +1672,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1676,6 +1728,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1770,6 +1825,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -1854,6 +1912,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_IgnoreTags_Ove
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
@@ -2013,6 +2074,9 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_IgnoreTags_Ove
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
