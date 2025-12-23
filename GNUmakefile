@@ -499,6 +499,7 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 
 # The 2 smoke test targets run exactly the same set of acceptance tests.
 # The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
+# The tests must pass on the earliest supported Terraform version (0.12.31).
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
