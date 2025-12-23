@@ -108,11 +108,11 @@ func (w *WithList) InitDataFields(ctx context.Context, data any, result list.Lis
 
 		switch field.Interface().(attr.Value).Type(ctx).(type) {
 		case basetypes.MapTypable:
-			if field.Type() == reflect.TypeOf(tftags.Map{}) {
+			if field.Type() == reflect.TypeFor[tftags.Map]() {
 				field.Set(reflect.ValueOf(tftags.NewMapValueNull()))
 			}
 		case basetypes.ObjectTypable:
-			if field.Type() == reflect.TypeOf(timeouts.Value{}) {
+			if field.Type() == reflect.TypeFor[timeouts.Value]() {
 				timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
 				nullObj, objDiags := newNullObject(timeoutsType)
 				diags.Append(objDiags...)
