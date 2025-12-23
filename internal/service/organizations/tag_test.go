@@ -33,11 +33,11 @@ func TestAccOrganizationsTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccOrganizationsTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceTag(), resourceName),
@@ -84,11 +84,11 @@ func TestAccOrganizationsTag_Value(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, "key1", "value1"),
+				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -97,11 +97,11 @@ func TestAccOrganizationsTag_Value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationsTagConfig(rName, "key1", "value1updated"),
+				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
 			},
 		},
