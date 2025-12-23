@@ -4,6 +4,8 @@
 package lambda
 
 import (
+	"fmt"
+
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -21,9 +23,33 @@ func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
+	fullARNRegex := regexache.MustCompile(`^arn:[\w-]+:lambda:[a-z]{2}-(?:[a-z]+-){1,2}\d{1}:\d{12}:function:([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`)
+	partialARNRegex := regexache.MustCompile(`^\d{12}:function:([0-9A-Za-z_-]+)$`)
+
 	return validation.All(
 		validation.StringMatch(regexache.MustCompile(pattern), "must be valid function name or function ARN"),
 		validation.StringLenBetween(1, 140),
+		func(i any, k string) (warnings []string, errors []error) {
+			v, ok := i.(string)
+			if !ok {
+				errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+				return warnings, errors
+			}
+
+			var functionName string
+			if matched := fullARNRegex.FindStringSubmatch(v); matched != nil {
+				functionName = matched[1]
+			} else if matched := partialARNRegex.FindStringSubmatch(v); matched != nil {
+				functionName = matched[1]
+			} else {
+				functionName = v
+			}
+			if len(functionName) > 64 {
+				errors = append(errors, fmt.Errorf("expected length of the Lambda function name to be less than or equal to 64, got %s (%d characters)", functionName, len(functionName)))
+			}
+
+			return warnings, errors
+		},
 	)
 }
 
