@@ -20,7 +20,7 @@ Manages an individual Organizations resource tag. This resource should only be u
 data "aws_organizations_organization" "example" {}
 
 resource "aws_organizations_organizational_unit" "example" {
-  name = "ExampleOU"
+  name      = "ExampleOU"
   parent_id = data.aws_organizations_organization.example.roots[0].id
 
   lifecycle {
@@ -30,8 +30,8 @@ resource "aws_organizations_organizational_unit" "example" {
 
 resource "aws_organizations_tag" "example" {
   resource_id = aws_organizations_organizational_unit.example.id
-  key          = "ExampleKey"
-  value        = "ExampleValue"
+  key         = "ExampleKey"
+  value       = "ExampleValue"
 }
 ```
 
