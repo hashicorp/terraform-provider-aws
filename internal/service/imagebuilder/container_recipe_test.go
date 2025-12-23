@@ -719,6 +719,33 @@ func testAccCheckContainerRecipeDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
+func TestAccImageBuilderContainerRecipe_wildcardVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipeConfig_wildcardVersion(rName, "1.x.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckContainerRecipeExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1564,4 +1591,32 @@ EOF
   }
 }
 `, rName))
+}
+
+func testAccContainerRecipeConfig_wildcardVersion(rName, version string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name           = %[1]q
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = %[2]q
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+`, rName, version))
 }

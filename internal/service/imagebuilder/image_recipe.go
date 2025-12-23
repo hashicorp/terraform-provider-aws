@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
@@ -235,10 +236,11 @@ func resourceImageRecipe() *schema.Resource {
 				),
 			},
 			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringLenBetween(1, 128),
+				DiffSuppressFunc: suppressWildcardVersionDiff,
 			},
 			"working_directory": {
 				Type:         schema.TypeString,
@@ -749,4 +751,31 @@ func flattenSystemsManagerAgent(apiObject *awstypes.SystemsManagerAgent) map[str
 	}
 
 	return tfMap
+}
+
+func suppressWildcardVersionDiff(k, old, new string, d *schema.ResourceData) bool {
+	if old == new {
+		return true
+	}
+
+	// Split versions into parts
+	oldParts := strings.Split(old, ".")
+	newParts := strings.Split(new, ".")
+
+	// Must have same number of parts (typically 3: major.minor.patch)
+	if len(oldParts) != len(newParts) {
+		return false
+	}
+
+	// Check each part - wildcards (x) in new (config) match any value in old (API)
+	for i := range newParts {
+		if newParts[i] == "x" {
+			continue
+		}
+		if oldParts[i] != newParts[i] {
+			return false
+		}
+	}
+
+	return true
 }

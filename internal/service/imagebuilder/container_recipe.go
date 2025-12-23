@@ -278,9 +278,10 @@ func resourceContainerRecipe() *schema.Resource {
 				},
 			},
 			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressWildcardVersionDiff,
 			},
 			"working_directory": {
 				Type:         schema.TypeString,
