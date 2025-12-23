@@ -114,7 +114,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
 	})
 
@@ -212,7 +212,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteAwsLogSourceOutput, error) {
 		return conn.DeleteAwsLogSource(ctx, input)
 	})
 

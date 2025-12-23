@@ -9,7 +9,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -27,13 +26,5 @@ const (
 
 // waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 func waitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.MalformedPolicyDocumentException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return f(ctx)
-	})
-
-	if err != nil {
-		return inttypes.Zero[T](), err
-	}
-
-	return outputRaw.(T), nil
+	return tfresource.RetryWhenIsA[T, *awstypes.MalformedPolicyDocumentException](ctx, timeout, f)
 }

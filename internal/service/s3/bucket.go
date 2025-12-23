@@ -39,7 +39,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1684,15 +1683,7 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 }
 
 func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return f(ctx)
-	}, errCodeNoSuchBucket)
-
-	if err != nil {
-		return inttypes.Zero[T](), err
-	}
-
-	return outputRaw.(T), nil
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, f, errCodeNoSuchBucket)
 }
 
 func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
