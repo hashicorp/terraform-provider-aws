@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -122,7 +124,7 @@ func testAccCheckOrganizationsTagDestroy(ctx context.Context) resource.TestCheck
 
 			_, err = tforganizations.FindTag(ctx, conn, identifier, key)
 
-			if retry.NotFound(err) {
+			if retry.NotFound(err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
 				continue
 			}
 
