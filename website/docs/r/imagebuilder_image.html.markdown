@@ -12,6 +12,8 @@ Manages an Image Builder Image.
 
 ## Example Usage
 
+### Building an Image from a Recipe
+
 ```terraform
 resource "aws_imagebuilder_image" "example" {
   distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.example.arn
@@ -20,24 +22,50 @@ resource "aws_imagebuilder_image" "example" {
 }
 ```
 
+### Building an Image by Invoking a Pipeline
+
+```terraform
+resource "aws_imagebuilder_image_pipeline" "example" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.example.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.example.arn
+  name                             = "example"
+}
+
+resource "aws_imagebuilder_image" "example" {
+  image_pipeline_execution_settings {
+    image_pipeline_arn = aws_imagebuilder_image_pipeline.example.arn
+  }
+
+  tags = {
+    Name = "example"
+  }
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
-
-* `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
+~> **NOTE:** You must specify one of the following: (`image_recipe_arn` or `container_recipe_arn` with `infrastructure_configuration_arn`) OR `image_pipeline_execution_settings`. These approaches are mutually exclusive.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
+* `container_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the container recipe.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `execution_role` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
+* `image_pipeline_execution_settings` - (Optional) Configuration block to trigger an image build by invoking an existing image pipeline. Detailed below.
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
-* `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
+* `infrastructure_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration. Required when using `image_recipe_arn` or `container_recipe_arn`.
 * `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### image_pipeline_execution_settings
+
+The following arguments are required:
+
+* `image_pipeline_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Image Pipeline to invoke for creating the image.
 
 ### image_tests_configuration
 

@@ -54,7 +54,7 @@ func resourceImage() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn", "image_pipeline_execution_settings"},
 			},
 			"date_created": {
 				Type:     schema.TypeString,
@@ -83,7 +83,33 @@ func resourceImage() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn", "image_pipeline_execution_settings"},
+			},
+			"image_pipeline_execution_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_pipeline_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn", "image_pipeline_execution_settings"},
+				ConflictsWith: []string{
+					"distribution_configuration_arn",
+					"enhanced_image_metadata_enabled",
+					"execution_role",
+					"image_scanning_configuration",
+					"image_tests_configuration",
+					"infrastructure_configuration_arn",
+					"workflow",
+				},
 			},
 			"image_scanning_configuration": {
 				Type:     schema.TypeList,
@@ -147,9 +173,10 @@ func resourceImage() *schema.Resource {
 			},
 			"infrastructure_configuration_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
+				RequiredWith: []string{"image_recipe_arn", "container_recipe_arn"},
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
@@ -278,51 +305,75 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.CreateImageInput{
-		ClientToken:                  aws.String(id.UniqueId()),
-		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
-		Tags:                         getTagsIn(ctx),
+	var imageBuildVersionArn string
+
+	if v, ok := d.GetOk("image_pipeline_execution_settings"); ok && len(v.([]any)) > 0 {
+		input := &imagebuilder.StartImagePipelineExecutionInput{
+			ClientToken: aws.String(id.UniqueId()),
+			Tags:        getTagsIn(ctx),
+		}
+
+		settings := v.([]any)[0].(map[string]any)
+		if arn, ok := settings["image_pipeline_arn"].(string); ok {
+			input.ImagePipelineArn = aws.String(arn)
+		}
+
+		output, err := conn.StartImagePipelineExecution(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "starting Image Builder Image Pipeline execution: %s", err)
+		}
+
+		imageBuildVersionArn = aws.ToString(output.ImageBuildVersionArn)
+	} else {
+		input := &imagebuilder.CreateImageInput{
+			ClientToken:                  aws.String(id.UniqueId()),
+			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
+			Tags:                         getTagsIn(ctx),
+		}
+
+		if v, ok := d.GetOk("container_recipe_arn"); ok {
+			input.ContainerRecipeArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("distribution_configuration_arn"); ok {
+			input.DistributionConfigurationArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_role"); ok {
+			input.ExecutionRole = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("image_recipe_arn"); ok {
+			input.ImageRecipeArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
+			input.InfrastructureConfigurationArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
+			input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
+		}
+
+		output, err := conn.CreateImage(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: %s", err)
+		}
+
+		imageBuildVersionArn = aws.ToString(output.ImageBuildVersionArn)
 	}
 
-	if v, ok := d.GetOk("container_recipe_arn"); ok {
-		input.ContainerRecipeArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("distribution_configuration_arn"); ok {
-		input.DistributionConfigurationArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("execution_role"); ok {
-		input.ExecutionRole = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("image_recipe_arn"); ok {
-		input.ImageRecipeArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
-		input.InfrastructureConfigurationArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
-		input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
-	}
-
-	output, err := conn.CreateImage(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: %s", err)
-	}
-
-	d.SetId(aws.ToString(output.ImageBuildVersionArn))
+	d.SetId(imageBuildVersionArn)
 
 	if _, err := waitImageStatusAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) create: %s", d.Id(), err)
@@ -347,36 +398,54 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", d.Id(), err)
 	}
 
+	// Check if this image was created via pipeline execution settings
+	_, usingPipelineExecution := d.GetOk("image_pipeline_execution_settings")
+
 	d.Set(names.AttrARN, image.Arn)
-	if image.ContainerRecipe != nil {
-		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+
+	// Only set recipe and infrastructure ARNs if not using pipeline execution
+	if !usingPipelineExecution {
+		if image.ContainerRecipe != nil {
+			d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+		}
+		if image.ImageRecipe != nil {
+			d.Set("image_recipe_arn", image.ImageRecipe.Arn)
+		}
+		if image.InfrastructureConfiguration != nil {
+			d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
+		}
+		if image.DistributionConfiguration != nil {
+			d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
+		}
+		d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
+		d.Set("execution_role", image.ExecutionRole)
+
+		if image.ImageScanningConfiguration != nil {
+			if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
+			}
+		} else {
+			d.Set("image_scanning_configuration", nil)
+		}
+
+		if image.ImageTestsConfiguration != nil {
+			if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
+			}
+		} else {
+			d.Set("image_tests_configuration", nil)
+		}
+
+		if image.Workflows != nil {
+			if err := d.Set("workflow", flattenWorkflowConfigurations(image.Workflows)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
+			}
+		} else {
+			d.Set("workflow", nil)
+		}
 	}
+
 	d.Set("date_created", image.DateCreated)
-	if image.DistributionConfiguration != nil {
-		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
-	}
-	d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
-	d.Set("execution_role", image.ExecutionRole)
-	if image.ImageRecipe != nil {
-		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
-	}
-	if image.ImageScanningConfiguration != nil {
-		if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
-		}
-	} else {
-		d.Set("image_scanning_configuration", nil)
-	}
-	if image.ImageTestsConfiguration != nil {
-		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
-		}
-	} else {
-		d.Set("image_tests_configuration", nil)
-	}
-	if image.InfrastructureConfiguration != nil {
-		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
-	}
 	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
@@ -388,13 +457,6 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("platform", image.Platform)
 	d.Set(names.AttrVersion, image.Version)
-	if image.Workflows != nil {
-		if err := d.Set("workflow", flattenWorkflowConfigurations(image.Workflows)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
-		}
-	} else {
-		d.Set("workflow", nil)
-	}
 
 	setTagsOut(ctx, image.Tags)
 

@@ -352,7 +352,7 @@ func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_imagebuilder_image_pipeline" {
+			if rs.Type != "aws_imagebuilder_image" {
 				continue
 			}
 
@@ -1068,4 +1068,184 @@ resource "aws_imagebuilder_image" "test" {
   depends_on = [aws_inspector2_enabler.test]
 }
 `)
+}
+
+func TestAccImageBuilderImage_pipelineExecutionSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_pipelineExecutionSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("image/%s/\\d+\\.\\d+\\.\\d+/[1-9][0-9]*", rName))),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, "date_created"),
+					resource.TestCheckResourceAttr(resourceName, "output_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "image_recipe_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "infrastructure_configuration_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"image_pipeline_execution_settings",
+					"execution_role",
+					"image_recipe_arn",
+					"infrastructure_configuration_arn",
+					"image_tests_configuration",
+					"workflow",
+				},
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImage_pipelineExecutionSettings_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_pipelineExecutionSettingsTags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"image_pipeline_execution_settings",
+					"execution_role",
+					"image_recipe_arn",
+					"infrastructure_configuration_arn",
+					"image_tests_configuration",
+					"workflow",
+				},
+			},
+			{
+				Config: testAccImageConfig_pipelineExecutionSettingsTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccImageConfig_pipelineExecutionSettingsTags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImage_pipelineExecutionSettings_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_pipelineExecutionSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImage(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccImageConfig_pipelineExecutionSettings(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  name                             = %[1]q
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_pipeline_execution_settings {
+    image_pipeline_arn = aws_imagebuilder_image_pipeline.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccImageConfig_pipelineExecutionSettingsTags1(rName string, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  name                             = %[1]q
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_pipeline_execution_settings {
+    image_pipeline_arn = aws_imagebuilder_image_pipeline.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccImageConfig_pipelineExecutionSettingsTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  name                             = %[1]q
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_pipeline_execution_settings {
+    image_pipeline_arn = aws_imagebuilder_image_pipeline.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
