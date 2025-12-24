@@ -593,7 +593,7 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 	return nil, err
 }
 
-func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) {
+func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
