@@ -51,7 +51,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_organizations_tag` using the Organizations resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_tag` using the Organizations resource identifier and key, separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_organizations_tag.example
+  id = "ou-1234567,ExampleKey"
+}
+```
+
+Using `terraform import`, import `aws_organizations_tag` using the Organizations resource identifier and key, separated by a comma (`,`). For example:
 
 ```console
 $ terraform import aws_organizations_tag.example ou-1234567,ExampleKey
