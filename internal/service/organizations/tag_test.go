@@ -4,20 +4,13 @@
 package organizations_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,10 +23,10 @@ func TestAccOrganizationsTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -58,10 +51,10 @@ func TestAccOrganizationsTag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceTag(), resourceName),
@@ -81,10 +74,10 @@ func TestAccOrganizationsTag_Value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -97,7 +90,7 @@ func TestAccOrganizationsTag_Value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationsTagConfig(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccTagConfig(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -108,41 +101,8 @@ func TestAccOrganizationsTag_Value(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationsTagDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_organizations_tag" {
-				continue
-			}
-
-			identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tforganizations.FindTag(ctx, conn, identifier, key)
-
-			if retry.NotFound(err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("%s resource (%s) tag (%s) still exists", names.Organizations, identifier, key)
-		}
-
-		return nil
-	}
-}
-
-func testAccOrganizationsTagConfig(rName string, key string, value string) string {
+func testAccTagConfig(rName string, key string, value string) string {
 	return fmt.Sprintf(`
-
-
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
