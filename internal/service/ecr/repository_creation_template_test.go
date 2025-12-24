@@ -36,9 +36,10 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForReplication)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForCreateOnPush)),
 					resource.TestCheckResourceAttr(resourceName, "custom_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -290,6 +291,7 @@ resource "aws_ecr_repository_creation_template" "test" {
   applied_for = [
     "PULL_THROUGH_CACHE",
     "REPLICATION",
+    "CREATE_ON_PUSH",
   ]
 
   resource_tags = {
