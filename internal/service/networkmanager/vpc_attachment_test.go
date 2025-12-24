@@ -554,6 +554,11 @@ func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "labelv1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv1"),
@@ -561,10 +566,14 @@ func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
 			},
 			{
 				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "labelv2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
-					testAccCheckVPCAttachmentRecreated(&v1, &v2, true),
 				),
 			},
 		},
