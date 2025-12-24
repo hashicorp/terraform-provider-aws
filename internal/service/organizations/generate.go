@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/tagresource/main.go -IDAttribName=resource_id
-//go:generate go run ../../generate/tags/main.go -GetTag -ListTags -ListTagsOpPaginated -ListTagsInIDElem=ResourceId -ServiceTagsSlice -TagInIDElem=ResourceId -UpdateTags
+//go:generate go run ../../generate/tags/main.go -GetTag -ListTags -ListTagsOpPaginated -ListTagsInIDElem=ResourceId -ServiceTagsSlice -TagInIDElem=ResourceId -UpdateTags -ParentNotFoundErrCode=TargetNotFoundException
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/tagstests/main.go
 //go:generate go run ../../generate/identitytests/main.go
