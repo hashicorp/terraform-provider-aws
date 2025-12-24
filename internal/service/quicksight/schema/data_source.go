@@ -395,6 +395,36 @@ func DataSourceParametersSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
+							"iam_parameters": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"auto_create_database_user": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"database_groups": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 50,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"database_user": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
 							names.AttrPort: {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -887,6 +917,32 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 			if v, ok := tfMap[names.AttrPort].(int); ok {
 				ps.Value.Port = int32(v)
 			}
+			if v, ok := tfMap["iam_parameters"].([]any); ok && len(v) > 0 && v != nil {
+				if tfMap, ok := v[0].(map[string]any); ok {
+					iamParams := &awstypes.RedshiftIAMParameters{}
+
+					if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+						iamParams.RoleArn = aws.String(v)
+					}
+					if v, ok := tfMap["auto_create_database_user"].(bool); ok {
+						iamParams.AutoCreateDatabaseUser = v
+					}
+					if v, ok := tfMap["database_groups"].([]any); ok && len(v) > 0 {
+						groups := make([]string, 0, len(v))
+						for _, item := range v {
+							if str, ok := item.(string); ok && str != "" {
+								groups = append(groups, str)
+							}
+						}
+						iamParams.DatabaseGroups = groups
+					}
+					if v, ok := tfMap["database_user"].(string); ok && v != "" {
+						iamParams.DatabaseUser = aws.String(v)
+					}
+
+					ps.Value.IAMParameters = iamParams
+				}
+			}
 
 			apiObject = ps
 		}
@@ -1127,7 +1183,15 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 				"cluster_id":       aws.ToString(v.Value.ClusterId),
 				names.AttrDatabase: aws.ToString(v.Value.Database),
 				"host":             aws.ToString(v.Value.Host),
-				names.AttrPort:     v.Value.Port,
+				"iam_parameters": []any{
+					map[string]any{
+						names.AttrRoleARN:           aws.ToString(v.Value.IAMParameters.RoleArn),
+						"auto_create_database_user": v.Value.IAMParameters.AutoCreateDatabaseUser,
+						"database_groups":           v.Value.IAMParameters.DatabaseGroups,
+						"database_user":             aws.ToString(v.Value.IAMParameters.DatabaseUser),
+					},
+				},
+				names.AttrPort: v.Value.Port,
 			},
 		}
 	case *awstypes.DataSourceParametersMemberS3Parameters:
