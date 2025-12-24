@@ -293,10 +293,6 @@ func testAccCheckSnapshotScheduleExists(ctx context.Context, n string, v *awstyp
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster Snapshot Schedule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindSnapshotScheduleByID(ctx, conn, rs.Primary.ID)
