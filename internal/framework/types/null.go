@@ -5,8 +5,10 @@ package types
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -16,6 +18,15 @@ import (
 func NullValueOf(ctx context.Context, v any) (attr.Value, error) {
 	var attrType attr.Type
 	var tfType tftypes.Type
+
+	// Check for types that have their own NullValue method
+	if t, ok := v.(interface{ NullValue(context.Context) (attr.Value, diag.Diagnostics) }); ok {
+		val, diags := t.NullValue(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error creating null value: %v", diags)
+		}
+		return val, nil
+	}
 
 	switch v := v.(type) {
 	case basetypes.BoolValuable:
