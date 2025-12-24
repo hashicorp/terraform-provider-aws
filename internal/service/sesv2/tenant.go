@@ -143,7 +143,6 @@ func (r *tenantResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
-
 }
 
 func (r *tenantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
