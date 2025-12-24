@@ -52,6 +52,10 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				return
 			}
 
+			if capacityProvider.State == awstypes.CapacityProviderStateDeleting {
+				continue
+			}
+
 			var data resourceCapacityProviderModel
 			if diags := r.InitDataFields(ctx, &data, result, names.AttrTags, names.AttrTagsAll, names.AttrTimeouts); diags.HasError() {
 				result.Diagnostics.Append(diags...)
