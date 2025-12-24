@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -377,6 +378,7 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 				Config: testAccClusterConfig_updateNodeCount(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -421,6 +423,7 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 				Config: testAccClusterConfig_updateNodeType(rName, "ra3.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1331,12 +1334,6 @@ resource "aws_redshift_cluster" "test" {
   number_of_nodes       = %[2]d
   skip_final_snapshot   = true
 }
-
-# Take a snaphot to prevent "InvalidClusterState: No recent snapshot found for cluster ... Please create a snapshot first".
-resource "aws_redshift_cluster_snapshot" "test" {
-  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
-  snapshot_identifier = %[1]q
-}
 `, rName, nodeCount)
 }
 
@@ -1352,12 +1349,6 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade = false
   number_of_nodes       = 2
   skip_final_snapshot   = true
-}
-
-# Take a snaphot to prevent "InvalidClusterState: No recent snapshot found for cluster ... Please create a snapshot first".
-resource "aws_redshift_cluster_snapshot" "test" {
-  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
-  snapshot_identifier = %[1]q
 }
 `, rName, nodeType)
 }

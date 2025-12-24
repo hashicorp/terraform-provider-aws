@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -26,6 +27,7 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 		return output, err
 	}
 
@@ -42,6 +44,7 @@ func waitClusterDeleted(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 		return output, err
 	}
 
@@ -58,6 +61,7 @@ func waitClusterUpdated(ctx context.Context, conn *redshift.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 		return output, err
 	}
 
