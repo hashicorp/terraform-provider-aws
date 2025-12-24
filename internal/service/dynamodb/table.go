@@ -47,6 +47,7 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -69,8 +70,8 @@ func resourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validStreamSpec(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateTableAttributes(diff)
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -145,6 +146,18 @@ func resourceTable() *schema.Resource {
 			}),
 			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
+			func(ctx context.Context, diff *schema.ResourceDiff, i any) error {
+				rs := diff.GetRawState()
+				if rs.IsNull() {
+					return nil
+				}
+
+				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					_ = diff.Clear("attribute")
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -188,6 +201,7 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
@@ -3063,7 +3077,9 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 
 // validators
 
-func validateTableAttributes(d *schema.ResourceDiff) error {
+func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 
@@ -3081,7 +3097,14 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			indexedAttributes[rangeKey] = true
 		}
 	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
+
+	config := d.GetRawConfig()
+	hasConfiguredGsi := false
+	if config.IsKnown() {
+		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
+	}
+
+	if v, ok := d.GetOk("global_secondary_index"); ok && hasConfiguredGsi {
 		indexes := v.(*schema.Set).List()
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
@@ -3095,14 +3118,46 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
+	remoteGSIAttributes := map[string]bool{}
+	table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string))
+	if err != nil && !retry.NotFound(err) {
+		return err
+	}
+
+	if table != nil {
+		for _, g := range table.GlobalSecondaryIndexes {
+			for _, ks := range g.KeySchema {
+				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+				delete(indexedAttributes, aws.ToString(ks.AttributeName))
+			}
+		}
+	}
+
 	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
+	var attributes []any
+	if hasConfiguredGsi {
+		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
+		for _, v := range vals {
+			attr := map[string]any{}
+			for k, v := range v.AsValueMap() {
+				attr[k] = v.AsString()
+			}
+			attributes = append(attributes, attr)
+		}
+	} else {
+		attributes = d.Get("attribute").(*schema.Set).List()
+	}
+
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]any)
 		attrName := attribute[names.AttrName].(string)
 
-		if _, ok := indexedAttributes[attrName]; !ok {
+		_, ok1 := indexedAttributes[attrName]
+		_, ok2 := remoteGSIAttributes[attrName]
+
+		if !ok1 && !ok2 {
 			unindexedAttributes = append(unindexedAttributes, attrName)
 		} else {
 			delete(indexedAttributes, attrName)
