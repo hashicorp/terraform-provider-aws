@@ -634,6 +634,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -722,6 +723,7 @@ func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -768,6 +770,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -814,6 +817,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
