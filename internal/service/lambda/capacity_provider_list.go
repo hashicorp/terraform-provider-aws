@@ -81,7 +81,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				data.Name = flex.StringValueToFramework(ctx, name)
 				result.DisplayName = name
 			})
-			
+
 			if diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				yield(result)
