@@ -11,11 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_sesv2_configuration_set", sweepConfigurationSets)
 	awsv2.Register("aws_sesv2_contact_list", sweepContactLists)
+	awsv2.Register("aws_sesv2_tenant", sweepTenants)
 }
 
 func sweepConfigurationSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -62,6 +64,28 @@ func sweepContactLists(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			d.SetId(aws.ToString(v.ContactListName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepTenants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SESV2Client(ctx)
+	var input sesv2.ListTenantsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sesv2.NewListTenantsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Tenants {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTenantResource, client,
+				framework.NewAttribute("tenant_id", aws.ToString(v.TenantId))))
 		}
 	}
 

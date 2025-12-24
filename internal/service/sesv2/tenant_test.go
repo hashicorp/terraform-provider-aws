@@ -5,69 +5,87 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESV2Tenant_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName1 := acctest.RandomWithPrefix(t, "tf-acc-test")
-	rName2 := acctest.RandomWithPrefix(t, "tf-acc-test-new")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_sesv2_tenant.test"
 
-	var tenantID string
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfsesv2.ResNameTenant),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTenantConfig_basic(rName1),
+				Config: testAccTenantConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					func(s *terraform.State) error {
-						rs := s.RootModule().Resources[resourceName]
-						tenantID = rs.Primary.ID
-						return nil
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
-				),
-			},
-			{
-				Config: testAccTenantConfig_basic(rName2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTenantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName2),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					testAccCheckTenantRecreated(resourceName, &tenantID),
-					testAccCheckTenantDoesNotExist(ctx, rName1),
-				),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sending_status"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tenant_arn"), tfknownvalue.RegionalARNRegexp("ses", regexache.MustCompile(`tenant/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tenant_id"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2Tenant_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_sesv2_tenant.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTenantDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTenantConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceTenant, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -82,90 +100,35 @@ func testAccCheckTenantDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			tenantName := rs.Primary.Attributes["tenant_name"]
-			_, err := tfsesv2.FindTenantByName(ctx, conn, tenantName)
+			_, err := tfsesv2.FindTenantByName(ctx, conn, rs.Primary.Attributes["tenant_name"])
 
 			if retry.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameTenant, tenantName, err)
+				return err
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameTenant, tenantName, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Tenant %s still exists", rs.Primary.Attributes["tenant_name"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTenantExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckTenantExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameTenant, name, errors.New("not found"))
-		}
-
-		tenantName, ok := rs.Primary.Attributes["tenant_name"]
-		if !ok || tenantName == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameTenant, name, errors.New("tenant_name attribute not found or empty"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
-		_, err := tfsesv2.FindTenantByName(ctx, conn, tenantName)
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameTenant, tenantName, err)
-		}
+		_, err := tfsesv2.FindTenantByName(ctx, conn, rs.Primary.Attributes["tenant_name"])
 
-		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
-
-	input := &sesv2.ListTenantsInput{}
-
-	_, err := conn.ListTenants(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckTenantRecreated(name string, oldID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", name)
-		}
-
-		if rs.Primary.ID == *oldID {
-			return fmt.Errorf("tenant was not recreated (ID did not change)")
-		}
-
-		*oldID = rs.Primary.ID
-		return nil
-	}
-}
-
-func testAccCheckTenantDoesNotExist(ctx context.Context, tenantName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
-
-		_, err := tfsesv2.FindTenantByName(ctx, conn, tenantName)
-		if retry.NotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("tenant %q still exists", tenantName)
+		return err
 	}
 }
 
