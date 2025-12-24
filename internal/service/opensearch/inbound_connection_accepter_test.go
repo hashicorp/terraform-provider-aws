@@ -63,7 +63,7 @@ func TestAccOpenSearchInboundConnectionAccepter_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceInboundConnectionAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

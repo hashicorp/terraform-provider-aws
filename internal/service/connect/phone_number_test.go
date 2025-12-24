@@ -213,7 +213,7 @@ func testAccPhoneNumber_disappears(t *testing.T) {
 				Config: testAccPhoneNumberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourcePhoneNumber(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourcePhoneNumber(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

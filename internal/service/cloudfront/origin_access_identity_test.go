@@ -99,7 +99,7 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

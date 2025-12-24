@@ -179,7 +179,7 @@ func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

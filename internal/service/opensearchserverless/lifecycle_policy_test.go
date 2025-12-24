@@ -77,7 +77,7 @@ func TestAccOpenSearchServerlessLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceLifecyclePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceLifecyclePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

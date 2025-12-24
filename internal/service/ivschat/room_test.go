@@ -125,7 +125,7 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 				Config: testAccRoomConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceRoom(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceRoom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

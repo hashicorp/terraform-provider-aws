@@ -675,7 +675,7 @@ func TestAccRDSProxy_disappears(t *testing.T) {
 				Config: testAccProxyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

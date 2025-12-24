@@ -369,8 +369,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -100,7 +100,7 @@ func TestAccVPCRouteServerPeer_disappears(t *testing.T) {
 				Config: testAccVPCRouteServerPeerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCRouteServerPeer, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCRouteServerPeer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

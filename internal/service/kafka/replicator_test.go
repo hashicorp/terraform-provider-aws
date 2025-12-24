@@ -243,7 +243,7 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceReplicator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceReplicator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -73,7 +73,7 @@ func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 				Config: testAccDataShareConsumerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

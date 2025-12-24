@@ -73,7 +73,7 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

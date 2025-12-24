@@ -69,7 +69,7 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediaconvert.ResourceQueue(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediaconvert.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -217,7 +217,7 @@ func TestAccRedshiftServerlessNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceNamespace(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

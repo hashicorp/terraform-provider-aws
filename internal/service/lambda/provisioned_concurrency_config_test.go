@@ -65,7 +65,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_disappears(t *testing.T) {
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceProvisionedConcurrencyConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceProvisionedConcurrencyConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), lambdaFunctionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), lambdaFunctionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

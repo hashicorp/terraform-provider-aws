@@ -96,7 +96,7 @@ func TestAccIPAMPool_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

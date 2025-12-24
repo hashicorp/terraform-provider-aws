@@ -69,7 +69,7 @@ func TestAccDAXParameterGroup_disappears(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -283,8 +283,8 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 				Config: testAccUserLoginProfileConfig_required(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserLoginProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserLoginProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

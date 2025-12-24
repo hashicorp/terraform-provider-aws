@@ -108,7 +108,7 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

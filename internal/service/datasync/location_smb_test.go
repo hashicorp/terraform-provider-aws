@@ -84,7 +84,7 @@ func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationSMB(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationSMB(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

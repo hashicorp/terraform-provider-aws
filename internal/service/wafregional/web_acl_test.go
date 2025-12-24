@@ -269,7 +269,7 @@ func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_basic(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceWebACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

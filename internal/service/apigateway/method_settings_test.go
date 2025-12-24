@@ -563,7 +563,7 @@ func testAccMethodSettings_disappears(t *testing.T) {
 				Config: testAccMethodSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceMethodSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

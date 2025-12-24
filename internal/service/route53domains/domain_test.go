@@ -80,7 +80,7 @@ func testAccDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53domains.ResourceDomain, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53domains.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

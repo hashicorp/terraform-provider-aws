@@ -229,7 +229,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourcePlatformApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourcePlatformApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -63,7 +63,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSnapshotCreateVolumePermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSnapshotCreateVolumePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSnapshotCreateVolumePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

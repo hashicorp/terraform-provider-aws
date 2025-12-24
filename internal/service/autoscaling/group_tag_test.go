@@ -59,7 +59,7 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

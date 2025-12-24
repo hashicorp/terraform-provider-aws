@@ -74,7 +74,7 @@ func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinternetmonitor.ResourceMonitor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinternetmonitor.ResourceMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

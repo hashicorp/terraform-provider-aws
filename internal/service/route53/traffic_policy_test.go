@@ -69,7 +69,7 @@ func TestAccRoute53TrafficPolicy_disappears(t *testing.T) {
 				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceTrafficPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceTrafficPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

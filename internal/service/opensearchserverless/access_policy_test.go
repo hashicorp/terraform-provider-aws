@@ -125,7 +125,7 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceAccessPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceAccessPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -82,7 +82,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccLocationFSxWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxWindowsFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationFSxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

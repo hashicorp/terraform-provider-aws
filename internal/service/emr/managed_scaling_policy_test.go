@@ -77,7 +77,7 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 				Config: testAccManagedScalingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceManagedScalingPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -501,7 +501,7 @@ func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

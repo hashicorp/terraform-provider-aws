@@ -362,7 +362,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

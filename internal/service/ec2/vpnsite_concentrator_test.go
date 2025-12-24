@@ -75,7 +75,7 @@ func TestAccSiteVPNConcentrator_disappears(t *testing.T) {
 				Config: testAccVPNConcentratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConcentrator, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPNConcentrator, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

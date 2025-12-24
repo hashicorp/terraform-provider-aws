@@ -346,7 +346,7 @@ func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 				Config: testAccResourceConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

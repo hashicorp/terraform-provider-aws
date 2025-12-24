@@ -83,7 +83,7 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 				Config: testAccAccessEntryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAccessEntry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +115,7 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 				Config: testAccAccessEntryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -84,7 +84,7 @@ func testAccAccountAlias_disappears(t *testing.T) {
 				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountAliasExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccountAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccountAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

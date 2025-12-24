@@ -94,8 +94,8 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,8 +125,8 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

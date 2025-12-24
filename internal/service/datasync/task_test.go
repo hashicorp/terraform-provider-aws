@@ -95,7 +95,7 @@ func TestAccDataSyncTask_disappears(t *testing.T) {
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceTask(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

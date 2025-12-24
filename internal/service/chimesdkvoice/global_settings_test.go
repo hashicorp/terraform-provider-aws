@@ -75,7 +75,7 @@ func testAccGlobalSettings_disappears(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceGlobalSettings(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceGlobalSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

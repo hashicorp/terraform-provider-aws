@@ -94,7 +94,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, resourceName, &agentruntimeendpoint),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceAgentRuntimeEndpoint, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAgentRuntimeEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

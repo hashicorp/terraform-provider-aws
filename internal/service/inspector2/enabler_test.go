@@ -121,7 +121,7 @@ func testAccEnabler_disappears(t *testing.T) {
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -403,7 +403,7 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 				Config: testAccEnablerConfig_MemberAccount(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceMemberAssociation(), "aws_inspector2_member_association.member"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceMemberAssociation(), "aws_inspector2_member_association.member"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

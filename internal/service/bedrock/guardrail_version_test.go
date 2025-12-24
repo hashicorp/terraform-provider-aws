@@ -81,7 +81,7 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrailVersion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

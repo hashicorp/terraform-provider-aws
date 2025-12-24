@@ -67,7 +67,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleetStackAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleetStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

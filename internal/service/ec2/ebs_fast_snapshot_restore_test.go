@@ -67,7 +67,7 @@ func TestAccEC2EBSFastSnapshotRestore_disappears(t *testing.T) {
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSFastSnapshotRestore, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEBSFastSnapshotRestore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccEC2EBSFastSnapshotRestore_disappearsSnapshot(t *testing.T) {
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshot(), snapshotResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSSnapshot(), snapshotResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

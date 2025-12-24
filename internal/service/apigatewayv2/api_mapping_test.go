@@ -118,7 +118,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateARN *st
 				Config: testAccAPIMappingConfig_basic(rName, *certificateARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceAPIMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceAPIMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

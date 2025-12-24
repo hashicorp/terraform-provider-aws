@@ -93,7 +93,7 @@ func TestAccAppSyncChannelNamespace_disappears(t *testing.T) {
 				Config: testAccChannelNamespaceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckChannelNamespaceExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceChannelNamespace, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappsync.ResourceChannelNamespace, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

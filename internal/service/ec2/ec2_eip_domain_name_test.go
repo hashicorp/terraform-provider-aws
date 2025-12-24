@@ -59,7 +59,7 @@ func TestAccEC2EIPDomainName_disappears(t *testing.T) {
 				Config: testAccEIPDomainNameConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPDomainNameExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIPDomainName, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEIPDomainName, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

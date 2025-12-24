@@ -112,7 +112,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

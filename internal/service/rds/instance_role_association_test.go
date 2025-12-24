@@ -82,7 +82,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceRoleAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstanceRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -130,7 +130,7 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceSMSChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -99,7 +99,7 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 				Config: testAccPrincipalAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourcePrincipalAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourcePrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

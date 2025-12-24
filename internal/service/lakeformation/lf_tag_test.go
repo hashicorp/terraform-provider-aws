@@ -153,7 +153,7 @@ func testAccLFTag_disappears(t *testing.T) {
 				Config: testAccLFTagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceLFTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceLFTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

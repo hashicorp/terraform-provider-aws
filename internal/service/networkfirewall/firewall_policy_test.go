@@ -1086,7 +1086,7 @@ func TestAccNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewallPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -64,7 +64,7 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 				Config: testAccDedicatedIPPoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceDedicatedIPPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceDedicatedIPPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

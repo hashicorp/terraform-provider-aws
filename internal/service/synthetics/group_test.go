@@ -66,7 +66,7 @@ func TestAccSyntheticsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

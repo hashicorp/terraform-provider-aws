@@ -72,7 +72,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_disappears(t *testing.T) {
 				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceDataProtectionSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceDataProtectionSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -111,7 +111,7 @@ func testAccSubscriber_disappears(t *testing.T) {
 				Config: testAccSubscriberConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceSubscriber, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

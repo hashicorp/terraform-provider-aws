@@ -83,7 +83,7 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 				Config: testAccDedicatedIPAssignmentConfig_basic(ip, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPAssignmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -105,7 +105,7 @@ func TestAccRBinRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, t, resourceName, &rbinrule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrbin.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

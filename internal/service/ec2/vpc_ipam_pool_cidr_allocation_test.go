@@ -107,7 +107,7 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) { // nosemgrep:ci.vp
 				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDRAllocation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPoolCIDRAllocation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

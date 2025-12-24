@@ -70,7 +70,7 @@ func TestAccRoute53ResolverRuleAssociation_disappears(t *testing.T) {
 				Config: testAccRuleAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleAssociationExists(ctx, resourceName, &assn),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceRuleAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceRuleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
 				Config: testAccRuleAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleAssociationExists(ctx, resourceName, &assn),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

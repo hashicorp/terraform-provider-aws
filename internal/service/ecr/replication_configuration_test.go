@@ -116,7 +116,7 @@ func testAccReplicationConfiguration_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion(), "current"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceReplicationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

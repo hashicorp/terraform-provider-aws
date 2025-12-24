@@ -87,7 +87,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffis.ResourceExperimentTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffis.ResourceExperimentTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

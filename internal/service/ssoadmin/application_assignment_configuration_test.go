@@ -74,7 +74,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_disappears_Application(t 
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplication, applicationResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

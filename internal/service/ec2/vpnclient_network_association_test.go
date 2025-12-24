@@ -114,7 +114,7 @@ func testAccClientVPNNetworkAssociation_disappears(t *testing.T, semaphore tfsyn
 				Config: testAccClientVPNNetworkAssociationConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceName, &assoc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

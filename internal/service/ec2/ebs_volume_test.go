@@ -75,7 +75,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

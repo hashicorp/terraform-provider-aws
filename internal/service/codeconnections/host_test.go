@@ -72,7 +72,7 @@ func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcodeconnections.ResourceHost, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeconnections.ResourceHost, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

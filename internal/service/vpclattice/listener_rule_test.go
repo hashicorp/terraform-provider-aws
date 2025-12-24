@@ -104,7 +104,7 @@ func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListenerRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

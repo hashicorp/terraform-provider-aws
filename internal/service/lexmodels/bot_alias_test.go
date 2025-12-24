@@ -356,7 +356,7 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceBotAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -76,7 +76,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

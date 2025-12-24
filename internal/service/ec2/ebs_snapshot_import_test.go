@@ -62,7 +62,7 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshotImport(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSSnapshotImport(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

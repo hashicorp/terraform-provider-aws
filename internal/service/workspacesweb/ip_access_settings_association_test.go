@@ -87,7 +87,7 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

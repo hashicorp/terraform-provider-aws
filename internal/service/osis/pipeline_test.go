@@ -84,7 +84,7 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfosis.ResourcePipeline, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipeline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

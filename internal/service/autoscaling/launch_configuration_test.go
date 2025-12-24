@@ -85,7 +85,7 @@ func TestAccAutoScalingLaunchConfiguration_disappears(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceLaunchConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceLaunchConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -217,7 +217,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckAMIExists(ctx, amiCopyResourceName, &ami),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMI(), amiCopyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceAMI(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

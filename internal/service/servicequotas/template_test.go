@@ -92,7 +92,7 @@ func testAccTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaConcurrentExecQuotaCode, lambdaServiceCode, lambdaConcurrentExecValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicequotas.ResourceTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

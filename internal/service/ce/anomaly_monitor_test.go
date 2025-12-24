@@ -67,7 +67,7 @@ func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceAnomalyMonitor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceAnomalyMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -225,7 +225,7 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceIndex, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

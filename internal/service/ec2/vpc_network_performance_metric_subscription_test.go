@@ -71,7 +71,7 @@ func testAccNetworkPerformanceMetricSubscription_disappears(t *testing.T) {
 				Config: testAccVPCNetworkPerformanceMetricSubscription_basic(src, dst),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkPerformanceMetricSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkPerformanceMetricSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

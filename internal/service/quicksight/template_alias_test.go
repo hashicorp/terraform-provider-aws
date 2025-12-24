@@ -77,7 +77,7 @@ func TestAccQuickSightTemplateAlias_disappears(t *testing.T) {
 				Config: testAccTemplateAliasConfig_basic(rId, rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAliasExists(ctx, resourceName, &templateAlias),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTemplateAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceTemplateAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

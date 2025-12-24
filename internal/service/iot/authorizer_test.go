@@ -70,7 +70,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

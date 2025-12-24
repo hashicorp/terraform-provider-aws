@@ -74,7 +74,7 @@ func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

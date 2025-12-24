@@ -84,7 +84,7 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 				Config: testAccReplicaKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceReplicaKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceReplicaKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -99,7 +99,7 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceArchive(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

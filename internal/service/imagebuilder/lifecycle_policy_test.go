@@ -271,7 +271,7 @@ func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

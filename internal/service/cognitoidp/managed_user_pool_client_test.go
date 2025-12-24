@@ -1013,7 +1013,7 @@ func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testi
 				Config: testAccManagedUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), "aws_opensearch_domain.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), "aws_opensearch_domain.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

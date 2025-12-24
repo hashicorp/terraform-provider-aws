@@ -86,8 +86,8 @@ func TestAccIAMRolePoliciesExclusive_disappears_Role(t *testing.T) {
 					testAccCheckRolePolicyExists(ctx, rolePolicyResourceName, &rolePolicy),
 					testAccCheckRolePoliciesExclusiveExists(ctx, resourceName),
 					// Inline policy must be deleted before the role can be
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicy(), rolePolicyResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), roleResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicy(), rolePolicyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

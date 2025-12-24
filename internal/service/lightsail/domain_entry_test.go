@@ -176,7 +176,7 @@ func testAccDomainEntry_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDomainEntry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDomainEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

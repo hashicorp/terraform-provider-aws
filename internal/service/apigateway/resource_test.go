@@ -150,7 +150,7 @@ func TestAccAPIGatewayResource_disappears(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceResource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

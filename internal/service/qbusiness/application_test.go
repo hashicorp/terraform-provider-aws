@@ -74,7 +74,7 @@ func TestAccQBusinessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfqbusiness.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

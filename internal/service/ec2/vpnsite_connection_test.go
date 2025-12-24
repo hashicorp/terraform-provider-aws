@@ -1648,7 +1648,7 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 				Config: testAccVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -72,7 +72,7 @@ func TestAccServiceCatalogAppRegistryApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicecatalogappregistry.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

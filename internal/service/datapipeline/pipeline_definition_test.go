@@ -68,7 +68,7 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
 				),
 			},
 		},

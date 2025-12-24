@@ -153,7 +153,7 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 				Config: testAccS3AccessPointAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffsx.ResourceS3AccessPointAttachment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffsx.ResourceS3AccessPointAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

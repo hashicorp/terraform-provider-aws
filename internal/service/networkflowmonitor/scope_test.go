@@ -84,7 +84,7 @@ func testAccScope_disappears(t *testing.T) {
 				Config: testAccScopeConfig_basic(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceScope, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkflowmonitor.ResourceScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

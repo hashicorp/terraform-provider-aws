@@ -86,7 +86,7 @@ func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 				Config: testAccSpotInstanceRequestConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotInstanceRequest(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSpotInstanceRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

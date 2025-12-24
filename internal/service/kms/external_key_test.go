@@ -89,7 +89,7 @@ func TestAccKMSExternalKey_disappears(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceExternalKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

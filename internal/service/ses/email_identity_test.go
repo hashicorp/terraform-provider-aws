@@ -76,7 +76,7 @@ func testAccEmailIdentity_disappears(t *testing.T) {
 				Config: testAccEmailIdentityConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceEmailIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceEmailIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -164,7 +164,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceProject, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

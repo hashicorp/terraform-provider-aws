@@ -276,7 +276,7 @@ func TestAccELBV2Listener_disappears(t *testing.T) {
 				Config: testAccListenerConfig_Application_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

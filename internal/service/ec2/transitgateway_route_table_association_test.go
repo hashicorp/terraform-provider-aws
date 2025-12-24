@@ -89,7 +89,7 @@ func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T, semapho
 				Config: testAccTransitGatewayRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTableAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -75,7 +75,7 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 				Config: testAccOrganizationAdminAccountRegistrationConfig_basic(adminAccountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountRegistrationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -71,7 +71,7 @@ func TestAccIoTBillingGroup_disappears(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiot.NewResourceBillingGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfiot.NewResourceBillingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

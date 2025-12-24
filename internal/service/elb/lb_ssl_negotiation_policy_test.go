@@ -112,7 +112,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceSSLNegotiationPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceSSLNegotiationPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

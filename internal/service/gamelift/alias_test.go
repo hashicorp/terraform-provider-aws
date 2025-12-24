@@ -221,7 +221,7 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_basic(aliasName, description, message),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

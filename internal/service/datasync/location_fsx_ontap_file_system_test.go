@@ -86,7 +86,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -66,7 +66,7 @@ func testAccIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresourceexplorer2.ResourceIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

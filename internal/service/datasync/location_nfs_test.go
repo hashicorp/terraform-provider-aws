@@ -107,7 +107,7 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationNFS(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationNFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

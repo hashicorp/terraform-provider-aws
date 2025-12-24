@@ -90,7 +90,7 @@ func TestAccCloudFrontTrustStore_disappears(t *testing.T) {
 				Config: testAccTrustStoreConfig_basic(rName, objectKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &truststore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceTrustStore, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceTrustStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

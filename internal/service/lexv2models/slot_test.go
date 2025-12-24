@@ -282,7 +282,7 @@ func TestAccLexV2ModelsSlot_disappears(t *testing.T) {
 				Config: testAccSlotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceSlot, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceSlot, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

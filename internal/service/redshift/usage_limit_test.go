@@ -79,7 +79,7 @@ func TestAccRedshiftUsageLimit_disappears(t *testing.T) {
 				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceUsageLimit(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceUsageLimit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

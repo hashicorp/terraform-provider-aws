@@ -71,7 +71,7 @@ func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 				Config: testAccNetworkInterfacePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterfacePermission, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceNetworkInterfacePermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

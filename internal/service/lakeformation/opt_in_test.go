@@ -129,7 +129,7 @@ func testAccOptIn_disappears(t *testing.T) {
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceOptIn, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceOptIn, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},

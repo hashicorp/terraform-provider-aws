@@ -113,7 +113,7 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 				Config: testAccTopicConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

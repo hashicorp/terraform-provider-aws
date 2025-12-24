@@ -81,7 +81,7 @@ func TestAccBackupLogicallyAirGappedVault_disappears(t *testing.T) {
 				Config: testAccLogicallyAirGappedVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogicallyAirGappedVaultExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceLogicallyAirGappedVault, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceLogicallyAirGappedVault, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -85,7 +85,7 @@ func TestAccAPIGatewayV2Authorizer_disappears(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceAuthorizer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

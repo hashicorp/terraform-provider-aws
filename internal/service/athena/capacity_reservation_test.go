@@ -84,7 +84,7 @@ func TestAccAthenaCapacityReservation_disappears(t *testing.T) {
 				Config: testAccCapacityReservationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfathena.ResourceCapacityReservation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfathena.ResourceCapacityReservation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

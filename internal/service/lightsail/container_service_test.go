@@ -93,7 +93,7 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceContainerService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceContainerService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

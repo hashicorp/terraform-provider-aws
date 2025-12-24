@@ -223,7 +223,7 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceAPIKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceAPIKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -102,7 +102,7 @@ func TestAccNetworkFirewallVPCEndpointAssociation_disappears(t *testing.T) {
 				Config: testAccVPCEndpointAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceVPCEndpointAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceVPCEndpointAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -149,7 +149,7 @@ func TestAccDataZoneGlossary_disappears(t *testing.T) {
 				Config: testAccGlossaryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlossaryExists(ctx, resourceName, &glossary),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceGlossary, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceGlossary, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -120,7 +120,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceExtensionAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceExtensionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

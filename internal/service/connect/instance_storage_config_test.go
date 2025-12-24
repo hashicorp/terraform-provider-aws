@@ -465,7 +465,7 @@ func testAccInstanceStorageConfig_disappears(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceInstanceStorageConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceInstanceStorageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

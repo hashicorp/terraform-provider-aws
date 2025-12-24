@@ -103,7 +103,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

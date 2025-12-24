@@ -160,7 +160,7 @@ func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
 				Config: testAccTrustAnchorConfig_basic(rName, caCommonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrolesanywhere.ResourceTrustAnchor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrolesanywhere.ResourceTrustAnchor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -94,7 +94,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

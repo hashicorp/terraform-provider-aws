@@ -164,7 +164,7 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappautoscaling.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

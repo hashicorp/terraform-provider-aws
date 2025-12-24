@@ -71,7 +71,7 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 				Config: testAccPreparedStatementConfig_basic(rName, condition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPreparedStatementExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourcePreparedStatement(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourcePreparedStatement(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

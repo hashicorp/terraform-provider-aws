@@ -87,7 +87,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 				Config: testAccGrantAccepterConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
-					acctest.CheckResourceDisappears(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappearsWithProvider(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

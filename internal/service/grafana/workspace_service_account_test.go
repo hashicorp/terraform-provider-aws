@@ -71,7 +71,7 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

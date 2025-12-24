@@ -105,7 +105,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, acctest.CtDisappears, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappintegrations.ResourceEventIntegration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappintegrations.ResourceEventIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

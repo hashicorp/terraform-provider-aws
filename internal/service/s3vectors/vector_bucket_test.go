@@ -100,7 +100,7 @@ func TestAccS3VectorsVectorBucket_disappears(t *testing.T) {
 				Config: testAccVectorBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVectorBucketExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceVectorBucket, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceVectorBucket, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

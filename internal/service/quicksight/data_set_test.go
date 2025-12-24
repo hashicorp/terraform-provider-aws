@@ -76,7 +76,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

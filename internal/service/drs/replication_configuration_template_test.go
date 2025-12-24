@@ -113,7 +113,7 @@ func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

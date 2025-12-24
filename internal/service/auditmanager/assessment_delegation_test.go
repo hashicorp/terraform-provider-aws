@@ -73,7 +73,7 @@ func TestAccAuditManagerAssessmentDelegation_disappears(t *testing.T) {
 				Config: testAccAssessmentDelegationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceAssessmentDelegation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceAssessmentDelegation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

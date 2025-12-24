@@ -63,7 +63,7 @@ func TestAccS3ControlBucketPolicy_disappears(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceBucketPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

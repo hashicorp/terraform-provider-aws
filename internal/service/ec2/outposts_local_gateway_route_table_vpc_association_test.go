@@ -65,7 +65,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_disappears(t *testin
 				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

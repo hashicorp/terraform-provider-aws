@@ -74,7 +74,7 @@ func testAccClientVPNAuthorizationRule_disappears(t *testing.T, semaphore tfsync
 				Config: testAccClientVPNAuthorizationRuleConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNAuthorizationRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNAuthorizationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T, semapho
 				Config: testAccClientVPNAuthorizationRuleConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNEndpoint(), "aws_ec2_client_vpn_endpoint.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNEndpoint(), "aws_ec2_client_vpn_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

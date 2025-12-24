@@ -112,7 +112,7 @@ func TestAccS3BucketReplicationConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketReplicationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

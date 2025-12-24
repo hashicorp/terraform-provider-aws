@@ -120,7 +120,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -72,7 +72,7 @@ func testAccDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 				Config: testAccDRTAccessRoleARNAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDRTAccessRoleARNAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessRoleARNAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceDRTAccessRoleARNAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

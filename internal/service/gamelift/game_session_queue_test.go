@@ -201,7 +201,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceGameSessionQueue(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceGameSessionQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

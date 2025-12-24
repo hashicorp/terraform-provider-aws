@@ -95,7 +95,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -71,7 +71,7 @@ func TestAccLocationPlaceIndex_disappears(t *testing.T) {
 				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourcePlaceIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourcePlaceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

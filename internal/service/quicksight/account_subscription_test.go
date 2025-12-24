@@ -75,7 +75,7 @@ func testAccAccountSubscription_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSubscriptionDisableTerminationProtection(ctx, resourceName), // Workaround to remove termination protection
 					testAccCheckAccountSubscriptionExists(ctx, resourceName, &accountsubscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAccountSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceAccountSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

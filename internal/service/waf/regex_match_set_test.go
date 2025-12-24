@@ -186,7 +186,7 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(ctx, resourceName, &matchSet),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceRegexMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceRegexMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

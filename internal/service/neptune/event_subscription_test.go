@@ -76,7 +76,7 @@ func TestAccNeptuneEventSubscription_disappears(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceEventSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

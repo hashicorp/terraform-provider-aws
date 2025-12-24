@@ -227,7 +227,7 @@ func TestAccNotificationsEventRule_disappears(t *testing.T) {
 				Config: testAccEventRuleConfig_basic(rConfigName, rEventPattern, rEventType, rRegion1, rRegion2, rSource),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventRuleExists(ctx, resourceName, &eventrule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceEventRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceEventRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

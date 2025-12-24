@@ -124,7 +124,7 @@ func TestAccFISTargetAccountConfiguration_disappears(t *testing.T) {
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffis.ResourceTargetAccountConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffis.ResourceTargetAccountConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

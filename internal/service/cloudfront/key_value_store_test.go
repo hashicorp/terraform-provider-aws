@@ -74,7 +74,7 @@ func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

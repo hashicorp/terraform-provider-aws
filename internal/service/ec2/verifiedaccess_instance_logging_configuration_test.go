@@ -397,7 +397,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

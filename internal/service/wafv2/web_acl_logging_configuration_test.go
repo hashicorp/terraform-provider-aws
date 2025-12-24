@@ -412,7 +412,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACLLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -511,7 +511,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_Disappears_webACL(t *testing.T) {
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACL(), webACLResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

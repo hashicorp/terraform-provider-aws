@@ -69,7 +69,7 @@ func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
 				Config: testAccEBSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

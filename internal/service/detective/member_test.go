@@ -75,7 +75,7 @@ func testAccMember_disappears(t *testing.T) {
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdetective.ResourceMember(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

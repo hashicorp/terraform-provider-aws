@@ -203,8 +203,8 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -156,7 +156,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

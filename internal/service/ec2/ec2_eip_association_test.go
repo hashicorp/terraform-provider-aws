@@ -64,7 +64,7 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 				Config: testAccEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

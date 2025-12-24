@@ -59,7 +59,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 				Config: testAccDomainIdentityConfig_basic(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

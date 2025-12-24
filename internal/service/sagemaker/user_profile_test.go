@@ -445,7 +445,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

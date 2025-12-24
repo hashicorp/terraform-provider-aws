@@ -203,7 +203,7 @@ func testAccDataLake_disappears(t *testing.T) {
 				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceDataLake, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

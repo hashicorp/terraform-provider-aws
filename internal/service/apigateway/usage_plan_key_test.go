@@ -70,7 +70,7 @@ func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceUsagePlanKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceUsagePlanKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

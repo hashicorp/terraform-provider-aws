@@ -80,7 +80,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppAuthorization, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),

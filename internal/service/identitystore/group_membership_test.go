@@ -78,7 +78,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroupMembership(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

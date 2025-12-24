@@ -82,7 +82,7 @@ func TestAccSWFDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfswf.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfswf.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

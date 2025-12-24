@@ -128,7 +128,7 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAnomalyDetector, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

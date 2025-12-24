@@ -380,7 +380,7 @@ func TestAccVPCSecurityGroupRule_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupRuleConfig_egress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

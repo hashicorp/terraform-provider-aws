@@ -129,7 +129,7 @@ func TestAccMediaLiveInput_disappears(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceInput(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceInput(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

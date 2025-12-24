@@ -271,7 +271,7 @@ func TestAccBedrockAgentCoreMemoryStrategy_disappears(t *testing.T) {
 				Config: testAccMemoryStrategyConfig(rName, "SEMANTIC", "Example Description", "default"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemoryStrategyExists(ctx, resourceName, &memorystrategy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceMemoryStrategy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceMemoryStrategy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -96,7 +96,7 @@ func TestAccPinpointApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceApp(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -88,8 +88,8 @@ func TestAccIAMGroupPoliciesExclusive_disappears_Group(t *testing.T) {
 					testAccCheckGroupPolicyExists(ctx, groupPolicyResourceName, &groupPolicy),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					// Inline policy must be deleted before the group can be
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroupPolicy(), groupPolicyResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroup(), groupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicy(), groupPolicyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), groupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

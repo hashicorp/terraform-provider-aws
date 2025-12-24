@@ -71,7 +71,7 @@ func TestAccAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
 				Config: testAccIntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceIntegrationResponse(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceIntegrationResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

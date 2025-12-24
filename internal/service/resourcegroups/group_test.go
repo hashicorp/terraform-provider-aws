@@ -92,7 +92,7 @@ func TestAccResourceGroupsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfresourcegroups.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

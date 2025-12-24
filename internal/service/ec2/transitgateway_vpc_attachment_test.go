@@ -92,7 +92,7 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T, semaphore tfsyn
 				Config: testAccTransitGatewayVPCAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

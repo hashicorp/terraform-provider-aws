@@ -80,7 +80,7 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},

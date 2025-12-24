@@ -94,7 +94,7 @@ func TestAccTransferWebApp_disappears(t *testing.T) {
 				Config: testAccWebAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebApp, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceWebApp, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

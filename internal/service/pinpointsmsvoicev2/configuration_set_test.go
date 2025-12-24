@@ -78,7 +78,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_disappears(t *testing.T) {
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceConfigurationSet, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceConfigurationSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

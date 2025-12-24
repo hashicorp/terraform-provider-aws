@@ -360,7 +360,7 @@ func TestAccECRPublicRepository_disappears(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepository(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecrpublic.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -63,7 +63,7 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -153,7 +153,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_disappears(t *testin
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

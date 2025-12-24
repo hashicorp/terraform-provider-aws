@@ -77,7 +77,7 @@ func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T, semaph
 				Config: testAccTransitGatewayPolicyTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPolicyTableAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPolicyTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

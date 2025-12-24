@@ -143,7 +143,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 				Config: testAccCodePipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourcePipeline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodepipeline.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

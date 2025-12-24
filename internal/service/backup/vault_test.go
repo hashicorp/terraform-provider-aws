@@ -77,7 +77,7 @@ func TestAccBackupVault_disappears(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVault(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

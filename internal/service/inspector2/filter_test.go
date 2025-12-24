@@ -753,7 +753,7 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceFilter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfinspector2.ResourceFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

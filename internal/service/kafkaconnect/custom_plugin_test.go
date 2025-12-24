@@ -72,7 +72,7 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
