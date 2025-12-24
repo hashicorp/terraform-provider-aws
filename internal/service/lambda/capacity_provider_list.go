@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,6 +32,7 @@ type listResourceCapacityProvider struct {
 }
 
 func (r *listResourceCapacityProvider) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	conn := r.Meta().LambdaClient(ctx)
 	var query capacityProviderListModel
 
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
@@ -41,10 +41,6 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 			return
 		}
 	}
-
-	awsClient := r.Meta()
-	conn := awsClient.LambdaClient(ctx)
-	ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
@@ -63,7 +59,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				return
 			}
 
-			diags := r.Flatten(ctx, awsClient, &data, &result, func() {
+			diags := r.Flatten(ctx, r.Meta(), &data, &result, func() {
 				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
