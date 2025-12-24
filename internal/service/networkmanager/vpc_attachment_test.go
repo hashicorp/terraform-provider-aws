@@ -576,6 +576,18 @@ func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
 				),
 			},
+			{
+				Config: testAccVPCAttachmentConfig_routingPolicyLabelRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", ""),
+				),
+			},
 		},
 	})
 }
@@ -900,4 +912,73 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   }
 }
 `, rName, label))
+}
+
+func testAccVPCAttachmentConfig_routingPolicyLabelRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = data.aws_region.current.region
+    }
+  }
+
+  segments {
+    name                          = "segment"
+    require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-exists"
+      key  = "segment"
+    }
+
+    action {
+      association_method = "tag"
+      tag_value_of_key   = "segment"
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns          = aws_subnet.test[*].arn
+  core_network_id      = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn              = aws_vpc.test.arn
+
+  tags = {
+    segment = "segment"
+  }
+}
+`, rName))
 }
