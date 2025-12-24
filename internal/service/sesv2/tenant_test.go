@@ -52,9 +52,11 @@ func TestAccSESV2Tenant_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "tenant_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "tenant_name",
 			},
 		},
 	})
