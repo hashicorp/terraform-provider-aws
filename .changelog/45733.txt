@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ecr_repository_creation_template: Add support for `CREATE_ON_PUSH` value in `applied_for` attribute
+```
+```release-note:enhancement
+resource/aws_ecr_repository_creation_template: Add support for `CREATE_ON_PUSH` value in `applied_for` argument
+```
+
