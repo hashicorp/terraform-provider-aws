@@ -655,7 +655,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 						),
 					{{- end }}
 				{{- else if $value.IsCustomInherentRegionIdentity }}
-					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }},
+					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }}, {{ .CustomInherentRegionParser }},
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),

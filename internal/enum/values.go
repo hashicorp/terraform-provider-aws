@@ -5,6 +5,7 @@ package enum
 
 import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type Valueser[T ~string] interface {
@@ -13,8 +14,7 @@ type Valueser[T ~string] interface {
 }
 
 func EnumValues[T Valueser[T]]() []T {
-	var zero T
-	return zero.Values()
+	return inttypes.Zero[T]().Values()
 }
 
 func Values[T Valueser[T]]() []string {

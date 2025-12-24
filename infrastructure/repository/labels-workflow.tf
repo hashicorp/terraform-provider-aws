@@ -101,6 +101,10 @@ variable "workflow_labels" {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
     },
+    "list-resource" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to list resource."
+    },
     "localstack" = {
       color       = "6577e7", # color:localstack blue-mid
       description = "LocalStack-specific issues and PRs."
