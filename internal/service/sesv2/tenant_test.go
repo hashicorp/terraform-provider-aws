@@ -135,10 +135,7 @@ func testAccCheckTenantExists(ctx context.Context, n string) resource.TestCheckF
 func testAccTenantConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_tenant" "test" {
-  tenant_name             = %[1]q
-	tags = {
-		"testkey" = "testvalue"
-	}
+  tenant_name = %[1]q
 }
 `, rName)
 }
