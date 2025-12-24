@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,37 +63,26 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				return
 			}
 
-			if diags := r.RunResultInterceptors(ctx, listresource.Before, awsClient, &result); diags.HasError() {
-				result.Diagnostics.Append(diags...)
-				yield(result)
-				return
-			}
+			diags := r.Flatten(ctx, awsClient, &data, &result, func() {
+				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
+					result.Diagnostics.Append(diags...)
+					yield(result)
+					return
+				}
 
-			if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
-				result.Diagnostics.Append(diags...)
-				yield(result)
-				return
-			}
+				cpARN, err := arn.Parse(data.ARN.ValueString())
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
 
-			cpARN, err := arn.Parse(data.ARN.ValueString())
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			name := strings.TrimPrefix(cpARN.Resource, "capacity-provider:")
-			data.Name = flex.StringValueToFramework(ctx, name)
-
-			if diags := result.Resource.Set(ctx, &data); diags.HasError() {
-				result.Diagnostics.Append(diags...)
-				yield(result)
-				return
-			}
-
-			result.DisplayName = name
-
-			if diags := r.RunResultInterceptors(ctx, listresource.After, awsClient, &result); diags.HasError() {
+				name := strings.TrimPrefix(cpARN.Resource, "capacity-provider:")
+				data.Name = flex.StringValueToFramework(ctx, name)
+				result.DisplayName = name
+			})
+			
+			if diags.HasError() {
 				result.Diagnostics.Append(diags...)
 				yield(result)
 				return

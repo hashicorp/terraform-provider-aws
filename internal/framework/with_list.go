@@ -23,16 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Lister is an interface for resources that support List operations
 type Lister interface {
 	AppendResultInterceptor(listresource.ListResultInterceptor)
 }
 
 var _ Lister = &WithList{}
 
+// WithList provides common functionality for ListResources
 type WithList struct {
 	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor
 }
+
+type flattenFunc func()
 
 func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor) {
 	w.interceptors = append(w.interceptors, interceptor)
@@ -42,7 +46,7 @@ func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
 	return w.interceptors
 }
 
-func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, result *list.ListResult) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
 	params := listresource.InterceptorParams{
 		C:      awsClient,
@@ -67,6 +71,29 @@ func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
+func (w *WithList) Flatten(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, result)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	f()
+
+	diags.Append(result.Resource.Set(ctx, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, result)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
+}
+
 func (w *WithList) InitDataFields(ctx context.Context, data any, result list.ListResult, fieldNames ...string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -79,14 +106,8 @@ func (w *WithList) InitDataFields(ctx context.Context, data any, result list.Lis
 
 	objData := dereferencePointer(reflect.ValueOf(data))
 
-	valRef := map[string]string{
-		names.AttrTagsAll:  "TagsAll",
-		names.AttrTags:     "Tags",
-		names.AttrTimeouts: "Timeouts",
-	}
-
 	for _, fieldName := range fieldNames {
-		mappedName, ok := valRef[fieldName]
+		mappedName, ok := tagToStructFieldMap(fieldName)
 		if !ok {
 			continue
 		}
@@ -167,4 +188,15 @@ func dereferencePointer(value reflect.Value) reflect.Value {
 
 func implementsAttrValue(field reflect.Value) bool {
 	return field.Type().Implements(reflect.TypeFor[attr.Value]())
+}
+
+func tagToStructFieldMap(tag string) (string, bool) {
+	values := map[string]string{
+		names.AttrTagsAll:  "TagsAll",
+		names.AttrTags:     "Tags",
+		names.AttrTimeouts: "Timeouts",
+	}
+
+	val, ok := values[tag]
+	return val, ok
 }
