@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_networkmanager_vpc_attachment: Support updating `routing_policy_label` argument in place
+resource/aws_networkmanager_vpc_attachment: Enable in-place updates of `routing_policy_label` argument
 ```
