@@ -206,6 +206,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  resourceTag,
+			TypeName: "aws_organizations_tag",
+			Name:     "Organizations Resource Tag",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
