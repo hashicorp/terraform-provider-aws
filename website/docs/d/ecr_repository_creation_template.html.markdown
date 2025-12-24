@@ -29,7 +29,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `applied_for` - Which features this template applies to. Contains one or more of `PULL_THROUGH_CACHE` or `REPLICATION`.
+* `applied_for` - Which features this template applies to. Contains one or more of `PULL_THROUGH_CACHE`, `REPLICATION`, or `CREATE_ON_PUSH`.
 * `custom_role_arn` - The ARN of the custom role used for repository creation.
 * `description` - The description for this template.
 * `encryption_configuration` - Encryption configuration for any created repositories. See [Encryption Configuration](#encryption-configuration) below.
