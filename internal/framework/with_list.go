@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -149,14 +148,6 @@ func (w *WithList) InitDataFields(ctx context.Context, data any, result list.Lis
 	}
 
 	return diags
-}
-
-type withListResourceConfigSchema struct{}
-
-func (w *withListResourceConfigSchema) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-	}
 }
 
 func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
