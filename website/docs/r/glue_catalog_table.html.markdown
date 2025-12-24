@@ -103,6 +103,7 @@ The following arguments are optional:
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
+* `view_definition` - (Optional) A structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition) below.
 
 ### open_table_format_input
 
@@ -194,6 +195,21 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
 * `region` - (Optional) Region of the target table.
+
+### view_definition
+
+* `representations` - (Optional) A list of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations) below.
+* `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
+* `definer` - (Optional) The definer of a view in SQL.
+* `sub_objects` - (Optional) A list of base table ARNs that make up the view.
+
+#### representations
+
+* `dialect` - (Optional) A parameter that specifies the engine type of a specific representation. Valid values are `REDSHIFT`, `ATHENA`, and `SPARK`.
+* `dialect_version` - (Optional) A parameter that specifies the version of the engine of a specific representation.
+* `validation_connection` - (Optional) The name of the connection to be used to validate the specific representation of the view.
+* `view_expanded_text` - (Optional) A string that represents the SQL query that describes the view with expanded resource ARNs.
+* `view_original_text` - (Optional) A string that represents the original SQL query that describes the view.
 
 ## Attribute Reference
 
