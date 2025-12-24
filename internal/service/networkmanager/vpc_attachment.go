@@ -331,14 +331,27 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange("routing_policy_label") {
-		input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
-			AttachmentId:       aws.String(d.Id()),
-			CoreNetworkId:      aws.String(d.Get("core_network_id").(string)),
-			RoutingPolicyLabel: aws.String(d.Get("routing_policy_label").(string)),
-		}
-		_, err := conn.PutAttachmentRoutingPolicyLabel(ctx, &input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+		if v, ok := d.GetOk("routing_policy_label"); ok {
+			// Set or update routing policy label
+			input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
+				AttachmentId:       aws.String(d.Id()),
+				CoreNetworkId:      aws.String(d.Get("core_network_id").(string)),
+				RoutingPolicyLabel: aws.String(v.(string)),
+			}
+			_, err := conn.PutAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
+		} else {
+			// Remove routing policy label
+			input := networkmanager.RemoveAttachmentRoutingPolicyLabelInput{
+				AttachmentId:  aws.String(d.Id()),
+				CoreNetworkId: aws.String(d.Get("core_network_id").(string)),
+			}
+			_, err := conn.RemoveAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
 		}
 		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) routing policy label update: %s", d.Id(), err)
