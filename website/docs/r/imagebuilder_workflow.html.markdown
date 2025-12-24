@@ -76,6 +76,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the workflow.
 * `date_created` - Date the workflow was created.
+* `latest_major_version_arn` - Amazon Resource Name (ARN) of the latest major version of the workflow.
+* `latest_minor_version_arn` - Amazon Resource Name (ARN) of the latest minor version of the workflow.
+* `latest_patch_version_arn` - Amazon Resource Name (ARN) of the latest patch version of the workflow.
+* `latest_version_arn` - Amazon Resource Name (ARN) of the latest version of the workflow.
 * `owner` - Owner of the workflow.
 
 ## Import
