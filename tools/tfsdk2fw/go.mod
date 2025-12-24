@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.57.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connect v1.152.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.278.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.279.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.70.0 // indirect
@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.71.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.35.2 // indirect
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.57.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.15.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.15.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.15 // indirect
@@ -310,7 +310,7 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0 // indirect
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.69 // indirect
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.70 // indirect
 	github.com/hashicorp/awspolicyequivalence v1.7.0 // indirect
 	github.com/hashicorp/cli v1.1.7 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

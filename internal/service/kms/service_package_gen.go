@@ -170,6 +170,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  aliasResourceAsListResource,
+			TypeName: "aws_kms_alias",
+			Name:     "Alias",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
 			Factory:  keyResourceAsListResource,
 			TypeName: "aws_kms_key",
 			Name:     "Key",

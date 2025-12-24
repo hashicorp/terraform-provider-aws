@@ -44,6 +44,7 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
 // @Testing(preIdentityVersion="v6.25.0")
+// @Testing(preCheck="testAccCapacityProviderPreCheck")
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 

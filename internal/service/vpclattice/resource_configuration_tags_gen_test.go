@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,6 +28,9 @@ func TestAccVPCLatticeResourceConfiguration_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -210,6 +214,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_null(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -273,6 +280,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyMap(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -324,6 +334,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_AddOnUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -405,6 +418,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnCreate(t *testing.T)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -496,6 +512,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Add(t *testin
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -636,6 +655,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Replace(t *te
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -727,6 +749,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_providerOnly(t *tes
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -909,6 +934,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nonOverlapping(t *t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1070,6 +1098,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_overlapping(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1247,6 +1278,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToProviderOnl
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1338,6 +1372,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToResourceOnl
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1428,6 +1465,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyResourceTag(t 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1495,6 +1535,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyProviderOnlyTa
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1554,6 +1597,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullOverlappingReso
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1624,6 +1670,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullNonOverlappingR
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1696,6 +1745,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnCreate(t *testing
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1752,6 +1804,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Add(t *tes
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1850,6 +1905,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Replace(t 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1938,6 +1996,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_DefaultTag(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -2101,6 +2162,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_ResourceTag(
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
