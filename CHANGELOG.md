@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * data-source/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * data-source/aws_route53_resolver_firewall_rules: Add `dns_threat_protection`, `confidence_threshold`, `firewall_threat_protection_id`, `firewall_domain_redirection_action`, and `q_type` attributes ([#45711](https://github.com/hashicorp/terraform-provider-aws/issues/45711))
+* data-source/aws_route53_resolver_rule: Add `target_ips` attribute ([#45492](https://github.com/hashicorp/terraform-provider-aws/issues/45492))
 * data-source/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` attributes ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 * data-source/aws_vpc_endpoint: Promote `service_region` and `vpc_endpoint_type` from attributes to arguments for filtering ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 * resource/aws_alb: Enforce tag policy compliance for the `elasticloadbalancing:loadbalancer` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
