@@ -63,5 +63,5 @@ import {
 Using `terraform import`, import `aws_organizations_tag` using the Organizations resource identifier and key, separated by a comma (`,`). For example:
 
 ```console
-$ terraform import aws_organizations_tag.example ou-1234567,ExampleKey
+% terraform import aws_organizations_tag.example ou-1234567,ExampleKey
 ```
