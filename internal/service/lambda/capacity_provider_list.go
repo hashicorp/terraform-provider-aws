@@ -63,7 +63,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				return
 			}
 
-			diags := r.Flatten(ctx, r.Meta(), &data, &result, func() {
+			diags := r.SetResult(ctx, r.Meta(), &data, &result, func() {
 				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

@@ -70,7 +70,7 @@ func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *WithList) Flatten(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) diag.Diagnostics {
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, result)...)
