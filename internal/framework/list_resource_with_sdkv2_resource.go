@@ -22,6 +22,8 @@ type WithRegionSpec interface {
 }
 
 type ListResourceWithSDKv2Resource struct {
+	withListResourceConfigSchema
+	ResourceWithConfigure
 	resourceSchema *schema.Resource
 	identitySpec   inttypes.Identity
 	identitySchema *schema.ResourceIdentity

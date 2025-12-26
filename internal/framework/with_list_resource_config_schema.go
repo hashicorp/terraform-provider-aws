@@ -15,5 +15,6 @@ type withListResourceConfigSchema struct{}
 func (w *withListResourceConfigSchema) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{},
+		Blocks:     map[string]listschema.Block{},
 	}
 }
