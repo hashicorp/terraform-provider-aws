@@ -150,7 +150,6 @@ func (r *listResource{{ .ListResource }}) List(ctx context.Context, request list
 		}
 	}
 }
-
 {{ if .IncludeComments }}
 // TIP: ==== DATA STRUCTURES ====
 // With Terraform Plugin-Framework configurations are deserialized into
@@ -168,7 +167,6 @@ func (r *listResource{{ .ListResource }}) List(ctx context.Context, request list
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
 }
-
 {{ if .IncludeComments }}
 // TIP: ==== LISTING FUNCTION ====
 // This listing function is written using an iterator pattern to handle pagination
