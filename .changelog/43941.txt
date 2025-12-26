@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add `is_default` argument to query the default listener rule
+```
