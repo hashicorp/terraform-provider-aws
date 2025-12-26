@@ -171,6 +171,46 @@ func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRuleGroupAssociation_withVisibilityConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+	ruleGroupResourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_withVisibilityConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", fmt.Sprintf("%s-association", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "10"),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
+					resource.TestCheckResourceAttrPair(resourceName, "web_acl_arn", webACLResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "rule_group_reference.0.arn", ruleGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
@@ -562,6 +602,289 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ruleActionOverride(
 	})
 }
 
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level", "COMMON"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfigUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level", "TARGETED"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_acfpRuleSet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesACFPRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_acfp_rule_set.0.creation_path":                                            "/creation",
+						"aws_managed_rules_acfp_rule_set.0.registration_page_path":                                   "/registration",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":            "/email",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier":         "/password",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.0": "/phone1",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.1": "/phone2",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.0":      "home",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.1":      "work",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                        "JSON",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier":         "/username",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_acfpRuleSetUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesACFPRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                                     acctest.CtTrue,
+						"aws_managed_rules_acfp_rule_set.0.creation_path":                                            "/creation",
+						"aws_managed_rules_acfp_rule_set.0.registration_page_path":                                   "/registration",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":            "/email",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier":         "/pass",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.0": "/phone3",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.0":      "mobile",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                        "JSON",
+						"aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier":         "/user",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupConfig_AntiDDoSRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_antiDDoSRuleSet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesAntiDDoSRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.usage_of_action":                              "ENABLED",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.#":              "2",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.0.regex_string": "\\/api\\/",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.1.regex_string": "jpg",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.sensitivity":                                  "MEDIUM",
+						"aws_managed_rules_anti_ddos_rule_set.0.sensitivity_to_block":                                                                 "HIGH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_antiDDoSRuleSetWithDefaultSensitivity(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesAntiDDoSRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.usage_of_action":                              "ENABLED",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.#":              "2",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.0.regex_string": "\\/api\\/",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.1.regex_string": "jpg",
+						"aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.sensitivity":                                  "HIGH",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_atpRuleSet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesATPRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/1/signin",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.0.identifier": "/password",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.#":            "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier": "/username",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.payload_type":                "JSON",
+						"aws_managed_rules_atp_rule_set.0.response_inspection.#":                            "0",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_atpRuleSetUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesATPRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_atp_rule_set.0.enable_regex_in_path":                             acctest.CtTrue,
+						"aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/2/signin",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.0.identifier": "/pass",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.#":            "1",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier": "/user",
+						"aws_managed_rules_atp_rule_set.0.request_inspection.0.payload_type":                "JSON",
+						"aws_managed_rules_atp_rule_set.0.response_inspection.#":                            "0",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_botControl(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					// Check top-level attributes
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesBotControlRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+
+					// Verify Managed Rule Group Config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "managed_rule_group.0.managed_rule_group_configs.*", map[string]string{
+						"aws_managed_rules_bot_control_rule_set.0.inspection_level":        "TARGETED",
+						"aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": acctest.CtTrue,
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
@@ -834,6 +1157,78 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_withVisibilityConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "%[1]s-association"
+  priority    = 10
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.test.arn
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, rName)
@@ -1494,6 +1889,469 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
       name = "GenericRFI_BODY"
       action_to_use {
         count {}
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesBotControlRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level = "COMMON"
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfigUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesBotControlRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level = "TARGETED"
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_acfpRuleSet(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+
+    name        = "AWSManagedRulesACFPRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_acfp_rule_set {
+        creation_path          = "/creation"
+        registration_page_path = "/registration"
+        request_inspection {
+          email_field {
+            identifier = "/email"
+          }
+          password_field {
+            identifier = "/password"
+          }
+          phone_number_fields {
+            identifiers = ["/phone1", "/phone2"]
+          }
+          address_fields {
+            identifiers = ["home", "work"]
+          }
+          payload_type = "JSON"
+          username_field {
+            identifier = "/username"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_acfpRuleSetUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesACFPRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_acfp_rule_set {
+        enable_regex_in_path   = true
+        creation_path          = "/creation"
+        registration_page_path = "/registration"
+
+        request_inspection {
+          email_field {
+            identifier = "/email"
+          }
+          password_field {
+            identifier = "/pass"
+          }
+          phone_number_fields {
+            identifiers = ["/phone3"]
+          }
+          address_fields {
+            identifiers = ["mobile"]
+          }
+          payload_type = "JSON"
+          username_field {
+            identifier = "/user"
+          }
+        }
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_antiDDoSRuleSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+
+    name        = "AWSManagedRulesAntiDDoSRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_anti_ddos_rule_set {
+        client_side_action_config {
+          challenge {
+            usage_of_action = "ENABLED"
+            exempt_uri_regular_expression {
+              regex_string = "\\/api\\/"
+            }
+            exempt_uri_regular_expression {
+              regex_string = "jpg"
+            }
+            sensitivity = "MEDIUM"
+          }
+        }
+        sensitivity_to_block = "HIGH"
+      }
+    }
+
+  }
+
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_antiDDoSRuleSetWithDefaultSensitivity(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesAntiDDoSRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_anti_ddos_rule_set {
+        client_side_action_config {
+          challenge {
+            usage_of_action = "ENABLED"
+            exempt_uri_regular_expression {
+              regex_string = "\\/api\\/"
+            }
+            exempt_uri_regular_expression {
+              regex_string = "jpg"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_atpRuleSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesATPRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_atp_rule_set {
+        login_path = "/api/1/signin"
+
+        request_inspection {
+          password_field {
+            identifier = "/password"
+          }
+
+          payload_type = "JSON"
+
+          username_field {
+            identifier = "/username"
+          }
+        }
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_atpRuleSetUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesATPRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_atp_rule_set {
+        enable_regex_in_path = true
+        login_path           = "/api/2/signin"
+
+        request_inspection {
+          password_field {
+            identifier = "/pass"
+          }
+          payload_type = "JSON"
+          username_field {
+            identifier = "/user"
+          }
+        }
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroupConfig_botControl(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesBotControlRuleSet"
+    vendor_name = "AWS"
+
+    managed_rule_group_configs {
+      aws_managed_rules_bot_control_rule_set {
+        inspection_level        = "TARGETED"
+        enable_machine_learning = true
       }
     }
   }
