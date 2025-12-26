@@ -225,6 +225,8 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The user profile Amazon Resource Name (ARN).
+* `domain_id` - The domain ID of the resource.
+* `user_profile_name` - The user profile name.
 * `home_efs_file_system_uid` - The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
