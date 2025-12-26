@@ -51,6 +51,6 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the stream consumer.
 * `status` - Current status of the stream consumer.
 
-[1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
+[1]: https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html
 
 <!-- cache-key: cdktf-0.20.8 input-77f6ef084f65362b06bfa52aa7180df46916b9f41414986b7770811ac59bdba2 -->
