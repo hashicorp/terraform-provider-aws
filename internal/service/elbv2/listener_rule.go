@@ -141,8 +141,13 @@ func resourceListenerRule() *schema.Resource {
 									},
 									names.AttrClientSecret: {
 										Type:      schema.TypeString,
-										Required:  true,
 										Sensitive: true,
+										Optional:  true,
+									},
+									"use_existing_client_secret": {
+										Type:     schema.TypeBool,
+										Default:  false,
+										Optional: true,
 									},
 									names.AttrIssuer: {
 										Type:     schema.TypeString,
