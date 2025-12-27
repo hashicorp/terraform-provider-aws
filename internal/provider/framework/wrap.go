@@ -871,6 +871,9 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 
 		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
 
+		// interceptor to set default types for tags, tags_all, and timeouts objects
+		v.AppendResultInterceptor(listresource.DefaultObjectInterceptor())
+
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
 		}

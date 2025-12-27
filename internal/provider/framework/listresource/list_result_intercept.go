@@ -6,8 +6,10 @@ package listresource
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
@@ -38,6 +40,7 @@ const (
 
 type InterceptorParams struct {
 	C      *conns.AWSClient
+	Data   any
 	Result *list.ListResult
 	When   when
 }
@@ -220,6 +223,115 @@ func (r setRegionInterceptor) Read(ctx context.Context, params InterceptorParams
 	}
 
 	return diags
+}
+
+type defaultObjectInterceptor struct{}
+
+func DefaultObjectInterceptor() defaultObjectInterceptor {
+	return defaultObjectInterceptor{}
+}
+
+func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch params.When {
+	case Before:
+		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr {
+			diags.AddError(
+				"Internal Error",
+				"data object must be a pointer")
+			return diags
+		}
+
+		objData := dereferencePointer(reflect.ValueOf(params.Data))
+
+		for _, fieldName := range []string{names.AttrTags, names.AttrTagsAll, names.AttrTimeouts} {
+			mappedName, ok := tagToStructFieldMap(fieldName)
+			if !ok {
+				continue
+			}
+			field := objData.FieldByName(mappedName)
+			if !field.IsValid() {
+				continue
+			}
+
+			if !implementsAttrValue(field) {
+				diags.AddError(
+					"Internal Error",
+					"An unexpected error occurred. "+
+						"This is always an error in the provider. "+
+						"Please report the following to the provider developer:\n\n"+
+						fmt.Sprintf("Expected field %s to implement attr.Value, got: %T", fieldName, objData.FieldByName(fieldName).Interface()),
+				)
+				return diags
+			}
+
+			switch field.Interface().(attr.Value).Type(ctx).(type) {
+			case basetypes.MapTypable:
+				if field.Type() == reflect.TypeFor[tftags.Map]() {
+					field.Set(reflect.ValueOf(tftags.NewMapValueNull()))
+				}
+			case basetypes.ObjectTypable:
+				if field.Type() == reflect.TypeFor[timeouts.Value]() {
+					timeoutsType, _ := params.Result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
+					nullObj, objDiags := newNullObject(timeoutsType)
+					diags.Append(objDiags...)
+					if diags.HasError() {
+						return diags
+					}
+
+					t := timeouts.Value{}
+					t.Object = nullObj
+					field.Set(reflect.ValueOf(t))
+				}
+			}
+		}
+
+		return diags
+	}
+
+	return diags
+}
+
+func dereferencePointer(value reflect.Value) reflect.Value {
+	if value.Kind() == reflect.Ptr {
+		return value.Elem()
+	}
+	return value
+}
+
+func implementsAttrValue(field reflect.Value) bool {
+	return field.Type().Implements(reflect.TypeFor[attr.Value]())
+}
+
+func tagToStructFieldMap(tag string) (string, bool) {
+	values := map[string]string{
+		names.AttrTagsAll:  "TagsAll",
+		names.AttrTags:     "Tags",
+		names.AttrTimeouts: "Timeouts",
+	}
+
+	val, ok := values[tag]
+	return val, ok
+}
+
+func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
+	i, ok := typ.(attr.TypeWithAttributeTypes)
+	if !ok {
+		diags.AddError(
+			"Internal Error",
+			"An unexpected error occurred. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
+		)
+		return
+	}
+
+	attrTypes := i.AttributeTypes()
+
+	obj = basetypes.NewObjectNull(attrTypes)
+
+	return obj, diags
 }
 
 type ListResultInterceptorSDK interface {

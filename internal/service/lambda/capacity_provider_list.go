@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_lambda_capacity_provider")
@@ -57,12 +56,6 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 			}
 
 			var data resourceCapacityProviderModel
-			if diags := r.InitDataFields(ctx, &data, result, names.AttrTags, names.AttrTagsAll, names.AttrTimeouts); diags.HasError() {
-				result.Diagnostics.Append(diags...)
-				yield(result)
-				return
-			}
-
 			diags := r.SetResult(ctx, r.Meta(), &data, &result, func() {
 				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
 					result.Diagnostics.Append(diags...)
