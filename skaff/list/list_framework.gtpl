@@ -37,6 +37,7 @@ import (
 	// awstypes.<Type Name>.
 {{- end }}
 	"context"
+	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
