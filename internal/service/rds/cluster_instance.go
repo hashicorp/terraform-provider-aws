@@ -161,7 +161,7 @@ func resourceClusterInstance() *schema.Resource {
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
+				Computed: true,
 			},
 			"monitoring_role_arn": {
 				Type:     schema.TypeString,
