@@ -24,7 +24,7 @@ type WithRegionSpec interface {
 	SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion])
 }
 
-// Lister is an interface for resources that support List operations
+// ListerSDK is an interface for resources that support List operations
 type ListerSDK interface {
 	AppendResultInterceptor(listresource.ListResultInterceptorSDK)
 }
