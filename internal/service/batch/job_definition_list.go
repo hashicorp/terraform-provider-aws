@@ -29,7 +29,6 @@ func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
 
 type jobDefinitionListResource struct {
 	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
 }
 
 type jobDefinitionListResourceModel struct {
@@ -77,13 +76,6 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 			if rd.Id() == "" {
 				// Resource is logically deleted
 				continue
-			}
-
-			err = l.SetTags(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
 			}
 
 			result.DisplayName = aws.ToString(item.JobDefinitionName)

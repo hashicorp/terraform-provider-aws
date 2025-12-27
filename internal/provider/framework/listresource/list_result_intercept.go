@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
@@ -219,4 +220,65 @@ func (r setRegionInterceptor) Read(ctx context.Context, params InterceptorParams
 	}
 
 	return diags
+}
+
+type ListResultInterceptorSDK interface {
+	Read(ctx context.Context, params InterceptorParamsSDK) error
+}
+
+type InterceptorParamsSDK struct {
+	C            *conns.AWSClient
+	ResourceData *schema.ResourceData
+	When         when
+}
+
+type tagsInterceptorSDK struct {
+	interceptors.HTags
+}
+
+func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptorSDK {
+	return tagsInterceptorSDK{
+		HTags: interceptors.HTags(tags),
+	}
+}
+
+func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) error {
+	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
+	if !ok {
+		return nil
+	}
+
+	switch params.When {
+	case After:
+		// If the R handler didn't set tags, try and read them from the service API.
+		if tagsInContext.TagsOut.IsNone() {
+			// Some old resources may not have the required attribute set after Read:
+			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+			if identifier := r.GetIdentifierSDKv2(ctx, params.ResourceData); identifier != "" {
+				if err := r.ListTags(ctx, sp, params.C, identifier); err != nil {
+					return err
+				}
+			}
+		}
+
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(params.C.IgnoreTagsConfig(ctx))
+
+		// The resource's configured tags can now include duplicate tags that have been configured on the provider.
+		if err := params.ResourceData.Set(names.AttrTags, tags.ResolveDuplicates(ctx, params.C.DefaultTagsConfig(ctx), params.C.IgnoreTagsConfig(ctx), params.ResourceData, names.AttrTags, nil).Map()); err != nil {
+			return err
+		}
+
+		// Computed tags_all do.
+		if err := params.ResourceData.Set(names.AttrTagsAll, tags.Map()); err != nil {
+			return err
+		}
+
+		// reset tags in context for next resource
+		tagsInContext.TagsOut = nil
+
+		return nil
+	}
+
+	return nil
 }
