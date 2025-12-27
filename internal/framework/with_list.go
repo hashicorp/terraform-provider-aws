@@ -6,27 +6,36 @@ package framework
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Lister is an interface for resources that support List operations
 type Lister interface {
 	AppendResultInterceptor(listresource.ListResultInterceptor)
 }
 
 var _ Lister = &WithList{}
 
+// WithList provides common functionality for ListResources
 type WithList struct {
+	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor
 }
+
+type flattenFunc func()
 
 func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor) {
 	w.interceptors = append(w.interceptors, interceptor)
@@ -36,8 +45,13 @@ func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
 	return w.interceptors
 }
 
-func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, params listresource.InterceptorParams) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
+	params := listresource.InterceptorParams{
+		C:      awsClient,
+		Result: result,
+	}
+
 	switch when {
 	case listresource.Before:
 		params.When = listresource.Before
@@ -56,17 +70,84 @@ func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *WithList) ListResourceTagsInit(ctx context.Context, result list.ListResult) basetypes.MapValue {
-	typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
-	tagsType := typ.(attr.TypeWithElementType)
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	return basetypes.NewMapNull(tagsType.ElementType())
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, result)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	f()
+
+	diags.Append(result.Resource.Set(ctx, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, result)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
 }
 
-func (w *WithList) ListResourceTimeoutInit(ctx context.Context, result list.ListResult) (basetypes.ObjectValue, diag.Diagnostics) {
-	timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
+func (w *WithList) InitDataFields(ctx context.Context, data any, result list.ListResult, fieldNames ...string) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	return newNullObject(timeoutsType)
+	if reflect.ValueOf(data).Kind() != reflect.Ptr {
+		diags.AddError(
+			"Internal Error",
+			"data object must be a pointer")
+		return diags
+	}
+
+	objData := dereferencePointer(reflect.ValueOf(data))
+
+	for _, fieldName := range fieldNames {
+		mappedName, ok := tagToStructFieldMap(fieldName)
+		if !ok {
+			continue
+		}
+		field := objData.FieldByName(mappedName)
+		if !field.IsValid() {
+			continue
+		}
+
+		if !implementsAttrValue(field) {
+			diags.AddError(
+				"Internal Error",
+				"An unexpected error occurred. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Expected field %s to implement attr.Value, got: %T", fieldName, objData.FieldByName(fieldName).Interface()),
+			)
+			return diags
+		}
+
+		switch field.Interface().(attr.Value).Type(ctx).(type) {
+		case basetypes.MapTypable:
+			if field.Type() == reflect.TypeFor[tftags.Map]() {
+				field.Set(reflect.ValueOf(tftags.NewMapValueNull()))
+			}
+		case basetypes.ObjectTypable:
+			if field.Type() == reflect.TypeFor[timeouts.Value]() {
+				timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
+				nullObj, objDiags := newNullObject(timeoutsType)
+				diags.Append(objDiags...)
+				if diags.HasError() {
+					return diags
+				}
+
+				t := timeouts.Value{}
+				t.Object = nullObj
+				field.Set(reflect.ValueOf(t))
+			}
+		}
+	}
+
+	return diags
 }
 
 func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
@@ -87,4 +168,26 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 	obj = basetypes.NewObjectNull(attrTypes)
 
 	return obj, diags
+}
+
+func dereferencePointer(value reflect.Value) reflect.Value {
+	if value.Kind() == reflect.Ptr {
+		return value.Elem()
+	}
+	return value
+}
+
+func implementsAttrValue(field reflect.Value) bool {
+	return field.Type().Implements(reflect.TypeFor[attr.Value]())
+}
+
+func tagToStructFieldMap(tag string) (string, bool) {
+	values := map[string]string{
+		names.AttrTagsAll:  "TagsAll",
+		names.AttrTags:     "Tags",
+		names.AttrTimeouts: "Timeouts",
+	}
+
+	val, ok := values[tag]
+	return val, ok
 }

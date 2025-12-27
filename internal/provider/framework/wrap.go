@@ -995,6 +995,12 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.SetTagsSpec(spec.Tags)
 		}
+	} else { // Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
+		if v, ok := inner.(framework.ListerSDK); ok {
+			if !tfunique.IsHandleNil(spec.Tags) {
+				v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
+			}
+		}
 	}
 
 	return &wrappedListResourceSDK{
