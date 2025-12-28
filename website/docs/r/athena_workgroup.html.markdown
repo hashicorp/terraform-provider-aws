@@ -47,6 +47,7 @@ This resource supports the following arguments:
 ### Configuration
 
 * `bytes_scanned_cutoff_per_query` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
+* `customer_content_encryption_configuration` - (Optional) Configuration block to specify the KMS key that is used to encrypt the user's data stores in Athena. This setting applies to the PySpark engine for Athena notebooks. See [Customer Content Encryption Configuration](#customer-content-encryption-configuration) below.
 * `enable_minimum_encryption_configuration` - (Optional) Boolean indicating whether a minimum level of encryption is enforced for the workgroup for query and calculation results written to Amazon S3.
 * `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `engine_version` - (Optional) Configuration block for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). See [Engine Version](#engine-version) below.
@@ -56,6 +57,10 @@ This resource supports the following arguments:
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 * `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `managed_query_results_configuration` - (Optional) Configuration block for storing results in Athena owned storage. See [Managed Query Results Configuration](#managed-query-results-configuration) below.
+
+#### Customer Content Encryption Configuration
+
+* `kms_key_arn` - (Required) Customer managed KMS key that is used to encrypt the user's data stores in Athena.
 
 #### Engine Version
 
