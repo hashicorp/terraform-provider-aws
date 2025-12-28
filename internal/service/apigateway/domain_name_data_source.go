@@ -59,6 +59,10 @@ func dataSourceDomainName() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"endpoint_access_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -131,6 +135,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
+	d.Set("endpoint_access_mode", output.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
