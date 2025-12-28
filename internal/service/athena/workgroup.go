@@ -63,6 +63,20 @@ func resourceWorkGroup() *schema.Resource {
 								validation.IntInSlice([]int{0}),
 							),
 						},
+						"customer_content_encryption_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrKMSKey: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+									},
+								},
+							},
+						},
 						"enable_minimum_encryption_configuration": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -320,6 +334,14 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if d.HasChange(names.AttrConfiguration) {
 			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]any))
+			if d.HasChange("configuration.0.customer_content_encryption_configuration") {
+				// When customer_content_encryption_configuration is changed and the expander returns nil,
+				// the content_encryption_configuration needs to be removed.
+				// To remove it, set RemoveCustomerContentEncryptionConfiguration to true.
+				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.CustomerContentEncryptionConfiguration == nil {
+					input.ConfigurationUpdates.RemoveCustomerContentEncryptionConfiguration = aws.Bool(true)
+				}
+			}
 			if d.HasChange("configuration.0.enable_minimum_encryption_configuration") {
 				// When enable_minimum_encryption_configuration is returned as nil, set it to false to disable it.
 				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.EnableMinimumEncryptionConfiguration == nil {
@@ -404,6 +426,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	}
 
+	if v, ok := m["customer_content_encryption_configuration"]; ok {
+		configuration.CustomerContentEncryptionConfiguration = expandWorkGroupCustomerContentEncryptionConfiguration(v.([]any))
+	}
+
 	// Depending on other configurations, enable_minimum_encryption_configuration
 	// must not be specified, even when set to false.
 	// Therefore, the value is set only when it is true to avoid an API error.
@@ -446,6 +472,29 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 	return configuration
 }
 
+func expandWorkGroupCustomerContentEncryptionConfiguration(l []any) *types.CustomerContentEncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	// customerContentEncryptionConfiguration is created and returned
+	// only when a KMS key is specified.
+	// Otherwise, nil is returned to avoid an SDK error.
+	//
+	// When the KMS key is removed from the configuration during an update,
+	// the returned nil is handled in the Update function via
+	// RemoveCustomerContentEncryptionConfiguration.
+	if v, ok := m[names.AttrKMSKey].(string); ok && v != "" {
+		customerContentEncryptionConfiguration := &types.CustomerContentEncryptionConfiguration{
+			KmsKey: aws.String(v),
+		}
+		return customerContentEncryptionConfiguration
+	}
+	return nil
+}
+
 func expandWorkGroupEngineVersion(l []any) *types.EngineVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -475,6 +524,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
+	}
+
+	if v, ok := m["customer_content_encryption_configuration"]; ok {
+		configurationUpdates.CustomerContentEncryptionConfiguration = expandWorkGroupCustomerContentEncryptionConfiguration(v.([]any))
 	}
 
 	// Depending on other configurations, enable_minimum_encryption_configuration
@@ -699,7 +752,15 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
+		"customer_content_encryption_configuration": flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
 		"enable_minimum_encryption_configuration":   aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
+func flattenWorkGroupCustomerContentEncryptionConfiguration(encryptionConfiguration *types.CustomerContentEncryptionConfiguration) []any {
+	if encryptionConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrKMSKey: aws.ToString(encryptionConfiguration.KmsKey),
 	}
 
 	return []any{m}
