@@ -882,6 +882,56 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictValidation(
 	})
 }
 
+func TestAccAthenaWorkGroup_enableMinimumEncryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enable_minimum_encryption_configuration", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enable_minimum_encryption_configuration", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *types.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
@@ -1330,3 +1380,14 @@ resource "aws_athena_workgroup" "test" {
 }
 `, rName)
 }
+func testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName string, enableMinimumEncryptionConfiguration bool) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    enable_minimum_encryption_configuration = %[2]t
+  }
+}
+`, rName, enableMinimumEncryptionConfiguration)
+}
+
