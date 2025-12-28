@@ -882,6 +882,72 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictValidation(
 	})
 }
 
+func TestAccAthenaWorkGroup_customerContentEncryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, "test1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.customer_content_encryption_configuration.0.kms_key", "aws_kms_key.test1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, "test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.customer_content_encryption_configuration.0.kms_key", "aws_kms_key.test2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfigurationRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAthenaWorkGroup_enableMinimumEncryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1 types.WorkGroup
@@ -1380,6 +1446,85 @@ resource "aws_athena_workgroup" "test" {
 }
 `, rName)
 }
+
+func testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["athena.amazonaws.com"]
+    }
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, kmsKeyIdentifier string) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    customer_content_encryption_configuration {
+      kms_key = aws_kms_key.%[2]s.arn
+    }
+    engine_version {
+      selected_engine_version = "PySpark engine version 3"
+    }
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark/"
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName, kmsKeyIdentifier))
+}
+
+func testAccWorkGroupConfig_customerContentEncryptionConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    engine_version {
+      selected_engine_version = "PySpark engine version 3"
+    }
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark/"
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName))
+}
+
 func testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName string, enableMinimumEncryptionConfiguration bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
