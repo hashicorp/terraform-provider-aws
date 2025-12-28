@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -304,6 +305,73 @@ func TestAccTransferWebApp_accessEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccTransferWebApp_VPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DescribedWebApp
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_web_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebAppConfig_VPC(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey("vpc_id"),
+						"aws_vpc.test",
+						tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_app_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "web_app_id"),
+			},
+			{
+				Config: testAccWebAppConfig_VPC(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebAppExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName,
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey("vpc_id"),
+						"aws_vpc.test",
+						tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckWebAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
@@ -458,6 +526,34 @@ resource "aws_transfer_web_app" "test" {
   access_endpoint = %[2]q
 }
 `, rName, accessEndPoint))
+}
+
+func testAccWebAppConfig_VPC(rName string, subnetIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		testAccWebAppConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_transfer_web_app" "test" {
+  identity_provider_details {
+    identity_center_config {
+      instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      role         = aws_iam_role.test.arn
+    }
+  }
+  endpoint_details {
+    vpc {
+      vpc_id             = aws_vpc.test.id
+      subnet_ids         = [aws_subnet.test[%[2]d].id]
+      security_group_ids = [aws_security_group.test.id]
+    }
+  }
+}
+`, rName, subnetIndex))
 }
 
 func testAccWebAppConfig_tags1(rName, tag1Key, tag1Value string) string {
