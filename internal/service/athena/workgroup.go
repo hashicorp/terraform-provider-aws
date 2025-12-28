@@ -155,6 +155,177 @@ func resourceWorkGroup() *schema.Resource {
 								},
 							},
 						},
+						"monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloud_watch_logging_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+											// Empty block and enabled = false is equivalent
+											o, n := d.GetChange("configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration")
+											if o != nil && n != nil {
+												if v, ok := o.([]any); ok && len(v) == 0 {
+													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+														vm := v[0].(map[string]any)
+														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+															return true
+														}
+													}
+												}
+											}
+											return false
+										},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+														if old == "" && new == "false" {
+															return true
+														}
+														return false
+													},
+												},
+												"log_group": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+													ValidateFunc: validation.All(
+														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+														validation.StringLenBetween(1, 512),
+													),
+												},
+												"log_stream_name_prefix": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+													ValidateFunc: validation.All(
+														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+														validation.StringLenBetween(1, 512),
+													),
+												},
+												"log_type": {
+													Type:             schema.TypeSet,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrKey: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															names.AttrValues: {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"managed_logging_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+											// Empty block and enabled = false is equivalent
+											o, n := d.GetChange("configuration.0.monitoring_configuration.0.managed_logging_configuration")
+											if o != nil && n != nil {
+												if v, ok := o.([]any); ok && len(v) == 0 {
+													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+														vm := v[0].(map[string]any)
+														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+															return true
+														}
+													}
+												}
+											}
+											return false
+										},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+														if old == "" && new == "false" {
+															return true
+														}
+														return false
+													},
+												},
+												names.AttrKMSKey: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringManagedLogging,
+													ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+												},
+											},
+										},
+									},
+									"s3_logging_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+											// Empty block and enabled = false is equivalent
+											o, n := d.GetChange("configuration.0.monitoring_configuration.0.s3_logging_configuration")
+											if o != nil && n != nil {
+												if v, ok := o.([]any); ok && len(v) == 0 {
+													if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+														vm := v[0].(map[string]any)
+														if v, ok := vm[names.AttrEnabled].(bool); ok && !v {
+															return true
+														}
+													}
+												}
+											}
+											return false
+										},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+													DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+														if old == "" && new == "false" {
+															return true
+														}
+														return false
+													},
+												},
+												names.AttrKMSKey: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
+													ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+												},
+												"log_location": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 1024),
+														validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][a-z0-9\-]*[a-z0-9](/.*)?$`), "must be a valid S3 URI starting with s3://"),
+													),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -249,6 +420,30 @@ func resourceWorkGroup() *schema.Resource {
 	}
 }
 
+func diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging(_, old, new string, d *schema.ResourceData) bool {
+	// cloud_watch_logging_configuration is disabled, ignore other attribute diffs
+	if _, ok := d.GetOk("configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.enabled"); !ok {
+		return true
+	}
+	return false
+}
+
+func diffSuppressWorkGroupConfigurationMonitoringManagedLogging(_, old, new string, d *schema.ResourceData) bool {
+	// managed_logging_configuration is disabled, ignore other attribute diffs
+	if _, ok := d.GetOk("configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled"); !ok {
+		return true
+	}
+	return false
+}
+
+func diffSuppressWorkGroupConfigurationMonitoringS3Logging(_, old, new string, d *schema.ResourceData) bool {
+	// s3_logging_configuration is disabled, ignore other attribute diffs
+	if _, ok := d.GetOk("configuration.0.monitoring_configuration.0.s3_logging_configuration.0.enabled"); !ok {
+		return true
+	}
+	return false
+}
+
 func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
@@ -340,6 +535,27 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				// To remove it, set RemoveCustomerContentEncryptionConfiguration to true.
 				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.CustomerContentEncryptionConfiguration == nil {
 					input.ConfigurationUpdates.RemoveCustomerContentEncryptionConfiguration = aws.Bool(true)
+				}
+			}
+			if d.HasChange("configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration") {
+				// When monitoring_configuration block is removed or monitoring_configuration.cloud_watch_logging_configuration is removed,
+				// the cloud_watch_logging_configuration is disabled.
+				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.MonitoringConfiguration == nil || input.ConfigurationUpdates.MonitoringConfiguration.CloudWatchLoggingConfiguration == nil) {
+					input.ConfigurationUpdates.MonitoringConfiguration.CloudWatchLoggingConfiguration.Enabled = aws.Bool(false)
+				}
+			}
+			if d.HasChange("configuration.0.monitoring_configuration.0.managed_logging_configuration") {
+				// When monitoring_configuration block is removed or monitoring_configuration.managed_logging_configuration is removed,
+				// the managed_logging_configuration is disabled.
+				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.MonitoringConfiguration == nil || input.ConfigurationUpdates.MonitoringConfiguration.ManagedLoggingConfiguration == nil) {
+					input.ConfigurationUpdates.MonitoringConfiguration.ManagedLoggingConfiguration.Enabled = aws.Bool(false)
+				}
+			}
+			if d.HasChange("configuration.0.monitoring_configuration.0.s3_logging_configuration") {
+				// When monitoring_configuration block is removed or monitoring_configuration.s3_logging_configuration is removed,
+				// the s3_logging_configuration is disabled.
+				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.MonitoringConfiguration == nil || input.ConfigurationUpdates.MonitoringConfiguration.S3LoggingConfiguration == nil) {
+					input.ConfigurationUpdates.MonitoringConfiguration.S3LoggingConfiguration.Enabled = aws.Bool(false)
 				}
 			}
 			if d.HasChange("configuration.0.enable_minimum_encryption_configuration") {
@@ -457,6 +673,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.ManagedQueryResultsConfiguration = expandWorkGroupManagedQueryResultsConfiguration(v.([]any))
 	}
 
+	if v, ok := m["monitoring_configuration"]; ok {
+		configuration.MonitoringConfiguration = expandWorkGroupMonitoringConfiguration(v.([]any))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
@@ -555,6 +775,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandWorkGroupManagedQueryResultsConfigurationUpdates(v.([]any))
 	}
 
+	if v, ok := m["monitoring_configuration"]; ok {
+		configurationUpdates.MonitoringConfiguration = expandWorkGroupMonitoringConfiguration(v.([]any))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
@@ -616,6 +840,108 @@ func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
 	}
 
 	return resultConfiguration
+}
+
+func expandWorkGroupMonitoringConfiguration(l []any) *types.MonitoringConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	monitoringConfiguration := &types.MonitoringConfiguration{}
+
+	if v, ok := m["cloud_watch_logging_configuration"]; ok {
+		monitoringConfiguration.CloudWatchLoggingConfiguration = expandWorkGroupMonitoringConfigurationCloudWatchLoggingConfiguration(v.([]any))
+	}
+
+	if v, ok := m["managed_logging_configuration"]; ok {
+		monitoringConfiguration.ManagedLoggingConfiguration = expandWorkGroupMonitoringConfigurationManagedLoggingConfiguration(v.([]any))
+	}
+
+	if v, ok := m["s3_logging_configuration"]; ok {
+		monitoringConfiguration.S3LoggingConfiguration = expandWorkGroupMonitoringConfigurationS3LoggingConfiguration(v.([]any))
+	}
+
+	return monitoringConfiguration
+}
+
+func expandWorkGroupMonitoringConfigurationCloudWatchLoggingConfiguration(l []any) *types.CloudWatchLoggingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	cloudWatchLoggingConfiguration := &types.CloudWatchLoggingConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		cloudWatchLoggingConfiguration.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := m["log_group"].(string); ok && v != "" {
+		cloudWatchLoggingConfiguration.LogGroup = aws.String(v)
+	}
+
+	if v, ok := m["log_stream_name_prefix"].(string); ok && v != "" {
+		cloudWatchLoggingConfiguration.LogStreamNamePrefix = aws.String(v)
+	}
+
+	if v, ok := m["log_type"].(*schema.Set); ok && v.Len() > 0 {
+		logTypes := make(map[string][]string)
+		for _, item := range v.List() {
+			m := item.(map[string]any)
+			if key, ok := m[names.AttrKey].(string); ok && key != "" {
+				if valueSet, ok := m[names.AttrValues].(*schema.Set); ok {
+					values := make([]string, 0, valueSet.Len())
+					for _, val := range valueSet.List() {
+						values = append(values, val.(string))
+					}
+					logTypes[key] = values
+				}
+			}
+		}
+		cloudWatchLoggingConfiguration.LogTypes = logTypes
+	}
+
+	return cloudWatchLoggingConfiguration
+}
+
+func expandWorkGroupMonitoringConfigurationManagedLoggingConfiguration(l []any) *types.ManagedLoggingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	managedLoggingConfiguration := &types.ManagedLoggingConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedLoggingConfiguration.Enabled = aws.Bool(v)
+	}
+	if v, ok := m[names.AttrKMSKey].(string); ok && v != "" {
+		managedLoggingConfiguration.KmsKey = aws.String(v)
+	}
+	return managedLoggingConfiguration
+}
+
+func expandWorkGroupMonitoringConfigurationS3LoggingConfiguration(l []any) *types.S3LoggingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	s3LoggingConfiguration := &types.S3LoggingConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		s3LoggingConfiguration.Enabled = aws.Bool(v)
+	}
+	if v, ok := m[names.AttrKMSKey].(string); ok && v != "" {
+		s3LoggingConfiguration.KmsKey = aws.String(v)
+	}
+	if v, ok := m["log_location"].(string); ok && v != "" {
+		s3LoggingConfiguration.LogLocation = aws.String(v)
+	}
+	return s3LoggingConfiguration
 }
 
 func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurationUpdates {
@@ -743,17 +1069,23 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":      aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"enforce_workgroup_configuration":     aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:               flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                      aws.ToString(configuration.ExecutionRole),
-		"identity_center_configuration":       flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
-		"managed_query_results_configuration": flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
-		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
+		"bytes_scanned_cutoff_per_query":            aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
 		"customer_content_encryption_configuration": flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
 		"enable_minimum_encryption_configuration":   aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
+		"enforce_workgroup_configuration":           aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                            aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":             flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"managed_query_results_configuration":       flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"monitoring_configuration":                  flattenWorkGroupMonitoringConfiguration(configuration.MonitoringConfiguration),
+		"publish_cloudwatch_metrics_enabled":        aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                      flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":                    aws.ToBool(configuration.RequesterPaysEnabled),
+	}
+
+	return []any{m}
+}
+
 func flattenWorkGroupCustomerContentEncryptionConfiguration(encryptionConfiguration *types.CustomerContentEncryptionConfiguration) []any {
 	if encryptionConfiguration == nil {
 		return []any{}
@@ -787,6 +1119,73 @@ func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *ty
 	m := map[string]any{
 		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
 		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupMonitoringConfiguration(monitoringConfiguration *types.MonitoringConfiguration) []any {
+	if monitoringConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"cloud_watch_logging_configuration": flattenWorkGroupMonitoringConfigurationCloudWatchLoggingConfiguration(monitoringConfiguration.CloudWatchLoggingConfiguration),
+		"managed_logging_configuration":     flattenWorkGroupMonitoringConfigurationManagedLoggingConfiguration(monitoringConfiguration.ManagedLoggingConfiguration),
+		"s3_logging_configuration":          flattenWorkGroupMonitoringConfigurationS3LoggingConfiguration(monitoringConfiguration.S3LoggingConfiguration),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupMonitoringConfigurationCloudWatchLoggingConfiguration(cloudWatchLoggingConfiguration *types.CloudWatchLoggingConfiguration) []any {
+	if cloudWatchLoggingConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled:        aws.ToBool(cloudWatchLoggingConfiguration.Enabled),
+		"log_group":              aws.ToString(cloudWatchLoggingConfiguration.LogGroup),
+		"log_stream_name_prefix": aws.ToString(cloudWatchLoggingConfiguration.LogStreamNamePrefix),
+	}
+
+	if len(cloudWatchLoggingConfiguration.LogTypes) > 0 {
+		logTypes := make([]any, 0, len(cloudWatchLoggingConfiguration.LogTypes))
+		for key, values := range cloudWatchLoggingConfiguration.LogTypes {
+			logTypeMap := map[string]any{
+				names.AttrKey:    key,
+				names.AttrValues: values,
+			}
+			logTypes = append(logTypes, logTypeMap)
+		}
+		m["log_type"] = logTypes
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupMonitoringConfigurationManagedLoggingConfiguration(managedLoggingConfiguration *types.ManagedLoggingConfiguration) []any {
+	if managedLoggingConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled: aws.ToBool(managedLoggingConfiguration.Enabled),
+		names.AttrKMSKey:  aws.ToString(managedLoggingConfiguration.KmsKey),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupMonitoringConfigurationS3LoggingConfiguration(s3LoggingConfiguration *types.S3LoggingConfiguration) []any {
+	if s3LoggingConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled: aws.ToBool(s3LoggingConfiguration.Enabled),
+		names.AttrKMSKey:  aws.ToString(s3LoggingConfiguration.KmsKey),
+		"log_location":    aws.ToString(s3LoggingConfiguration.LogLocation),
 	}
 
 	return []any{m}
