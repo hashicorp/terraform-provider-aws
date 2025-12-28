@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -459,7 +460,17 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateWorkGroup(ctx, &input)
+	// To avoid eventual consistency issues with IAM roles,
+	// retry on InvalidRequestException with a specific message.
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidRequestException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateWorkGroup(ctx, &input)
+		},
+		"Make sure that athena.amazonaws.com has been allowed for sts:AssumeRole",
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena WorkGroup (%s): %s", name, err)
@@ -580,7 +591,17 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.State = types.WorkGroupState(d.Get(names.AttrState).(string))
 		}
 
-		_, err := conn.UpdateWorkGroup(ctx, &input)
+		// To avoid eventual consistency issues with IAM roles,
+		// retry on InvalidRequestException with a specific message.
+		const (
+			timeout = 2 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidRequestException](ctx, timeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateWorkGroup(ctx, &input)
+			},
+			"Make sure that athena.amazonaws.com has been allowed for sts:AssumeRole",
+		)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Athena WorkGroup (%s): %s", d.Id(), err)
