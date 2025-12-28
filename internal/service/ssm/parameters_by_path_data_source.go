@@ -23,15 +23,29 @@ func dataSourceParametersByPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeList,
+			names.AttrParameters: {
+				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrNames: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrPath: {
 				Type:     schema.TypeString,
@@ -41,17 +55,6 @@ func dataSourceParametersByPath() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrValues: {
-				Type:      schema.TypeList,
-				Computed:  true,
-				Sensitive: true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
 			"with_decryption": {
 				Type:     schema.TypeBool,
@@ -86,17 +89,13 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(path)
-	d.Set(names.AttrARNs, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
-		return aws.ToString(v.ARN)
-	}))
-	d.Set(names.AttrNames, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
-		return aws.ToString(v.Name)
-	}))
-	d.Set("types", tfslices.ApplyToAll(output, func(v awstypes.Parameter) awstypes.ParameterType {
-		return v.Type
-	}))
-	d.Set(names.AttrValues, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
-		return aws.ToString(v.Value)
+	d.Set(names.AttrParameters, tfslices.ApplyToAll(output, func(parameter awstypes.Parameter) map[string]any {
+		return map[string]any{
+			names.AttrARN:   aws.ToString(parameter.ARN),
+			names.AttrName:  aws.ToString(parameter.Name),
+			names.AttrType:  parameter.Type,
+			names.AttrValue: aws.ToString(parameter.Value),
+		}
 	}))
 
 	return diags
