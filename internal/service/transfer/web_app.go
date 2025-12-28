@@ -3,7 +3,7 @@
 
 package transfer
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"reflect"
@@ -92,7 +92,7 @@ func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"security_group_ids": schema.SetAttribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
 										ElementType: types.StringType,
 										Optional:    true,
 										Computed:    true,
@@ -101,14 +101,14 @@ func (r *webAppResource) Schema(ctx context.Context, request resource.SchemaRequ
 											setplanmodifier.UseStateForUnknown(),
 										},
 									},
-									"subnet_ids": schema.SetAttribute{
+									names.AttrSubnetIDs: schema.SetAttribute{
 										ElementType: types.StringType,
 										Required:    true,
 									},
-									"vpc_endpoint_id": schema.StringAttribute{
+									names.AttrVPCEndpointID: schema.StringAttribute{
 										Computed: true,
 									},
-									"vpc_id": schema.StringAttribute{
+									names.AttrVPCID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

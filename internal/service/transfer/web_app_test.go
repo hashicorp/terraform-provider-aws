@@ -334,9 +334,9 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
 						resourceName,
-						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey("vpc_id"),
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrVPCID),
 						"aws_vpc.test",
-						tfjsonpath.New("id"),
+						tfjsonpath.New(names.AttrID),
 						compare.ValuesSame(),
 					),
 				},
@@ -361,9 +361,9 @@ func TestAccTransferWebApp_VPC(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
 						resourceName,
-						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey("vpc_id"),
+						tfjsonpath.New("endpoint_details").AtSliceIndex(0).AtMapKey("vpc").AtSliceIndex(0).AtMapKey(names.AttrVPCID),
 						"aws_vpc.test",
-						tfjsonpath.New("id"),
+						tfjsonpath.New(names.AttrID),
 						compare.ValuesSame(),
 					),
 				},
