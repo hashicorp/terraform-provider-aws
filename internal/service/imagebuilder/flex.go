@@ -181,3 +181,65 @@ func expandWorkflowConfigurations(tfList []any) []awstypes.WorkflowConfiguration
 
 	return apiObjects
 }
+func expandLoggingConfiguration(tfMap map[string]any) *awstypes.ImageLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ImageLoggingConfiguration{}
+
+	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenLoggingConfiguration(apiObject *awstypes.ImageLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap["log_group_name"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+func expandPipelineLoggingConfiguration(tfMap map[string]any) *awstypes.PipelineLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PipelineLoggingConfiguration{}
+
+	if v, ok := tfMap["image_log_group_name"].(string); ok && v != "" {
+		apiObject.ImageLogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["pipeline_log_group_name"].(string); ok && v != "" {
+		apiObject.PipelineLogGroupName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPipelineLoggingConfiguration(apiObject *awstypes.PipelineLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ImageLogGroupName; v != nil {
+		tfMap["image_log_group_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PipelineLogGroupName; v != nil {
+		tfMap["pipeline_log_group_name"] = aws.ToString(v)
+	}
+
+	return tfMap
+}

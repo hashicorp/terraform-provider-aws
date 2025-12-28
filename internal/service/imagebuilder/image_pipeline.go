@@ -154,6 +154,23 @@ func resourceImagePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`), "valid infrastructure configuration ARN must be provided"),
 			},
+			"logging_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_log_group_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"pipeline_log_group_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -287,6 +304,10 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandPipelineLoggingConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
@@ -356,6 +377,11 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("image_tests_configuration", nil)
 	}
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
+	if imagePipeline.LoggingConfiguration != nil {
+		if err := d.Set("logging_configuration", []any{flattenPipelineLoggingConfiguration(imagePipeline.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	}
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
@@ -416,6 +442,10 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 			input.InfrastructureConfigurationArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.LoggingConfiguration = expandPipelineLoggingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {

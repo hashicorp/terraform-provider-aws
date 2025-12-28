@@ -151,6 +151,20 @@ func resourceImage() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"logging_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_group_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -312,6 +326,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
 		input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
 	}
@@ -376,6 +394,11 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
+	}
+	if image.LoggingConfiguration != nil {
+		if err := d.Set("logging_configuration", []any{flattenLoggingConfiguration(image.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
 	}
 	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
