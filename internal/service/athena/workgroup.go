@@ -558,6 +558,12 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					input.ConfigurationUpdates.MonitoringConfiguration.S3LoggingConfiguration.Enabled = aws.Bool(false)
 				}
 			}
+			if d.HasChange("configuration.0.requester_pays_enabled") {
+				// When requester_pays_enabled is returned as nil, set it to false to disable it.
+				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.RequesterPaysEnabled == nil {
+					input.ConfigurationUpdates.RequesterPaysEnabled = aws.Bool(false)
+				}
+			}
 			if d.HasChange("configuration.0.enable_minimum_encryption_configuration") {
 				// When enable_minimum_encryption_configuration is returned as nil, set it to false to disable it.
 				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.EnableMinimumEncryptionConfiguration == nil {
@@ -685,7 +691,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]any))
 	}
 
-	if v, ok := m["requester_pays_enabled"].(bool); ok {
+	// Depending on other configurations, requester_pays_enabled
+	// must not be specified, even when set to false.
+	// Therefore, the value is set only when it is true to avoid an API error.
+	if v, ok := m["requester_pays_enabled"].(bool); ok && v {
 		configuration.RequesterPaysEnabled = aws.Bool(v)
 	}
 
@@ -787,7 +796,12 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]any))
 	}
 
-	if v, ok := m["requester_pays_enabled"].(bool); ok {
+	// Depending on other configurations, requester_pays_enabled
+	// must not be specified, even when set to false.
+	// Therefore, the value is set only when it is true to avoid an API error.
+	// The returned nil is handled in the Update function when this setting
+	// needs to be disabled.
+	if v, ok := m["requester_pays_enabled"].(bool); ok && v {
 		configurationUpdates.RequesterPaysEnabled = aws.Bool(v)
 	}
 
