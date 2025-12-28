@@ -39,8 +39,8 @@ type ListResourceWithSDKv2Resource struct {
 	interceptors   []listresource.ListResultInterceptorSDK
 }
 
-func (r *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptorSDK) {
-	r.interceptors = append(r.interceptors, interceptor)
+func (l *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptorSDK) {
+	l.interceptors = append(l.interceptors, interceptor)
 }
 
 func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
