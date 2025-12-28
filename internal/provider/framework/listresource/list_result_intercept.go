@@ -244,12 +244,8 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 
 		objData := dereferencePointer(reflect.ValueOf(params.Data))
 
-		for _, fieldName := range []string{names.AttrTags, names.AttrTagsAll, names.AttrTimeouts} {
-			mappedName, ok := tagToStructFieldMap(fieldName)
-			if !ok {
-				continue
-			}
-			field := objData.FieldByName(mappedName)
+		for _, fieldName := range structTagsForInitialization() {
+			field := objData.FieldByName(fieldName)
 			if !field.IsValid() {
 				continue
 			}
@@ -303,15 +299,13 @@ func implementsAttrValue(field reflect.Value) bool {
 	return field.Type().Implements(reflect.TypeFor[attr.Value]())
 }
 
-func tagToStructFieldMap(tag string) (string, bool) {
-	values := map[string]string{
-		names.AttrTagsAll:  "TagsAll",
-		names.AttrTags:     "Tags",
-		names.AttrTimeouts: "Timeouts",
+// structTagsForInitialization returns the list of struct tags that require special handling for defaulting.
+func structTagsForInitialization() []string {
+	return []string{
+		"Tags",
+		"TagsAll",
+		"Timeouts",
 	}
-
-	val, ok := values[tag]
-	return val, ok
 }
 
 func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
