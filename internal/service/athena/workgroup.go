@@ -63,6 +63,11 @@ func resourceWorkGroup() *schema.Resource {
 								validation.IntInSlice([]int{0}),
 							),
 						},
+						"enable_minimum_encryption_configuration": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 						"enforce_workgroup_configuration": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -315,6 +320,12 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if d.HasChange(names.AttrConfiguration) {
 			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]any))
+			if d.HasChange("configuration.0.enable_minimum_encryption_configuration") {
+				// When enable_minimum_encryption_configuration is returned as nil, set it to false to disable it.
+				if input.ConfigurationUpdates == nil || input.ConfigurationUpdates.EnableMinimumEncryptionConfiguration == nil {
+					input.ConfigurationUpdates.EnableMinimumEncryptionConfiguration = aws.Bool(false)
+				}
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -393,6 +404,13 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	}
 
+	// Depending on other configurations, enable_minimum_encryption_configuration
+	// must not be specified, even when set to false.
+	// Therefore, the value is set only when it is true to avoid an API error.
+	if v, ok := m["enable_minimum_encryption_configuration"].(bool); ok && v {
+		configuration.EnableMinimumEncryptionConfiguration = aws.Bool(v)
+	}
+
 	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
@@ -457,6 +475,15 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
+	}
+
+	// Depending on other configurations, enable_minimum_encryption_configuration
+	// must not be specified, even when set to false.
+	// Therefore, the value is set only when it is true to avoid an API error.
+	// The returned nil is handled in the Update function when this setting
+	// needs to be disabled.
+	if v, ok := m["enable_minimum_encryption_configuration"].(bool); ok && v {
+		configurationUpdates.EnableMinimumEncryptionConfiguration = aws.Bool(v)
 	}
 
 	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
@@ -672,6 +699,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
+		"enable_minimum_encryption_configuration":   aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
 	}
 
 	return []any{m}
