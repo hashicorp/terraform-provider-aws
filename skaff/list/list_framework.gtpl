@@ -119,7 +119,7 @@ func (r *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	        // TIP: -- 4. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
-			diags := r.SetResult(ctx, r.Meta(), &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, item, &data, flex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
@@ -134,8 +134,7 @@ func (r *listResource{{ .ListResource }}) List(ctx context.Context, request list
 				result.DisplayName = name
 			})
 
-			if diags.HasError() {
-				result.Diagnostics.Append(diags...)
+			if result.Diagnostics.HasError() {
 				yield(result)
 				return
 			}
