@@ -63,25 +63,26 @@ func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) diag.Diagnostics {
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
 	var diags diag.Diagnostics
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, data, result)...)
 	if diags.HasError() {
-		return diags
+		return
 	}
 
 	f()
+	if result.Diagnostics.HasError() {
+		return
+	}
 
 	diags.Append(result.Resource.Set(ctx, data)...)
 	if diags.HasError() {
-		return diags
+		return
 	}
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, data, result)...)
 	if diags.HasError() {
-		return diags
+		return
 	}
-
-	return diags
 }

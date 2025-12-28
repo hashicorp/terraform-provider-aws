@@ -56,7 +56,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 			}
 
 			var data resourceCapacityProviderModel
-			diags := r.SetResult(ctx, r.Meta(), &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), &data, &result, func() {
 				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
@@ -75,8 +75,7 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				result.DisplayName = name
 			})
 
-			if diags.HasError() {
-				result.Diagnostics.Append(diags...)
+			if result.Diagnostics.HasError() {
 				yield(result)
 				return
 			}

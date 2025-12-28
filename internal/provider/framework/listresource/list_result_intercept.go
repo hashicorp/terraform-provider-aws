@@ -244,7 +244,7 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 
 		objData := dereferencePointer(reflect.ValueOf(params.Data))
 
-		for _, fieldName := range structTagsForInitialization() {
+		for tfName, fieldName := range tfFieldToStructFieldMap() {
 			field := objData.FieldByName(fieldName)
 			if !field.IsValid() {
 				continue
@@ -268,9 +268,13 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 				}
 			case basetypes.ObjectTypable:
 				if field.Type() == reflect.TypeFor[timeouts.Value]() {
-					timeoutsType, _ := params.Result.Resource.Schema.TypeAtPath(ctx, path.Root(fieldName))
-					nullObj, objDiags := newNullObject(timeoutsType)
-					diags.Append(objDiags...)
+					timeoutsType, d := params.Result.Resource.Schema.TypeAtPath(ctx, path.Root(tfName))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+					nullObj, d := newNullObject(timeoutsType)
+					diags.Append(d...)
 					if diags.HasError() {
 						return diags
 					}
@@ -299,12 +303,11 @@ func implementsAttrValue(field reflect.Value) bool {
 	return field.Type().Implements(reflect.TypeFor[attr.Value]())
 }
 
-// structTagsForInitialization returns the list of struct tags that require special handling for defaulting.
-func structTagsForInitialization() []string {
-	return []string{
-		"Tags",
-		"TagsAll",
-		"Timeouts",
+func tfFieldToStructFieldMap() map[string]string {
+	return map[string]string{
+		names.AttrTags:     "Tags",
+		names.AttrTagsAll:  "TagsAll",
+		names.AttrTimeouts: "Timeouts",
 	}
 }
 
