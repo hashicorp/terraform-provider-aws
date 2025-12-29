@@ -123,6 +123,16 @@ func resourceFilter() *schema.Resource {
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
+									"not_matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
 								},
 							},
 						},
@@ -383,6 +393,16 @@ func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
 				condition.Matches = foo
 			}
 		}
+		if x, ok := typedCriterion["not_matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.NotMatches = foo
+			}
+		}
 		criteria[field] = condition
 	}
 
@@ -428,6 +448,9 @@ func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []a
 		}
 		if len(conditions.Matches) > 0 {
 			criterion["matches"] = conditions.Matches
+		}
+		if len(conditions.NotMatches) > 0 {
+			criterion["not_matches"] = conditions.NotMatches
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
