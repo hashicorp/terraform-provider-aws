@@ -5,10 +5,14 @@ FEATURES:
 * **New List Resource:** `aws_kms_alias` ([#45700](https://github.com/hashicorp/terraform-provider-aws/issues/45700))
 * **New List Resource:** `aws_sqs_queue` ([#45691](https://github.com/hashicorp/terraform-provider-aws/issues/45691))
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
+* **New Resource:** `aws_organizations_tag` ([#45730](https://github.com/hashicorp/terraform-provider-aws/issues/45730))
+* **New Resource:** `aws_sesv2_tenant` ([#45706](https://github.com/hashicorp/terraform-provider-aws/issues/45706))
 
 ENHANCEMENTS:
 
+* data-source/aws_apigateway_domain_name : Add `endpoint_access_mode` attribute ([#45741](https://github.com/hashicorp/terraform-provider-aws/issues/45741))
 * data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+* data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` arguments, and new valid values for `rule.action.type` and `rule.selection.count_type` arguments ([#45752](https://github.com/hashicorp/terraform-provider-aws/issues/45752))
 * data-source/aws_iam_saml_provider: Add `saml_provider_uuid` attribute ([#45707](https://github.com/hashicorp/terraform-provider-aws/issues/45707))
 * data-source/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * data-source/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
@@ -20,6 +24,10 @@ ENHANCEMENTS:
 * resource/aws_alb_listener: Enforce tag policy compliance for the `elasticloadbalancing:listener` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_alb_listener_rule: Enforce tag policy compliance for the `elasticloadbalancing:listener-rule` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_alb_target_group: Enforce tag policy compliance for the `elasticloadbalancing:targetgroup` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
+* resource/aws_apigateway_domain_name: Add `endpoint_access_mode` argument and configurable timeout for create and update ([#45741](https://github.com/hashicorp/terraform-provider-aws/issues/45741))
+* resource/aws_athena_workgroup: Add `customer_content_encryption_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
+* resource/aws_athena_workgroup: Add `enable_minimum_encryption_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
+* resource/aws_athena_workgroup: Add `monitoring_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_cleanrooms_collaboration: Add resource identity support ([#45548](https://github.com/hashicorp/terraform-provider-aws/issues/45548))
 * resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
 * resource/aws_docdb_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
@@ -31,7 +39,9 @@ ENHANCEMENTS:
 * resource/aws_fsx_openzfs_snapshot: Enforce tag policy compliance for the `fsx:snapshot` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_openzfs_volume: Enforce tag policy compliance for the `fsx:volume` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_windows_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
+* resource/aws_guardduty_filter: Add `finding_criteria.criterion.matches` and `finding_criteria.criterion.not_matches` arguments ([#45758](https://github.com/hashicorp/terraform-provider-aws/issues/45758))
 * resource/aws_iam_saml_provider: Add `saml_provider_uuid` attribute ([#45707](https://github.com/hashicorp/terraform-provider-aws/issues/45707))
+* resource/aws_iam_virtual_mfa_device: Add `serial_number` attribute ([#45751](https://github.com/hashicorp/terraform-provider-aws/issues/45751))
 * resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config.poller_group_name` argument ([#45313](https://github.com/hashicorp/terraform-provider-aws/issues/45313))
 * resource/aws_lambda_function: Add `response_streaming_invoke_arn` attribute ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
 * resource/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions ([#45652](https://github.com/hashicorp/terraform-provider-aws/issues/45652))
@@ -45,6 +55,7 @@ ENHANCEMENTS:
 * resource/aws_networkmanager_vpc_attachment: Enable in-place updates of `routing_policy_label` argument. This functionality requires the `networkmanager: PutAttachmentRoutingPolicyLabel` and `networkmanager: RemoveAttachmentRoutingPolicyLabel` IAM permissions ([#45728](https://github.com/hashicorp/terraform-provider-aws/issues/45728))
 * resource/aws_rds_cluster: Enforce tag policy compliance for the `rds:cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_route53_resolver_firewall_rule: Add `dns_threat_protection`, `confidence_threshold`, and `firewall_threat_protection_id` arguments to support DNS Firewall Advanced rules ([#45711](https://github.com/hashicorp/terraform-provider-aws/issues/45711))
+* resource/aws_transfer_web_app: Add `endpoint_details.vpc` configuration block to support VPC hosted Transfer Family web app ([#45745](https://github.com/hashicorp/terraform-provider-aws/issues/45745))
 * resource/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` arguments ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 * resource/aws_vpclattice_service_network_resource_association: Add `private_dns_enabled` argument ([#45673](https://github.com/hashicorp/terraform-provider-aws/issues/45673))
 

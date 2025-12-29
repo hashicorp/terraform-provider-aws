@@ -150,17 +150,33 @@ resource "aws_route53_record" "example" {
 }
 ```
 
+### Enhanced Security Policy
+
+```terraform
+resource "aws_api_gateway_domain_name" "example" {
+  domain_name              = "api.example.com"
+  regional_certificate_arn = aws_acm_certificate_validation.example.certificate_arn
+  security_policy          = "SecurityPolicy_TLS13_1_3_2025_09"
+  endpoint_access_mode     = "STRICT"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to register.
+* `endpoint_access_mode` - (Optional) Endpoint access mode of the DomainName. Only available for domain names that use security policies that start with `SecurityPolicy_`. Valid values: `BASIC`, `STRICT`.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
-* `policy` - (Optional) A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
 * `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
-* `security_policy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `policy` - (Optional) A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
+* `security_policy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Must be configured to perform drift detection. For a list of valid security policies, see [DomainName](https://docs.aws.amazon.com/apigateway/latest/api/API_DomainName.html) in the Amazon API Gateway API Reference.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
@@ -199,6 +215,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `regional_domain_name` - Hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `60m`)
+- `update` - (Default `60m`)
 
 ## Import
 

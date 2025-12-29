@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_athena_workgroup: Add `customer_content_encryption_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_athena_workgroup: Add `enable_minimum_encryption_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_athena_workgroup: Add `monitoring_configuration` argument
+```
