@@ -51,17 +51,10 @@ func RegisterSweepers() {
 		F:    sweepKeyGroup,
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_monitoring_subscription", &resource.Sweeper{
-		Name: "aws_cloudfront_monitoring_subscription",
-		F:    sweepMonitoringSubscriptions,
-		Dependencies: []string{
-			"aws_cloudfront_distribution",
-		},
-	})
-
 	awsv2.Register("aws_cloudfront_connection_function", sweepConnectionFunctions, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_field_level_encryption_config", sweepFieldLevelEncryptionConfigs)
 	awsv2.Register("aws_cloudfront_field_level_encryption_profile", sweepFieldLevelEncryptionProfiles, "aws_cloudfront_field_level_encryption_config")
+	awsv2.Register("aws_cloudfront_monitoring_subscription", sweepMonitoringSubscriptions, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_origin_access_control", sweepOriginAccessControls, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_origin_request_policy", sweepOriginRequestPolicies, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_realtime_log_config", sweepRealtimeLogsConfig)
@@ -366,27 +359,16 @@ func sweepKeyGroup(region string) error {
 	return nil
 }
 
-func sweepMonitoringSubscriptions(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepMonitoringSubscriptions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudfront.ListDistributionsInput
 	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListDistributionsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := cloudfront.NewListDistributionsPaginator(conn, input)
+	pages := cloudfront.NewListDistributionsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Monitoring Subscription sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.DistributionList.Items {
@@ -398,13 +380,7 @@ func sweepMonitoringSubscriptions(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Monitoring Subscriptions (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepRealtimeLogsConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
