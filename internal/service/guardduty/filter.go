@@ -107,6 +107,16 @@ func resourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
 									"not_equals": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -363,6 +373,16 @@ func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
 				condition.LessThanOrEqual = aws.Int64(i)
 			}
 		}
+		if x, ok := typedCriterion["matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.Matches = foo
+			}
+		}
 		criteria[field] = condition
 	}
 
@@ -405,6 +425,9 @@ func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []a
 		}
 		if v := aws.ToInt64(conditions.LessThanOrEqual); v > 0 {
 			criterion["less_than_or_equal"] = flattenConditionIntField(field, v)
+		}
+		if len(conditions.Matches) > 0 {
+			criterion["matches"] = conditions.Matches
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
