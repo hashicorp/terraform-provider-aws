@@ -72,14 +72,6 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_origin_request_policy", &resource.Sweeper{
-		Name: "aws_cloudfront_origin_request_policy",
-		F:    sweepOriginRequestPolicies,
-		Dependencies: []string{
-			"aws_cloudfront_distribution",
-		},
-	})
-
 	resource.AddTestSweepers("aws_cloudfront_realtime_log_config", &resource.Sweeper{
 		Name: "aws_cloudfront_realtime_log_config",
 		F:    sweepRealtimeLogsConfig,
@@ -87,6 +79,7 @@ func RegisterSweepers() {
 
 	awsv2.Register("aws_cloudfront_connection_function", sweepConnectionFunctions, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_origin_access_control", sweepOriginAccessControls, "aws_cloudfront_distribution")
+	awsv2.Register("aws_cloudfront_origin_request_policy", sweepOriginRequestPolicies, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_response_headers_policy", sweepResponseHeadersPolicies, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_trust_store", sweepTrustStores, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_vpc_origin", sweepVPCOrigins)
@@ -585,19 +578,14 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	return nil
 }
 
-func sweepOriginRequestPolicies(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListOriginRequestPoliciesInput{
+func sweepOriginRequestPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudfront.ListOriginRequestPoliciesInput{
 		Type: awstypes.OriginRequestPolicyTypeCustom,
 	}
-	sweepResources := make([]sweep.Sweepable, 0)
+	conn := client.CloudFrontClient(ctx)
+	var sweepResources []sweep.Sweepable
 
-	err = listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+	err := listOriginRequestPoliciesPages(ctx, conn, &input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -625,22 +613,11 @@ func sweepOriginRequestPolicies(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Origin Request Policy sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing CloudFront Origin Request Policies (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Origin Request Policies (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepResponseHeadersPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
