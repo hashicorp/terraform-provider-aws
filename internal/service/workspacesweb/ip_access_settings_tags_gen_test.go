@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,6 +27,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -208,6 +212,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_null(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -270,6 +277,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -320,6 +330,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -399,6 +412,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -489,6 +505,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnUpdate_Add(t *testing.
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -627,6 +646,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnUpdate_Replace(t *test
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -716,6 +738,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_providerOnly(t *testi
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -897,6 +922,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nonOverlapping(t *tes
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1057,6 +1085,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_overlapping(t *testin
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1233,6 +1264,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_updateToProviderOnly(
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1322,6 +1356,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_updateToResourceOnly(
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1410,6 +1447,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_emptyResourceTag(t *t
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1476,6 +1516,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_emptyProviderOnlyTag(
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1534,6 +1577,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nullOverlappingResour
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1603,6 +1649,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nullNonOverlappingRes
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1674,6 +1723,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnCreate(t *testing.T
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1729,6 +1781,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnUpdate_Add(t *testi
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1825,6 +1880,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnUpdate_Replace(t *t
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1911,6 +1969,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_IgnoreTags_Overlap_DefaultTag(t *
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -2070,6 +2131,9 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_IgnoreTags_Overlap_ResourceTag(t 
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),

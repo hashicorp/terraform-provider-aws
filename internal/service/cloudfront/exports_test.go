@@ -14,6 +14,7 @@ var (
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
+	ResourceMultiTenantDistribution     = newMultiTenantDistributionResource
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy

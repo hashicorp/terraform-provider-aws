@@ -71,8 +71,16 @@ func dataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rni_enhanced_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"target_name_server_metrics_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			names.AttrVPCID: {
@@ -129,7 +137,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("protocols", flex.FlattenStringyValueSet(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
+	d.Set("rni_enhanced_metrics_enabled", ep.RniEnhancedMetricsEnabled)
 	d.Set(names.AttrStatus, ep.Status)
+	d.Set("target_name_server_metrics_enabled", ep.TargetNameServerMetricsEnabled)
 	d.Set(names.AttrVPCID, ep.HostVPCId)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())

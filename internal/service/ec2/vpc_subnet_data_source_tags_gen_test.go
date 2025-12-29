@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -28,6 +29,9 @@ func TestAccVPCSubnetDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,6 +59,9 @@ func TestAccVPCSubnetDataSource_tags_NullMap(t *testing.T) {
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,6 +85,9 @@ func TestAccVPCSubnetDataSource_tags_EmptyMap(t *testing.T) {
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -101,6 +111,9 @@ func TestAccVPCSubnetDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.EC2ServiceID),
 		Steps: []resource.TestStep{
@@ -132,6 +145,9 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.EC2ServiceID),
 		Steps: []resource.TestStep{
@@ -169,6 +185,9 @@ func TestAccVPCSubnetDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 	dataSourceName := "data.aws_subnet.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.EC2ServiceID),
 		Steps: []resource.TestStep{

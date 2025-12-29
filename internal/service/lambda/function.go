@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -124,6 +123,7 @@ func resourceFunction() *schema.Resource {
 			},
 			"code_sha256": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"code_signing_config_arn": {
@@ -405,6 +405,10 @@ func resourceFunction() *schema.Resource {
 				Optional:     true,
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
+			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrRole: {
 				Type:         schema.TypeString,
@@ -861,6 +865,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
@@ -917,12 +922,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		setTagsOut(ctx, output.Tags)
 	}
 
-	// Currently, this functionality is only enabled in AWS Commercial partition
-	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
-	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1780,6 +1784,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
+		d.HasChange("code_sha256") ||
 		d.HasChange("source_code_hash") ||
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
@@ -1829,13 +1834,12 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "apigateway",
-		Region:    c.Region(ctx),
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
-	}.String()
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
+}
+
+// See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
+func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
@@ -1863,6 +1867,8 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.EuNorth1RegionID:     {},
 		endpoints.MeSouth1RegionID:     {},
 		endpoints.SaEast1RegionID:      {},
+		endpoints.UsGovEast1RegionID:   {},
+		endpoints.UsGovWest1RegionID:   {},
 	}
 	_, ok := availableRegions[region]
 

@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_iam_user", name="User")
-// @Tags(identifierAttribute="name", resourceType="User")
+// @Tags(identifierAttribute="id", resourceType="User")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{

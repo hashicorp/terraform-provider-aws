@@ -842,7 +842,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	// Bucket Policy.
 	//
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource.
-	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (string, error) {
+	policy, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (string, error) {
 		return findBucketPolicy(ctx, conn, d.Id())
 	})
 
@@ -872,7 +872,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket ACL.
 	//
-	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAclOutput, error) {
+	bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 		return findBucketACL(ctx, conn, d.Id(), "")
 	})
 
@@ -896,7 +896,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket CORS Configuration.
 	//
-	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.CORSRule, error) {
+	corsRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.CORSRule, error) {
 		return findCORSRules(ctx, conn, d.Id(), "")
 	})
 
@@ -920,7 +920,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Website Configuration.
 	//
-	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketWebsiteOutput, error) {
+	bucketWebsite, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketWebsiteOutput, error) {
 		return findBucketWebsite(ctx, conn, d.Id(), "")
 	})
 
@@ -948,7 +948,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Versioning.
 	//
-	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketVersioningOutput, error) {
+	bucketVersioning, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketVersioningOutput, error) {
 		return findBucketVersioning(ctx, conn, d.Id(), "")
 	})
 
@@ -972,7 +972,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Accelerate Configuration.
 	//
-	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketAccelerateConfigurationOutput, error) {
+	bucketAccelerate, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketAccelerateConfigurationOutput, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -994,7 +994,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Request Payment Configuration.
 	//
-	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*s3.GetBucketRequestPaymentOutput, error) {
+	bucketRequestPayment, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*s3.GetBucketRequestPaymentOutput, error) {
 		return findBucketRequestPayment(ctx, conn, d.Id(), "")
 	})
 
@@ -1016,7 +1016,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Logging.
 	//
-	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.LoggingEnabled, error) {
+	loggingEnabled, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.LoggingEnabled, error) {
 		return findLoggingEnabled(ctx, conn, d.Id(), "")
 	})
 
@@ -1040,7 +1040,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Lifecycle Configuration.
 	//
-	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() ([]types.LifecycleRule, error) {
+	lifecycleRules, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) ([]types.LifecycleRule, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, d.Id(), "")
 
 		if err != nil {
@@ -1070,7 +1070,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Replication Configuration.
 	//
-	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ReplicationConfiguration, error) {
+	replicationConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ReplicationConfiguration, error) {
 		return findReplicationConfiguration(ctx, conn, d.Id())
 	})
 
@@ -1094,7 +1094,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Server-side Encryption Configuration.
 	//
-	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ServerSideEncryptionConfiguration, error) {
+	encryptionConfiguration, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ServerSideEncryptionConfiguration, error) {
 		return findServerSideEncryptionConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1118,7 +1118,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Object Lock Configuration.
 	//
-	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (*types.ObjectLockConfiguration, error) {
+	objLockConfig, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (*types.ObjectLockConfiguration, error) {
 		return findObjectLockConfiguration(ctx, conn, d.Id(), "")
 	})
 
@@ -1341,7 +1341,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.HasChange("grant") && d.Get("grant").(*schema.Set).Len() > 0 {
-		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func() (*s3.GetBucketAclOutput, error) {
+		bucketACL, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (*s3.GetBucketAclOutput, error) {
 			return findBucketACL(ctx, conn, d.Id(), "")
 		})
 
@@ -1682,17 +1682,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	return region, nil
 }
 
-func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
-		return f()
-	}, errCodeNoSuchBucket)
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return outputRaw.(T), nil
+func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, f, errCodeNoSuchBucket)
 }
 
 func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {

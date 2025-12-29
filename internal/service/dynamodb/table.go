@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -33,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -2203,7 +2203,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 }
 
 func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, globalTableWitnessRegionName string, timeout time.Duration) error {
-	var g multierror.Group
+	var g tfsync.Group
 
 	var replicaDeletes []awstypes.ReplicationGroupUpdate
 	for _, tfMapRaw := range tfList {
@@ -2310,7 +2310,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				continue
 			}
 
-			g.Go(func() error {
+			g.Go(ctx, func(ctx context.Context) error {
 				input := &dynamodb.UpdateTableInput{
 					TableName: aws.String(tableName),
 					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
@@ -2359,7 +2359,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return nil
 			})
 		}
-		return g.Wait().ErrorOrNil()
+		return g.Wait(ctx)
 	}
 }
 
@@ -2608,10 +2608,11 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	for _, g := range gsi {
 		gsi := make(map[string]any)
 
+		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
 
 		for _, attribute := range g.KeySchema {

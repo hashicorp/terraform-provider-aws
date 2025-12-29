@@ -169,7 +169,7 @@ The `extraction` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier of the Memory Strategy.
+* `memory_strategy_id` - Unique identifier of the Memory Strategy. This corresponds to the service `strategyId` identifier (AWS API / CloudFormation terminology).
 
 ## Timeouts
 

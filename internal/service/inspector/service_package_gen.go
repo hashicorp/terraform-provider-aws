@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceRulesPackages,
+			Factory:  dataSourceRulesPackages,
 			TypeName: "aws_inspector_rules_packages",
 			Name:     "Rules Packages",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -42,7 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAssessmentTarget,
+			Factory:  resourceAssessmentTarget,
 			TypeName: "aws_inspector_assessment_target",
 			Name:     "Assessment Target",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceAssessmentTemplate,
+			Factory:  resourceAssessmentTemplate,
 			TypeName: "aws_inspector_assessment_template",
 			Name:     "Assessment Template",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceResourceGroup,
+			Factory:  resourceResourceGroup,
 			TypeName: "aws_inspector_resource_group",
 			Name:     "Resource Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

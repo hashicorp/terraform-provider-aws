@@ -121,8 +121,8 @@ func autoGenerateGoldenPath(t *testing.T, fullTestName, testCaseName string) str
 	// fullTestName might be "TestExpandLogging_collections/Collection_of_primitive_types_Source_and_slice_or_map_of_primtive_types_Target"
 	// We want to extract "TestExpandLogging_collections"
 	baseName := fullTestName
-	if slashIndex := strings.Index(fullTestName, "/"); slashIndex != -1 {
-		baseName = fullTestName[:slashIndex]
+	if before, _, ok := strings.Cut(fullTestName, "/"); ok {
+		baseName = before
 	}
 
 	// Convert TestExpandLogging_collections -> expand_logging_collections
