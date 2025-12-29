@@ -93,15 +93,8 @@ func RegisterSweepers() {
 		F:    sweepRealtimeLogsConfig,
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_response_headers_policy", &resource.Sweeper{
-		Name: "aws_cloudfront_response_headers_policy",
-		F:    sweepResponseHeadersPolicies,
-		Dependencies: []string{
-			"aws_cloudfront_distribution",
-		},
-	})
-
 	awsv2.Register("aws_cloudfront_connection_function", sweepConnectionFunctions, "aws_cloudfront_distribution")
+	awsv2.Register("aws_cloudfront_response_headers_policy", sweepResponseHeadersPolicies, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_trust_store", sweepTrustStores, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_vpc_origin", sweepVPCOrigins)
 }
@@ -657,19 +650,14 @@ func sweepOriginRequestPolicies(region string) error {
 	return nil
 }
 
-func sweepResponseHeadersPolicies(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListResponseHeadersPoliciesInput{
+func sweepResponseHeadersPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudfront.ListResponseHeadersPoliciesInput{
 		Type: awstypes.ResponseHeadersPolicyTypeCustom,
 	}
-	sweepResources := make([]sweep.Sweepable, 0)
+	conn := client.CloudFrontClient(ctx)
+	var sweepResources []sweep.Sweepable
 
-	err = listResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+	err := listResponseHeadersPoliciesPages(ctx, conn, &input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -697,22 +685,11 @@ func sweepResponseHeadersPolicies(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Response Headers Policy sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing CloudFront Response Headers Policies (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Response Headers Policies (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepOriginAccessControls(region string) error {
