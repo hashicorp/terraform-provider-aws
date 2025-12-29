@@ -54,6 +54,14 @@ func resourceSubscriptionFilter() *schema.Resource {
 				Default:          awstypes.DistributionByLogStream,
 				ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
 			},
+			"emit_system_fields": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+				},
+			},
 			"filter_pattern": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -95,6 +103,12 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("distribution"); ok {
 		input.Distribution = awstypes.Distribution(v.(string))
+	}
+
+	if v, ok := d.GetOk("emit_system_fields"); ok {
+		input.EmitSystemFields = tfslices.ApplyToAll(v.(*schema.Set).List(), func(v any) string {
+			return v.(string)
+		})
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
@@ -153,6 +167,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
+	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
 	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
 	d.Set(names.AttrName, subscriptionFilter.FilterName)
