@@ -41,14 +41,11 @@ func RegisterSweepers() {
 		F:    sweepDistributions,
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
-		Name: "aws_cloudfront_function",
-		F:    sweepFunctions,
-	})
-
 	awsv2.Register("aws_cloudfront_connection_function", sweepConnectionFunctions, "aws_cloudfront_distribution")
+	// DO NOT add a continuous deployment policy sweeper as these are swept as part of the distribution sweeper.
 	awsv2.Register("aws_cloudfront_field_level_encryption_config", sweepFieldLevelEncryptionConfigs)
 	awsv2.Register("aws_cloudfront_field_level_encryption_profile", sweepFieldLevelEncryptionProfiles, "aws_cloudfront_field_level_encryption_config")
+	awsv2.Register("aws_cloudfront_function", sweepFunctions)
 	awsv2.Register("aws_cloudfront_key_group", sweepKeyGroup)
 	awsv2.Register("aws_cloudfront_monitoring_subscription", sweepMonitoringSubscriptions, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_origin_access_control", sweepOriginAccessControls, "aws_cloudfront_distribution")
@@ -243,17 +240,12 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	return nil
 }
 
-func sweepFunctions(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudfront.ListFunctionsInput
 	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListFunctionsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	err = listFunctionsPages(ctx, conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
+	err := listFunctionsPages(ctx, conn, &input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -281,22 +273,11 @@ func sweepFunctions(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing CloudFront Functions (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Functions (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepKeyGroup(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
