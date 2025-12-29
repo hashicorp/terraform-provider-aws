@@ -237,31 +237,45 @@ type recurringChargeModel struct {
 	RecurringChargeFrequency types.String  `tfsdk:"recurring_charge_frequency"`
 }
 
-func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id string) (result awstypes.ReservedCacheNode, err error) {
+func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id string) (*awstypes.ReservedCacheNode, error) {
 	input := elasticache.DescribeReservedCacheNodesInput{
 		ReservedCacheNodeId: aws.String(id),
 	}
 
-	output, err := conn.DescribeReservedCacheNodes(ctx, &input)
+	return findReservedCacheNode(ctx, conn, &input)
+}
 
-	if errs.IsA[*awstypes.ReservedCacheNodeNotFoundFault](err) {
-		return result, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
+func findReservedCacheNode(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReservedCacheNodesInput) (*awstypes.ReservedCacheNode, error) {
+	output, err := findReservedCacheNodes(ctx, conn, input)
+
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	if output == nil || len(output.ReservedCacheNodes) == 0 {
-		return result, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findReservedCacheNodes(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReservedCacheNodesInput) ([]awstypes.ReservedCacheNode, error) {
+	var output []awstypes.ReservedCacheNode
+
+	pages := elasticache.NewDescribeReservedCacheNodesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ReservedCacheNodeNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ReservedCacheNodes...)
 	}
 
-	if count := len(output.ReservedCacheNodes); count > 1 {
-		return result, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ReservedCacheNodes[0], nil
+	return output, nil
 }
 
 func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) error {

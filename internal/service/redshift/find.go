@@ -7,10 +7,12 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,23 +47,14 @@ func findCluster(ctx context.Context, conn *redshift.Client, input *redshift.Des
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
 	return tfresource.AssertSingleValueResult(output)
 }
 
 func findClusterByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Cluster, error) {
-	input := &redshift.DescribeClustersInput{
+	input := redshift.DescribeClustersInput{
 		ClusterIdentifier: aws.String(id),
 	}
-
-	output, err := findCluster(ctx, conn, input)
+	output, err := findCluster(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -77,33 +70,80 @@ func findClusterByID(ctx context.Context, conn *redshift.Client, id string) (*aw
 	return output, nil
 }
 
-func findScheduledActionByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ScheduledAction, error) {
-	input := &redshift.DescribeScheduledActionsInput{
-		ScheduledActionName: aws.String(name),
-	}
+func findScheduledActions(ctx context.Context, conn *redshift.Client, input *redshift.DescribeScheduledActionsInput) ([]awstypes.ScheduledAction, error) {
+	var output []awstypes.ScheduledAction
 
-	output, err := conn.DescribeScheduledActions(ctx, input)
+	pages := redshift.NewDescribeScheduledActionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if errs.IsA[*awstypes.ScheduledActionNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if errs.IsA[*awstypes.ScheduledActionNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ScheduledActions...)
 	}
+
+	return output, nil
+}
+
+func findScheduledAction(ctx context.Context, conn *redshift.Client, input *redshift.DescribeScheduledActionsInput) (*awstypes.ScheduledAction, error) {
+	output, err := findScheduledActions(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.ScheduledActions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findScheduledActionByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ScheduledAction, error) {
+	input := redshift.DescribeScheduledActionsInput{
+		ScheduledActionName: aws.String(name),
 	}
 
-	if count := len(output.ScheduledActions); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
+	return findScheduledAction(ctx, conn, &input)
+}
+
+func findHSMClientCertificates(ctx context.Context, conn *redshift.Client, input *redshift.DescribeHsmClientCertificatesInput) ([]awstypes.HsmClientCertificate, error) {
+	var output []awstypes.HsmClientCertificate
+
+	pages := redshift.NewDescribeHsmClientCertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.HsmClientCertificateNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.HsmClientCertificates...)
 	}
 
-	return tfresource.AssertSingleValueResult(output.ScheduledActions)
+	return output, nil
+}
+
+func findHSMClientCertificate(ctx context.Context, conn *redshift.Client, input *redshift.DescribeHsmClientCertificatesInput) (*awstypes.HsmClientCertificate, error) {
+	output, err := findHSMClientCertificates(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.HsmClientCertificate, error) {
@@ -111,27 +151,41 @@ func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Client, id
 		HsmClientCertificateIdentifier: aws.String(id),
 	}
 
-	output, err := conn.DescribeHsmClientCertificates(ctx, &input)
-	if errs.IsA[*awstypes.HsmClientCertificateNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	return findHSMClientCertificate(ctx, conn, &input)
+}
+
+func findHSMConfigurations(ctx context.Context, conn *redshift.Client, input *redshift.DescribeHsmConfigurationsInput) ([]awstypes.HsmConfiguration, error) {
+	var output []awstypes.HsmConfiguration
+
+	pages := redshift.NewDescribeHsmConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.HsmConfigurationNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.HsmConfigurations...)
 	}
+
+	return output, nil
+}
+
+func findHSMConfiguration(ctx context.Context, conn *redshift.Client, input *redshift.DescribeHsmConfigurationsInput) (*awstypes.HsmConfiguration, error) {
+	output, err := findHSMConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.HsmClientCertificates) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.HsmClientCertificates); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.HsmClientCertificates)
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findHSMConfigurationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.HsmConfiguration, error) {
@@ -139,64 +193,53 @@ func findHSMConfigurationByID(ctx context.Context, conn *redshift.Client, id str
 		HsmConfigurationIdentifier: aws.String(id),
 	}
 
-	output, err := conn.DescribeHsmConfigurations(ctx, &input)
-	if errs.IsA[*awstypes.HsmConfigurationNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	return findHSMConfiguration(ctx, conn, &input)
+}
+
+func findUsageLimits(ctx context.Context, conn *redshift.Client, input *redshift.DescribeUsageLimitsInput) ([]awstypes.UsageLimit, error) {
+	var output []awstypes.UsageLimit
+
+	pages := redshift.NewDescribeUsageLimitsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.UsageLimitNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.UsageLimits...)
 	}
+
+	return output, nil
+}
+
+func findUsageLimit(ctx context.Context, conn *redshift.Client, input *redshift.DescribeUsageLimitsInput) (*awstypes.UsageLimit, error) {
+	output, err := findUsageLimits(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.HsmConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.HsmConfigurations); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.HsmConfigurations)
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findUsageLimitByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.UsageLimit, error) {
-	input := &redshift.DescribeUsageLimitsInput{
+	input := redshift.DescribeUsageLimitsInput{
 		UsageLimitId: aws.String(id),
 	}
 
-	output, err := conn.DescribeUsageLimits(ctx, input)
-
-	if errs.IsA[*awstypes.UsageLimitNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.UsageLimits) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.UsageLimits); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.UsageLimits)
+	return findUsageLimit(ctx, conn, &input)
 }
 
-func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.AuthenticationProfile, error) {
-	input := redshift.DescribeAuthenticationProfilesInput{
-		AuthenticationProfileName: aws.String(id),
-	}
-
-	output, err := conn.DescribeAuthenticationProfiles(ctx, &input)
+func findAuthenticationProfiles(ctx context.Context, conn *redshift.Client, input *redshift.DescribeAuthenticationProfilesInput) ([]awstypes.AuthenticationProfile, error) {
+	output, err := conn.DescribeAuthenticationProfiles(ctx, input)
 
 	if errs.IsA[*awstypes.AuthenticationProfileNotFoundFault](err) {
 		return nil, &sdkretry.NotFoundError{
@@ -209,152 +252,201 @@ func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Client, i
 		return nil, err
 	}
 
-	if output == nil || len(output.AuthenticationProfiles) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.AuthenticationProfiles); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
+	return output.AuthenticationProfiles, nil
+}
+
+func findAuthenticationProfile(ctx context.Context, conn *redshift.Client, input *redshift.DescribeAuthenticationProfilesInput) (*awstypes.AuthenticationProfile, error) {
+	output, err := findAuthenticationProfiles(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output.AuthenticationProfiles)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.AuthenticationProfile, error) {
+	input := redshift.DescribeAuthenticationProfilesInput{
+		AuthenticationProfileName: aws.String(id),
+	}
+
+	return findAuthenticationProfile(ctx, conn, &input)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEventSubscriptionsInput) ([]awstypes.EventSubscription, error) {
+	var output []awstypes.EventSubscription
+
+	pages := redshift.NewDescribeEventSubscriptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.EventSubscriptionsList...)
+	}
+
+	return output, nil
+}
+
+func findEventSubscription(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEventSubscriptionsInput) (*awstypes.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findEventSubscriptionByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.EventSubscription, error) {
-	input := &redshift.DescribeEventSubscriptionsInput{
+	input := redshift.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
 
-	output, err := conn.DescribeEventSubscriptions(ctx, input)
+	return findEventSubscription(ctx, conn, &input)
+}
 
-	if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+func findClusterSubnetGroups(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterSubnetGroupsInput) ([]awstypes.ClusterSubnetGroup, error) {
+	var output []awstypes.ClusterSubnetGroup
+
+	pages := redshift.NewDescribeClusterSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterSubnetGroupNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ClusterSubnetGroups...)
 	}
+
+	return output, nil
+}
+
+func findClusterSubnetGroup(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterSubnetGroupsInput) (*awstypes.ClusterSubnetGroup, error) {
+	output, err := findClusterSubnetGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.EventSubscriptionsList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.EventSubscriptionsList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.EventSubscriptionsList)
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findSubnetGroupByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ClusterSubnetGroup, error) {
-	input := &redshift.DescribeClusterSubnetGroupsInput{
+	input := redshift.DescribeClusterSubnetGroupsInput{
 		ClusterSubnetGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeClusterSubnetGroups(ctx, input)
+	return findClusterSubnetGroup(ctx, conn, &input)
+}
 
-	if errs.IsA[*awstypes.ClusterSubnetGroupNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+func findEndpointAccesses(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEndpointAccessInput) ([]awstypes.EndpointAccess, error) {
+	var output []awstypes.EndpointAccess
+
+	pages := redshift.NewDescribeEndpointAccessPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.EndpointNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.EndpointAccessList...)
 	}
+
+	return output, nil
+}
+
+func findEndpointAccess(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEndpointAccessInput) (*awstypes.EndpointAccess, error) {
+	output, err := findEndpointAccesses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.ClusterSubnetGroups) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.ClusterSubnetGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.ClusterSubnetGroups)
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findEndpointAccessByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.EndpointAccess, error) {
-	input := &redshift.DescribeEndpointAccessInput{
+	input := redshift.DescribeEndpointAccessInput{
 		EndpointName: aws.String(name),
 	}
 
-	output, err := conn.DescribeEndpointAccess(ctx, input)
-
-	if errs.IsA[*awstypes.EndpointNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.EndpointAccessList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.EndpointAccessList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.EndpointAccessList)
+	return findEndpointAccess(ctx, conn, &input)
 }
 
-func findEndpointAuthorizationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.EndpointAuthorization, error) {
-	account, clusterId, err := DecodeEndpointAuthorizationID(id)
-	if err != nil {
-		return nil, err
-	}
+func findEndpointAuthorizations(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEndpointAuthorizationInput) ([]awstypes.EndpointAuthorization, error) {
+	var output []awstypes.EndpointAuthorization
 
-	input := &redshift.DescribeEndpointAuthorizationInput{
-		Account:           aws.String(account),
-		ClusterIdentifier: aws.String(clusterId),
-	}
+	pages := redshift.NewDescribeEndpointAuthorizationPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	output, err := conn.DescribeEndpointAuthorization(ctx, input)
-
-	if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.EndpointAuthorizationList...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.EndpointAuthorizationList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.EndpointAuthorizationList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.EndpointAuthorizationList)
+	return output, nil
 }
 
-func findPartnerByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.PartnerIntegrationInfo, error) {
-	account, clusterId, dbName, partnerName, err := decodePartnerID(id)
+func findEndpointAuthorization(ctx context.Context, conn *redshift.Client, input *redshift.DescribeEndpointAuthorizationInput) (*awstypes.EndpointAuthorization, error) {
+	output, err := findEndpointAuthorizations(ctx, conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	input := &redshift.DescribePartnersInput{
-		AccountId:         aws.String(account),
-		ClusterIdentifier: aws.String(clusterId),
-		DatabaseName:      aws.String(dbName),
-		PartnerName:       aws.String(partnerName),
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEndpointAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.Client, accountID, clusterID string) (*awstypes.EndpointAuthorization, error) {
+	input := redshift.DescribeEndpointAuthorizationInput{
+		Account:           aws.String(accountID),
+		ClusterIdentifier: aws.String(clusterID),
 	}
 
+	return findEndpointAuthorization(ctx, conn, &input)
+}
+
+func findPartners(ctx context.Context, conn *redshift.Client, input *redshift.DescribePartnersInput) ([]awstypes.PartnerIntegrationInfo, error) {
 	output, err := conn.DescribePartners(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
@@ -368,59 +460,91 @@ func findPartnerByID(ctx context.Context, conn *redshift.Client, id string) (*aw
 		return nil, err
 	}
 
-	if output == nil || len(output.PartnerIntegrationInfoList) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.PartnerIntegrationInfoList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.PartnerIntegrationInfoList)
+	return output.PartnerIntegrationInfoList, nil
 }
 
-func findClusterSnapshotByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
-	input := &redshift.DescribeClusterSnapshotsInput{
-		SnapshotIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeClusterSnapshots(ctx, input)
-
-	if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.ClusterSnapshotNotFoundFault](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findPartner(ctx context.Context, conn *redshift.Client, input *redshift.DescribePartnersInput) (*awstypes.PartnerIntegrationInfo, error) {
+	output, err := findPartners(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Snapshots) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPartnerByFourPartKey(ctx context.Context, conn *redshift.Client, accountID, clusterID, databaseName, partnerName string) (*awstypes.PartnerIntegrationInfo, error) {
+	input := redshift.DescribePartnersInput{
+		AccountId:         aws.String(accountID),
+		ClusterIdentifier: aws.String(clusterID),
+		DatabaseName:      aws.String(databaseName),
+		PartnerName:       aws.String(partnerName),
 	}
 
-	if count := len(output.Snapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
+	return findPartner(ctx, conn, &input)
+}
+
+func findClusterSnapshots(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterSnapshotsInput) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
+
+	pages := redshift.NewDescribeClusterSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.ClusterSnapshotNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Snapshots...)
 	}
 
-	if status := aws.ToString(output.Snapshots[0].Status); status == clusterSnapshotStatusDeleted {
+	return output, nil
+}
+
+func findClusterSnapshot(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterSnapshotsInput) (*awstypes.Snapshot, error) {
+	output, err := findClusterSnapshots(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClusterSnapshotByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.Snapshot, error) {
+	input := redshift.DescribeClusterSnapshotsInput{
+		SnapshotIdentifier: aws.String(id),
+	}
+	output, err := findClusterSnapshot(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.ToString(output.Status); status == clusterSnapshotStatusDeleted {
 		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
 	}
 
-	return tfresource.AssertSingleValueResult(output.Snapshots)
+	return output, nil
 }
 
-func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.ResourcePolicy, error) {
-	input := &redshift.GetResourcePolicyInput{
-		ResourceArn: aws.String(arn),
-	}
-
+func findResourcePolicy(ctx context.Context, conn *redshift.Client, input *redshift.GetResourcePolicyInput) (*awstypes.ResourcePolicy, error) {
 	output, err := conn.GetResourcePolicy(ctx, input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
@@ -437,6 +561,14 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn str
 	}
 
 	return output.ResourcePolicy, nil
+}
+
+func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.ResourcePolicy, error) {
+	input := redshift.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	return findResourcePolicy(ctx, conn, &input)
 }
 
 func findIntegrations(ctx context.Context, conn *redshift.Client, input *redshift.DescribeIntegrationsInput) ([]awstypes.Integration, error) {
@@ -479,4 +611,332 @@ func findIntegrationByARN(ctx context.Context, conn *redshift.Client, arn string
 	}
 
 	return findIntegration(ctx, conn, &input)
+}
+
+func findLoggingStatus(ctx context.Context, conn *redshift.Client, input *redshift.DescribeLoggingStatusInput) (*redshift.DescribeLoggingStatusOutput, error) {
+	output, err := conn.DescribeLoggingStatus(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findLoggingStatusByID(ctx context.Context, conn *redshift.Client, clusterID string) (*redshift.DescribeLoggingStatusOutput, error) {
+	input := redshift.DescribeLoggingStatusInput{
+		ClusterIdentifier: aws.String(clusterID),
+	}
+
+	output, err := findLoggingStatus(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !aws.ToBool(output.LoggingEnabled) {
+		return nil, &sdkretry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findClusterParameterGroups(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParameterGroupsInput) ([]awstypes.ClusterParameterGroup, error) {
+	var output []awstypes.ClusterParameterGroup
+
+	pages := redshift.NewDescribeClusterParameterGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ParameterGroups...)
+	}
+
+	return output, nil
+}
+
+func findClusterParameterGroup(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParameterGroupsInput) (*awstypes.ClusterParameterGroup, error) {
+	output, err := findClusterParameterGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.ClusterParameterGroup, error) {
+	input := redshift.DescribeClusterParameterGroupsInput{
+		ParameterGroupName: aws.String(name),
+	}
+	output, err := findClusterParameterGroup(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ParameterGroupName) != name {
+		return nil, &sdkretry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, clusterID string) (*awstypes.ClusterSnapshotCopyStatus, error) {
+	output, err := findClusterByID(ctx, conn, clusterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ClusterSnapshotCopyStatus == nil {
+		return nil, tfresource.NewEmptyResultError(clusterID)
+	}
+
+	return output.ClusterSnapshotCopyStatus, nil
+}
+
+func findSnapshotCopyGrants(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotCopyGrantsInput) ([]awstypes.SnapshotCopyGrant, error) {
+	var output []awstypes.SnapshotCopyGrant
+
+	pages := redshift.NewDescribeSnapshotCopyGrantsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.SnapshotCopyGrantNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SnapshotCopyGrants...)
+	}
+
+	return output, nil
+}
+
+func findSnapshotCopyGrant(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotCopyGrantsInput) (*awstypes.SnapshotCopyGrant, error) {
+	output, err := findSnapshotCopyGrants(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Client, name string) (*awstypes.SnapshotCopyGrant, error) {
+	input := redshift.DescribeSnapshotCopyGrantsInput{
+		SnapshotCopyGrantName: aws.String(name),
+	}
+
+	return findSnapshotCopyGrant(ctx, conn, &input)
+}
+
+func findSnapshotSchedules(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotSchedulesInput) ([]awstypes.SnapshotSchedule, error) {
+	var output []awstypes.SnapshotSchedule
+
+	pages := redshift.NewDescribeSnapshotSchedulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.SnapshotScheduleNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SnapshotSchedules...)
+	}
+
+	return output, nil
+}
+
+func findSnapshotSchedule(ctx context.Context, conn *redshift.Client, input *redshift.DescribeSnapshotSchedulesInput) (*awstypes.SnapshotSchedule, error) {
+	output, err := findSnapshotSchedules(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSnapshotScheduleByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.SnapshotSchedule, error) {
+	input := redshift.DescribeSnapshotSchedulesInput{
+		ScheduleIdentifier: aws.String(id),
+	}
+
+	return findSnapshotSchedule(ctx, conn, &input)
+}
+
+func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Client, clusterID, scheduleID string) (*awstypes.ClusterAssociatedToSchedule, error) {
+	input := redshift.DescribeSnapshotSchedulesInput{
+		ClusterIdentifier:  aws.String(clusterID),
+		ScheduleIdentifier: aws.String(scheduleID),
+	}
+	output, err := findSnapshotSchedule(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.AssociatedClusters, func(v awstypes.ClusterAssociatedToSchedule) bool {
+		return aws.ToString(v.ClusterIdentifier) == clusterID
+	}))
+}
+
+func findDataShares(ctx context.Context, conn *redshift.Client, input *redshift.DescribeDataSharesInput) ([]awstypes.DataShare, error) {
+	var output []awstypes.DataShare
+
+	pages := redshift.NewDescribeDataSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DataShares...)
+	}
+
+	return output, nil
+}
+
+func findDataShare(ctx context.Context, conn *redshift.Client, input *redshift.DescribeDataSharesInput) (*awstypes.DataShare, error) {
+	output, err := findDataShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDataShareAuthorizationByTwoPartKey(ctx context.Context, conn *redshift.Client, dataShareARN, consumerID string) (*awstypes.DataShare, error) {
+	input := redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(dataShareARN),
+	}
+	output, err := findDataShare(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify a share with the expected consumer identifier is present and the
+	// status is one of "AUTHORIZED" or "ACTIVE".
+	_, err = tfresource.AssertFirstValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
+		return aws.ToString(v.ConsumerIdentifier) == consumerID && (v.Status == awstypes.DataShareStatusAuthorized || v.Status == awstypes.DataShareStatusActive)
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDataShareConsumerAssociationByFourPartKey(ctx context.Context, conn *redshift.Client, dataShareARN, associateEntireAccount, consumerARN, consumerRegion string) (*awstypes.DataShare, error) {
+	input := redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(dataShareARN),
+	}
+	output, err := findDataShare(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// The data share should include an association in an "ACTIVE" status where
+	// one of the following is true:
+	// - `associate_entire_account` is `true` and `ConsumerIdentifier` matches the
+	//   account number of the data share ARN.
+	// - `consumer_arn` is set and `ConsumerIdentifier` matches its value.
+	// - `consumer_region` is set and `ConsumerRegion` matches its value.
+	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DataShareAssociations, func(v awstypes.DataShareAssociation) bool {
+		accountIDFromARN := func(s string) string {
+			v, err := arn.Parse(s)
+			if err != nil {
+				return ""
+			}
+			return v.AccountID
+		}
+
+		return v.Status == awstypes.DataShareStatusActive &&
+			((associateEntireAccount == "true" && aws.ToString(v.ConsumerIdentifier) == accountIDFromARN(dataShareARN)) ||
+				(consumerARN != "" && aws.ToString(v.ConsumerIdentifier) == consumerARN) ||
+				(consumerRegion != "" && aws.ToString(v.ConsumerRegion) == consumerRegion))
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findClusterParameters(ctx context.Context, conn *redshift.Client, input *redshift.DescribeClusterParametersInput) ([]awstypes.Parameter, error) {
+	var output []awstypes.Parameter
+
+	pages := redshift.NewDescribeClusterParametersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ClusterParameterGroupNotFoundFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Parameters...)
+	}
+
+	return output, nil
 }
