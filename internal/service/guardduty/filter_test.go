@@ -137,6 +137,17 @@ func testAccFilter_update(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccFilterConfig_matches(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.0", "us-*"),
+				),
+			},
 		},
 	})
 }
@@ -321,6 +332,28 @@ resource "aws_guardduty_filter" "test" {
     criterion {
       field      = "service.additionalInfo.threatListName"
       not_equals = ["some-threat", "yet-another-threat"]
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_matches() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
+
+  finding_criteria {
+    criterion {
+      field   = "region"
+      matches = ["us-*"]
     }
   }
 }
