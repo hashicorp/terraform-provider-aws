@@ -188,7 +188,7 @@ func expandLoggingConfiguration(tfMap map[string]any) *awstypes.ImageLoggingConf
 
 	apiObject := &awstypes.ImageLoggingConfiguration{}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -203,7 +203,7 @@ func flattenLoggingConfiguration(apiObject *awstypes.ImageLoggingConfiguration) 
 	tfMap := map[string]any{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.ToString(v)
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	return tfMap

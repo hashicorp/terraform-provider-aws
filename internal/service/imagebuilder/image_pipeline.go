@@ -154,7 +154,7 @@ func resourceImagePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`), "valid infrastructure configuration ARN must be provided"),
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -304,7 +304,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.LoggingConfiguration = expandPipelineLoggingConfiguration(v.([]any)[0].(map[string]any))
 	}
 
@@ -378,7 +378,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
 	if imagePipeline.LoggingConfiguration != nil {
-		if err := d.Set("logging_configuration", []any{flattenPipelineLoggingConfiguration(imagePipeline.LoggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenPipelineLoggingConfiguration(imagePipeline.LoggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	}
@@ -444,7 +444,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.InfrastructureConfigurationArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.LoggingConfiguration = expandPipelineLoggingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
