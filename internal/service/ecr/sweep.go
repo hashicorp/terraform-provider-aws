@@ -20,6 +20,8 @@ func RegisterSweepers() {
 		Name: "aws_ecr_repository",
 		F:    sweepRepositories,
 	})
+
+	awsv2.Register("aws_ecr_pull_time_update_exclusion", sweepPullTimeUpdateExclusions)
 }
 
 func sweepRepositories(region string) error {
