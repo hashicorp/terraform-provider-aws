@@ -54,6 +54,10 @@ func dataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"confidence_threshold": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrCreationTime: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -62,11 +66,23 @@ func dataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"dns_threat_protection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"firewall_domain_list_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"firewall_domain_redirection_action": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"firewall_rule_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"firewall_threat_protection_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -80,6 +96,10 @@ func dataSourceResolverFirewallRules() *schema.Resource {
 						},
 						names.AttrPriority: {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"q_type": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -145,9 +165,12 @@ func flattenFirewallRules(apiObjects []awstypes.FirewallRule) []any {
 
 func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]any {
 	tfMap := map[string]any{
-		names.AttrAction:          apiObject.Action,
-		"block_override_dns_type": apiObject.BlockOverrideDnsType,
-		"block_response":          apiObject.BlockResponse,
+		names.AttrAction:                     apiObject.Action,
+		"block_override_dns_type":            apiObject.BlockOverrideDnsType,
+		"block_response":                     apiObject.BlockResponse,
+		"confidence_threshold":               apiObject.ConfidenceThreshold,
+		"dns_threat_protection":              apiObject.DnsThreatProtection,
+		"firewall_domain_redirection_action": apiObject.FirewallDomainRedirectionAction,
 	}
 
 	if apiObject.BlockOverrideDomain != nil {
@@ -168,6 +191,9 @@ func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]any {
 	if apiObject.FirewallRuleGroupId != nil {
 		tfMap["firewall_rule_group_id"] = aws.ToString(apiObject.FirewallRuleGroupId)
 	}
+	if apiObject.FirewallThreatProtectionId != nil {
+		tfMap["firewall_threat_protection_id"] = aws.ToString(apiObject.FirewallThreatProtectionId)
+	}
 	if apiObject.ModificationTime != nil {
 		tfMap["modification_time"] = aws.ToString(apiObject.ModificationTime)
 	}
@@ -176,6 +202,9 @@ func flattenFirewallRule(apiObject awstypes.FirewallRule) map[string]any {
 	}
 	if apiObject.Priority != nil {
 		tfMap[names.AttrPriority] = aws.ToInt32(apiObject.Priority)
+	}
+	if apiObject.Qtype != nil {
+		tfMap["q_type"] = aws.ToString(apiObject.Qtype)
 	}
 	return tfMap
 }
