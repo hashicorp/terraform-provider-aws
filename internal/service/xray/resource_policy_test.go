@@ -77,7 +77,7 @@ func TestAccXRayResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfxray.ResourceResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfxray.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -127,7 +127,7 @@ func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceGateway, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

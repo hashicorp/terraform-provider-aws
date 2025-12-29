@@ -67,7 +67,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisanalyticsv2.ResourceApplicationSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesisanalyticsv2.ResourceApplicationSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +92,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), applicationResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesisanalyticsv2.ResourceApplication(), applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

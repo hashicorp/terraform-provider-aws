@@ -79,7 +79,7 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffms.ResourceSet, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffms.ResourceSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

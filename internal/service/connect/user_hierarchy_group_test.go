@@ -182,7 +182,7 @@ func testAccUserHierarchyGroup_disappears(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUserHierarchyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -97,7 +97,7 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceObservabilityConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceObservabilityConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

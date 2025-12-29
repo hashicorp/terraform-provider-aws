@@ -133,7 +133,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceLanguageModel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceLanguageModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

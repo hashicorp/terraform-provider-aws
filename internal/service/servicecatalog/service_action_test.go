@@ -72,7 +72,7 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceActionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

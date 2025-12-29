@@ -82,7 +82,7 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceCustomActionType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodepipeline.ResourceCustomActionType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -79,7 +79,7 @@ func TestAccCognitoIDPUserGroup_disappears(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -135,7 +135,7 @@ func TestAccNetworkManagerConnectPeer_disappears(t *testing.T) {
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnectPeer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

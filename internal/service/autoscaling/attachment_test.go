@@ -135,7 +135,7 @@ func TestAccAutoScalingAttachment_disappears(t *testing.T) {
 				Config: testAccAttachmentConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

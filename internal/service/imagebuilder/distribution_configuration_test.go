@@ -77,7 +77,7 @@ func TestAccImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

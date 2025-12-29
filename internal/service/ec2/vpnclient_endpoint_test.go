@@ -103,7 +103,7 @@ func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphor
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

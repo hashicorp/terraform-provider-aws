@@ -62,7 +62,7 @@ func TestAccDSLogSubscription_disappears(t *testing.T) {
 				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceLogSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceLogSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

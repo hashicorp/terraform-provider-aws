@@ -152,7 +152,7 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 				Config: testAccNodeGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

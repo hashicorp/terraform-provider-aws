@@ -100,7 +100,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

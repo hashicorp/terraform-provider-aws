@@ -119,7 +119,7 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -197,7 +197,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 				Config: testAccCertificateConfig_certificate(certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -96,7 +96,7 @@ func TestAccIoTRoleAlias_disappears(t *testing.T) {
 				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceRoleAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceRoleAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -147,7 +147,7 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffirehose.ResourceDeliveryStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffirehose.ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

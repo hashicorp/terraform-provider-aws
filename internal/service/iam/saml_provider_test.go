@@ -123,7 +123,7 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSAMLProvider(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSAMLProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

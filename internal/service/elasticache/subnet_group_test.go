@@ -67,7 +67,7 @@ func TestAccElastiCacheSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, t, resourceName, &csg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

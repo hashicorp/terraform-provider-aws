@@ -63,7 +63,7 @@ func testAccGraph_disappears(t *testing.T) {
 				Config: testAccGraphConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdetective.ResourceGraph(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceGraph(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

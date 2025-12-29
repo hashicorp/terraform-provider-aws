@@ -162,7 +162,7 @@ func TestAccRDSClusterSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterSnapshotCopy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceClusterSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

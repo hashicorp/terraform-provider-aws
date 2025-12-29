@@ -64,7 +64,7 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

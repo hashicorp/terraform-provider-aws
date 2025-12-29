@@ -73,7 +73,7 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

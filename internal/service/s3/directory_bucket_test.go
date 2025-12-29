@@ -104,7 +104,7 @@ func TestAccS3DirectoryBucket_disappears(t *testing.T) {
 				Config: testAccDirectoryBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceDirectoryBucket, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceDirectoryBucket, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

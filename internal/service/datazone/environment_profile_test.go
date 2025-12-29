@@ -91,7 +91,7 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

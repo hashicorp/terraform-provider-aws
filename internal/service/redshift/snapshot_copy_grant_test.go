@@ -62,7 +62,7 @@ func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -300,7 +300,7 @@ func testAccDataSource_disappears(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceDataSource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceDataSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

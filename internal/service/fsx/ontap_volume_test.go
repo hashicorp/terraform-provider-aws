@@ -87,7 +87,7 @@ func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceONTAPVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceONTAPVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

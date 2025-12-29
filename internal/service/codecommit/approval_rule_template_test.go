@@ -66,7 +66,7 @@ func TestAccCodeCommitApprovalRuleTemplate_disappears(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

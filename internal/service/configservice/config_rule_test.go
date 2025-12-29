@@ -344,7 +344,7 @@ func testAccConfigRule_disappears(t *testing.T) {
 				Config: testAccConfigRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

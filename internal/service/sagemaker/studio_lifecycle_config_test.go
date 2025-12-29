@@ -113,7 +113,7 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

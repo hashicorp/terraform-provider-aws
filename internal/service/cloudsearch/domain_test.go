@@ -83,7 +83,7 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDomainExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudsearch.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudsearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

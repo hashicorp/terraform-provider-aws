@@ -149,7 +149,7 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataCellsFilter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceDataCellsFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

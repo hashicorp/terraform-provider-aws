@@ -149,7 +149,7 @@ func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_basic(rName, lbName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceLoadBalancerCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

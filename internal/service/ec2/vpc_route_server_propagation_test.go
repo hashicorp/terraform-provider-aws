@@ -73,7 +73,7 @@ func TestAccVPCRouteServerPropagation_disappears(t *testing.T) {
 				Config: testAccVPCRouteServerPropagationConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerPropagationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCRouteServerPropagation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCRouteServerPropagation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

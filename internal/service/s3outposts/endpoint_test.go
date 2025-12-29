@@ -143,7 +143,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3outposts.ResourceEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3outposts.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

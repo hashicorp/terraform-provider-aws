@@ -209,7 +209,7 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceVocabulary(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

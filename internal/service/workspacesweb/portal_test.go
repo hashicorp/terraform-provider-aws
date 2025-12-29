@@ -75,7 +75,7 @@ func TestAccWorkSpacesWebPortal_disappears(t *testing.T) {
 				Config: testAccPortalConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourcePortal, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourcePortal, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

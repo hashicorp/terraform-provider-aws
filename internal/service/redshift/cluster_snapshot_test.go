@@ -80,7 +80,7 @@ func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceClusterSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -88,7 +88,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourcePrincipalPortfolioAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourcePrincipalPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

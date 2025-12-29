@@ -751,8 +751,8 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdlm.ResourceLifecyclePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdlm.ResourceLifecyclePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

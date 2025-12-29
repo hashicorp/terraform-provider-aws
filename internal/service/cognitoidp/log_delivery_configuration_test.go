@@ -151,7 +151,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_disappears(t *testing.T) {
 				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceLogDeliveryConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcognitoidp.ResourceLogDeliveryConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -70,7 +70,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -66,7 +66,7 @@ func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,8 +91,8 @@ func TestAccVPCInternetGatewayAttachment_Disappears_internetGateway(t *testing.T
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), igwResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGateway(), igwResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

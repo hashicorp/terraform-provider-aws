@@ -121,7 +121,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T, semaphore t
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPeeringAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPeeringAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

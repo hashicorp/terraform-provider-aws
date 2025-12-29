@@ -134,7 +134,7 @@ func TestAccVPCVPCEncryptionControl_disappears(t *testing.T) {
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEncryptionControl, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCEncryptionControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

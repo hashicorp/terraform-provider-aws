@@ -77,7 +77,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, &chimeSipMediaApplication),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

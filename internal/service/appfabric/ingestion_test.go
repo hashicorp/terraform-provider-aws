@@ -81,7 +81,7 @@ func testAccIngestion_disappears(t *testing.T) {
 				Config: testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceIngestion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceIngestion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

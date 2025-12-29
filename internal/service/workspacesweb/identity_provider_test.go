@@ -124,7 +124,7 @@ func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIdentityProvider, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIdentityProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

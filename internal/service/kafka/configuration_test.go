@@ -69,7 +69,7 @@ func TestAccKafkaConfiguration_disappears(t *testing.T) {
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

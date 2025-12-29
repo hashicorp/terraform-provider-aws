@@ -88,7 +88,7 @@ func testAccRecommendationPreferences_disappears(t *testing.T) {
 				Config: testAccRecommendationPreferencesConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcomputeoptimizer.ResourceRecommendationPreferences, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcomputeoptimizer.ResourceRecommendationPreferences, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

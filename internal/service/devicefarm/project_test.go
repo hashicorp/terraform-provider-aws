@@ -183,8 +183,8 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

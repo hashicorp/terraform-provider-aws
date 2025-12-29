@@ -66,7 +66,7 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_disappears(t *testing.T) {
 				Config: testAccQueryLogConfigAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceQueryLogConfigAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceQueryLogConfigAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

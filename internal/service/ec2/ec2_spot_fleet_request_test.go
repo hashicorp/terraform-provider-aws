@@ -157,7 +157,7 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotFleetRequest(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSpotFleetRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

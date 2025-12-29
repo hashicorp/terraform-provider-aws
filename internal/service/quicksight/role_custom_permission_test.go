@@ -84,7 +84,7 @@ func testAccRoleCustomPermission_disappears(t *testing.T) {
 				Config: testAccRoleCustomPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleCustomPermissionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRoleCustomPermission, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceRoleCustomPermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

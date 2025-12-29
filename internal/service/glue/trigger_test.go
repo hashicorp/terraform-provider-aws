@@ -596,7 +596,7 @@ func TestAccGlueTrigger_disappears(t *testing.T) {
 				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceTrigger(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -148,7 +148,7 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

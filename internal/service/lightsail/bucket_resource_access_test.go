@@ -75,7 +75,7 @@ func TestAccLightsailBucketResourceAccess_disappears(t *testing.T) {
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketResourceAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucketResourceAccess(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceBucketResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

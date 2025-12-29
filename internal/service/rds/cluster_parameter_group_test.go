@@ -141,7 +141,7 @@ func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

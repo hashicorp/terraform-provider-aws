@@ -73,7 +73,7 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceMemberAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceMemberAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

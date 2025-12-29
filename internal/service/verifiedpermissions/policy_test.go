@@ -207,7 +207,7 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

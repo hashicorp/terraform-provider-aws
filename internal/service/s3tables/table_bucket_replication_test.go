@@ -77,7 +77,7 @@ func TestAccS3TablesTableBucketReplication_disappears(t *testing.T) {
 				Config: testAccTableBucketReplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTableBucketReplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTableBucketReplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

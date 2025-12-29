@@ -119,7 +119,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_disappears(t *testing.T) {
 				Config: testAccUserAccessLoggingSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &userAccessLoggingSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

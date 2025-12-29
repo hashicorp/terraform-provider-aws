@@ -73,7 +73,7 @@ func TestAccQuickSightTheme_disappears(t *testing.T) {
 				Config: testAccThemeConfig_basic(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThemeExists(ctx, resourceName, &theme),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTheme(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceTheme(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

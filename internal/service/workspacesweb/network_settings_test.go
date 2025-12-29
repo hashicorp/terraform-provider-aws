@@ -86,7 +86,7 @@ func TestAccWorkSpacesWebNetworkSettings_disappears(t *testing.T) {
 				Config: testAccNetworkSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsExists(ctx, resourceName, &networkSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceNetworkSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceNetworkSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

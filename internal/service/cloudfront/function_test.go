@@ -84,7 +84,7 @@ func TestAccCloudFrontFunction_disappears(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFunction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

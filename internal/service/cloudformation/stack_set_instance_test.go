@@ -100,7 +100,7 @@ func TestAccCloudFormationStackSetInstance_disappears(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,8 +127,8 @@ func TestAccCloudFormationStackSetInstance_Disappears_stackSet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, stackSetResourceName, &stackSet1),
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackSetInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

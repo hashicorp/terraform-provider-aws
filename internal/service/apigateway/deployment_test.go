@@ -70,7 +70,7 @@ func TestAccAPIGatewayDeployment_disappears(t *testing.T) {
 				Config: testAccDeploymentConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDeployment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceDeployment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					testAccCheckRESTAPIExists(ctx, restApiResourceName, &restApi),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), restApiResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), restApiResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

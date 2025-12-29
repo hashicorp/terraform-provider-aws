@@ -164,7 +164,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

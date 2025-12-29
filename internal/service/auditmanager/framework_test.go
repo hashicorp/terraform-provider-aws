@@ -74,7 +74,7 @@ func TestAccAuditManagerFramework_disappears(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceFramework, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceFramework, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

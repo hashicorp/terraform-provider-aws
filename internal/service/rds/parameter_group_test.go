@@ -394,7 +394,7 @@ func TestAccRDSParameterGroup_disappears(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

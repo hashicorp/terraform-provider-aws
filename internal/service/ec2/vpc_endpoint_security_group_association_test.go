@@ -65,7 +65,7 @@ func TestAccVPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 				Config: testAccVPCEndpointSecurityGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointSecurityGroupAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointSecurityGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

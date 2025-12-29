@@ -87,7 +87,7 @@ func testAccAgreement_disappears(t *testing.T) {
 				Config: testAccAgreementConfig_basic(rName, baseDirectory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceAgreement(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceAgreement(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

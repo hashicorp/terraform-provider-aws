@@ -283,7 +283,7 @@ func TestAccODBCloudExadataInfrastructureResource_disappears(t *testing.T) {
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudExadataInfrastructure, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudExadataInfrastructure, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -225,7 +225,7 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -134,7 +134,7 @@ func testAccLFTagExpression_disappears(t *testing.T) {
 				Config: testAccLFTagExpressionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExpressionExists(ctx, resourceName, &lftagexpression),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceLFTagExpression, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceLFTagExpression, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

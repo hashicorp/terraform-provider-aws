@@ -250,7 +250,7 @@ func TestAccKendraFaq_disappears(t *testing.T) {
 				Config: testAccFaqConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFaqExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceFaq(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceFaq(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

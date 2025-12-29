@@ -84,7 +84,7 @@ func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 				Config: testAccOrganizationCustomPolicyRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &organizationcustompolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationCustomPolicyRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceOrganizationCustomPolicyRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

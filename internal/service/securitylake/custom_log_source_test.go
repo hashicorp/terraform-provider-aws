@@ -257,7 +257,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceCustomLogSource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceCustomLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

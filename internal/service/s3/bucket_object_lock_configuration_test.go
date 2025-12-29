@@ -66,7 +66,7 @@ func TestAccS3BucketObjectLockConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketObjectLockConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketObjectLockConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketObjectLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

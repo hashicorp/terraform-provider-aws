@@ -2515,7 +2515,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

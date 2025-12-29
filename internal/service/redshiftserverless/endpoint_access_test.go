@@ -79,7 +79,7 @@ func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) 
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceWorkgroup(), "aws_redshiftserverless_workgroup.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), "aws_redshiftserverless_workgroup.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,7 +102,7 @@ func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceEndpointAccess(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

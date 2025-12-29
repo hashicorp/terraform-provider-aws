@@ -112,7 +112,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_disappears(t *testing.T) {
 				Config: testAccSQLInjectionMatchSetConfig_basic(sqlInjectionMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceSQLInjectionMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceSQLInjectionMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

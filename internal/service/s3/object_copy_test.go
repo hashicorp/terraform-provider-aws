@@ -116,7 +116,7 @@ func TestAccS3ObjectCopy_disappears(t *testing.T) {
 				Config: testAccObjectCopyConfig_basic(rName1, names.AttrSource, rName2, names.AttrTarget),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObjectCopy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObjectCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

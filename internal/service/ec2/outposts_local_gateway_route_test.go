@@ -66,7 +66,7 @@ func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

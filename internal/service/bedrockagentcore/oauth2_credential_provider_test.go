@@ -95,7 +95,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceOAuth2CredentialProvider, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceOAuth2CredentialProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

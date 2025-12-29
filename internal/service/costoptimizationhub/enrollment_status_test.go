@@ -71,7 +71,7 @@ func testAccEnrollmentStatus_disappears(t *testing.T) {
 				Config: testAccEnrollmentStatusConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusIsActive(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcostoptimizationhub.ResourceEnrollmentStatus, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcostoptimizationhub.ResourceEnrollmentStatus, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

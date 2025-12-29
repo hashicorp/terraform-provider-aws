@@ -117,7 +117,7 @@ func testAccConformancePack_disappears(t *testing.T) {
 				Config: testAccConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConformancePack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

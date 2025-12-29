@@ -74,7 +74,7 @@ func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 				Config: testAccChannelAssociationConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckChannelAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceChannelAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceChannelAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

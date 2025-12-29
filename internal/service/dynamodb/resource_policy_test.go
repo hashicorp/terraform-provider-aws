@@ -100,7 +100,7 @@ func TestAccDynamoDBResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &out),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdynamodb.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

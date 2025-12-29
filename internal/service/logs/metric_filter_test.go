@@ -72,7 +72,7 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceMetricFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

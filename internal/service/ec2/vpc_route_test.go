@@ -91,7 +91,7 @@ func TestAccVPCRoute_disappears(t *testing.T) {
 				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +117,7 @@ func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &route),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRouteTable(), rtResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

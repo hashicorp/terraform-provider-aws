@@ -64,7 +64,7 @@ func TestAccVPCNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

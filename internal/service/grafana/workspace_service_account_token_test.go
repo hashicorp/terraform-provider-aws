@@ -68,7 +68,7 @@ func TestAccGrafanaWorkspaceServiceAccountToken_disappears(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountTokenConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountTokenExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccountToken, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfgrafana.ResourceWorkspaceServiceAccountToken, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

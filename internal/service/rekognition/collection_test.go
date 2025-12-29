@@ -83,7 +83,7 @@ func TestAccRekognitionCollection_disappears(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceCollection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

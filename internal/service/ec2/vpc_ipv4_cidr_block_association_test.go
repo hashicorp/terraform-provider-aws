@@ -88,7 +88,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +140,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -200,7 +200,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 			{
 				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 					testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx, ipamPoolResourceName, vpcResourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

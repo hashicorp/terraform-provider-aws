@@ -256,7 +256,7 @@ func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 				Config: testAccByteMatchSetConfig_basic(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceByteMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceByteMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

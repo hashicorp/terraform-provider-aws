@@ -219,7 +219,7 @@ func TestAccODBNetworkPeeringConnection_disappears(t *testing.T) {
 				Config: oracleDBNwkPeeringTestResource.basicConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeering),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.OracleDBNetworkPeeringConnection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.OracleDBNetworkPeeringConnection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

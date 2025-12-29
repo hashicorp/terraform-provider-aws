@@ -74,7 +74,7 @@ func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceCodeSigningConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceCodeSigningConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

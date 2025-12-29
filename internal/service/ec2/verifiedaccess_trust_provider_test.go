@@ -123,7 +123,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_basic("test", trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

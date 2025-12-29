@@ -82,7 +82,7 @@ func TestAccImageBuilderContainerRecipe_disappears(t *testing.T) {
 				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceContainerRecipe(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceContainerRecipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

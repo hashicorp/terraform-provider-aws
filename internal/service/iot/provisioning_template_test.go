@@ -72,7 +72,7 @@ func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceProvisioningTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceProvisioningTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

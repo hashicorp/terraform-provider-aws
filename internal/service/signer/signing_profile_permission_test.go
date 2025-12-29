@@ -74,7 +74,7 @@ func TestAccSignerSigningProfilePermission_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsigner.ResourceSigningProfilePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfilePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

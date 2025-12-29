@@ -130,7 +130,7 @@ func testAccControlPanel_disappears(t *testing.T) {
 				Config: testAccControlPanelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlPanelExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

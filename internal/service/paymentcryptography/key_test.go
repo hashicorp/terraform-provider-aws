@@ -202,7 +202,7 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpaymentcryptography.ResourceKey, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpaymentcryptography.ResourceKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

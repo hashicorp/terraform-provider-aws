@@ -199,8 +199,8 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceBuild(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceBuild(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

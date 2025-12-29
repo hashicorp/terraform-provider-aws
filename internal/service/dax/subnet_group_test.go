@@ -72,7 +72,7 @@ func TestAccDAXSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

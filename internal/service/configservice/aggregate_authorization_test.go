@@ -92,7 +92,7 @@ func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceAggregateAuthorization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceAggregateAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

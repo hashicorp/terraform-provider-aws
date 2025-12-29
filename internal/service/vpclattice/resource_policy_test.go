@@ -73,7 +73,7 @@ func TestAccVPCLatticeResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

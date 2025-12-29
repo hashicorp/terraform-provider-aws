@@ -66,7 +66,7 @@ func TestAccCloudFrontMultiTenantDistribution_disappears(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

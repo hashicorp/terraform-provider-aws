@@ -264,7 +264,7 @@ func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(ctx, apiResourceName, &api),
 					testAccCheckStageExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceStage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

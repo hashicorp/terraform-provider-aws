@@ -82,7 +82,7 @@ func testAccDeliverySource_disappears(t *testing.T) {
 				Config: testAccDeliverySourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliverySource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliverySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

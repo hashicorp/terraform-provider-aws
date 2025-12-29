@@ -799,8 +799,8 @@ func testAccTrail_disappears(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceTrail(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceTrail(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudtrail.ResourceTrail(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudtrail.ResourceTrail(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

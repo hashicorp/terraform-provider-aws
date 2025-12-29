@@ -75,7 +75,7 @@ func TestAccEC2InstanceConnectEndpoint_disappears(t *testing.T) {
 				Config: testAccInstanceConnectEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceConnectEndpoint, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceConnectEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

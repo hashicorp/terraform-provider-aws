@@ -139,7 +139,7 @@ func TestAccRedshiftCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

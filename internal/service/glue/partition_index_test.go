@@ -67,8 +67,8 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,8 +92,8 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,8 +117,8 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

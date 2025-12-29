@@ -230,7 +230,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourcePhoneNumber, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourcePhoneNumber, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

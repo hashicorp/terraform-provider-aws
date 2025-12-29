@@ -83,7 +83,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTargetExists(ctx, resourceName, &mount),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -75,7 +75,7 @@ func TestAccRedshiftSnapshotSchedule_disappears(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotSchedule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceSnapshotSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

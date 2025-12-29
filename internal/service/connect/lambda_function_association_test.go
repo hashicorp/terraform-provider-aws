@@ -63,7 +63,7 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

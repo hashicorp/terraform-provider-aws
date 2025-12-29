@@ -72,7 +72,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 				Config: testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

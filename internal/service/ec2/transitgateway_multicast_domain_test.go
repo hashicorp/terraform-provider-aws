@@ -79,7 +79,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T, semaphore tfs
 				Config: testAccTransitGatewayMulticastDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

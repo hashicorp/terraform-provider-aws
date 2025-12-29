@@ -106,7 +106,7 @@ func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 				Config: testAccCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

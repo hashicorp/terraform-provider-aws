@@ -241,8 +241,8 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func TestAccEC2Host_disappears(t *testing.T) {
 				Config: testAccHostConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &host),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceHost(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

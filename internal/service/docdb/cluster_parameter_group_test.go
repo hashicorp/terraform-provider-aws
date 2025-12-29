@@ -71,7 +71,7 @@ func TestAccDocDBClusterParameterGroup_disappears(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

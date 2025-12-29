@@ -74,7 +74,7 @@ func TestAccVPCRouteTable_disappears(t *testing.T) {
 				Config: testAccVPCRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccVPCRouteTable_Disappears_subnetAssociation(t *testing.T) {
 				Config: testAccVPCRouteTableConfig_subnetAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

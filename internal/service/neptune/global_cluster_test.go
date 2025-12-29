@@ -109,7 +109,7 @@ func TestAccNeptuneGlobalCluster_disappears(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceGlobalCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceGlobalCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

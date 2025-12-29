@@ -67,7 +67,7 @@ func testAccControl_disappears(t *testing.T) {
 				Config: testAccControlConfig_basic(ouName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

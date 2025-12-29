@@ -505,7 +505,7 @@ func testAccDistribution_disappears(t *testing.T) {
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDistribution(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDistribution(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

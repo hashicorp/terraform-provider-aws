@@ -84,7 +84,7 @@ func TestAccSignerSigningProfile_disappears(t *testing.T) {
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsigner.ResourceSigningProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -90,7 +90,7 @@ func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 				Config: testAccStreamProcessorConfig_connectedHome(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceStreamProcessor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -72,7 +72,7 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 				Config: testAccRolePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyExists(ctx, resourceName, &rolePolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

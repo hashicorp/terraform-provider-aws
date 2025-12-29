@@ -69,7 +69,7 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -324,7 +324,7 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceWorkgroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

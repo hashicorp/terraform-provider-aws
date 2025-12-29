@@ -75,7 +75,7 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarconnections.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -63,7 +63,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_disappears(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceRecoveryGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceRecoveryGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

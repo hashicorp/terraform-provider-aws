@@ -118,7 +118,7 @@ func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupIngressRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupIngressRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

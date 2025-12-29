@@ -150,7 +150,7 @@ func TestAccECSTaskSet_disappears(t *testing.T) {
 				Config: testAccTaskSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceTaskSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

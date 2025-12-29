@@ -118,7 +118,7 @@ func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceSizeConstraintSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceSizeConstraintSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

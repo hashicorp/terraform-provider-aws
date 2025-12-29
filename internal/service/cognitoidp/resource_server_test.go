@@ -72,7 +72,7 @@ func TestAccCognitoIDPResourceServer_disappears(t *testing.T) {
 				Config: testAccResourceServerConfig_basic(identifier, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceResourceServer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceResourceServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

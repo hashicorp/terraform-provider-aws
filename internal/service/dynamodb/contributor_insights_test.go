@@ -143,7 +143,7 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceContributorInsights(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceContributorInsights(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

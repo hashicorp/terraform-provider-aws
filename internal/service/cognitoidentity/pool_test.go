@@ -426,7 +426,7 @@ func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

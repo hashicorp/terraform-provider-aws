@@ -95,7 +95,7 @@ func TestAccSchedulerScheduleGroup_disappears(t *testing.T) {
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfscheduler.ResourceScheduleGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfscheduler.ResourceScheduleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

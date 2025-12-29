@@ -69,7 +69,7 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig_basic(rName, "bourbon"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig_basic(rName, "bourbon"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceLoadBalancer(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

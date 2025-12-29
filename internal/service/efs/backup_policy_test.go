@@ -65,7 +65,7 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceFileSystem(), fsResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

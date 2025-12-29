@@ -132,7 +132,7 @@ func testAccAppSyncSourceAPIAssociation_disappears(t *testing.T) {
 				Config: testAccSourceAPIAssociationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceSourceAPIAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappsync.ResourceSourceAPIAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -86,7 +86,7 @@ func TestAccRDSShardGroup_disappears(t *testing.T) {
 				Config: testAccShardGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckShardGroupExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceShardGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceShardGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

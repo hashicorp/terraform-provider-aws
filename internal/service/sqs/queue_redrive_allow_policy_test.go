@@ -78,7 +78,7 @@ func TestAccSQSQueueRedriveAllowPolicy_disappears(t *testing.T) {
 				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueueRedriveAllowPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueueRedriveAllowPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,7 +102,7 @@ func TestAccSQSQueueRedriveAllowPolicy_Disappears_queue(t *testing.T) {
 				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

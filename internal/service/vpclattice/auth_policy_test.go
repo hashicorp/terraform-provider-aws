@@ -73,7 +73,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceAuthPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceAuthPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

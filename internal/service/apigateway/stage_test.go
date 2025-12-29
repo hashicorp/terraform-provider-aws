@@ -211,7 +211,7 @@ func testAccStage_disappears(t *testing.T) {
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,8 +235,8 @@ func testAccStage_Disappears_restAPI(t *testing.T) {
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -75,7 +75,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 				Config: testAccEnvironmentBlueprintConfigurationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

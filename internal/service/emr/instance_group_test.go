@@ -68,8 +68,8 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceInstanceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, emrClusterResourceName, &cluster),
 					testAccCheckInstanceGroupExists(ctx, resourceName, &ig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

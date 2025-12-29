@@ -81,7 +81,7 @@ func TestAccWorkSpacesWebUserSettings_disappears(t *testing.T) {
 				Config: testAccUserSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -155,7 +155,7 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

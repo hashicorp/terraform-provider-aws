@@ -214,7 +214,7 @@ func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketMetadataConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketMetadataConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

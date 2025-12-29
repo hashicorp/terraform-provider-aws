@@ -75,7 +75,7 @@ func TestAccIPAM_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

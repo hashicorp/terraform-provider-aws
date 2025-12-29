@@ -175,7 +175,7 @@ func TestAccIVSChannel_disappears(t *testing.T) {
 				Config: testAccChannelConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourceChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

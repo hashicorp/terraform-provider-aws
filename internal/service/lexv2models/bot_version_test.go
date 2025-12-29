@@ -72,7 +72,7 @@ func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotVersion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceBotVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -152,7 +152,7 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &registry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceRegistry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

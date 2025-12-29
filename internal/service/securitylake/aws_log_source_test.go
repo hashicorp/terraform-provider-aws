@@ -193,7 +193,7 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceAWSLogSource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceAWSLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

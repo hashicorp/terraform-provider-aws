@@ -84,7 +84,7 @@ func TestAccCodeGuruProfilerProfilingGroup_disappears(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcodeguruprofiler.ResourceProfilingGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeguruprofiler.ResourceProfilingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

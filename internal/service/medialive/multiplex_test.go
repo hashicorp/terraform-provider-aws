@@ -175,7 +175,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceMultiplex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

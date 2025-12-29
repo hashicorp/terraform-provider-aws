@@ -158,7 +158,7 @@ func TestAccLambdaLayerVersionPermission_disappears(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceLayerVersionPermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceLayerVersionPermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

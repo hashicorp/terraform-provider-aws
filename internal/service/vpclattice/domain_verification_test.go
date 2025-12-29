@@ -72,7 +72,7 @@ func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 				Config: testAccDomainVerificationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainVerificationExists(ctx, resourceName, &domainVerification),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceDomainVerification, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceDomainVerification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -74,7 +74,7 @@ func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceVPCLink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

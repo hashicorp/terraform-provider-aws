@@ -89,7 +89,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 				Config: testAccCodeInterpreterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeinterpreter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceCodeInterpreter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceCodeInterpreter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
