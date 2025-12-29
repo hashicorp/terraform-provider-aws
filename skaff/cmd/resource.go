@@ -15,6 +15,7 @@ var (
 	force         bool
 	pluginSDKV2   bool
 	includeTags   bool
+	framework     bool
 )
 
 var resourceCmd = &cobra.Command{
