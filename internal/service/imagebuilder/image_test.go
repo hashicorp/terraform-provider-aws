@@ -347,6 +347,28 @@ func TestAccImageBuilderImage_workflows(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImage_deletionSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_deletionSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_settings.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -1068,4 +1090,64 @@ resource "aws_imagebuilder_image" "test" {
   depends_on = [aws_inspector2_enabler.test]
 }
 `)
+}
+
+func testAccImageConfig_deletionSettings(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "deletion" {
+  name = "%[1]s-deletion"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "imagebuilder.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "deletion" {
+  name = "%[1]s-deletion"
+  role = aws_iam_role.deletion.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "imagebuilder:GetImage",
+        "imagebuilder:GetLifecycleExecution",
+        "imagebuilder:DeleteImage",
+        "ec2:DescribeImages",
+        "ec2:DescribeImageAttribute",
+        "ec2:DescribeSnapshots",
+        "ec2:DeregisterImage",
+        "ec2:DeleteSnapshot",
+        "ecr:BatchDeleteImage",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+
+  deletion_settings {
+    execution_role = aws_iam_role.deletion.arn
+  }
+
+  depends_on = [aws_iam_role_policy.deletion]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
