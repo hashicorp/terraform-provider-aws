@@ -22,12 +22,7 @@ import (
 )
 
 func RegisterSweepers() {
-	// DO NOT add a continuous deployment policy sweeper as these are swept as part of the distribution sweeper
-	// resource.AddTestSweepers("aws_cloudfront_continuous_deployment_policy", &resource.Sweeper{
-	//	Name: "aws_cloudfront_continuous_deployment_policy",
-	//	F:    sweepContinuousDeploymentPolicies,
-	//})
-
+	// Keep distribution sweeper as an old-style sweeper.
 	resource.AddTestSweepers("aws_cloudfront_distribution", &resource.Sweeper{
 		Name: "aws_cloudfront_distribution",
 		F:    sweepDistributions,
@@ -76,9 +71,9 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
+	var input cloudfront.ListDistributionsInput
 	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListDistributionsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
 	if staging {
 		log.Print("[INFO] Sweeping staging CloudFront Distributions")
@@ -86,7 +81,7 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 		log.Print("[INFO] Sweeping production CloudFront Distributions")
 	}
 
-	pages := cloudfront.NewListDistributionsPaginator(conn, input)
+	pages := cloudfront.NewListDistributionsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -139,11 +134,11 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
+	var input cloudfront.ListContinuousDeploymentPoliciesInput
 	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	err = listContinuousDeploymentPoliciesPages(ctx, conn, input, func(page *cloudfront.ListContinuousDeploymentPoliciesOutput, lastPage bool) bool {
+	err = listContinuousDeploymentPoliciesPages(ctx, conn, &input, func(page *cloudfront.ListContinuousDeploymentPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
