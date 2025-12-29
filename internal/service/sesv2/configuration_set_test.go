@@ -255,6 +255,37 @@ func TestAccSESV2ConfigurationSet_suppressedReasonsEmpty(t *testing.T) {
 	})
 }
 
+func TestAccSESV2ConfigurationSet_suppressedReasonsAddEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_basic(rName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationSetConfig_suppressedReasonsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2ConfigurationSet_engagementMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -329,17 +360,6 @@ func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccConfigurationSetConfig_suppressedReasonsEmpty(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_configuration_set" "test" {
-  configuration_set_name = %[1]q
-  suppression_options {
-    suppressed_reasons = []
-  }
-}
-`, rName)
 }
 
 func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -450,6 +470,17 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, suppressedReason)
+}
+
+func testAccConfigurationSetConfig_suppressedReasonsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+  suppression_options {
+    suppressed_reasons = []
+  }
+}
+`, rName)
 }
 
 func testAccConfigurationSetConfig_engagementMetrics(rName, engagementMetrics string) string {
