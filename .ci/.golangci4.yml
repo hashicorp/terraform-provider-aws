@@ -134,7 +134,7 @@ linters:
       - linters:
           - staticcheck
         path: internal/service/ecr/
-        text: 'SA1019: params.RegistryIds is deprecated: This field is deprecated.'
+        text: 'SA1019: \w+.(\w+) is deprecated: This field is deprecated.'
       - linters:
           - staticcheck
         path: internal/service/firehose/
