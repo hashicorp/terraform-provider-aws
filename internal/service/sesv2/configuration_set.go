@@ -399,11 +399,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 				if v, ok := tfMap["suppressed_reasons"].([]any); ok {
-					if len(v) > 0 {
-						input.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
-					} else {
-						input.SuppressedReasons = make([]types.SuppressionListReason, 0)
-					}
+					input.SuppressedReasons = expandSuppressedReasons(v)
 				}
 			}
 		}
@@ -685,14 +681,22 @@ func expandSuppressionOptions(tfMap map[string]any) *types.SuppressionOptions {
 	apiObject := &types.SuppressionOptions{}
 
 	if v, ok := tfMap["suppressed_reasons"].([]any); ok {
-		if len(v) > 0 {
-			apiObject.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
-		} else {
-			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
-		}
+		apiObject.SuppressedReasons = expandSuppressedReasons(v)
 	}
 
 	return apiObject
+}
+
+func expandSuppressedReasons(tfList []any) []types.SuppressionListReason {
+	var apiObjects []types.SuppressionListReason
+
+	if len(tfList) > 0 {
+		apiObjects = flex.ExpandStringyValueList[types.SuppressionListReason](tfList)
+	} else {
+		apiObjects = make([]types.SuppressionListReason, 0)
+	}
+
+	return apiObjects
 }
 
 func expandTrackingOptions(tfMap map[string]any) *types.TrackingOptions {
