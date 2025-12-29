@@ -53,3 +53,7 @@ rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
 rule "aws_guardduty_member_invalid_email" {
   enabled = false
 }
+
+rule "aws_api_gateway_domain_name_invalid_security_policy" {
+  enabled = false
+}

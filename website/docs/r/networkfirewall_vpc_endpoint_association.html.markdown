@@ -25,10 +25,6 @@ resource "aws_networkfirewall_vpc_endpoint_association" "example" {
     subnet_id = aws_subnet.example.id
   }
 
-  subnet_mapping {
-    subnet_id = aws_subnet.example_two.id
-  }
-
   tags = {
     Name = "example endpoint"
   }
