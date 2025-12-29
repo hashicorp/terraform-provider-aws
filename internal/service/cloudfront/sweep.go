@@ -41,11 +41,6 @@ func RegisterSweepers() {
 		F:    sweepDistributions,
 	})
 
-	resource.AddTestSweepers("aws_cloudfront_field_level_encryption_config", &resource.Sweeper{
-		Name: "aws_cloudfront_field_level_encryption_config",
-		F:    sweepFieldLevelEncryptionConfigs,
-	})
-
 	resource.AddTestSweepers("aws_cloudfront_function", &resource.Sweeper{
 		Name: "aws_cloudfront_function",
 		F:    sweepFunctions,
@@ -70,6 +65,7 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_cloudfront_connection_function", sweepConnectionFunctions, "aws_cloudfront_distribution")
+	awsv2.Register("aws_cloudfront_field_level_encryption_config", sweepFieldLevelEncryptionConfigs)
 	awsv2.Register("aws_cloudfront_field_level_encryption_profile", sweepFieldLevelEncryptionProfiles, "aws_cloudfront_field_level_encryption_config")
 	awsv2.Register("aws_cloudfront_origin_access_control", sweepOriginAccessControls, "aws_cloudfront_distribution")
 	awsv2.Register("aws_cloudfront_origin_request_policy", sweepOriginRequestPolicies, "aws_cloudfront_distribution")
@@ -459,17 +455,12 @@ func sweepRealtimeLogsConfig(region string) error {
 	return nil
 }
 
-func sweepFieldLevelEncryptionConfigs(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFieldLevelEncryptionConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudfront.ListFieldLevelEncryptionConfigsInput
 	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	err = listFieldLevelEncryptionConfigsPages(ctx, conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
+	err := listFieldLevelEncryptionConfigsPages(ctx, conn, &input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -497,22 +488,11 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Config sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error listing CloudFront Field-level Encryption Configs (%s): %w", region, err)
+		return nil, err
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Configs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepFieldLevelEncryptionProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
