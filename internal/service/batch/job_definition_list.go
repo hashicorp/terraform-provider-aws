@@ -6,11 +6,12 @@ package batch
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -27,20 +28,11 @@ func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
 }
 
 type jobDefinitionListResource struct {
-	framework.ResourceWithConfigure
 	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
 }
 
 type jobDefinitionListResourceModel struct {
 	framework.WithRegionModel
-}
-
-func (l *jobDefinitionListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-		Blocks:     map[string]listschema.Block{},
-	}
 }
 
 func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -60,51 +52,59 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 	tflog.Info(ctx, "Listing Batch job definitions")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := batch.NewDescribeJobDefinitionsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+		for item, err := range listJobDefinitions(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			for _, jobDef := range page.JobDefinitions {
-				arn := aws.ToString(jobDef.JobDefinitionArn)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
+			arn := aws.ToString(item.JobDefinitionArn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
-				result := request.NewListResult(ctx)
-				rd := l.ResourceData()
-				rd.SetId(arn)
+			result := request.NewListResult(ctx)
+			rd := l.ResourceData()
+			rd.SetId(arn)
 
-				tflog.Info(ctx, "Reading Batch job definition")
-				diags := resourceJobDefinitionRead(ctx, rd, awsClient)
-				if diags.HasError() {
-					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Batch job definition %s", arn))
-					yield(result)
-					return
-				}
-				if rd.Id() == "" {
-					// Resource is logically deleted
-					continue
-				}
+			tflog.Info(ctx, "Reading Batch job definition")
+			diags := resourceJobDefinitionRead(ctx, rd, awsClient)
+			if diags.HasError() {
+				result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Batch job definition %s", arn))
+				yield(result)
+				return
+			}
+			if rd.Id() == "" {
+				// Resource is logically deleted
+				continue
+			}
 
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
+			result.DisplayName = aws.ToString(item.JobDefinitionName)
 
-				result.DisplayName = aws.ToString(jobDef.JobDefinitionName)
+			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
 
-				if !yield(result) {
+func listJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) iter.Seq2[awstypes.JobDefinition, error] {
+	return func(yield func(awstypes.JobDefinition, error) bool) {
+		pages := batch.NewDescribeJobDefinitionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.JobDefinition{}, fmt.Errorf("listing Batch Job Definitions: %w", err))
+				return
+			}
+
+			for _, item := range page.JobDefinitions {
+				if !yield(item, nil) {
 					return
 				}
 			}
