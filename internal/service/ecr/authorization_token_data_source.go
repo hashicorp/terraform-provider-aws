@@ -57,8 +57,12 @@ func dataSourceAuthorizationToken() *schema.Resource {
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
+	params := &ecr.GetAuthorizationTokenInput{}
+	if v, ok := d.GetOk("registry_id"); ok {
+		params.RegistryIds = []string{v.(string)}
+	}
 
-	out, err := conn.GetAuthorizationToken(ctx, &ecr.GetAuthorizationTokenInput{})
+	out, err := conn.GetAuthorizationToken(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Authorization Token: %s", err)
