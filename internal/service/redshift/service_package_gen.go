@@ -52,6 +52,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceIDCApplication,
+			TypeName: "aws_redshift_idc_application",
+			Name:     "IDC Application",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "redshift_idc_application_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newIntegrationResource,
 			TypeName: "aws_redshift_integration",
 			Name:     "Integration",
@@ -180,14 +189,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  resourceIdcApplication,
-			TypeName: "aws_redshift_idc_application",
-			Name:     "IDC Application",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
 		},
 		{
 			Factory:  resourceParameterGroup,
