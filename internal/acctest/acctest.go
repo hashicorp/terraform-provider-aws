@@ -1263,6 +1263,27 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
+	t.Helper()
+
+	var organizations []*organizationstypes.Organization
+
+	for _, providerF := range providerFs {
+		organizations = append(organizations, PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF))
+	}
+
+	slices.SortFunc(organizations, func(a, b *organizationstypes.Organization) int {
+		return strings.Compare(aws.ToString(a.Id), aws.ToString(b.Id))
+	})
+	organizations = slices.CompactFunc(organizations, func(a, b *organizationstypes.Organization) bool {
+		return aws.ToString(a.Id) == aws.ToString(b.Id)
+	})
+
+	if len(organizations) != 1 {
+		t.Skip("all AWS accounts must be members of the same AWS Organization")
+	}
+}
+
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
