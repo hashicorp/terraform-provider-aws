@@ -16,10 +16,13 @@ Manages an AWS CloudFront Connection Function.
 
 ```terraform
 resource "aws_cloudfront_connection_function" "example" {
-  name    = "example-connection-function"
-  runtime = "cloudfront-js-2.0"
-  comment = "Example connection function"
-  code    = "function handler(event) { return event.request; }"
+  name                     = "example-connection-function"
+  connection_function_code = "function handler(event) { return event.request; }"
+
+  connection_function_config {
+    runtime = "cloudfront-js-2.0"
+    comment = "Example connection function"
+  }
 }
 ```
 
@@ -27,10 +30,14 @@ resource "aws_cloudfront_connection_function" "example" {
 
 ```terraform
 resource "aws_cloudfront_connection_function" "example" {
-  name    = "example-connection-function"
-  runtime = "cloudfront-js-2.0"
-  comment = "Example connection function with publish enabled"
-  code    = "function handler(event) { return event.request; }"
+  name                     = "example-connection-function"
+  connection_function_code = "function handler(event) { return event.request; }"
+
+  connection_function_config {
+    runtime = "cloudfront-js-2.0"
+    comment = "Example connection function"
+  }
+
   publish = true
 }
 ```
@@ -44,13 +51,14 @@ resource "aws_cloudfront_key_value_store" "example" {
 }
 
 resource "aws_cloudfront_connection_function" "example" {
-  name    = "example-connection-function"
-  runtime = "cloudfront-js-2.0"
-  comment = "Example connection function with KVS"
-  code    = "function handler(event) { return event.request; }"
+  name                     = "example-connection-function"
+  connection_function_code = "function handler(event) { return event.request; }"
 
-  key_value_store_associations {
-    items {
+  connection_function_config {
+    runtime = "cloudfront-js-2.0"
+    comment = "Example connection function"
+
+    key_value_store_association {
       key_value_store_arn = aws_cloudfront_key_value_store.example.arn
     }
   }
@@ -61,10 +69,13 @@ resource "aws_cloudfront_connection_function" "example" {
 
 ```terraform
 resource "aws_cloudfront_connection_function" "example" {
-  name    = "example-connection-function"
-  runtime = "cloudfront-js-2.0"
-  comment = "Example connection function with tags"
-  code    = "function handler(event) { return event.request; }"
+  name                     = "example-connection-function"
+  connection_function_code = "function handler(event) { return event.request; }"
+
+  connection_function_config {
+    runtime = "cloudfront-js-2.0"
+    comment = "Example connection function"
+  }
 
   tags = {
     Environment = "production"
@@ -77,40 +88,36 @@ resource "aws_cloudfront_connection_function" "example" {
 
 The following arguments are required:
 
-* `code` - (Required) Code for the connection function. Maximum length is 40960 characters.
+* `connection_function_code` - (Required) Code for the connection function. Maximum length is 40960 characters.
+* `connection_function_config` - (Required) Configuration information for the connection function. See [`connection_function_config`](#connection_function_config) below.
 * `name` - (Required) Name for the connection function. Must be 1-64 characters and can contain letters, numbers, hyphens, and underscores. Changing this forces a new resource to be created.
-* `runtime` - (Required) Runtime environment for the function. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
 The following arguments are optional:
 
-* `comment` - (Optional) Comment to describe the function.
 * `key_value_store_associations` - (Optional) Configuration block for key value store associations. See [`key_value_store_associations`](#key_value_store_associations) below.
 * `publish` - (Optional) Whether to publish the function to the `LIVE` stage after creation or update. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### key_value_store_associations
+### connection_function_config
 
-* `items` - (Required) List of key value store associations.
-    * `key_value_store_arn` - (Required) ARN of the key value store.
+* `comment` - (Required) Comment to describe the function.
+* `key_value_store_association` - (Optional) Key value store associations. See [`key_value_store_association`](#key_value_store_association) below.
+* `runtime` - (Required) Runtime environment for the function. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
+
+### key_value_store_association
+
+* `key_value_store_arn` - (Required) ARN of the key value store.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the connection function.
+* `connection_function_arn` - ARN of the connection function.
 * `etag` - ETag of the connection function.
 * `id` - ID of the connection function.
 * `live_stage_etag` - ETag of the function's LIVE stage. Will be empty if the function has not been published.
 * `status` - Status of the connection function.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `10m`)
-* `update` - (Default `10m`)
-* `delete` - (Default `10m`)
 
 ## Import
 

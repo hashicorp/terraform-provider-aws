@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfront_connection_function",
 			Name:     "Connection Function",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "connection_function_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
