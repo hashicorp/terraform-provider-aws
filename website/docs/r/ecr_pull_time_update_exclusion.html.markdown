@@ -103,9 +103,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - ARN of the IAM principal to exclude from having image pull times recorded.
+This resource exports no additional attributes.
 
 ## Import
 

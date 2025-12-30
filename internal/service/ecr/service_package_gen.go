@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourcePullTimeUpdateExclusion,
+			Factory:  newPullTimeUpdateExclusionResource,
 			TypeName: "aws_ecr_pull_time_update_exclusion",
 			Name:     "Pull Time Update Exclusion",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

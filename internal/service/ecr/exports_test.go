@@ -7,7 +7,7 @@ package ecr
 var (
 	ResourceLifecyclePolicy               = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule          = resourcePullThroughCacheRule
-	ResourcePullTimeUpdateExclusion       = newResourcePullTimeUpdateExclusion
+	ResourcePullTimeUpdateExclusion       = newPullTimeUpdateExclusionResource
 	ResourceRegistryPolicy                = resourceRegistryPolicy
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
