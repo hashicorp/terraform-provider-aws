@@ -259,7 +259,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 			versionID := aws.ToString(output.PolicyVersion.VersionId)
 
-			time.Sleep(time.Duration(v.(int)) * time.Millisecond)
+			time.Sleep(time.Duration(v.(int)) * time.Millisecond) //nolint:durationcheck // OK
 
 			inputSDPV := iam.SetDefaultPolicyVersionInput{
 				PolicyArn: aws.String(d.Id()),
