@@ -28,6 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Standards Control Associations",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newStandardsControlDefinitionsDataSource,
+			TypeName: "aws_securityhub_standards_control_definitions",
+			Name:     "Standards Control Definitions",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
