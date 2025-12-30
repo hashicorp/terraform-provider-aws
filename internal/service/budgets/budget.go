@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets
@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -94,6 +94,11 @@ func ResourceBudget() *schema.Resource {
 						},
 					},
 				},
+			},
+			"billing_view_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"budget_type": {
 				Type:             schema.TypeString,
@@ -359,7 +364,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -378,6 +383,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_type", budget.BudgetType)
+	d.Set("billing_view_arn", budget.BillingViewArn)
 
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cost_filter: %s", err)
@@ -410,7 +416,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -437,7 +443,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			tfList = append(tfList, tfMap)
 			continue
 		}
@@ -450,9 +456,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		var snsSubscribers []string
 
 		for _, subscriber := range subscribers {
-			if subscriber.SubscriptionType == awstypes.SubscriptionTypeSns {
+			switch subscriber.SubscriptionType {
+			case awstypes.SubscriptionTypeSns:
 				snsSubscribers = append(snsSubscribers, aws.ToString(subscriber.Address))
-			} else if subscriber.SubscriptionType == awstypes.SubscriptionTypeEmail {
+			case awstypes.SubscriptionTypeEmail:
 				emailSubscribers = append(emailSubscribers, aws.ToString(subscriber.Address))
 			}
 		}
@@ -564,8 +571,7 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -593,8 +599,7 @@ func findNotifications(ctx context.Context, conn *budgets.Client, accountID, bud
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -612,7 +617,7 @@ func findNotifications(ctx context.Context, conn *budgets.Client, accountID, bud
 	}
 
 	if len(output) == 0 {
-		return nil, &retry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -632,8 +637,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budge
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -651,7 +655,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budge
 	}
 
 	if len(output) == 0 {
-		return nil, &retry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -706,14 +710,14 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *sch
 			_, err := conn.DeleteNotification(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("deleting Budget (%s) notification: %s", d.Id(), err)
+				return fmt.Errorf("deleting Budget (%s) notification: %w", d.Id(), err)
 			}
 		}
 
 		err = createBudgetNotifications(ctx, conn, addNotifications, addSubscribers, budgetName, accountID)
 
 		if err != nil {
-			return fmt.Errorf("creating Budget (%s) notifications: %s", d.Id(), err)
+			return fmt.Errorf("creating Budget (%s) notifications: %w", d.Id(), err)
 		}
 	}
 
@@ -878,6 +882,10 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 				}
 			}
 		}
+	}
+
+	if v, ok := d.GetOk("billing_view_arn"); ok {
+		budget.BillingViewArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {

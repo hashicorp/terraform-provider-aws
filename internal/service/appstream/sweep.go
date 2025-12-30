@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream
@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -157,7 +158,9 @@ func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		return nil, nil
 	}
 	conn := client.AppStreamClient(ctx)
-	var input appstream.DescribeUsersInput
+	input := appstream.DescribeUsersInput{
+		AuthenticationType: awstypes.AuthenticationTypeUserpool,
+	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err := describeUsersPages(ctx, conn, &input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {

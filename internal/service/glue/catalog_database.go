@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,12 +31,13 @@ import (
 
 // @SDKResource("aws_glue_catalog_database", name="Database")
 // @Tags(identifierAttribute="arn")
-func ResourceCatalogDatabase() *schema.Resource {
+func resourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogDatabaseCreate,
 		ReadWithoutTimeout:   resourceCatalogDatabaseRead,
 		UpdateWithoutTimeout: resourceCatalogDatabaseUpdate,
 		DeleteWithoutTimeout: resourceCatalogDatabaseDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -200,6 +203,64 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
+func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+
+	catalogID, name, err := ReadCatalogID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
+	}
+
+	out, err := findDatabaseByName(ctx, conn, catalogID, name)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
+	}
+
+	database := out.Database
+	databaseArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   "glue",
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("database/%s", aws.ToString(database.Name)),
+	}.String()
+	d.Set(names.AttrARN, databaseArn)
+	d.Set(names.AttrName, database.Name)
+	d.Set(names.AttrCatalogID, database.CatalogId)
+	d.Set(names.AttrDescription, database.Description)
+	d.Set("location_uri", database.LocationUri)
+	d.Set(names.AttrParameters, database.Parameters)
+
+	if database.FederatedDatabase != nil {
+		if err := d.Set("federated_database", []any{flattenDatabaseFederatedDatabase(database.FederatedDatabase)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting federated_database: %s", err)
+		}
+	} else {
+		d.Set("federated_database", nil)
+	}
+
+	if database.TargetDatabase != nil {
+		if err := d.Set("target_database", []any{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting target_database: %s", err)
+		}
+	} else {
+		d.Set("target_database", nil)
+	}
+
+	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
+	}
+
+	return diags
+}
+
 func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -249,73 +310,17 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	catalogID, name, err := ReadCatalogID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
-	}
-
-	out, err := FindDatabaseByName(ctx, conn, catalogID, name)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
-	}
-
-	database := out.Database
-	databaseArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("database/%s", aws.ToString(database.Name)),
-	}.String()
-	d.Set(names.AttrARN, databaseArn)
-	d.Set(names.AttrName, database.Name)
-	d.Set(names.AttrCatalogID, database.CatalogId)
-	d.Set(names.AttrDescription, database.Description)
-	d.Set("location_uri", database.LocationUri)
-	d.Set(names.AttrParameters, database.Parameters)
-
-	if database.FederatedDatabase != nil {
-		if err := d.Set("federated_database", []any{flattenDatabaseFederatedDatabase(database.FederatedDatabase)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting federated_database: %s", err)
-		}
-	} else {
-		d.Set("federated_database", nil)
-	}
-
-	if database.TargetDatabase != nil {
-		if err := d.Set("target_database", []any{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting target_database: %s", err)
-		}
-	} else {
-		d.Set("target_database", nil)
-	}
-
-	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
-	}
-
-	return diags
-}
-
 func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
-	_, err := conn.DeleteDatabase(ctx, &glue.DeleteDatabaseInput{
+	log.Printf("[DEBUG] Deleting Glue Catalog Database: %s", d.Id())
+	input := glue.DeleteDatabaseInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
 		CatalogId: aws.String(d.Get(names.AttrCatalogID).(string)),
-	})
+	}
+	_, err := conn.DeleteDatabase(ctx, &input)
+
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
@@ -341,6 +346,31 @@ func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string
 		catalogID = accountid
 	}
 	return
+}
+
+func findDatabaseByName(ctx context.Context, conn *glue.Client, catalogID, name string) (*glue.GetDatabaseOutput, error) {
+	input := &glue.GetDatabaseInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetDatabase(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandDatabaseFederatedDatabase(tfMap map[string]any) *awstypes.FederatedDatabase {

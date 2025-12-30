@@ -37,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 * `associate_entire_account` - (Optional) Whether the datashare is associated with the entire account. Conflicts with `consumer_arn` and `consumer_region`.
 * `consumer_arn` - (Optional) Amazon Resource Name (ARN) of the consumer that is associated with the datashare. Conflicts with `associate_entire_account` and `consumer_region`.

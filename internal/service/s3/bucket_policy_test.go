@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -11,11 +11,12 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -234,18 +235,6 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDoc(t *testing.T) {
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
 			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -265,17 +254,6 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDocNotPrincipal(t *testing.T) {
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
 			},
-			{
-				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -286,6 +264,7 @@ func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_policy.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -295,24 +274,60 @@ func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncodeOrder2(rName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName2),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncodeOrder3(rName3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName3),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -466,7 +481,7 @@ func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -504,7 +519,7 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(ctx), acctest.Partition(), bucketName)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(policy, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
@@ -512,6 +527,23 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+
+		_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
+		return err
 	}
 }
 

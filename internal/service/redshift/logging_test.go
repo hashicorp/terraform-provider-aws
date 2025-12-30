@@ -1,24 +1,21 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -182,62 +179,57 @@ func testAccCheckLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfredshift.FindLoggingByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameLogging, rs.Primary.ID, err)
+			_, err := tfredshift.FindLoggingStatusByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameLogging, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Logging %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLoggingExists(ctx context.Context, name string, log *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
+func testAccCheckLoggingExists(ctx context.Context, n string, v *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		out, err := tfredshift.FindLoggingByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfredshift.FindLoggingStatusByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, rs.Primary.ID, err)
+			return err
 		}
 
-		*log = *out
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccLoggingConfigBase(rName string) string {
-	return acctest.ConfigCompose(
-		// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  multi_az                            = false
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  multi_az              = false
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccLoggingConfig_basic(rName string) string {
@@ -245,7 +237,7 @@ func testAccLoggingConfig_basic(rName string) string {
 		testAccLoggingConfigBase(rName),
 		`
 resource "aws_redshift_logging" "test" {
-  cluster_identifier   = aws_redshift_cluster.test.id
+  cluster_identifier   = aws_redshift_cluster.test.cluster_identifier
   log_destination_type = "cloudwatch"
   log_exports          = ["connectionlog", "useractivitylog", "userlog"]
 }
@@ -293,8 +285,8 @@ EOF
 resource "aws_redshift_logging" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
-  cluster_identifier   = aws_redshift_cluster.test.id
-  bucket_name          = aws_s3_bucket.test.id
+  cluster_identifier   = aws_redshift_cluster.test.cluster_identifier
+  bucket_name          = aws_s3_bucket.test.bucket
   s3_key_prefix        = "testprefix/"
   log_destination_type = "s3"
 }

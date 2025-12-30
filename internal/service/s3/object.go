@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -25,17 +25,18 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
@@ -43,19 +44,20 @@ import (
 
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags(identifierAttribute="arn", resourceType="Object")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("key")
+// @IdAttrFormat("{bucket}/{key}")
+// @ImportIDHandler("objectImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
-// @Testing(importStateIdFunc=testAccObjectImportStateIdFunc)
 // @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
 		ReadWithoutTimeout:   resourceObjectRead,
 		UpdateWithoutTimeout: resourceObjectUpdate,
 		DeleteWithoutTimeout: resourceObjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceObjectImport,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
@@ -274,7 +276,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -435,25 +437,6 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	id := d.Id()
-	id = strings.TrimPrefix(id, "s3://")
-	parts := strings.Split(id, "/")
-
-	if len(parts) < 2 {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
-	}
-
-	bucket := parts[0]
-	key := strings.Join(parts[1:], "/")
-
-	d.SetId(key)
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrKey, key)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
@@ -494,7 +477,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 	} else if v, ok := d.GetOk("content_base64"); ok {
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		v, err := itypes.Base64Decode(v.(string))
+		v, err := inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -600,7 +583,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(d.Get(names.AttrKey).(string))
+		d.SetId(createObjectImportID(d))
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
@@ -672,7 +655,7 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	output, err := conn.HeadObject(ctx, input, optFns...)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -765,4 +748,29 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.Defaul
 	}
 
 	return data
+}
+
+func createObjectImportID(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s/%s", d.Get(names.AttrBucket).(string), d.Get(names.AttrKey).(string))
+}
+
+type objectImportID struct{}
+
+func (objectImportID) Create(d *schema.ResourceData) string {
+	return createObjectImportID(d)
+}
+
+func (objectImportID) Parse(id string) (string, map[string]string, error) {
+	id = strings.TrimPrefix(id, "s3://")
+
+	bucket, key, found := strings.Cut(id, "/")
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
+	}
+
+	result := map[string]string{
+		names.AttrBucket: bucket,
+		names.AttrKey:    key,
+	}
+	return id, result, nil
 }

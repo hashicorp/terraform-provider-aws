@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package plancheck
@@ -32,7 +32,7 @@ func (e expectKnownValueChangeCheck) CheckPlan(ctx context.Context, request plan
 	}
 
 	if err := e.oldValue.CheckValue(old); err != nil {
-		response.Error = fmt.Errorf("checking old value for attribute at path: %s.%s, err: %s", resource.Address, e.attributePath.String(), err)
+		response.Error = fmt.Errorf("checking old value for attribute at path: %s.%s, err: %w", resource.Address, e.attributePath.String(), err)
 
 		return
 	}
@@ -45,7 +45,7 @@ func (e expectKnownValueChangeCheck) CheckPlan(ctx context.Context, request plan
 	}
 
 	if err := e.newValue.CheckValue(new); err != nil {
-		response.Error = fmt.Errorf("checking new value for attribute at path: %s.%s, err: %s", resource.Address, e.attributePath.String(), err)
+		response.Error = fmt.Errorf("checking new value for attribute at path: %s.%s, err: %w", resource.Address, e.attributePath.String(), err)
 
 		return
 	}

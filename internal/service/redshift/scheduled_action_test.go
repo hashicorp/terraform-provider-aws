@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -240,7 +240,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionConfig_resizeClusterFullOptions(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
+				Config: testAccScheduledActionConfig_resizeClusterFullOptions(rName, "cron(00 23 * * ? *)", true, "multi-node", "ra3.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -256,7 +256,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.classic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "dc2.large"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "ra3.large"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.number_of_nodes", "2"),
 				),
 			},
@@ -304,7 +304,7 @@ func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfredshift.FindScheduledActionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

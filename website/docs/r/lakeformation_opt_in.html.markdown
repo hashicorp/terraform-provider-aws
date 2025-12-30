@@ -21,8 +21,9 @@ resource "aws_lakeformation_opt_in" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
 * `resource_data` - (Required) Structure for the resource. See [Resource](#resource) for more details.
 
@@ -88,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `database_name` - The name of the database for the table. Unique to a Data Catalog. A database is a set of associated table definitions organized into a logical group. You can Grant and Revoke database privileges to a principal.
 * `name` - Name of the table.
 * `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `table_wild_card` - Wildcard object representing every table under a database. At least one of TableResource$Name or TableResource$TableWildcard is required.
+* `wildcard` - Boolean value that indicates whether to use a wildcard representing every table under the specified database. When set to true, this represents all tables within the specified database. At least one of TableResource$Name or TableResource$Wildcard is required.
 
 ### Table With Columns
 
@@ -105,20 +106,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation Opt In using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_lakeformation_opt_in.example
-  id = "opt_in-id-12345678"
-}
-```
-
-Using `terraform import`, import Lake Formation Opt In using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_lakeformation_opt_in.example opt_in-id-12345678
-```

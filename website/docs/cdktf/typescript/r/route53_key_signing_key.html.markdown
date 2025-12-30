@@ -120,7 +120,7 @@ The following arguments are required:
 
 * `hostedZoneId` - (Required) Identifier of the Route 53 Hosted Zone.
 * `keyManagementServiceArn` - (Required) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key. This must be unique for each key-signing key (KSK) in a single hosted zone. This key must be in the `us-east-1` Region and meet certain requirements, which are described in the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-cmk-requirements.html) and [Route 53 API Reference](https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateKeySigningKey.html).
-* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-singing key in the same hosted zone.
+* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-signing key in the same hosted zone.
 
 The following arguments are optional:
 
@@ -182,4 +182,4 @@ Using `terraform import`, import `aws_route53_key_signing_key` resources using t
 % terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-41cd29e64a349c0fcd44efc39234e18d8a5477ce186d36f6d5b0680e203d4201 -->
+<!-- cache-key: cdktf-0.20.8 input-16c6c81fd044a23130935bb0a16bb8c695042c569aa821232357d45e4a85a269 -->

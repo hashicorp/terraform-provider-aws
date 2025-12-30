@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codepipeline_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1301,7 +1301,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodepipeline.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3252,7 +3252,7 @@ resource "aws_codepipeline" "test" {
           configuration   = {}
           commands        = ["exit 0"]
           input_artifacts = ["test"]
-          region          = data.aws_region.current.name
+          region          = data.aws_region.current.region
           role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
 
@@ -3531,7 +3531,7 @@ resource "aws_codepipeline" "test" {
           configuration   = {}
           commands        = ["exit 1"]
           input_artifacts = ["test"]
-          region          = data.aws_region.current.name
+          region          = data.aws_region.current.region
           role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -25,7 +25,7 @@ func newCustomModelDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type customModelDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[customModelDataSourceModel]
 }
 
 func (d *customModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -145,6 +145,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 }
 
 type customModelDataSourceModel struct {
+	framework.WithRegionModel
 	BaseModelARN         fwtypes.ARN                                                `tfsdk:"base_model_arn"`
 	CreationTime         timetypes.RFC3339                                          `tfsdk:"creation_time"`
 	HyperParameters      fwtypes.MapOfString                                        `tfsdk:"hyperparameters"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_ssoadmin_instances", name="Instances")
-func DataSourceInstances() *schema.Resource {
+func dataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 

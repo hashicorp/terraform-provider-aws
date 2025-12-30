@@ -1,15 +1,15 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 # tflint-ignore: terraform_unused_declarations
 data "aws_batch_compute_environment" "test" {
-  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+  name = aws_batch_compute_environment.test.name
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = var.rName
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
+  name         = var.rName
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
 
   tags = var.resource_tags
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -505,7 +505,7 @@ func testAccCheckInstanceStorageConfigDestroy(ctx context.Context) resource.Test
 
 			_, err := tfconnect.FindInstanceStorageConfigByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes[names.AttrAssociationID], awstypes.InstanceStorageResourceType(rs.Primary.Attributes[names.AttrResourceType]))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -724,6 +724,7 @@ func testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -757,11 +758,13 @@ locals {
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "KMS Key 2"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -852,11 +855,13 @@ locals {
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket 1"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "KMS Key for Bucket 2"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 

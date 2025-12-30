@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -22,6 +22,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateDisplayName":  testAccContact_updateDisplayName,
 			"tags":               testAccSSMContactsContact_tagsSerial,
 			"updateType":         testAccContact_updateType,
+			"identity":           testAccSSMContactsContact_IdentitySerial,
 		},
 		"ContactDataSource": {
 			acctest.CtBasic: testAccContactDataSource_basic,
@@ -34,6 +35,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtDisappears: testAccContactChannel_disappears,
 			acctest.CtName:       testAccContactChannel_name,
 			"type":               testAccContactChannel_type,
+			"identity":           testAccSSMContactsContactChannel_IdentitySerial,
 		},
 		"ContactChannelDataSource": {
 			acctest.CtBasic: testAccContactChannelDataSource_basic,
@@ -53,13 +55,15 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"channelTargetInfo": testAccPlanDataSource_channelTargetInfo,
 		},
 		"RotationResource": {
-			acctest.CtBasic:      testAccRotation_basic,
-			acctest.CtDisappears: testAccRotation_disappears,
-			"update":             testAccRotation_updateRequiredFields,
-			"startTime":          testAccRotation_startTime,
-			"contactIds":         testAccRotation_contactIds,
-			"recurrence":         testAccRotation_recurrence,
-			"tags":               testAccSSMContactsRotation_tagsSerial,
+			acctest.CtBasic:          testAccRotation_basic,
+			acctest.CtDisappears:     testAccRotation_disappears,
+			"update":                 testAccRotation_updateRequiredFields,
+			"startTime":              testAccRotation_startTime,
+			"contactIds":             testAccRotation_contactIds,
+			"recurrence":             testAccRotation_recurrence,
+			"tags":                   testAccSSMContactsRotation_tagsSerial,
+			"identity":               testAccSSMContactsRotation_IdentitySerial,
+			"identityRegionOverride": testAccSSMContactsRotation_Identity_RegionOverride,
 		},
 		"RotationDataSource": {
 			acctest.CtBasic:   testAccRotationDataSource_basic,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography
@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -22,23 +21,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
-func newResourceKey(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceKey{}
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/paymentcryptography;paymentcryptography.GetKeyOutput")
+// @Testing(generator=false)
+// @Testing(importIgnore="deletion_window_in_days")
+// @Testing(preIdentityVersion="v5.100.0")
+func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &keyResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,13 +56,15 @@ const (
 	defaultDeletionWindowInDays = 7
 )
 
-type resourceKey struct {
-	framework.ResourceWithConfigure
+type keyResource struct {
+	framework.ResourceWithModel[keyResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
-func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
@@ -116,105 +122,109 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"key_attributes": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-				CustomType: fwtypes.NewObjectTypeOf[keyAttributesModel](ctx),
-				Attributes: map[string]schema.Attribute{
-					"key_algorithm": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyAlgorithm](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
+			"key_attributes": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[keyAttributesModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"key_algorithm": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyAlgorithm](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"key_class": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyClass](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"key_usage": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.KeyUsage](),
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
-					"key_class": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyClass](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-					},
-					"key_usage": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.KeyUsage](),
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"key_modes_of_use": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-						CustomType: fwtypes.NewObjectTypeOf[keyModesOfUseModel](ctx),
-						Attributes: map[string]schema.Attribute{
-							"decrypt": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"derive_key": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"encrypt": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"generate": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"no_restrictions": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"sign": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"unwrap": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"verify": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
-							"wrap": schema.BoolAttribute{
-								Optional: true,
-								Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.RequiresReplace(),
-									boolplanmodifier.UseStateForUnknown(),
+					Blocks: map[string]schema.Block{
+						"key_modes_of_use": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyModesOfUseModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"decrypt": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"derive_key": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"encrypt": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"generate": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"no_restrictions": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"sign": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"unwrap": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"verify": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"wrap": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.RequiresReplace(),
+											boolplanmodifier.UseStateForUnknown(),
+										},
+									},
 								},
 							},
 						},
@@ -230,10 +240,21 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 	}
 }
 
-func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *keyResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := keySchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeKeyStateV0toV1,
+		},
+	}
+}
+
+func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var plan resourceKeyModel
+	var plan keyResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -264,14 +285,14 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 		return
 	}
 
-	plan.KeyArn = flex.StringToFramework(ctx, out.Key.KeyArn)
+	plan.KeyARN = flex.StringToFramework(ctx, out.Key.KeyArn)
 	plan.setId()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitKeyCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForCreation, ResNameKey, plan.KeyArn.String(), err),
+			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForCreation, ResNameKey, plan.KeyARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -285,17 +306,17 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyModel
+	var state keyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findKeyByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -315,8 +336,8 @@ func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, re
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceKeyModel
+func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new keyResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -336,7 +357,7 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 			_, err := conn.StartKeyUsage(ctx, in)
 			if err != nil {
 				response.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyARN.String(), err),
 					err.Error(),
 				)
 				return
@@ -348,7 +369,7 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 			_, err := conn.StopKeyUsage(ctx, in)
 			if err != nil {
 				response.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyARN.String(), err),
 					err.Error(),
 				)
 				return
@@ -371,10 +392,10 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyModel
+	var state keyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -411,12 +432,8 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 	}
 }
 
-func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.KeyStateCreateInProgress),
 		Target:                    enum.Slice(awstypes.KeyStateCreateComplete),
 		Refresh:                   statusKey(ctx, conn, id),
@@ -434,7 +451,7 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
 		Target:  []string{},
 		Refresh: statusKey(ctx, conn, id),
@@ -449,10 +466,10 @@ func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id st
 	return nil, err
 }
 
-func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) retry.StateRefreshFunc {
+func statusKey(ctx context.Context, conn *paymentcryptography.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKeyByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -472,7 +489,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	out, err := conn.GetKey(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -487,7 +504,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.
 	if state := out.Key.KeyState; state == awstypes.KeyStateDeletePending || state == awstypes.KeyStateDeleteComplete {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: in,
 		}
@@ -496,13 +513,14 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	return out.Key, nil
 }
 
-type resourceKeyModel struct {
-	KeyArn                 types.String                                        `tfsdk:"arn"`
+type keyResourceModel struct {
+	framework.WithRegionModel
+	KeyARN                 types.String                                        `tfsdk:"arn"`
 	DeletionWindowInDays   types.Int64                                         `tfsdk:"deletion_window_in_days"`
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
 	ID                     types.String                                        `tfsdk:"id"`
-	KeyAttributes          fwtypes.ObjectValueOf[keyAttributesModel]           `tfsdk:"key_attributes"`
+	KeyAttributes          fwtypes.ListNestedObjectValueOf[keyAttributesModel] `tfsdk:"key_attributes"`
 	KeyCheckValue          types.String                                        `tfsdk:"key_check_value"`
 	KeyCheckValueAlgorithm fwtypes.StringEnum[awstypes.KeyCheckValueAlgorithm] `tfsdk:"key_check_value_algorithm"`
 	KeyOrigin              fwtypes.StringEnum[awstypes.KeyOrigin]              `tfsdk:"key_origin"`
@@ -512,15 +530,15 @@ type resourceKeyModel struct {
 	Timeouts               timeouts.Value                                      `tfsdk:"timeouts"`
 }
 
-func (k *resourceKeyModel) setId() {
-	k.ID = k.KeyArn
+func (k *keyResourceModel) setId() {
+	k.ID = k.KeyARN
 }
 
 type keyAttributesModel struct {
-	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm] `tfsdk:"key_algorithm"`
-	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]     `tfsdk:"key_class"`
-	KeyModesOfUse fwtypes.ObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
-	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]     `tfsdk:"key_usage"`
+	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm]           `tfsdk:"key_algorithm"`
+	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]               `tfsdk:"key_class"`
+	KeyModesOfUse fwtypes.ListNestedObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
+	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]               `tfsdk:"key_usage"`
 }
 
 type keyModesOfUseModel struct {

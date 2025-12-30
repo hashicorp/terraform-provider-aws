@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -156,6 +156,36 @@ func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConfiguration_codeRepository(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_codeRepository(false, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.code_repository", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
@@ -167,7 +197,7 @@ func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfinspector2.FindOrganizationConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -232,4 +262,21 @@ resource "aws_inspector2_organization_configuration" "test" {
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }
 `, ec2, ecr, lambda, lambda_code)
+}
+
+func testAccOrganizationConfigurationConfig_codeRepository(ec2, ecr, codeRepository bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+resource "aws_inspector2_organization_configuration" "test" {
+  auto_enable {
+    ec2             = %[1]t
+    ecr             = %[2]t
+    code_repository = %[3]t
+  }
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+`, ec2, ecr, codeRepository)
 }

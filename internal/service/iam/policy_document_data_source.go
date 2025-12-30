@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -169,7 +169,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 
 func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	mergedDoc := &IAMPolicyDoc{}
+	mergedDoc := &iamPolicyDoc{}
 
 	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]any)) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
@@ -186,7 +186,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			sourceDoc := &IAMPolicyDoc{}
+			sourceDoc := &iamPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
 				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: %s", sourceJSONIndex, err)
 			}
@@ -206,7 +206,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// process the current document
-	doc := &IAMPolicyDoc{
+	doc := &iamPolicyDoc{
 		Version: d.Get(names.AttrVersion).(string),
 	}
 
@@ -216,12 +216,12 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
 		var cfgStmtIntf = cfgStmts.([]any)
-		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
+		stmts := make([]*iamPolicyStatement, len(cfgStmtIntf))
 		sidMap := make(map[string]struct{})
 
 		for i, stmtI := range cfgStmtIntf {
 			cfgStmt := stmtI.(map[string]any)
-			stmt := &IAMPolicyStatement{
+			stmt := &iamPolicyStatement{
 				Effect: cfgStmt["effect"].(string),
 			}
 
@@ -300,7 +300,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 			if overrideJSON == nil {
 				continue
 			}
-			overrideDoc := &IAMPolicyDoc{}
+			overrideDoc := &iamPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
 				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging override document %d: %s", overrideJSONIndex, err)
 			}
@@ -353,12 +353,12 @@ func dataSourcePolicyDocumentReplaceVarsInList(in any, version string) (any, err
 	}
 }
 
-func dataSourcePolicyDocumentMakeConditions(in []any, version string) (IAMPolicyStatementConditionSet, error) {
-	out := make([]IAMPolicyStatementCondition, len(in))
+func dataSourcePolicyDocumentMakeConditions(in []any, version string) (iamPolicyStatementConditionSet, error) {
+	out := make([]iamPolicyStatementCondition, len(in))
 	for i, itemI := range in {
 		var err error
 		item := itemI.(map[string]any)
-		out[i] = IAMPolicyStatementCondition{
+		out[i] = iamPolicyStatementCondition{
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
@@ -374,15 +374,15 @@ func dataSourcePolicyDocumentMakeConditions(in []any, version string) (IAMPolicy
 			out[i].Values = itemValues[0]
 		}
 	}
-	return IAMPolicyStatementConditionSet(out), nil
+	return iamPolicyStatementConditionSet(out), nil
 }
 
-func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (IAMPolicyStatementPrincipalSet, error) {
-	out := make([]IAMPolicyStatementPrincipal, len(in))
+func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (iamPolicyStatementPrincipalSet, error) {
+	out := make([]iamPolicyStatementPrincipal, len(in))
 	for i, itemI := range in {
 		var err error
 		item := itemI.(map[string]any)
-		out[i] = IAMPolicyStatementPrincipal{
+		out[i] = iamPolicyStatementPrincipal{
 			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
@@ -394,5 +394,5 @@ func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (IAMPolicy
 			return nil, fmt.Errorf("reading identifiers: %w", err)
 		}
 	}
-	return IAMPolicyStatementPrincipalSet(out), nil
+	return iamPolicyStatementPrincipalSet(out), nil
 }

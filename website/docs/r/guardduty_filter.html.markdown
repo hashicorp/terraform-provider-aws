@@ -48,6 +48,7 @@ resource "aws_guardduty_filter" "MyFilter" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
 * `name` - (Required) The name of your filter.
 * `description` - (Optional) Description of the filter.
@@ -58,7 +59,7 @@ This resource supports the following arguments:
 
 ### criterion
 
-The `criterion` block suports the following:
+The `criterion` block supports the following:
 
 * `field` - (Required) The name of the field to be evaluated. The full list of field names can be found in [AWS documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_filter-findings.html#filter_criteria).
 * `equals` - (Optional) List of string values to be evaluated.
@@ -67,13 +68,14 @@ The `criterion` block suports the following:
 * `greater_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `less_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `less_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `matches` - (Optional) List of string values to be evaluated as matching conditions.
+* `not_matches` - (Optional) List of string values to be evaluated as non-matching conditions.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the GuardDuty filter.
-* `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

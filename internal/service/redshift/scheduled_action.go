@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -184,7 +185,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %#v", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateScheduledAction(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -211,7 +212,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 	scheduledAction, err := findScheduledActionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

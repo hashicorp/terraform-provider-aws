@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Running and Writing Acceptance Tests
 
@@ -761,6 +764,11 @@ func TestAccExampleThing_disappears(t *testing.T) {
           acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })
@@ -772,7 +780,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if !d.IsNewResource() && tfresource.NotFound(err) {
+if !d.IsNewResource() && retry.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -805,6 +813,12 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
           acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })
@@ -1509,9 +1523,9 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 #### Hardcoded Region
 
-- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
+- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.region`
 
-Here's an example of using `aws_region` and `data.aws_region.current.name`:
+Here's an example of using `aws_region` and `data.aws_region.current.region`:
 
 ```terraform
 data "aws_region" "current" {}
@@ -1519,7 +1533,7 @@ data "aws_region" "current" {}
 resource "aws_route53_zone" "test" {
   vpc {
     vpc_id     = aws_vpc.test.id
-    vpc_region = data.aws_region.current.name
+    vpc_region = data.aws_region.current.region
   }
 }
 ```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package m2
@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +43,7 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -157,7 +158,7 @@ func (r *deploymentResource) Read(ctx context.Context, request resource.ReadRequ
 
 	outputGD, err := findDeploymentByTwoPartKey(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -337,6 +338,9 @@ func (r *deploymentResource) ModifyPlan(ctx context.Context, request resource.Mo
 		}
 
 		response.Diagnostics.Append(response.Plan.Set(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 }
 
@@ -349,7 +353,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	output, err := conn.GetDeployment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -366,11 +370,11 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -383,7 +387,7 @@ func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deplo
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeploying),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
 		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
@@ -402,7 +406,7 @@ func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, 
 }
 
 func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeployUpdate),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
 		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
@@ -421,6 +425,7 @@ func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, 
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID      types.String   `tfsdk:"application_id"`
 	ApplicationVersion types.Int64    `tfsdk:"application_version"`
 	DeploymentID       types.String   `tfsdk:"deployment_id"`

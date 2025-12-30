@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -20,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,23 +36,24 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
-// @Testing(tagsTest=false)
+// @ArnIdentity("provisioned_model_arn", identityDuplicateAttributes="id")
+// Testing is cost-prohibitive
+// @Testing(tagsTest=false, identityTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProvisionedModelThroughput{}
+	r := &provisionedModelThroughputResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 
 	return r, nil
 }
 
-type resourceProvisionedModelThroughput struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
-	framework.WithImportByID
+type provisionedModelThroughputResource struct {
+	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
-func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"commitment_duration": schema.StringAttribute{
@@ -60,7 +63,7 @@ func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("provisioned_model_arn")),
 			"model_arn": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.ARNType,
@@ -92,7 +95,7 @@ func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request
 	}
 }
 
-func (r *resourceProvisionedModelThroughput) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *provisionedModelThroughputResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -134,16 +137,10 @@ func (r *resourceProvisionedModelThroughput) Create(ctx context.Context, request
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProvisionedModelThroughput) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *provisionedModelThroughputResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -151,7 +148,7 @@ func (r *resourceProvisionedModelThroughput) Read(ctx context.Context, request r
 
 	output, err := findProvisionedModelThroughputByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -172,7 +169,7 @@ func (r *resourceProvisionedModelThroughput) Read(ctx context.Context, request r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *provisionedModelThroughputResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -205,7 +202,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	output, err := conn.GetProvisionedModelThroughput(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -222,11 +219,11 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	return output, nil
 }
 
-func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
+func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findProvisionedModelThroughputByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -239,7 +236,7 @@ func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client,
 }
 
 func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetProvisionedModelThroughputOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedModelStatusCreating),
 		Target:  enum.Slice(awstypes.ProvisionedModelStatusInService),
 		Refresh: statusProvisionedModelThroughput(ctx, conn, id),
@@ -258,6 +255,7 @@ func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Cl
 }
 
 type provisionedModelThroughputResourceModel struct {
+	framework.WithRegionModel
 	CommitmentDuration   fwtypes.StringEnum[awstypes.CommitmentDuration] `tfsdk:"commitment_duration"`
 	ID                   types.String                                    `tfsdk:"id"`
 	ModelARN             fwtypes.ARN                                     `tfsdk:"model_arn"`
@@ -267,12 +265,6 @@ type provisionedModelThroughputResourceModel struct {
 	Tags                 tftags.Map                                      `tfsdk:"tags"`
 	TagsAll              tftags.Map                                      `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
-}
-
-func (data *provisionedModelThroughputResourceModel) InitFromID() error {
-	data.ProvisionedModelARN = data.ID
-
-	return nil
 }
 
 func (data *provisionedModelThroughputResourceModel) setID() {

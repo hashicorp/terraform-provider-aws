@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -48,7 +48,7 @@ func DataSetColumnGroupsSchema() *schema.Schema {
 }
 
 func DataSetColumnGroupsSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetColumnGroupsSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetColumnGroupsSchema())
 }
 
 func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
@@ -77,7 +77,7 @@ func DataSetColumnLevelPermissionRulesSchema() *schema.Schema {
 }
 
 func DataSetColumnLevelPermissionRulesSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetColumnLevelPermissionRulesSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetColumnLevelPermissionRulesSchema())
 }
 
 func DataSetUsageConfigurationSchema() *schema.Schema {
@@ -104,7 +104,7 @@ func DataSetUsageConfigurationSchema() *schema.Schema {
 }
 
 func DataSetUsageConfigurationSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetUsageConfigurationSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetUsageConfigurationSchema())
 }
 
 func DataSetFieldFoldersSchema() *schema.Schema {
@@ -131,7 +131,7 @@ func DataSetFieldFoldersSchema() *schema.Schema {
 }
 
 func DataSetFieldFoldersSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetFieldFoldersSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetFieldFoldersSchema())
 }
 
 func DataSetLogicalTableMapSchema() *schema.Schema {
@@ -352,7 +352,7 @@ func DataSetLogicalTableMapSchema() *schema.Schema {
 }
 
 func DataSetLogicalTableMapSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetLogicalTableMapSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetLogicalTableMapSchema())
 }
 
 func DataSetOutputColumnsSchema() *schema.Schema {
@@ -430,7 +430,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 64),
+							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 256),
 							names.AttrSchema: {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -497,7 +497,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 }
 
 func DataSetPhysicalTableMapSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetPhysicalTableMapSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetPhysicalTableMapSchema())
 }
 
 func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
@@ -518,7 +518,7 @@ func DataSetRowLevelPermissionDataSetSchema() *schema.Schema {
 }
 
 func DataSetRowLevelPermissionDataSetSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetRowLevelPermissionDataSetSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetRowLevelPermissionDataSetSchema())
 }
 
 func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
@@ -553,7 +553,7 @@ func DataSetRowLevelPermissionTagConfigurationSchema() *schema.Schema {
 }
 
 func DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(DataSetRowLevelPermissionTagConfigurationSchema())
+	return sdkv2.ComputedOnlyFromSchema(DataSetRowLevelPermissionTagConfigurationSchema())
 }
 
 func DataSetRefreshPropertiesSchema() *schema.Schema {
@@ -2126,6 +2126,10 @@ func FlattenDataSetRefreshProperties(apiObject *awstypes.DataSetRefreshPropertie
 
 	if apiObject.RefreshConfiguration != nil {
 		tfMap["refresh_configuration"] = flattenRefreshConfiguration(apiObject.RefreshConfiguration)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
 	}
 
 	return []any{tfMap}

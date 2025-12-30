@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,40 +16,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDeliverySource_basic(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_source.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -77,33 +65,23 @@ func testAccDeliverySource_basic(t *testing.T) {
 }
 
 func testAccDeliverySource_disappears(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_source.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliverySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,33 +91,23 @@ func testAccDeliverySource_disappears(t *testing.T) {
 }
 
 func testAccDeliverySource_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.DeliverySource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_source.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliverySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliverySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliverySourceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -162,7 +130,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 			{
 				Config: testAccDeliverySourceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -179,7 +147,7 @@ func testAccDeliverySource_tags(t *testing.T) {
 			{
 				Config: testAccDeliverySourceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliverySourceExists(ctx, resourceName, &v),
+					testAccCheckDeliverySourceExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -196,9 +164,9 @@ func testAccDeliverySource_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDeliverySourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeliverySourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_delivery_source" {
@@ -207,7 +175,7 @@ func testAccCheckDeliverySourceDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tflogs.FindDeliverySourceByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -222,14 +190,14 @@ func testAccCheckDeliverySourceDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckDeliverySourceExists(ctx context.Context, n string, v *awstypes.DeliverySource) resource.TestCheckFunc {
+func testAccCheckDeliverySourceExists(ctx context.Context, t *testing.T, n string, v *awstypes.DeliverySource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindDeliverySourceByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -305,37 +273,36 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccDeliverySourceConfig_base(rName string) string {
-	foundationModel := "amazon.titan-embed-text-v1"
+	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, foundationModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseS3VectorsBase(rName), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   knowledge_base_configuration {
-    vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-    }
     type = "VECTOR"
-  }
 
-  storage_configuration {
-    type = "RDS"
-    rds_configuration {
-      resource_arn           = aws_rds_cluster.test.arn
-      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
-      database_name          = aws_rds_cluster.test.database_name
-      table_name             = "bedrock_integration.bedrock_kb"
-      field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
       }
     }
   }
 
-  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+  storage_configuration {
+    type = "S3_VECTORS"
+
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.test.index_arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, foundationModel))
 }

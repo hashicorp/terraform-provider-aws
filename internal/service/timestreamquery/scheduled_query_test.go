@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamquery_test
@@ -17,14 +17,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreamquery/types"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	awswritetypes "github.com/aws/aws-sdk-go-v2/service/timestreamwrite/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreamquery "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,24 +30,24 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var scheduledquery awstypes.ScheduledQueryDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreamquery_scheduled_query.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamQueryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledQueryDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduledQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Must be done in 2 steps because the scheduled query requires data to be ingested first
 				// which creates the columns. Otherwise, the SQL will always be invalid because no columns exist.
 				Config: testAccScheduledQueryConfig_base(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWriteRecords(ctx, "aws_timestreamwrite_table.test", rName, rName),
+					testAccWriteRecords(ctx, t, "aws_timestreamwrite_table.test", rName, rName),
 				),
 			},
 			{
@@ -58,7 +56,7 @@ func TestAccTimestreamQueryScheduledQuery_basic(t *testing.T) {
 					testAccScheduledQueryConfig_basic(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckScheduledQueryExists(ctx, resourceName, &scheduledquery),
+					testAccCheckScheduledQueryExists(ctx, t, resourceName, &scheduledquery),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream", regexache.MustCompile(`scheduled-query/.+$`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "error_report_configuration.#", "1"),
@@ -134,24 +132,24 @@ func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var scheduledquery awstypes.ScheduledQueryDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreamquery_scheduled_query.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamQueryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledQueryDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduledQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Must be done in 2 steps because the scheduled query requires data to be ingested first
 				// which creates the columns. Otherwise, the SQL will always be invalid because no columns exist.
 				Config: testAccScheduledQueryConfig_base(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWriteRecords(ctx, "aws_timestreamwrite_table.test", rName, rName),
+					testAccWriteRecords(ctx, t, "aws_timestreamwrite_table.test", rName, rName),
 				),
 			},
 			{
@@ -160,7 +158,7 @@ func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 					testAccScheduledQueryConfig_basic(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckScheduledQueryExists(ctx, resourceName, &scheduledquery),
+					testAccCheckScheduledQueryExists(ctx, t, resourceName, &scheduledquery),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreamquery.ResourceScheduledQuery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -180,7 +178,7 @@ func testAccScheduledQueryImportStateIDFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccWriteRecords(ctx context.Context, name, database, table string) resource.TestCheckFunc {
+func testAccWriteRecords(ctx context.Context, t *testing.T, name, database, table string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -235,7 +233,7 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 			Records:      records,
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 		_, err := conn.WriteRecords(ctx, input)
 		if err != nil {
 			return create.Error(names.TimestreamQuery, create.ErrActionChecking, tftimestreamquery.ResNameScheduledQuery, rs.Primary.Attributes[names.AttrARN], err)
@@ -245,9 +243,9 @@ func testAccWriteRecords(ctx context.Context, name, database, table string) reso
 	}
 }
 
-func testAccCheckScheduledQueryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckScheduledQueryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamQueryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamQueryClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_timestreamquery_scheduled_query" {
@@ -255,7 +253,7 @@ func testAccCheckScheduledQueryDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			_, err := tftimestreamquery.FindScheduledQueryByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -269,7 +267,7 @@ func testAccCheckScheduledQueryDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckScheduledQueryExists(ctx context.Context, name string, scheduledquery *awstypes.ScheduledQueryDescription) resource.TestCheckFunc {
+func testAccCheckScheduledQueryExists(ctx context.Context, t *testing.T, name string, scheduledquery *awstypes.ScheduledQueryDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -280,7 +278,7 @@ func testAccCheckScheduledQueryExists(ctx context.Context, name string, schedule
 			return create.Error(names.TimestreamQuery, create.ErrActionCheckingExistence, tftimestreamquery.ResNameScheduledQuery, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamQueryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamQueryClient(ctx)
 
 		resp, err := tftimestreamquery.FindScheduledQueryByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
@@ -294,7 +292,7 @@ func testAccCheckScheduledQueryExists(ctx context.Context, name string, schedule
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamQueryClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).TimestreamQueryClient(ctx)
 
 	input := &timestreamquery.ListScheduledQueriesInput{}
 

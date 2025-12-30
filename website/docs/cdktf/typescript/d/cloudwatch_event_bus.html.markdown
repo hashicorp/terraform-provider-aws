@@ -38,6 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the event bus.
 
 ## Attribute Reference
@@ -45,8 +48,13 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the event bus.
+* `deadLetterConfig` - Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block has the following arguments:
+    * `arn` - The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - Event bus description.
 * `id` - Name of the event bus.
 * `kmsKeyIdentifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
+* `logConfig` - Block for logging configuration settings for the event bus.
+    * `includeDetail` - Whether EventBridge include detailed event information in the records it generates.
+    * `level` - Level of logging detail to include.
 
-<!-- cache-key: cdktf-0.20.8 input-0f202eb646a70b6cabb315f5503e544b82e58b15b92eb5ed135673db2adbee31 -->
+<!-- cache-key: cdktf-0.20.8 input-977936ce2702083764275c08970b0c469661a3a9bb06a55c68af882b5de83e68 -->

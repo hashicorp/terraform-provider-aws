@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -20,12 +20,13 @@ import (
 )
 
 // @SDKResource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
-func ResourceDataCatalogEncryptionSettings() *schema.Resource {
+func resourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
 		ReadWithoutTimeout:   resourceDataCatalogEncryptionSettingsRead,
 		UpdateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
 		DeleteWithoutTimeout: resourceDataCatalogEncryptionSettingsDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,6 +70,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 										Computed: true,
 									},
 									names.AttrThroughput: {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"volume_initialization_rate": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -176,32 +178,6 @@ func dataSourceLaunchTemplate() *schema.Resource {
 			"ebs_optimized": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"elastic_gpu_specifications": {
-				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"elastic_inference_accelerator": {
-				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"enclave_options": {
 				Type:     schema.TypeList,
@@ -728,6 +704,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -813,7 +793,8 @@ func dataSourceLaunchTemplate() *schema.Resource {
 
 func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := ec2.DescribeLaunchTemplatesInput{}
 
@@ -838,7 +819,6 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	lt, err := findLaunchTemplate(ctx, conn, &input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
 	}
@@ -847,19 +827,11 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 
 	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, d.Id()))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)

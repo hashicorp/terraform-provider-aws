@@ -1,52 +1,51 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource_test
 
 import (
+	"context"
 	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestWaitUntil(t *testing.T) { //nolint:tparallel
-	ctx := acctest.Context(t)
 	t.Parallel()
 
+	ctx := t.Context()
 	var retryCount int32
-
 	testCases := []struct {
 		Name        string
-		F           func() (bool, error)
+		F           func(context.Context) (bool, error)
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (bool, error) {
+			F: func(context.Context) (bool, error) {
 				return true, nil
 			},
 		},
 		{
 			Name: "immediate error",
-			F: func() (bool, error) {
+			F: func(context.Context) (bool, error) {
 				return false, errors.New("TestCode")
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "never reaches state",
-			F: func() (bool, error) {
+			F: func(context.Context) (bool, error) {
 				return false, nil
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "retry then success",
-			F: func() (bool, error) {
+			F: func(context.Context) (bool, error) {
 				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
 					return true, nil
 				}

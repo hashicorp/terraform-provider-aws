@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the gateway route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the gateway route. Must be between 1 and 255 characters in length.
 * `virtual_gateway_name` - (Required) Name of the [virtual gateway](/docs/providers/aws/r/appmesh_virtual_gateway.html) to associate the gateway route with. Must be between 1 and 255 characters in length.
@@ -200,4 +201,4 @@ Using `terraform import`, import App Mesh gateway routes using `mesh_name` and `
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.8 input-c4b969b72d8a7fa97ad9813ee47129d1f3ecfc1dcc5979566a12522b5042594d -->
+<!-- cache-key: cdktf-0.20.8 input-ac7d706851ab8416c8a9e353c9fa5f26dcec6808d30d9b94523cd10efbb7625f -->

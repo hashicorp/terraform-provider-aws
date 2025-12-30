@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -232,7 +233,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRoleException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRoleException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateImageBuilder(ctx, &input)
 	}, "encountered an error because your IAM role")
 
@@ -255,7 +256,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	imageBuilder, err := findImageBuilderByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppStream ImageBuilder (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -360,7 +361,7 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -373,11 +374,11 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	return output, nil
 }
 
-func statusImageBuilder(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
+func statusImageBuilder(ctx context.Context, conn *appstream.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImageBuilderByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -393,7 +394,7 @@ func waitImageBuilderRunning(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending),
 		Target:  enum.Slice(awstypes.ImageBuilderStateRunning),
 		Refresh: statusImageBuilder(ctx, conn, id),
@@ -415,7 +416,7 @@ func waitImageBuilderDeleted(ctx context.Context, conn *appstream.Client, id str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageBuilderStatePending, awstypes.ImageBuilderStateDeleting),
 		Target:  []string{},
 		Refresh: statusImageBuilder(ctx, conn, id),

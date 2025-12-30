@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -30,7 +29,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../internal/provider/provider_gen.go`
+		filename = `../../../internal/provider/sdkv2/provider_gen.go`
 	)
 	g := common.NewGenerator()
 

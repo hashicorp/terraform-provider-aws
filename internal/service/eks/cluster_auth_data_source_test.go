@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -51,7 +51,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)
 		if err != nil {
-			return fmt.Errorf("Error verifying token for cluster %q: %v", name, err)
+			return fmt.Errorf("Error verifying token for cluster %q: %w", name, err)
 		}
 		if identity.ARN == "" {
 			return fmt.Errorf("Unexpected blank ARN for token identity")

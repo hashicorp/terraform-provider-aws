@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -220,7 +220,7 @@ func testAccCheckSipMediaApplicationDestroy(ctx context.Context) resource.TestCh
 				return tfchimesdkvoice.FindSIPMediaApplicationByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -276,7 +276,7 @@ func testAccSipMediaApplicationConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -290,7 +290,7 @@ func testAccSipMediaApplicationConfig_tags1(rName, tagKey1, tagValue1 string) st
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -308,7 +308,7 @@ func testAccSipMediaApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, 
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }

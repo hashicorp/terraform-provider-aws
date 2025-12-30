@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -351,7 +352,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateEndpoint(ctx, input)
 	})
 
@@ -376,7 +377,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -493,7 +494,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyEndpoint(ctx, input)
 		})
 

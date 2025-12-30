@@ -1,35 +1,33 @@
-name: "Other"
-description: "Choose this option if your issue does not fit the description of the others."
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Other
+description: Choose this option if your issue does not fit any of the other forms.
 body:
   - type: markdown
     attributes:
       value: |
-        # Thank you for raising an issue!
+        ## Thank you for raising an issue!
 
-        This form is meant as a catch-all for issues that do not fit into one of the other existing forms:
+        This form is meant as a catch-all for issues that do not fit into one of the other existing forms. By nature this form is much more freeform, so providing a bit of additional information, context, or reference material is very much appreciated.
 
-        * Report a Bug
-        * Report a Documentation Error
-        * Request an Enhancement
-        * Request a New Resource, Data Source, or AWS Service
-        * Repository/Meta
-
-        By nature this form is less rigid, so providing a bit of additional information, context, or reference material is very much appreciated.
+        Before submission, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=is%3Aissue%20is%3Apr%20) to see if someone else may have already noticed whatever it is you're reporting, or has already worked on a relevant change.
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: Please leave a detailed description of the issue.
+      description: |
+        Please provide a brief description of what you're looking to report to the maintainers.
     validations:
       required: true
 
   - type: textarea
     id: references
     attributes:
-      label: References
+      label: Important Facts and References
       description: |
-        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+        Where possible, please supply links to documentation and/or other GitHub issues or pull requests that give additional context. Any other helpful or relevant information may also be provided in this field.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
@@ -38,11 +36,15 @@ body:
   - type: dropdown
     id: will_contribute
     attributes:
-      label: Would you like to implement a fix?
+      label: Would you like to implement a relevant change?
       description: |
-        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        Indicate to the maintainers and community as to whether you plan to implement a change related to this (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
         - "Yes"
+      multiple: false
+      default: 0
     validations:
       required: false

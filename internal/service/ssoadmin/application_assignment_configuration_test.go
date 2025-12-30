@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -41,7 +41,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_basic(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
@@ -184,7 +184,7 @@ resource "aws_ssoadmin_application" "test" {
 }
 
 resource "aws_ssoadmin_application_assignment_configuration" "test" {
-  application_arn     = aws_ssoadmin_application.test.application_arn
+  application_arn     = aws_ssoadmin_application.test.arn
   assignment_required = %[3]t
 }
 `, rName, testAccApplicationProviderARN, assignmentRequired)

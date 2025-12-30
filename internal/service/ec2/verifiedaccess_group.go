@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -9,15 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -105,7 +105,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		ClientToken:              aws.String(id.UniqueId()),
-		TagSpecifications:        getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessGroup),
+		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
@@ -138,7 +138,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 
 	group, err := findVerifiedAccessGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -257,12 +257,12 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
+func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *awstypes.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
+	apiObject := &awstypes.VerifiedAccessSseSpecificationRequest{}
 
 	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
@@ -275,7 +275,7 @@ func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.Ve
 	return apiObject
 }
 
-func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
+func flattenVerifiedAccessSseSpecificationResponse(apiObject *awstypes.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}

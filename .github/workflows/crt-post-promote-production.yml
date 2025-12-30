@@ -1,0 +1,57 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: crt-post-promote-production
+
+on:
+  repository_dispatch:
+    types:
+      - crt-post-promote-production
+      - crt-post-promote-production::*
+
+permissions:
+  actions: write
+
+jobs:
+  start-registry-check:
+    name: Start Registry Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initiate Workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run \
+            --repo ${{ github.repository }} \
+            --ref main \
+            --field version=${{ github.event.client_payload.payload.version }} \
+            registry-check.yml
+  create-update-changelog-pr:
+    name: Create Update Changelog PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initiate Workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run \
+            --repo ${{ github.repository }} \
+            --ref main \
+            --field previous_version=${{ github.event.client_payload.payload.version }} \
+            update-changelog.yml
+  post-publish:
+    name: Runs post publish actions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initiate Workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run \
+            --repo ${{ github.repository }} \
+            --ref main \
+            --field release_tag=${{ github.event.client_payload.payload.version }} \
+            post-publish.yml

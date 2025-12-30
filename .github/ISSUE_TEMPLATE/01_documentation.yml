@@ -1,22 +1,26 @@
-name: "Report a Documentation Error"
-description: "Choose this option if you've found an error in the provider documentation or contribution guides."
-title: "[Docs]: "
-labels: ["documentation"]
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Report a Documentation Error
+description: Choose this option if you've found an error in the provider documentation or contributor guides.
+labels:
+  - documentation
 body:
   - type: markdown
     attributes:
       value: |
-        # Thank you for raising a documentation issue!
+        ## Thank you for raising a documentation issue!
 
-        This form is meant to alert the maintainers to an issue with the provider documentation found on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) (such as resource and data source documentation, guides and examples), as well as the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+        This form is meant to alert the maintainers to issues with the provider documentation found on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) (such as resource and data source documentation, guides, and examples), or the [contributors guide](https://hashicorp.github.io/terraform-provider-aws/).
 
-        Documentation edits are generally a bit less involved, so are often a great entrypoint if you've ever been interested in [contributing](https://hashicorp.github.io/terraform-provider-aws/documentation-changes/)!
+        We ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Adocumentation) to see if someone else may have already noticed the same issue or has already submitted a fix for it.
 
-  - type: input
+  - type: textarea
     id: registry_link
     attributes:
-      label: Documentation Link
-      description: Please provide a link to the affected page on the Terraform Registry or contribution guide.
+      label: Documentation Link(s)
+      description: |
+        Please link to the affected page(s) on the Terraform Registry or contributors guide.
     validations:
       required: true
 
@@ -24,7 +28,8 @@ body:
     id: description
     attributes:
       label: Description
-      description: Please leave a brief description of the documentation issue.
+      description: |
+        Please leave a brief description of the documentation issue(s), including what the documentation currently says and, if possible, what it should say.
     validations:
       required: true
 
@@ -33,7 +38,7 @@ body:
     attributes:
       label: References
       description: |
-        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+        Where possible, please supply links to AWS documentation and/or other GitHub issues or pull requests that give additional context.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
     validations:
@@ -44,9 +49,13 @@ body:
     attributes:
       label: Would you like to implement a fix?
       description: |
-        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        Indicate to the maintainers and community as to whether you plan to implement a fix for this (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        Documentation edits are generally a bit less involved, so are often a great entrypoint if you've ever been interested in contributing. If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/documentation-changes/) for tips on getting started.
       options:
         - "No"
         - "Yes"
+      multiple: false
+      default: 0
     validations:
       required: false

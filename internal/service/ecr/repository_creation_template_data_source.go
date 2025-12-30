@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -59,6 +59,22 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"image_tag_mutability_exclusion_filter": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrFilter: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"lifecycle_policy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,7 +84,7 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
+					validation.StringLenBetween(2, 256),
 					validation.StringMatch(
 						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
@@ -106,6 +122,9 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", rct.ImageTagMutability)
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(rct.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
 
 	policy, err := structure.NormalizeJsonString(aws.ToString(rct.LifecyclePolicy))
 	if err != nil {

@@ -92,6 +92,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacityProviderStrategy` - (Optional) The capacity provider strategy to use for the service. Can be one or more.  [Defined below](#capacity_provider_strategy).
 * `externalId` - (Optional) The external ID associated with the task set.
 * `forceDelete` - (Optional) Whether to allow deleting the task set without waiting for scaling down to 0. You can force a task set to delete even if it's in the process of scaling a resource. Normally, Terraform drains all the tasks before deleting the task set. This bypasses that behavior and potentially leaves resources dangling.
@@ -193,4 +194,4 @@ Using `terraform import`, import ECS Task Sets using the `taskSetId`, `service`,
 % terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0c23f439c10bf62237c2978dae4ddbb20ffe6a937ff6356657670867f1942259 -->
+<!-- cache-key: cdktf-0.20.8 input-142a5453c9e13a23a096e5766c8853e3705cf5bda70117c89050e0b2a2cfecaa -->

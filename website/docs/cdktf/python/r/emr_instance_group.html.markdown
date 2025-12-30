@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type` (Required) The EC2 instance type for all instances in the instance group. Changing this forces a new resource to be created.
@@ -112,4 +113,4 @@ Using `terraform import`, import EMR task instance group using their EMR Cluster
 % terraform import aws_emr_instance_group.task_group j-123456ABCDEF/ig-15EK4O09RZLNR
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81ea0e37ef071af4b0b3288229252058d70fdfc3a60046cd4d509292a38b32f0 -->
+<!-- cache-key: cdktf-0.20.8 input-9113d7616f1c9dd0427091ae172f8800f834e9c0985ade315aa27a22fb476203 -->

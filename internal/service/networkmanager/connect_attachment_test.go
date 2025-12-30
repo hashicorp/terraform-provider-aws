@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -155,7 +155,7 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
+func TestAccNetworkManagerConnectAttachment_routingPolicyLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
@@ -168,37 +168,60 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "testlabel"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "testlabel"),
 				),
 			},
 			{
-				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-				),
-			},
-			{
-				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
+}
+
+func TestAccNetworkManagerConnectAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.ConnectAttachment
+	resourceName := "aws_networkmanager_connect_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv1"),
+				),
+			},
+			{
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
+					testAccCheckConnectAttachmentRecreated(&v1, &v2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckConnectAttachmentRecreated(before, after *awstypes.ConnectAttachment) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.Attachment.AttachmentId == after.Attachment.AttachmentId {
+			return fmt.Errorf("Connect Attachment was not recreated")
+		}
+		return nil
+	}
 }
 
 func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
@@ -233,7 +256,7 @@ func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -249,34 +272,9 @@ func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestChec
 }
 
 func testAccConnectAttachmentConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-  assign_ipv6_address_on_creation = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
     Name = %[1]q
@@ -296,12 +294,14 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
+data "aws_region" "current" {}
+
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
       asn      = 64512
     }
   }
@@ -331,7 +331,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
   }
 }
-
 `, rName))
 }
 
@@ -446,10 +445,110 @@ resource "aws_networkmanager_attachment_accepter" "test2" {
 `)
 }
 
-func testAccConnectAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
+func testAccConnectAttachmentConfig_baseWithRoutingPolicy(rName, label string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+    edge_locations {
+      location = data.aws_region.current.region
+      asn      = 64512
+    }
+  }
+  segments {
+    name                          = "shared"
+    description                   = "SegmentForSharedServices"
+    require_attachment_acceptance = true
+  }
+  segment_actions {
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "shared"
+    share_with = ["*"]
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[2]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 1
+    condition_logic = "or"
+    conditions {
+      type     = "tag-value"
+      operator = "equals"
+      key      = "segment"
+      value    = "shared"
+    }
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
+  }
+}
+`, rName, label))
+}
+
+func testAccConnectAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccConnectAttachmentConfig_baseWithRoutingPolicy(rName, label), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
+  subnet_arns     = aws_subnet.test[*].arn
   core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
@@ -466,59 +565,21 @@ resource "aws_networkmanager_connect_attachment" "test" {
   core_network_id         = aws_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
+  routing_policy_label    = %[1]q
   options {
     protocol = "GRE"
   }
-  depends_on = [
-    "aws_networkmanager_attachment_accepter.test"
-  ]
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-
-resource "aws_networkmanager_attachment_accepter" "test2" {
-  attachment_id   = aws_networkmanager_connect_attachment.test.id
-  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccConnectAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
   }
-}
-
-resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpc_attachment.test.id
-  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
-}
-
-resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id         = aws_networkmanager_core_network.test.id
-  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
-  options {
-    protocol = "GRE"
-  }
   depends_on = [
     "aws_networkmanager_attachment_accepter.test"
   ]
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test2" {
   attachment_id   = aws_networkmanager_connect_attachment.test.id
   attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, label))
 }

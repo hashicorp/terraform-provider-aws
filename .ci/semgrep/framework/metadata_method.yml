@@ -1,12 +1,15 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: metadata-method-in-wrapper
     languages: [go]
     message: Don't implement a Metadata method
     paths:
       include:
-        - "internal/service/*/*.go"
+        - "/internal/service/*/*.go"
       exclude:
-        - "internal/service/*/*_test.go"
+        - "/internal/service/*/*_test.go"
     patterns:
       - pattern: func $FUNC(...) { ... }
       - metavariable-regex:

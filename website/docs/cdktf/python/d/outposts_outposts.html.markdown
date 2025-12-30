@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability Zone name.
 * `availability_zone_id` - (Optional) Availability Zone identifier.
 * `site_id` - (Optional) Site identifier.
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `ids` - Set of identifiers.
 
-<!-- cache-key: cdktf-0.20.8 input-02cae365ee7d67e7341963b741e8f66fba4ba35af6c45fb037892e4ed7c91bbe -->
+<!-- cache-key: cdktf-0.20.8 input-25e253353acf18a98898930ae71cea344223127ee301e20a7d17311cafcc7601 -->

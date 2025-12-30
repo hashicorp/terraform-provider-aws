@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -79,6 +79,44 @@ func dataSourceReplicationGroup() *schema.Resource {
 			"multi_az_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"node_group_configuration": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"primary_availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"primary_outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"replica_availability_zones": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_outpost_arns": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"slots": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -175,7 +213,12 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
-	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+	if len(rg.NodeGroups) > 0 {
+		d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+		if err := d.Set("node_group_configuration", flattenNodeGroupConfigurations(rg.NodeGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_group_configuration: %s", err)
+		}
+	}
 	d.Set("cluster_mode", rg.ClusterMode)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)

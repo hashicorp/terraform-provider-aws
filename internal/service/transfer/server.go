@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -16,7 +16,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -475,7 +476,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findServerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -822,8 +823,8 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, 1*time.Minute,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteServer(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),
 			})
@@ -884,7 +885,7 @@ func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.Up
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateServer(ctx, input)
 	}, "VPC Endpoint state is not yet available")
 
@@ -903,7 +904,7 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	output, err := conn.DescribeServer(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -920,11 +921,11 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	return output.Server, nil
 }
 
-func statusServer(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
+func statusServer(ctx context.Context, conn *transfer.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -937,7 +938,7 @@ func statusServer(ctx context.Context, conn *transfer.Client, id string) retry.S
 }
 
 func waitServerCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting),
 		Target:  enum.Slice(awstypes.StateOnline),
 		Refresh: statusServer(ctx, conn, id),
@@ -957,7 +958,7 @@ func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateOffline, awstypes.StateOnline, awstypes.StateStarting, awstypes.StateStopping, awstypes.StateStartFailed, awstypes.StateStopFailed),
 		Target:  []string{},
 		Refresh: statusServer(ctx, conn, id),
@@ -974,7 +975,7 @@ func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*
 }
 
 func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOffline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOnline),
 		Refresh: statusServer(ctx, conn, id),
@@ -991,7 +992,7 @@ func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, ti
 }
 
 func waitServerStopped(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOnline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOffline),
 		Refresh: statusServer(ctx, conn, id),
@@ -1243,20 +1244,25 @@ func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []any {
 type securityPolicyName string
 
 const (
-	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
-	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
-	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
-	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
-	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
-	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
-	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
-	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
-	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
-	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
-	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
-	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
-	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
-	securityPolicyNameRestricted_2024_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyName2018_11                   securityPolicyName = "TransferSecurityPolicy-2018-11"
+	securityPolicyName2020_06                   securityPolicyName = "TransferSecurityPolicy-2020-06"
+	securityPolicyName2022_03                   securityPolicyName = "TransferSecurityPolicy-2022-03"
+	securityPolicyName2023_05                   securityPolicyName = "TransferSecurityPolicy-2023-05"
+	securityPolicyName2024_01                   securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyName2025_03                   securityPolicyName = "TransferSecurityPolicy-2025-03"
+	securityPolicyNameFIPS_2020_06              securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
+	securityPolicyNameFIPS_2024_10              securityPolicyName = "TransferSFTPConnectorSecurityPolicy-FIPS-2024-10"
+	securityPolicyNameFIPS_2025_03              securityPolicyName = "TransferSecurityPolicy-FIPS-2025-03"
+	securityPolicyNamePQ_SSH_2023_04            securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
+	securityPolicyNamePQ_SSH_FIPS_2023_04       securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11        securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+	securityPolicyNameRestricted_2024_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyNameSSHAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
+	securityPolicyNameAS2Restricted_2025_07     securityPolicyName = "TransferSecurityPolicy-AS2Restricted-2025-07"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1266,14 +1272,18 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyName2022_03,
 		securityPolicyName2023_05,
 		securityPolicyName2024_01,
+		securityPolicyName2025_03,
 		securityPolicyNameFIPS_2020_06,
 		securityPolicyNameFIPS_2023_05,
 		securityPolicyNameFIPS_2024_01,
 		securityPolicyNameFIPS_2024_05,
+		securityPolicyNameFIPS_2025_03,
 		securityPolicyNamePQ_SSH_2023_04,
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
+		securityPolicyNameSSHAuditCompliant_2025_02,
+		securityPolicyNameAS2Restricted_2025_07,
 	}
 }

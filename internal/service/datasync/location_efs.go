@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -14,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,17 +28,18 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_efs", name="Location EFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationEfsOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
 		ReadWithoutTimeout:   resourceLocationEFSRead,
 		UpdateWithoutTimeout: resourceLocationEFSUpdate,
 		DeleteWithoutTimeout: resourceLocationEFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_point_arn": {
@@ -160,7 +161,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findLocationEFSByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Location EFS (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -190,7 +191,13 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
-	efsFileSystemARN := fmt.Sprintf("arn:%s:elasticfilesystem:%s:%s:file-system/%s", locationARN.Partition, globalIDParts[0], locationARN.AccountID, globalIDParts[1])
+	efsFileSystemARN := arn.ARN{
+		Partition: locationARN.Partition,
+		Service:   "elasticfilesystem",
+		Region:    globalIDParts[0],
+		AccountID: locationARN.AccountID,
+		Resource:  "file-system/" + globalIDParts[1],
+	}.String()
 	d.Set("efs_file_system_arn", efsFileSystemARN)
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)
@@ -237,7 +244,7 @@ func findLocationEFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	output, err := conn.DescribeLocationEfs(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

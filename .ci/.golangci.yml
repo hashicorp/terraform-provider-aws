@@ -1,11 +1,14 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+version: "2"
+linters:
+  default: none
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-
-linters:
-  disable-all: true
+formatters:
   enable:
     - gofmt
-
 run:
   timeout: 30m

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,16 +31,14 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")
 // @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,
 		ReadWithoutTimeout:   resourceTrustStoreRead,
 		UpdateWithoutTimeout: resourceTrustStoreUpdate,
 		DeleteWithoutTimeout: resourceTrustStoreDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
@@ -136,7 +135,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.TrustStores[0].TrustStoreArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findTrustStoreByARN(ctx, conn, d.Id())
 	})
 
@@ -171,7 +170,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	trustStore, err := findTrustStoreByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Trust Store %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -222,7 +221,7 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Trust Store: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteTrustStore(ctx, &elasticloadbalancingv2.DeleteTrustStoreInput{
 			TrustStoreArn: aws.String(d.Id()),
 		})
@@ -251,7 +250,7 @@ func findTrustStoreByARN(ctx context.Context, conn *elasticloadbalancingv2.Clien
 
 	// Eventual consistency check.
 	if aws.ToString(output.TrustStoreArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -277,7 +276,7 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TrustStoreNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -293,11 +292,11 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 	return output, nil
 }
 
-func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTrustStoreByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -310,7 +309,7 @@ func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 }
 
 func waitTrustStoreActive(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, timeout time.Duration) (*awstypes.TrustStore, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.TrustStoreStatusCreating),
 		Target:     enum.Slice(awstypes.TrustStoreStatusActive),
 		Refresh:    statusTrustStore(ctx, conn, arn),
@@ -336,7 +335,7 @@ func findTrustStoreAssociations(ctx context.Context, conn *elasticloadbalancingv
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TrustStoreNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -357,10 +356,10 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elasticloadbalan
 		TrustStoreArn: aws.String(arn),
 	}
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		associations, err := findTrustStoreAssociations(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return 0, nil
 		}
 

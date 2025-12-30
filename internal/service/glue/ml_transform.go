@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,12 +29,13 @@ import (
 
 // @SDKResource("aws_glue_ml_transform", name="ML Transform")
 // @Tags(identifierAttribute="arn")
-func ResourceMLTransform() *schema.Resource {
+func resourceMLTransform() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMLTransformCreate,
 		ReadWithoutTimeout:   resourceMLTransformRead,
 		UpdateWithoutTimeout: resourceMLTransformUpdate,
 		DeleteWithoutTimeout: resourceMLTransformDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -224,7 +227,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating Glue ML Transform: %+v", input)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidInputException](ctx, iamPropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateMLTransform(ctx, input)
 	}, "Unable to assume role")
 
@@ -355,17 +358,17 @@ func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
-
-	input := &glue.DeleteMLTransformInput{
+	log.Printf("[DEBUG] Deleting Glue ML Transform: %s", d.Id())
+	input := glue.DeleteMLTransformInput{
 		TransformId: aws.String(d.Id()),
 	}
+	_, err := conn.DeleteMLTransform(ctx, &input)
 
-	_, err := conn.DeleteMLTransform(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Glue ML Transform (%s): %s", d.Id(), err)
 	}
 
@@ -377,6 +380,51 @@ func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+// statusMLTransform fetches the MLTransform and its Status
+func statusMLTransform(ctx context.Context, conn *glue.Client, transformId string) sdkretry.StateRefreshFunc {
+	const (
+		mlTransformStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		input := &glue.GetMLTransformInput{
+			TransformId: aws.String(transformId),
+		}
+
+		output, err := conn.GetMLTransform(ctx, input)
+
+		if err != nil {
+			return nil, mlTransformStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, mlTransformStatusUnknown, nil
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+// waitMLTransformDeleted waits for an MLTransform to return Deleted
+func waitMLTransformDeleted(ctx context.Context, conn *glue.Client, transformId string) (*glue.GetMLTransformOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransformStatusTypeNotReady, awstypes.TransformStatusTypeReady, awstypes.TransformStatusTypeDeleting),
+		Target:  []string{},
+		Refresh: statusMLTransform(ctx, conn, transformId),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetMLTransformOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandMLTransformInputRecordTables(l []any) []awstypes.GlueTable {

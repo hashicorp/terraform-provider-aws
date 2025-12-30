@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -519,7 +519,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapprunner.FindServiceByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -688,6 +688,7 @@ func testAccServiceConfig_ImageRepository_encryptionConfiguration(rName string) 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = %[1]q
+  enable_key_rotation     = true
 }
 
 resource "aws_apprunner_service" "test" {

@@ -1,30 +1,27 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	sgResourceName := "aws_security_group.test"
@@ -35,19 +32,20 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.SecurityGroupVpcAssociationStateAssociated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.SecurityGroupVpcAssociationStateAssociated)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.target", names.AttrID),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
-				ImportStateIdFunc:                    testAccVPCSecurityGroupVPCAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccSecurityGroupVPCAssociationImportStateIDFunc(resourceName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrVPCID,
@@ -58,8 +56,7 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 
@@ -69,12 +66,12 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,8 +82,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	sgResourceName := "aws_security_group.test"
@@ -97,12 +93,12 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), sgResourceName),
 				),
@@ -114,8 +110,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	vpcResourceName := "aws_vpc.target"
@@ -126,12 +121,12 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
+					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
 				),
@@ -141,7 +136,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSecurityGroupVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
@@ -151,53 +146,50 @@ func testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx context.Context) reso
 			}
 
 			_, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameSecurityGroupVPCAssociation, rs.Primary.Attributes["security_group_id"], err)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameSecurityGroupVPCAssociation, rs.Primary.Attributes["security_group_id"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Security Group (%s) VPC (%s) Association still exists", rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
 		}
 
 		return nil
 	}
 }
 
-func testAccVPCSecurityGroupVPCAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccCheckSecurityGroupVPCAssociationExists(ctx context.Context, n string, v *awstypes.SecurityGroupVpcAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccSecurityGroupVPCAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID]), nil
-	}
-}
-
-func testAccCheckVPCSecurityGroupVPCAssociationExists(ctx context.Context, name string, assoc *types.SecurityGroupVpcAssociation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, name, errors.New("not found"))
-		}
-
-		securityGroupID := rs.Primary.Attributes["security_group_id"]
-		vpcID := rs.Primary.Attributes[names.AttrVPCID]
-
-		if securityGroupID == "" || vpcID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, name, errors.New("not set"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		resp, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, securityGroupID, rs.Primary.Attributes[names.AttrVPCID])
-		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, securityGroupID, err)
-		}
-
-		*assoc = *resp
-
-		return nil
 	}
 }
 

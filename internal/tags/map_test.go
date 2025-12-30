@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tags
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -75,7 +74,7 @@ func TestTagMapEquality(t *testing.T) {
 			semanticEquals: false,
 		},
 
-		"set-missing": {
+		"set-missing-different-lengths": {
 			val1: newMapValueMust(
 				map[string]attr.Value{
 					"key1": types.StringValue("value1"),
@@ -84,6 +83,23 @@ func TestTagMapEquality(t *testing.T) {
 			),
 			val2: newMapValueMust(
 				map[string]attr.Value{
+					"key2": types.StringValue("value2"),
+				},
+			),
+			equals:         false,
+			semanticEquals: false,
+		},
+
+		"set-missing-same-lengths": {
+			val1: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			val2: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
 					"key2": types.StringValue("value2"),
 				},
 			),
@@ -213,7 +229,7 @@ func TestTagMapEquality(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			equals := test.val1.Equal(test.val2)
 

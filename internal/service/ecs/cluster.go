@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,7 +27,8 @@ import (
 )
 
 // @SDKResource("aws_ecs_cluster", name="Cluster")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnFormat("cluster/{name}")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -229,11 +231,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 2 * time.Second
 	)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (any, error) {
+	cluster, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func(ctx context.Context) (*awstypes.Cluster, error) {
 		return findClusterByNameOrARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -243,7 +245,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
-	cluster := outputRaw.(*awstypes.Cluster)
 	d.Set(names.AttrARN, cluster.ClusterArn)
 	if cluster.Configuration != nil {
 		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
@@ -310,7 +311,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf4[*awstypes.ClusterContainsContainerInstancesException, *awstypes.ClusterContainsServicesException, *awstypes.ClusterContainsTasksException, *awstypes.UpdateInProgressException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsOneOf4[any, *awstypes.ClusterContainsContainerInstancesException, *awstypes.ClusterContainsServicesException, *awstypes.ClusterContainsTasksException, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteCluster(ctx, &ecs.DeleteClusterInput{
 			Cluster: aws.String(d.Id()),
 		})
@@ -329,9 +330,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
+
+	region := d.Get(names.AttrRegion).(string)
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Partition: names.PartitionForRegion(region).ID(),
+		Region:    region,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "cluster/" + d.Id(),
@@ -341,7 +344,7 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func retryClusterCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateCluster(ctx, input)
 	}, "Unable to assume the service linked role")
 
@@ -366,7 +369,7 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	output, err := conn.DescribeClusters(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -411,7 +414,7 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	}
 
 	if status := aws.ToString(output.Status); status == clusterStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -420,11 +423,11 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -440,7 +443,7 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterStatusProvisioning},
 		Target:  []string{clusterStatusActive},
 		Refresh: statusCluster(ctx, conn, arn),
@@ -458,7 +461,7 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 }
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, arn),

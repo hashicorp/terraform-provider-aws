@@ -98,7 +98,7 @@ The following arguments are required:
 
 * `hosted_zone_id` - (Required) Identifier of the Route 53 Hosted Zone.
 * `key_management_service_arn` - (Required) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key. This must be unique for each key-signing key (KSK) in a single hosted zone. This key must be in the `us-east-1` Region and meet certain requirements, which are described in the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-cmk-requirements.html) and [Route 53 API Reference](https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateKeySigningKey.html).
-* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-singing key in the same hosted zone.
+* `name` - (Required) Name of the key-signing key (KSK). Must be unique for each key-signing key in the same hosted zone.
 
 The following arguments are optional:
 

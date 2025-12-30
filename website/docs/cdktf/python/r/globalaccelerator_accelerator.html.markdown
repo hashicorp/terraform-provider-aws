@@ -86,6 +86,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_accelerator.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  }
+}
+
+resource "aws_globalaccelerator_accelerator" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator accelerator.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator accelerators using the `arn`. For example:
 
 ```python
@@ -109,4 +130,4 @@ Using `terraform import`, import Global Accelerator accelerators using the `arn`
 % terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3555efe0b16a51dac529022ae1cb96c7786df7b902a62f1a606a3ef2709af39c -->
+<!-- cache-key: cdktf-0.20.8 input-5bf6459d9f5b1d04f76d64affa0f768f92c94272ff519704dbe540baafabb5a5 -->

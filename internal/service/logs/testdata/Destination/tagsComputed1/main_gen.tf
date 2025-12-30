@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "role" {
       type = "Service"
 
       identifiers = [
-        "logs.${data.aws_region.current.name}.amazonaws.com",
+        "logs.${data.aws_region.current.region}.amazonaws.com",
       ]
     }
 

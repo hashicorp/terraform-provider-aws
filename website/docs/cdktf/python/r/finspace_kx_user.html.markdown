@@ -78,6 +78,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -121,4 +122,4 @@ Using `terraform import`, import an AWS FinSpace Kx User using the `id` (environ
 % terraform import aws_finspace_kx_user.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ca0c383fee51cd83230b9fbdc20cbdd865bb1f5eb6633d7d2d1fa7bea216bcb4 -->
+<!-- cache-key: cdktf-0.20.8 input-71235e1e9c8c6f29f3c67e109a7fb252d417a4f7e306cb431185d42c4b4d6065 -->

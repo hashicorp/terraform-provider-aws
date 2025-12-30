@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -17,30 +17,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lambda_function_recursion_config", name="Function Recursion Config")
-func newResourceFunctionRecursionConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceFunctionRecursionConfig{}, nil
+func newFunctionRecursionConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &functionRecursionConfigResource{}, nil
 }
 
 const (
 	ResNameFunctionRecursionConfig = "Function Recursion Config"
 )
 
-type resourceFunctionRecursionConfig struct {
-	framework.ResourceWithConfigure
+type functionRecursionConfigResource struct {
+	framework.ResourceWithModel[functionRecursionConfigResourceModel]
 }
 
-func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *functionRecursionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"function_name": schema.StringAttribute{
@@ -60,8 +61,8 @@ func (r *resourceFunctionRecursionConfig) Schema(ctx context.Context, req resour
 	}
 }
 
-func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceFunctionRecursionConfigData
+func (r *functionRecursionConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan functionRecursionConfigResourceModel
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -99,8 +100,8 @@ func (r *resourceFunctionRecursionConfig) Create(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceFunctionRecursionConfigData
+func (r *functionRecursionConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state functionRecursionConfigResourceModel
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -109,7 +110,7 @@ func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource
 	}
 
 	out, err := findFunctionRecursionConfigByName(ctx, conn, state.FunctionName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -129,8 +130,8 @@ func (r *resourceFunctionRecursionConfig) Read(ctx context.Context, req resource
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceFunctionRecursionConfigData
+func (r *functionRecursionConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state functionRecursionConfigResourceModel
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -173,8 +174,8 @@ func (r *resourceFunctionRecursionConfig) Update(ctx context.Context, req resour
 // Delete sets the Lambda function's recursion configuration to the default ("Terminate")
 //
 // Ref: https://docs.aws.amazon.com/lambda/latest/api/API_PutFunctionRecursionConfig.html
-func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceFunctionRecursionConfigData
+func (r *functionRecursionConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state functionRecursionConfigResourceModel
 	conn := r.Meta().LambdaClient(ctx)
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -200,8 +201,8 @@ func (r *resourceFunctionRecursionConfig) Delete(ctx context.Context, req resour
 	}
 }
 
-func (r *resourceFunctionRecursionConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), req.ID)...)
+func (r *functionRecursionConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("function_name"), req, resp)
 }
 
 func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client, functionName string) (*lambda.GetFunctionRecursionConfigOutput, error) {
@@ -212,7 +213,7 @@ func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client,
 	out, err := conn.GetFunctionRecursionConfig(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -228,7 +229,8 @@ func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client,
 	return out, nil
 }
 
-type resourceFunctionRecursionConfigData struct {
+type functionRecursionConfigResourceModel struct {
+	framework.WithRegionModel
 	FunctionName  types.String                               `tfsdk:"function_name"`
 	RecursiveLoop fwtypes.StringEnum[awstypes.RecursiveLoop] `tfsdk:"recursive_loop"`
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -96,7 +97,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
+	manifest, err := tfsmithy.DocumentFromJSONString(d.Get("manifest_json").(string), document.NewLazyDocument)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -133,7 +134,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	landingZone, err := findLandingZoneByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ControlTower Landing Zone (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -153,7 +154,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 	if landingZone.Manifest != nil {
-		v, err := json.SmithyDocumentToString(landingZone.Manifest)
+		v, err := tfsmithy.DocumentToJSONString(landingZone.Manifest)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -173,7 +174,7 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
+		manifest, err := tfsmithy.DocumentFromJSONString(d.Get("manifest_json").(string), document.NewLazyDocument)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -237,7 +238,7 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 	output, err := conn.GetLandingZone(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -262,7 +263,7 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	output, err := conn.GetLandingZoneOperation(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -279,11 +280,11 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	return output.OperationDetails, nil
 }
 
-func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
+func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLandingZoneOperationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -296,7 +297,7 @@ func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, 
 }
 
 func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.LandingZoneOperationDetail, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.LandingZoneOperationStatusInProgress),
 		Target:  enum.Slice(types.LandingZoneOperationStatusSucceeded),
 		Refresh: statusLandingZoneOperation(ctx, conn, id),

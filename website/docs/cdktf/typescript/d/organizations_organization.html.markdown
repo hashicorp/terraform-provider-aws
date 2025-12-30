@@ -101,7 +101,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -141,4 +141,4 @@ If the account is the master account or a delegated administrator for the organi
         * `name` - The name of the policy type
         * `status` - The status of the policy type as it relates to the associated root
 
-<!-- cache-key: cdktf-0.20.8 input-3f9a5e0bb85e9f8cdd8dcfa0c9353de9ba55a603cd7bf0529bbfabb7df52d6fd -->
+<!-- cache-key: cdktf-0.20.8 input-dc97097a2b75109df7dc118299f41db93148ad09f52c2b8edb841c0e2bda1e0d -->

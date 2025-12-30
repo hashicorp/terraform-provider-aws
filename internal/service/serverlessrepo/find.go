@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package serverlessrepo
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	serverlessrepo "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -23,7 +23,7 @@ func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicati
 
 	resp, err := conn.GetApplication(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:    err,
 			LastRequest:  input,
 			LastResponse: resp,
@@ -34,7 +34,7 @@ func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicati
 	}
 
 	if resp == nil {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest:  input,
 			LastResponse: resp,
 			Message:      "returned empty response",

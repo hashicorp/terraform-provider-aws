@@ -52,11 +52,14 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the listener. Required if `load_balancer_arn` and `port` is not set.
 * `load_balancer_arn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) Port of the listener. Required if `arn` is not set.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
 
@@ -66,4 +69,4 @@ See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for detai
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-211bbf8f48d3f19292f3ee8b224115fe3e52e8fa4345ea857f3fb1459aff8016 -->
+<!-- cache-key: cdktf-0.20.8 input-89e7245635c0e737bf923323d53bb06eca7558b3e01792cb6b5db4a6cbbd26d4 -->

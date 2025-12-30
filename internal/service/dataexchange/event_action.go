@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange
@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,32 +19,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_dataexchange_event_action", name="Event Action")
 func newEventActionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceEventAction{}, nil
+	return &eventActionResource{}, nil
 }
 
 const (
 	ResNameEventAction = "Event Action"
 )
 
-type resourceEventAction struct {
-	framework.ResourceWithConfigure
+type eventActionResource struct {
+	framework.ResourceWithModel[eventActionResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *eventActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -157,10 +158,10 @@ func (r *resourceEventAction) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *eventActionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan resourceEventActionModel
+	var plan eventActionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,17 +197,17 @@ func (r *resourceEventAction) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventActionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceEventActionModel
+	var state eventActionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEventActionByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -226,10 +227,10 @@ func (r *resourceEventAction) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventActionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan, state resourceEventActionModel
+	var plan, state eventActionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -266,10 +267,10 @@ func (r *resourceEventAction) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventActionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceEventActionModel
+	var state eventActionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -292,10 +293,6 @@ func (r *resourceEventAction) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceEventAction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetEventActionOutput, error) {
 	input := dataexchange.GetEventActionInput{
 		EventActionId: aws.String(id),
@@ -304,7 +301,7 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 	out, err := conn.GetEventAction(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -320,7 +317,8 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 	return out, nil
 }
 
-type resourceEventActionModel struct {
+type eventActionResourceModel struct {
+	framework.WithRegionModel
 	Action    fwtypes.ListNestedObjectValueOf[actionModel] `tfsdk:"action"`
 	ARN       types.String                                 `tfsdk:"arn"`
 	CreatedAt timetypes.RFC3339                            `tfsdk:"created_at"`

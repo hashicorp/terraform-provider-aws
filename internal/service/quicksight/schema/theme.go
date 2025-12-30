@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -161,7 +161,7 @@ func ThemeConfigurationSchema() *schema.Schema {
 }
 
 func ThemeConfigurationDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(ThemeConfigurationSchema())
+	return sdkv2.ComputedOnlyFromSchema(ThemeConfigurationSchema())
 }
 
 func ExpandThemeConfiguration(tfList []any) *awstypes.ThemeConfiguration {

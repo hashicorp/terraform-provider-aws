@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -194,9 +194,9 @@ func testAccCheckCustomerManagedPolicyAttachmentDestroy(ctx context.Context) res
 				return err
 			}
 
-			_, err = tfssoadmin.FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindCustomerManagedPolicyByFourPartKey(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -229,7 +229,7 @@ func testAccCheckCustomerManagedPolicyAttachmentExists(ctx context.Context, n st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindCustomerManagedPolicyByFourPartKey(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
 		return err
 	}

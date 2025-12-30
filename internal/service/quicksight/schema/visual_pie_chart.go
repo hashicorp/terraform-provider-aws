@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -45,7 +45,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringEnumSchema[awstypes.ArcThicknessOptions](attrOptional),
+													"arc_thickness": stringEnumSchema[awstypes.ArcThickness](attrOptional),
 												},
 											},
 										},

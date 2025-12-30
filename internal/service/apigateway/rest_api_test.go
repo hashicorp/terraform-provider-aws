@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -14,12 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -985,6 +989,101 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayRestAPI_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_ipAddressType(rName, "REGIONAL", "ipv4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			{
+				Config: testAccRestAPIConfig_ipAddressType(rName, "REGIONAL", "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "dualstack"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_ipAddressType_overrideBody(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, "REGIONAL", "ipv4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			// Verify updated description still overrides
+			{
+				Config: testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, "REGIONAL", "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.ip_address_type", "dualstack"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_ipAddressType_privateError(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRestAPIConfig_ipAddressType(rName, "PRIVATE", "ipv4"),
+				ExpectError: regexache.MustCompile(`endpoint_configuration type "PRIVATE" requires ip_address_type "dualstack"`),
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetRestApiOutput
@@ -1267,6 +1366,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
 	resourceName := "aws_api_gateway_rest_api.test"
 	expectedPolicyText := `{"Statement":[{"Action":"execute-api:Invoke","Condition":{"IpAddress":{"aws:SourceIp":["123.123.123.123/32","122.122.122.122/32","169.254.169.253/32"]}},"Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*"}],"Version":"2012-10-17"}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1280,12 +1380,30 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_policyOrder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringExact(expectedPolicyText)),
+				},
 			},
 			{
-				Config:   testAccRestAPIConfig_policyNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccRestAPIConfig_policyNewOrder(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1457,7 +1575,7 @@ func testAccCheckRESTAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigateway.FindRestAPIByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1617,7 +1735,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1667,7 +1785,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1676,7 +1794,7 @@ resource "aws_vpc_endpoint" "test" {
 resource "aws_vpc_endpoint" "test2" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1728,7 +1846,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1813,7 +1931,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1897,7 +2015,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -2345,6 +2463,60 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName, bodyDescription)
+}
+
+func testAccRestAPIConfig_ipAddressType(rName, endpointType, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  endpoint_configuration {
+    types           = ["%[2]s"]
+    ip_address_type = %[3]q
+  }
+  name = %[1]q
+}
+`, rName, endpointType, ipAddressType)
+}
+
+func testAccRestAPIConfig_ipAddressTypeOverrideBody(rName, endpointType, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  endpoint_configuration {
+    types           = ["%[2]s"]
+    ip_address_type = %[3]q
+  }
+  name = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+  })
+}
+`, rName, endpointType, ipAddressType)
 }
 
 func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize string) string {

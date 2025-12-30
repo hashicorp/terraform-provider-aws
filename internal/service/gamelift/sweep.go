@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift
@@ -56,7 +56,7 @@ func sweepAliases(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &gamelift.ListAliasesInput{}
 	conn := client.GameLiftClient(ctx)
@@ -97,7 +97,7 @@ func sweepBuilds(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &gamelift.ListBuildsInput{}
 	conn := client.GameLiftClient(ctx)
@@ -138,7 +138,7 @@ func sweepScripts(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &gamelift.ListScriptsInput{}
 	conn := client.GameLiftClient(ctx)
@@ -179,7 +179,7 @@ func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &gamelift.ListFleetsInput{}
 	conn := client.GameLiftClient(ctx)
@@ -220,7 +220,7 @@ func sweepGameServerGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.GameLiftClient(ctx)
 	input := &gamelift.ListGameServerGroupsInput{}
@@ -261,7 +261,7 @@ func sweepGameSessionQueue(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &gamelift.DescribeGameSessionQueuesInput{}
 	conn := client.GameLiftClient(ctx)

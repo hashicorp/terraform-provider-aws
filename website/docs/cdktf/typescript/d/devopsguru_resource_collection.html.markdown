@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `type` - (Required) Type of AWS resource collection to create. Valid values are `AWS_CLOUD_FORMATION`, `AWS_SERVICE`, and `AWS_TAGS`.
 
 ## Attribute Reference
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `appBoundaryKey` - An AWS tag key that is used to identify the AWS resources that DevOps Guru analyzes.
 * `tagValues` - Array of tag values.
 
-<!-- cache-key: cdktf-0.20.8 input-21ef60629a87753835b0959d268e26965b9a0c4757597c4f6c81c339cf4ffd0d -->
+<!-- cache-key: cdktf-0.20.8 input-cb687772fee35e1e103ec9995c0b5bb556649629014d46032a0a2db864bb4ce4 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune
@@ -33,7 +33,7 @@ func dataSourceOrderableDBInstance() *schema.Resource {
 			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  engineNeptune,
+				Default:  defaultEngine,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -40,7 +40,7 @@ func createPartitionIndexID(catalogID, dbName, tableName, indexName string) stri
 func stringifyPartition(partValues []any) string {
 	var b bytes.Buffer
 	for _, val := range partValues {
-		b.WriteString(fmt.Sprintf("%s#", val.(string)))
+		fmt.Fprintf(&b, "%s#", val.(string))
 	}
 	vals := strings.Trim(b.String(), "#")
 

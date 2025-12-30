@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive
@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,7 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex")
 // @Testing(serialize=true)
-func ResourceMultiplex() *schema.Resource {
+func resourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
 		ReadWithoutTimeout:   resourceMultiplexRead,
@@ -153,9 +154,9 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindMultiplexByID(ctx, conn, d.Id())
+	out, err := findMultiplexByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Multiplex (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -205,7 +206,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if d.HasChange("start_multiplex") {
-		out, err := FindMultiplexByID(ctx, conn, d.Id())
+		out, err := findMultiplexByID(ctx, conn, d.Id())
 		if err != nil {
 			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 		}
@@ -234,9 +235,9 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
 
-	out, err := FindMultiplexByID(ctx, conn, d.Id())
+	out, err := findMultiplexByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -271,7 +272,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.MultiplexStateCreating),
 		Target:                    enum.Slice(types.MultiplexStateIdle),
 		Refresh:                   statusMultiplex(ctx, conn, id),
@@ -290,7 +291,7 @@ func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.MultiplexStateIdle),
 		Refresh:                   statusMultiplex(ctx, conn, id),
@@ -309,7 +310,7 @@ func waitMultiplexUpdated(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateDeleting),
 		Target:  enum.Slice(types.MultiplexStateDeleted),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -325,7 +326,7 @@ func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStarting),
 		Target:  enum.Slice(types.MultiplexStateRunning),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -341,7 +342,7 @@ func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string
 }
 
 func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateStopping),
 		Target:  enum.Slice(types.MultiplexStateIdle),
 		Refresh: statusMultiplex(ctx, conn, id),
@@ -356,10 +357,10 @@ func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string
 	return nil, err
 }
 
-func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
+func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindMultiplexByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		out, err := findMultiplexByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -371,7 +372,7 @@ func statusMultiplex(ctx context.Context, conn *medialive.Client, id string) ret
 	}
 }
 
-func FindMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeMultiplexOutput, error) {
+func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeMultiplexOutput, error) {
 	in := &medialive.DescribeMultiplexInput{
 		MultiplexId: aws.String(id),
 	}
@@ -379,7 +380,7 @@ func FindMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

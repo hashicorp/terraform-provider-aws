@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ds
@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,6 +33,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,7 +45,7 @@ func newTrustResource(_ context.Context) (resource.ResourceWithConfigure, error)
 }
 
 type trustResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[trustResourceModel]
 }
 
 func (r *trustResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -53,6 +54,7 @@ func (r *trustResource) Schema(ctx context.Context, request resource.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"conditional_forwarder_ip_addrs": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Set{
@@ -210,7 +212,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 	trustID := data.ID.ValueString()
 	trust, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -239,7 +241,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	data.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
+	data.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, forwarder.DnsIpAddrs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -320,7 +322,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 		if err != nil {
 			// Outputting a NotFoundError does not include the original error.
 			// Retrieve it to give the user an actionalble error message.
-			if nfe, ok := errs.As[*retry.NotFoundError](err); ok {
+			if nfe, ok := errs.As[*sdkretry.NotFoundError](err); ok {
 				if nfe.LastError != nil {
 					err = nfe.LastError
 				}
@@ -331,7 +333,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 			return
 		}
 
-		new.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
+		new.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, forwarder.DnsIpAddrs)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -394,7 +396,8 @@ func (r *trustResource) ImportState(ctx context.Context, request resource.Import
 }
 
 type trustResourceModel struct {
-	ConditionalForwarderIPAddrs          types.Set                                   `tfsdk:"conditional_forwarder_ip_addrs"`
+	framework.WithRegionModel
+	ConditionalForwarderIPAddrs          fwtypes.SetOfString                         `tfsdk:"conditional_forwarder_ip_addrs"`
 	CreatedDateTime                      timetypes.RFC3339                           `tfsdk:"created_date_time"`
 	DeleteAssociatedConditionalForwarder types.Bool                                  `tfsdk:"delete_associated_conditional_forwarder"`
 	DirectoryID                          types.String                                `tfsdk:"directory_id"`
@@ -428,7 +431,7 @@ func findTrusts(ctx context.Context, conn *directoryservice.Client, input *direc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -467,11 +470,11 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 	})
 }
 
-func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
+func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -484,7 +487,7 @@ func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID
 }
 
 func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TrustStateCreating),
 		Target:  enum.Slice(awstypes.TrustStateCreated),
 		Refresh: statusTrust(ctx, conn, directoryID, trustID),
@@ -510,7 +513,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 }
 
 func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreating,
 			awstypes.TrustStateCreated,
@@ -544,7 +547,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateUpdating,
 			awstypes.TrustStateUpdated,
@@ -577,7 +580,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 }
 
 func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreated,
 			awstypes.TrustStateDeleting,

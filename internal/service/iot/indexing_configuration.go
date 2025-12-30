@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -21,16 +21,17 @@ import (
 )
 
 // @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,
 		ReadWithoutTimeout:   resourceIndexingConfigurationRead,
 		UpdateWithoutTimeout: resourceIndexingConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"thing_group_indexing_configuration": {
@@ -291,7 +292,7 @@ func flattenIndexingFilter(apiObject *awstypes.IndexingFilter) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.NamedShadowNames; v != nil {
-		tfMap["named_shadow_names"] = aws.StringSlice(v)
+		tfMap["named_shadow_names"] = v
 	}
 
 	return tfMap

@@ -14,8 +14,6 @@ Amazon SQS (Simple Queue Service) is a fully managed message queuing service tha
 
 !> AWS will hang indefinitely, leading to a `timeout while waiting` error, when creating or updating an `aws_sqs_queue` with an associated [`aws_sqs_queue_policy`](/docs/providers/aws/r/sqs_queue_policy.html) if `Version = "2012-10-17"` is not explicitly set in the policy.
 
-!> AWS will hang indefinitely and trigger a `timeout while waiting` error when creating or updating an `aws_sqs_queue` if `kmsDataKeyReusePeriodSeconds` is set to a non-default value, `sqsManagedSseEnabled` is `false` (explicitly or by default), and `kmsMasterKeyId` is not set.
-
 ## Example Usage
 
 ```typescript
@@ -202,6 +200,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contentBasedDeduplication` - (Optional) Enables content-based deduplication for FIFO queues. For more information, see the [related documentation](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html#FIFO-queues-exactly-once-processing).
 * `deduplicationScope` - (Optional) Specifies whether message deduplication occurs at the message group or queue level. Valid values are `messageGroup` and `queue` (default).
 * `delaySeconds` - (Optional) Time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes). The default for this attribute is 0 seconds.
@@ -209,14 +208,14 @@ This resource supports the following arguments:
 * `fifoThroughputLimit` - (Optional) Specifies whether the FIFO queue throughput quota applies to the entire queue or per message group. Valid values are `perQueue` (default) and `perMessageGroupId`.
 * `kmsDataKeyReusePeriodSeconds` - (Optional) Length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours). The default is 300 (5 minutes).
 * `kmsMasterKeyId` - (Optional) ID of an AWS-managed customer master key (CMK) for Amazon SQS or a custom CMK. For more information, see [Key Terms](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-sse-key-terms).
-* `maxMessageSize` - (Optional) Limit of how many bytes a message can contain before Amazon SQS rejects it. An integer from 1024 bytes (1 KiB) up to 262144 bytes (256 KiB). The default for this attribute is 262144 (256 KiB).
+* `maxMessageSize` - (Optional) Limit of how many bytes a message can contain before Amazon SQS rejects it. An integer from 1024 bytes (1 KiB) up to 1048576 bytes (1024 KiB). The default for this attribute is 262144 (256 KiB).
 * `messageRetentionSeconds` - (Optional) Number of seconds Amazon SQS retains a message. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days). The default for this attribute is 345600 (4 days).
 * `name` - (Optional) Name of the queue. Queue names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long. For a FIFO (first-in-first-out) queue, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `policy` - (Optional) JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `policy` - (Optional) JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Terraform will only perform drift detection of its value when present in a configuration. It is preferred to use the `aws_sqs_queue_policy` resource instead.
 * `receiveWaitTimeSeconds` - (Optional) Time for which a ReceiveMessage call will wait for a message to arrive (long polling) before returning. An integer from 0 to 20 (seconds). The default for this attribute is 0, meaning that the call will return immediately.
-* `redriveAllowPolicy` - (Optional) JSON policy to set up the Dead Letter Queue redrive permission, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html).
-* `redrivePolicy` - (Optional) JSON policy to set up the Dead Letter Queue, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html). **Note:** when specifying `maxReceiveCount`, you must specify it as an integer (`5`), and not a string (`"5"`).
+* `redriveAllowPolicy` - (Optional) JSON policy to set up the Dead Letter Queue redrive permission, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html). Terraform will only perform drift detection of its value when present in a configuration. It is preferred to use the `aws_sqs_queue_redrive_allow_policy` resource instead.
+* `redrivePolicy` - (Optional) JSON policy to set up the Dead Letter Queue, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html). Terraform will only perform drift detection of its value when present in a configuration. It is preferred to use the `aws_sqs_queue_redrive_policy` resource instead. **Note:** when specifying `maxReceiveCount`, you must specify it as an integer (`5`), and not a string (`"5"`).
 * `sqsManagedSseEnabled` - (Optional) Boolean to enable server-side encryption (SSE) of message content with SQS-owned encryption keys. See [Encryption at rest](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html). Terraform will only perform drift detection of its value when present in a configuration.
 * `tags` - (Optional) Map of tags to assign to the queue. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibilityTimeoutSeconds` - (Optional) Visibility timeout for the queue. An integer from 0 to 43200 (12 hours). The default for this attribute is 30. For more information about visibility timeout, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html).
@@ -240,6 +239,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sqs_queue.example
+  identity = {
+    url = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+  }
+}
+
+resource "aws_sqs_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `url` (String) URL of the SQS queue.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queues using the queue `url`. For example:
 
 ```typescript
@@ -256,7 +281,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SqsQueue.generateConfigForImport(
       this,
-      "publicQueue",
+      "example",
       "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
     );
   }
@@ -267,7 +292,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SQS Queues using the queue `url`. For example:
 
 ```console
-% terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
+% terraform import aws_sqs_queue.example https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-943c7e4f3f17fb9dfc25e8b24a198c3d7fa0075b6c0597cf08c012cc2b50de08 -->
+<!-- cache-key: cdktf-0.20.8 input-544a3a13de54ae0d9f7af4143e60aa52a2da530829a47308342006553ef0eb69 -->

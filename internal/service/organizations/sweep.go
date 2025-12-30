@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -19,10 +19,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_organizations_account", sweepAccounts)
+	awsv2.Register("aws_organizations_account", sweepAccounts,
+		"aws_organizations_delegated_administrator",
+	)
+
+	awsv2.Register("aws_organizations_delegated_administrator", sweepDelegatedAdministrators)
 
 	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
 		"aws_organizations_account")
@@ -107,26 +112,78 @@ func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.Option
 	return nil
 }
 
-func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepDelegatedAdministrators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if skip, err := sweepPreCheck(ctx, client); err != nil {
+		return nil, err
+	} else if skip {
+		return nil, nil
+	}
+
 	conn := client.OrganizationsClient(ctx)
 
-	orgInput := organizations.DescribeOrganizationInput{}
-	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
-	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not part of an AWS Organization",
-		})
-		return nil, nil
+	r := resourceDelegatedAdministrator()
+	var sweepResources []sweep.Sweepable
+
+	input := organizations.ListDelegatedAdministratorsInput{}
+	pages := organizations.NewListDelegatedAdministratorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, delegatedAdministrator := range page.DelegatedAdministrators {
+			delegatedServices, err := sweepListDelegatedServices(ctx, client, r, delegatedAdministrator.Id)
+			if err != nil {
+				return nil, err
+			}
+
+			sweepResources = append(sweepResources, delegatedServices...)
+		}
 	}
-	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not the management account of an AWS Organization",
-		})
-		return nil, nil
+
+	return sweepResources, nil
+}
+
+func sweepListDelegatedServices(ctx context.Context, client *conns.AWSClient, r *schema.Resource, accountID *string) ([]sweep.Sweepable, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	input := organizations.ListDelegatedServicesForAccountInput{
+		AccountId: accountID,
 	}
-	if err != nil {
+	pages := organizations.NewListDelegatedServicesForAccountPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, delegatedService := range page.DelegatedServices {
+			servicePrincipal := aws.ToString(delegatedService.ServicePrincipal)
+			id := delegatedAdministratorCreateResourceID(aws.ToString(accountID), servicePrincipal)
+
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set(names.AttrAccountID, accountID)
+			d.Set("service_principal", servicePrincipal)
+
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if skip, err := sweepPreCheck(ctx, client); err != nil {
 		return nil, err
+	} else if skip {
+		return nil, nil
 	}
+
+	conn := client.OrganizationsClient(ctx)
 
 	r := resourceOrganizationalUnit()
 	var sweepResources []sweep.Sweepable
@@ -206,4 +263,24 @@ func (ous organizationalUnitSweeper) Delete(ctx context.Context, optFns ...tfres
 		return err
 	}
 	return nil
+}
+
+func sweepPreCheck(ctx context.Context, client *conns.AWSClient) (bool, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	orgInput := organizations.DescribeOrganizationInput{}
+	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not part of an AWS Organization",
+		})
+		return true, nil
+	}
+	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not the management account of an AWS Organization",
+		})
+		return true, nil
+	}
+	return false, err
 }

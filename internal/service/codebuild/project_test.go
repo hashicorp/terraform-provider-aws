@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,6 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -129,9 +128,9 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "source.0.location", testAccGitHubSourceLocationFromEnv()),
+					resource.TestCheckResourceAttr(resourceName, "source.0.location", ""),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "NO_SOURCE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -156,7 +155,6 @@ func TestAccCodeBuildProject_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -422,7 +420,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_basic(rName),
+				Config: testAccProjectConfig_basicGitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
@@ -436,6 +434,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location1),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
@@ -445,10 +444,31 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
-				Config: testAccProjectConfig_basic(rName),
+				Config: testAccProjectConfig_cacheNamespace(rName, s3Location2, "S3", "my-namespace"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", "my-namespace"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_cache(rName, s3Location2, "S3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
+				),
+			},
+			{
+				Config: testAccProjectConfig_basicGitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
@@ -462,6 +482,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.modes.0", "LOCAL_DOCKER_LAYER_CACHE"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 			{
@@ -470,6 +491,7 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", string(types.CacheTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.cache_namespace", ""),
 				),
 			},
 		},
@@ -1864,7 +1886,7 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_basic(rName),
+				Config: testAccProjectConfig_basicGitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
@@ -2858,7 +2880,7 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectConfig_basic(rName),
+				Config: testAccProjectConfig_basicGitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "0"),
@@ -2902,6 +2924,147 @@ func TestAccCodeBuildProject_fleet(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_dockerServer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_dockerServer(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_basicGitHub(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_dockerServerWithVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_dockerServerWithVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "environment.0.docker_server.0.security_group_ids.0", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_basicGitHub(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.docker_server.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_autoRetryLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_autoRetryLimit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_autoRetryLimit(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "4"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_autoRetryLimit(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProjectExists(ctx context.Context, n string, v *types.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2934,7 +3097,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindProjectByNameOrARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2967,7 +3130,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
@@ -3044,6 +3207,13 @@ resource "aws_iam_role_policy" "test" {
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeVpcs"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+         "codeconnections:GetConnectionToken"
+      ]
     }
   ]
 }
@@ -3053,6 +3223,36 @@ POLICY
 }
 
 func testAccProjectConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = <<EOT
+version: 0.2
+phases:
+  build:
+    commands:
+      - exit 1
+EOT
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_basicGitHub(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3329,6 +3529,48 @@ resource "aws_codebuild_project" "test" {
 `, rName, modeType))
 }
 
+func testAccProjectConfig_cacheNamespace(rName, cacheLocation, cacheType, cacheNamespace string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test1" {
+  bucket        = "%[1]s-1"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = "%[1]s-2"
+  force_destroy = true
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  cache {
+    location        = %[2]q
+    type            = %[3]q
+    cache_namespace = %[4]q
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  depends_on = [aws_s3_bucket.test1, aws_s3_bucket.test2]
+}
+`, rName, cacheLocation, cacheType, cacheNamespace))
+}
+
 func testAccProjectConfig_s3ComputedLocation(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -3502,6 +3744,7 @@ func testAccProjectConfig_encryptionKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codebuild_project" "test" {
@@ -5567,4 +5810,103 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, testAccGitHubSourceLocationFromEnv()))
+}
+
+func testAccProjectConfig_dockerServer(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_baseServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+    docker_server {
+      compute_type = "BUILD_GENERAL1_SMALL"
+    }
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo Hello World"
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_dockerServerWithVPC(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_baseServiceRole(rName),
+		testAccProjectConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+  cidr_ipv4         = aws_vpc.test.cidr_block
+  from_port         = 9876
+  ip_protocol       = "tcp"
+  to_port           = 9876
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+    docker_server {
+      compute_type       = "BUILD_GENERAL1_SMALL"
+      security_group_ids = [aws_security_group.test.id]
+    }
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = "version: 0.2\nphases:\n  build:\n    commands:\n      - echo Hello World"
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_autoRetryLimit(rName string, autoRetryLimit int) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  auto_retry_limit = %[1]d
+  name             = %[2]q
+  service_role     = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = <<EOT
+version: 0.2
+phases:
+  build:
+    commands:
+      - exit 1
+EOT
+  }
+}
+`, autoRetryLimit, rName))
 }

@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_instance: `user_data` now displays cleartext instead of a hash. Base64 encoded content should use `user_data_base64` instead.
+```

@@ -1,21 +1,11 @@
-# IMPORTANT: Only add linters whose names start with letters T-Z here.
-issues:
-  exclude-rules:
-    - linters:
-        - tparallel
-      text: "TestAcc"
-    - linters:
-        - unparam
-      text: "always receives"
-  max-issues-per-linter: 10
-  max-same-issues: 3
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
 
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
-    # !! only add t-z linters here
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
@@ -23,10 +13,21 @@ linters:
     - usetesting
     - wastedassign
     - whitespace
-
-linters-settings:
-  usetesting:
-    os-setenv: true
-
+  exclusions:
+    rules:
+      - linters:
+          - tparallel
+        text: TestAcc
+      - linters:
+          - unparam
+        text: always receives
+  settings:
+    usetesting:
+      os-setenv: true
+      context-background: false
+      context-todo: false
+issues:
+  max-issues-per-linter: 10
+  max-same-issues: 3
 run:
   timeout: 75m

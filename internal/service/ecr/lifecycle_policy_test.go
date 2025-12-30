@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -10,11 +10,12 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,10 +84,22 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccLifecyclePolicyConfig_newOrder(rName),
-				PlanOnly: true,
+				Config: testAccLifecyclePolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -108,11 +121,19 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:             testAccLifecyclePolicyConfig_changed(rName),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccLifecyclePolicyConfig_changed(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -134,11 +155,45 @@ func TestAccECRLifecyclePolicy_detectTagPatternListDiff(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:             testAccLifecyclePolicyConfig_tagPatternListChanged(rName),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccLifecyclePolicyConfig_tagPatternListChanged(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECRLifecyclePolicy_storageClass(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_storageClass(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,7 +210,7 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfecr.FindLifecyclePolicyByRepositoryName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -249,6 +304,54 @@ EOF
 `, rName)
 }
 
+func testAccLifecyclePolicyConfig_newOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 2
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPrefixList = [
+            "third",
+            "first",
+            "second",
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 1
+        description  = "Expire images older than 14 days"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
 func testAccLifecyclePolicyConfig_order(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
@@ -297,7 +400,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
 `, rName)
 }
 
-func testAccLifecyclePolicyConfig_newOrder(rName string) string {
+func testAccLifecyclePolicyConfig_storageClass(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -306,41 +409,40 @@ resource "aws_ecr_repository" "test" {
 resource "aws_ecr_lifecycle_policy" "test" {
   repository = aws_ecr_repository.test.name
 
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 2
-        description  = "Expire tagged images older than 14 days"
-        selection = {
-          tagStatus = "tagged"
-          tagPrefixList = [
-            "third",
-            "first",
-            "second",
-          ]
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 14
-        }
-        action = {
-          type = "expire"
-        }
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Archive images not pulled in 90 days",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "sinceImagePulled",
+        "countUnit": "days",
+        "countNumber": 90
       },
-      {
-        rulePriority = 1
-        description  = "Expire images older than 14 days"
-        selection = {
-          tagStatus   = "untagged"
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 14
-        }
-        action = {
-          type = "expire"
-        }
+      "action": {
+        "type": "transition",
+        "targetStorageClass": "archive"
+      }
+    },
+    {
+      "rulePriority": 2,
+      "description": "Delete images archived for more than 365 days",
+      "selection": {
+        "tagStatus": "any",
+        "storageClass": "archive",
+        "countType": "sinceImageTransitioned",
+        "countUnit": "days",
+        "countNumber": 365
       },
-    ]
-  })
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
 }
 `, rName)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -388,7 +388,7 @@ resource "aws_shield_protection_group" "test" {
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
 }
 `, rName))
 }

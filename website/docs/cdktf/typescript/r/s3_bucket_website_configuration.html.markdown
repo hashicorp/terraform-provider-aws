@@ -88,6 +88,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `errorDocument` - (Optional, Conflicts with `redirectAllRequestsTo`) Name of the error document for the website. [See below](#error_document).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
@@ -151,6 +152,33 @@ This resource exports the following attributes in addition to the arguments abov
 * `websiteEndpoint` - Website endpoint.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_website_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `expectedBucketOwner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket website configuration using the `bucket` or using the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
 
@@ -216,4 +244,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2bd65f193d56ad7f250de1a3de6546120dfff97bf42a13c7dc68b5c6058c0969 -->
+<!-- cache-key: cdktf-0.20.8 input-59f9f5ba0b39845b9547687111ca3a2d7bbe0896101555a59b73d668c2d75a7c -->

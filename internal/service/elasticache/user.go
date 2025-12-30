@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,10 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,9 +86,12 @@ func resourceUser() *schema.Resource {
 				},
 			},
 			names.AttrEngine: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+				),
 				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			"no_password_required": {
@@ -188,7 +192,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
 	user, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -317,8 +321,7 @@ func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache
 
 		if errs.IsA[*awstypes.UserNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -336,11 +339,11 @@ func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache
 	return output, nil
 }
 
-func statusUser(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusUser(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -363,7 +366,7 @@ func waitUserCreated(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusCreating},
 		Target:  []string{userStatusActive},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 
@@ -380,7 +383,7 @@ func waitUserUpdated(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 
@@ -397,7 +400,7 @@ func waitUserDeleted(ctx context.Context, conn *elasticache.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
-		Refresh: statusUser(ctx, conn, id),
+		Refresh: statusUser(conn, id),
 		Timeout: timeout,
 	}
 

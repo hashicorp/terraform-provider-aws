@@ -48,6 +48,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_quality_app_specification` - (Required) Specifies the container that runs the monitoring job. Fields are documented below.
 * `data_quality_baseline_config` - (Optional) Configures the constraints and baselines for the monitoring job. Fields are documented below.
 * `data_quality_job_input` - (Required) A list of inputs for the monitoring job. Fields are documented below.

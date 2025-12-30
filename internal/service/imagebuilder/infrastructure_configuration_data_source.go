@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -97,6 +97,30 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_resource_group_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenancy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrResourceTags: tftags.TagsSchemaComputed(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -154,6 +178,13 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	if infrastructureConfiguration.Placement != nil {
+		if err := d.Set("placement", []any{flattenPlacement(infrastructureConfiguration.Placement)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting placement: %s", err)
+		}
+	} else {
+		d.Set("placement", nil)
+	}
 	d.Set(names.AttrResourceTags, keyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)

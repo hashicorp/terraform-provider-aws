@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,6 +87,10 @@ func dataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrIPAddressType: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -115,7 +119,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	apiID := d.Get("api_id").(string)
 	api, err := findAPIByID(ctx, conn, apiID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "no API Gateway v2 API matched; change the search criteria and try again")
 	}
 
@@ -127,12 +131,13 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORS(api.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrIPAddressType, api.IpAddressType)
 	d.Set(names.AttrName, api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)

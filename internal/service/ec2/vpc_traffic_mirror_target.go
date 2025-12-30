@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -18,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -127,11 +125,12 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	target, err := findTrafficMirrorTargetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Traffic Mirror Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -142,14 +141,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	ownerID := aws.ToString(target.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorTargetARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, target.Description)
 	d.Set("gateway_load_balancer_endpoint_id", target.GatewayLoadBalancerEndpointId)
 	d.Set(names.AttrNetworkInterfaceID, target.NetworkInterfaceId)
@@ -188,4 +180,8 @@ func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func trafficMirrorTargetARN(ctx context.Context, c *conns.AWSClient, accountID, trafficMirrorTargetID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "traffic-mirror-target/"+trafficMirrorTargetID)
 }

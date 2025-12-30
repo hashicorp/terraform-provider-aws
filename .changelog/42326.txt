@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_lb_listener: `mutual_authentication` attributes `advertise_trust_store_ca_names`, `ignore_client_certificate_expiry`, and `trust_store_arn` are only valid if `mode` is `verify`
+```
+
+```release-note:enhancement
+resource/aws_lb_listener: `mutual_authentication` attribute `trust_store_arn` is required if `mode` is `verify`
+```

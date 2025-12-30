@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive
@@ -23,20 +23,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_medialive_multiplex_program", name="Multiplex Program")
-func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := multiplexProgram{}
+func newMultiplexProgramResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := multiplexProgramResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
 
 	return &r, nil
@@ -46,13 +47,13 @@ const (
 	ResNameMultiplexProgram = "Multiplex Program"
 )
 
-type multiplexProgram struct {
-	framework.ResourceWithConfigure
+type multiplexProgramResource struct {
+	framework.ResourceWithModel[multiplexProgramResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (m *multiplexProgramResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -163,10 +164,10 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (m *multiplexProgramResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var plan resourceMultiplexProgramData
+	var plan multiplexProgramResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -197,7 +198,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	state.ID = fwflex.StringValueToFramework(ctx, fmt.Sprintf("%s/%s", programName, multiplexId))
 
 	createTimeout := m.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*medialive.DescribeMultiplexProgramOutput, error) {
 		return findMultiplexProgramByID(ctx, conn, multiplexId, programName)
 	})
 	if err != nil {
@@ -208,7 +209,6 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	output := outputRaws.(*medialive.DescribeMultiplexProgramOutput)
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -217,10 +217,10 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (m *multiplexProgramResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var state resourceMultiplexProgramData
+	var state multiplexProgramResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -238,7 +238,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 
 	out, err := findMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -260,10 +260,10 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (m *multiplexProgramResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var plan, state resourceMultiplexProgramData
+	var plan, state multiplexProgramResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -326,10 +326,10 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (m *multiplexProgramResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var state resourceMultiplexProgramData
+	var state multiplexProgramResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -372,7 +372,7 @@ func findMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	out, err := conn.DescribeMultiplexProgram(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -403,7 +403,8 @@ func parseMultiplexProgramID(id string) (programName string, multiplexId string,
 	return programName, multiplexId, err
 }
 
-type resourceMultiplexProgramData struct {
+type multiplexProgramResourceModel struct {
+	framework.WithRegionModel
 	ID                       types.String                                              `tfsdk:"id"`
 	MultiplexID              types.String                                              `tfsdk:"multiplex_id"`
 	MultiplexProgramSettings fwtypes.ListNestedObjectValueOf[multiplexProgramSettings] `tfsdk:"multiplex_program_settings"`

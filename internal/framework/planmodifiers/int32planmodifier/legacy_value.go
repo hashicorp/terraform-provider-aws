@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package int32planmodifier
@@ -27,13 +27,13 @@ func (m legacyValueModifier) MarkdownDescription(ctx context.Context) string {
 }
 
 func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifier.Int32Request, resp *planmodifier.Int32Response) {
-	// Use value from Config if set
-	if !req.ConfigValue.IsNull() {
+	// Exit if another planmodifier has set the value
+	if !req.PlanValue.IsUnknown() {
 		return
 	}
 
-	// Exit if another planmodifier has set the value
-	if !req.PlanValue.IsUnknown() {
+	// Use value from Config if set
+	if !req.ConfigValue.IsNull() {
 		return
 	}
 
@@ -42,8 +42,5 @@ func (m legacyValueModifier) PlanModifyInt32(ctx context.Context, req planmodifi
 		return
 	}
 
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.Int32Value(0)
-		return
-	}
+	resp.PlanValue = types.Int32Value(0)
 }

@@ -22,9 +22,9 @@ data "aws_route53_resolver_firewall_rules" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
-The given filters must match exactly one resolver rule whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group that you want to retrieve the rules for.
 * `action` - (Optional) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list.
 * `priority` - (Optional) The setting that determines the processing order of the rules in a rule group.
@@ -35,14 +35,22 @@ This data source exports the following attributes in addition to the arguments a
 
 * `firewall_rules` - List with information about the firewall rules. See details below.
 
-### provisioning_artifact_details
+### firewall_rules
 
+* `action` - The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list, or a threat in a DNS Firewall Advanced rule.
 * `block_override_dns_type` - The DNS record's type.
 * `block_override_domain` - The custom DNS record to send back in response to the query.
 * `block_override_ttl` - The recommended amount of time, in seconds, for the DNS resolver or web browser to cache the provided override record.
 * `block_response` - The way that you want DNS Firewall to block the request.
+* `confidence_threshold` - The confidence threshold for DNS Firewall Advanced rules.
 * `creation_time` - The date and time that the rule was created, in Unix time format and Coordinated Universal Time (UTC).
 * `creator_request_id` - A unique string defined by you to identify the request.
+* `dns_threat_protection` - The type of DNS Firewall Advanced rule.
 * `firewall_domain_list_id` - The ID of the domain list that's used in the rule.
+* `firewall_domain_redirection_action` - How DNS Firewall evaluates DNS redirection in the DNS redirection chain.
+* `firewall_rule_group_id` - The unique identifier of the firewall rule group.
+* `firewall_threat_protection_id` - The ID of the DNS Firewall Advanced rule.
 * `modification_time` - The date and time that the rule was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `name` - The name of the rule.
+* `priority` - The priority of the rule in the rule group.
+* `q_type` - The DNS query type that the rule evaluates.

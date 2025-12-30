@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -23,4 +23,9 @@ func ToLowerSchemaStateFunc(v any) string {
 // ToUpperSchemaStateFunc converts a string value to uppercase before storing it in state.
 func ToUpperSchemaStateFunc(v any) string {
 	return strings.ToUpper(v.(string))
+}
+
+// TrimSpaceSchemaStateFunc removes all leading and trailing white space from a string value before storing it in state.
+func TrimSpaceSchemaStateFunc(v any) string {
+	return strings.TrimSpace(v.(string))
 }

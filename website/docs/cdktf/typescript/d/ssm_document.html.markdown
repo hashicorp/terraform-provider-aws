@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the document.
 * `documentFormat` - The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
 * `documentVersion` - The document version.
@@ -79,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - The content for the SSM document in JSON or YAML format.
 * `documentType` - The type of the document.
 
-<!-- cache-key: cdktf-0.20.8 input-b79cad94249d0d17a6bba99318ef3a5682c698db4bbaa5f76329e198f232d2ee -->
+<!-- cache-key: cdktf-0.20.8 input-eca5e31430e76e2d70d91656b5140c3fc87162021d3263a6164e23e8ec3774ef -->

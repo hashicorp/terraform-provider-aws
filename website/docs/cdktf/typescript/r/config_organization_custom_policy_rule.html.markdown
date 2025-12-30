@@ -50,28 +50,29 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `name` - (Required) name of the rule
-* `policyText` - (Required) policy definition containing the logic for your organization AWS Config Custom Policy rule
-* `policyRuntime` - (Required)  runtime system for your organization AWS Config Custom Policy rules
-* `triggerTypes` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`
+* `name` - (Required) Name of the rule.
+* `policyText` - (Required) Policy definition containing the rule logic.
+* `policyRuntime` - (Required)  Runtime system for policy rules.
+* `triggerTypes` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`.
 
 The following arguments are optional:
 
-* `description` - (Optional) Description of the rule
-* `debugLogDeliveryAccounts` - (Optional) List of AWS account identifiers to exclude from the rule
-* `excludedAccounts` - (Optional) List of AWS account identifiers to exclude from the rule
-* `inputParameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `description` - (Optional) Description of the rule.
+* `debugLogDeliveryAccounts` - (Optional) List of accounts that you can enable debug logging for. The list is null when debug logging is enabled for all accounts.
+* `excludedAccounts` - (Optional) List of AWS account identifiers to exclude from the rule.
+* `inputParameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function.
 * `maximumExecutionFrequency` - (Optional) Maximum frequency with which AWS Config runs evaluations for a rule, if the rule is triggered at a periodic frequency. Defaults to `TwentyFour_Hours` for periodic frequency triggered rules. Valid values: `One_Hour`, `Three_Hours`, `Six_Hours`, `Twelve_Hours`, or `TwentyFour_Hours`.
-* `resourceIdScope` - (Optional) Identifier of the AWS resource to evaluate
-* `resourceTypesScope` - (Optional) List of types of AWS resources to evaluate
-* `tagKeyScope` - (Optional, Required if `tagValueScope` is configured) Tag key of AWS resources to evaluate
-* `tagValueScope` - (Optional) Tag value of AWS resources to evaluate
+* `resourceIdScope` - (Optional) Identifier of the AWS resource to evaluate.
+* `resourceTypesScope` - (Optional) List of types of AWS resources to evaluate.
+* `tagKeyScope` - (Optional, Required if `tagValueScope` is configured) Tag key of AWS resources to evaluate.
+* `tagValueScope` - (Optional) Tag value of AWS resources to evaluate.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the rule
+* `arn` - Amazon Resource Name (ARN) of the rule.
 
 ## Timeouts
 
@@ -113,4 +114,4 @@ Using `terraform import`, import a Config Organization Custom Policy Rule using 
 % terraform import aws_config_organization_custom_policy_rule.example example_rule_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f90143a3072d513a2fe1459c4bfdb050b7dfd52b0b478cfb10ff823139422527 -->
+<!-- cache-key: cdktf-0.20.8 input-1b27aa6d3b31a24c472703a310e3b3ce32c9213a319d4bb4c8ed70cb6e76931b -->

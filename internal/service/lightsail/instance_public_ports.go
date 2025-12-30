@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,7 +49,6 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							// Default:  []string{"0.0.0.0/0"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -66,13 +66,12 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IntBetween(-1, 65535),
 						},
 						"ipv6_cidrs": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							// Default:  []string{"::/0"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -88,7 +87,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IntBetween(-1, 65535),
 						},
 					},
 				},
@@ -119,7 +118,7 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 
 	var buffer bytes.Buffer
 	for _, portInfo := range portInfos {
-		buffer.WriteString(fmt.Sprintf("%s-%d-%d\n", string(portInfo.Protocol), int64(portInfo.FromPort), int64(portInfo.ToPort)))
+		fmt.Fprintf(&buffer, "%s-%d-%d\n", string(portInfo.Protocol), int64(portInfo.FromPort), int64(portInfo.ToPort))
 	}
 
 	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), create.StringHashcode(buffer.String())))
@@ -163,7 +162,7 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	var errs []error
+	var closeErrs []error
 
 	var portInfos []types.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -171,17 +170,21 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	for _, portInfo := range portInfos {
-		_, portError := conn.CloseInstancePublicPorts(ctx, &lightsail.CloseInstancePublicPortsInput{
+		_, err := conn.CloseInstancePublicPorts(ctx, &lightsail.CloseInstancePublicPortsInput{
 			InstanceName: aws.String(d.Get("instance_name").(string)),
 			PortInfo:     &portInfo,
 		})
 
-		if portError != nil {
-			errs = append(errs, portError)
+		if errs.IsA[*types.NotFoundException](err) {
+			continue
+		}
+
+		if err != nil {
+			closeErrs = append(closeErrs, err)
 		}
 	}
 
-	if err := errors.Join(errs...); err != nil {
+	if err := errors.Join(closeErrs...); err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to close public ports for instance %s: %s", d.Get("instance_name").(string), err)
 	}
 
@@ -189,10 +192,6 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func expandPortInfo(tfMap map[string]any) types.PortInfo {
-	// if tfMap == nil {
-	// 	return nil
-	// }
-
 	apiObject := types.PortInfo{
 		FromPort: int32(tfMap["from_port"].(int)),
 		ToPort:   int32(tfMap["to_port"].(int)),
@@ -237,10 +236,6 @@ func expandPortInfos(tfList []any) []types.PortInfo {
 }
 
 func flattenInstancePortState(apiObject types.InstancePortState) map[string]any {
-	// if apiObject == (types.InstancePortState{}) {
-	// 	return nil
-	// }
-
 	tfMap := map[string]any{}
 
 	tfMap["from_port"] = int(apiObject.FromPort)
@@ -270,10 +265,6 @@ func flattenInstancePortStates(apiObjects []types.InstancePortState) []any {
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		// if apiObject == nil {
-		// 	continue
-		// }
-
 		tfList = append(tfList, flattenInstancePortState(apiObject))
 	}
 

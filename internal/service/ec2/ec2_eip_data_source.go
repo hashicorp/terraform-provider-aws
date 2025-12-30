@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -10,11 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -141,7 +142,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
-	if eip.Domain == types.DomainTypeVpc {
+	if eip.Domain == awstypes.DomainTypeVpc {
 		allocationID := aws.ToString(eip.AllocationId)
 		d.SetId(allocationID)
 		d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
@@ -151,7 +152,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		switch {
 		case err == nil:
 			d.Set("ptr_record", addressAttr.PtrRecord)
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 			d.Set("ptr_record", nil)
 		default:
 			return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)

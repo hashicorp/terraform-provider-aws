@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -237,7 +237,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     conditions {
-      type     = "account-id"
+      type     = "account"
       operator = "contains"
       value    = "one"
     }
@@ -283,7 +283,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     conditions {
-      type     = "account-id"
+      type     = "account"
       operator = "contains"
       value    = "one"
     }
@@ -370,7 +370,9 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
       "2001:4860::/32",
       "192.0.0.0/8",
       "10.1.0.0/16"
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -445,7 +447,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
           "value": "connect"
         },
         {
-          "type": "account-id",
+          "type": "account",
           "operator": "contains",
           "value": "one"
         },
@@ -486,7 +488,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
           "value": "vpc"
         },
         {
-          "type": "account-id",
+          "type": "account",
           "operator": "contains",
           "value": "one"
         },
@@ -670,7 +672,9 @@ const testAccPolicyDocumentServiceInsertionExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -824,7 +828,9 @@ const testAccPolicyDocumentWildCardWhenSentToExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -1059,7 +1065,9 @@ const testAccPolicyDocumentViaExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {

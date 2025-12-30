@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_name` - (Required) The name of the endpoint.
 * `owner_account` - (Optional) The owner Amazon Web Services account for the Amazon Redshift Serverless workgroup.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
@@ -91,4 +92,4 @@ Using `terraform import`, import Redshift Serverless Endpoint Access using the `
 % terraform import aws_redshiftserverless_endpoint_access.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-02a646b226fa2e51fbd46daf9da9414ac21e7f0d365734c9325c86977ee9c65c -->
+<!-- cache-key: cdktf-0.20.8 input-b807a6b128166c30b9510acc80e112f213c47362b42c1138e9d816cd8d4bbb1c -->

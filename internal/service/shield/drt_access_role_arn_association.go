@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_shield_drt_access_role_arn_association", name="DRT Role ARN Association")
 func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDRTAccessRoleARNAssociation{}
+	r := &drtAccessRoleARNAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -35,13 +36,13 @@ func newDRTAccessRoleARNAssociationResource(context.Context) (resource.ResourceW
 	return r, nil
 }
 
-type resourceDRTAccessRoleARNAssociation struct {
-	framework.ResourceWithConfigure
+type drtAccessRoleARNAssociationResource struct {
+	framework.ResourceWithModel[drtAccessRoleARNAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *drtAccessRoleARNAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -60,7 +61,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, reques
 	}
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *drtAccessRoleARNAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -74,7 +75,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 		RoleArn: aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateDRTRole(ctx, input)
 	}, "role does not have a valid DRT managed policy")
 
@@ -87,7 +88,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 	// Set values for unknowns.
 	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)
 	})
 
@@ -100,7 +101,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *drtAccessRoleARNAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -111,7 +112,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, request 
 
 	output, err := findDRTAccess(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -129,7 +130,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, request 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *drtAccessRoleARNAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -147,7 +148,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, reques
 			RoleArn: aws.String(roleARN),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.AssociateDRTRole(ctx, input)
 		}, "role does not have a valid DRT managed policy")
 
@@ -157,7 +158,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, reques
 			return
 		}
 
-		_, err = tfresource.RetryWhenNotFound(ctx, r.UpdateTimeout(ctx, new.Timeouts), func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, r.UpdateTimeout(ctx, new.Timeouts), func(ctx context.Context) (any, error) {
 			return findDRTRoleARNAssociation(ctx, conn, roleARN)
 		})
 
@@ -171,7 +172,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, reques
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceDRTAccessRoleARNAssociation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *drtAccessRoleARNAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data drtAccessRoleARNAssociationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -195,7 +196,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Delete(ctx context.Context, reques
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)
 	})
 

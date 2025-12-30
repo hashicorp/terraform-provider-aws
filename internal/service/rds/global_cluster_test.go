@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -628,6 +629,49 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	})
 }
 
+// Creates a global cluster from an existing regional source, then completes a major version upgrade
+func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_EngineVersion_updateMajor(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+	engineVersion := "15.10"
+	engineVersionUpdated := "16.6"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, engineVersion),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, engineVersionUpdated),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *types.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -660,7 +704,7 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfrds.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1278,6 +1322,40 @@ resource "aws_rds_global_cluster" "test" {
   source_db_cluster_identifier = aws_rds_cluster.test.arn
 }
 `, rName)
+}
+
+func testAccGlobalClusterConfig_sourceClusterIDEngineVersion(rName, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = "aurora-postgresql"
+  engine_version      = %[2]q
+  master_password     = "mustbeeightcharacters"
+  master_username     = "test"
+  skip_final_snapshot = true
+  database_name       = "database04"
+
+  lifecycle {
+    ignore_changes = [global_cluster_identifier, engine_version]
+  }
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = "db.r5.large"
+}
+
+resource "aws_rds_global_cluster" "test" {
+  force_destroy                = true
+  global_cluster_identifier    = %[1]q
+  engine                       = aws_rds_cluster.test.engine
+  engine_version               = %[2]q
+  source_db_cluster_identifier = aws_rds_cluster.test.arn
+}
+`, rName, engineVersion)
 }
 
 func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted bool) string {

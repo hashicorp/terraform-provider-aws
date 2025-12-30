@@ -92,6 +92,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.
 
@@ -136,4 +137,4 @@ Using `terraform import`, import DynamoDB Global Tables using the global table n
 % terraform import aws_dynamodb_global_table.MyTable MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-36c3419a203344c40c1651647342ffb9754b89e09585c7824bc0dc4a9fd6a617 -->
+<!-- cache-key: cdktf-0.20.8 input-6674cca0cd8096eb0efadcb0e750659463ac5b921cf24ecca69d90b9b2a3f472 -->

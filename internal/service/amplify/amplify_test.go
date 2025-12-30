@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -25,10 +25,12 @@ func TestAccAmplify_serial(t *testing.T) {
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
 			"CacheConfig":              testAccApp_CacheConfig,
+			"ComputeRole":              testAccApp_ComputeRole,
 			"CustomRules":              testAccApp_CustomRules,
 			"Description":              testAccApp_Description,
 			"EnvironmentVariables":     testAccApp_EnvironmentVariables,
 			"IamServiceRole":           testAccApp_IAMServiceRole,
+			"JobConfig":                testAccApp_JobConfig,
 			"Name":                     testAccApp_Name,
 			"Repository":               testAccApp_Repository,
 		},

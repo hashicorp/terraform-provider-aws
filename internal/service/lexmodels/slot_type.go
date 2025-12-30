@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -154,7 +155,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		var err error
 
 		if output != nil {
@@ -180,7 +181,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lex Slot Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -228,7 +229,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 		return conn.PutSlotType(ctx, input)
 	})
 
@@ -248,7 +249,7 @@ func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSlotType(ctx, input)
 	})
 

@@ -1,5 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
 
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
@@ -14,15 +14,19 @@ Resources:
   TypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: handler
-      Runtime: go1.x
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - x86_64
       CodeUri: bin/
 
   TestEntrypoint:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: handler
-      Runtime: go1.x
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - x86_64
       CodeUri: bin/
       Environment:
         Variables:

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -217,6 +218,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		healthCheckConfig.IPAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk(names.AttrPort); ok {
 		healthCheckConfig.Port = aws.Int32(int32(v.(int)))
 	}
@@ -235,8 +237,9 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	switch healthCheckType {
 	case awstypes.HealthCheckTypeCalculated:
-		if v, ok := d.GetOk("child_health_threshold"); ok {
-			healthCheckConfig.HealthThreshold = aws.Int32(int32(v.(int)))
+		if v := d.GetRawPlan().GetAttr("child_health_threshold"); !v.IsNull() {
+			v, _ := v.AsBigFloat().Int64()
+			healthCheckConfig.HealthThreshold = aws.Int32(int32(v))
 		}
 
 		if v, ok := d.GetOk("child_healthchecks"); ok {
@@ -304,7 +307,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	output, err := findHealthCheckByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Health Check (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -451,7 +454,7 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	output, err := conn.GetHealthCheck(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHealthCheck](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

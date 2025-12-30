@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dns
@@ -53,7 +53,7 @@ func normalizeCasingAndEscapeCodes(input string) string {
 			fallthrough
 		default:
 			// Three-digit octal code.
-			output.WriteString(fmt.Sprintf("\\%03o", ch))
+			fmt.Fprintf(&output, "\\%03o", ch)
 		}
 	}
 

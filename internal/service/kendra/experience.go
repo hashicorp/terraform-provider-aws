@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -231,7 +232,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	out, err := FindExperienceByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra Experience (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -345,7 +346,7 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -365,7 +366,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -385,7 +386,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
@@ -402,10 +403,10 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -427,7 +428,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	if errors.As(err, &resourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

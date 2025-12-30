@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -382,7 +382,7 @@ func testAccCheckEventActionDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfdataexchange.FindEventActionByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*retry.NotFoundError](err) {
+			if errs.IsA[*sdkretry.NotFoundError](err) {
 				return nil
 			}
 
@@ -552,6 +552,7 @@ func testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId string) st
 		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
+  enable_key_rotation = true
 }
 
 resource "aws_dataexchange_event_action" "test" {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry
@@ -18,11 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,20 +32,20 @@ import (
 // @FrameworkResource("aws_servicecatalogappregistry_attribute_group", name="Attribute Group")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry;servicecatalogappregistry.GetAttributeGroupOutput")
-func newResourceAttributeGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAttributeGroup{}, nil
+func newAttributeGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &attributeGroupResource{}, nil
 }
 
 const (
 	ResNameAttributeGroup = "Attribute Group"
 )
 
-type resourceAttributeGroup struct {
-	framework.ResourceWithConfigure
+type attributeGroupResource struct {
+	framework.ResourceWithModel[attributeGroupResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceAttributeGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *attributeGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -77,10 +78,10 @@ func (r *resourceAttributeGroup) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceAttributeGroup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *attributeGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var plan resourceAttributeGroupData
+	var plan attributeGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -119,17 +120,17 @@ func (r *resourceAttributeGroup) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceAttributeGroup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *attributeGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceAttributeGroupData
+	var state attributeGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findAttributeGroupByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -149,10 +150,10 @@ func (r *resourceAttributeGroup) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAttributeGroup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *attributeGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var plan, state resourceAttributeGroupData
+	var plan, state attributeGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -195,10 +196,10 @@ func (r *resourceAttributeGroup) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAttributeGroup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *attributeGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceAttributeGroupData
+	var state attributeGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -229,7 +230,7 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 	out, err := conn.GetAttributeGroup(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -245,7 +246,8 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 	return out, nil
 }
 
-type resourceAttributeGroupData struct {
+type attributeGroupResourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String         `tfsdk:"arn"`
 	Attributes  jsontypes.Normalized `tfsdk:"attributes"`
 	Description types.String         `tfsdk:"description"`

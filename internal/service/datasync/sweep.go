@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
@@ -46,7 +46,7 @@ func sweepAgents(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
 	input := &datasync.ListAgentsInput{}
@@ -66,7 +66,7 @@ func sweepAgents(region string) error {
 		}
 
 		for _, v := range page.Agents {
-			r := ResourceAgent()
+			r := resourceAgent()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.AgentArn))
 
@@ -87,7 +87,7 @@ func sweepLocations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
 	input := &datasync.ListLocationsInput{}
@@ -152,7 +152,7 @@ func sweepTasks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DataSyncClient(ctx)
 	input := datasync.ListTasksInput{}

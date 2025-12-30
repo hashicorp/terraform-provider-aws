@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -19,10 +21,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func testAccDirectoryBucketPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+
+	input := s3.ListDirectoryBucketsInput{}
+
+	_, err := conn.ListDirectoryBuckets(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
 
 func TestAccS3DirectoryBucket_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -30,7 +48,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
@@ -43,21 +61,22 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleAvailabilityZone")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), tfknownvalue.StringExact(awstypes.DataRedundancySingleAvailabilityZone)),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`bucket/.+--x-s3`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3.DirectoryBucketNameRegex)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleAvailabilityZone")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), tfknownvalue.StringExact(awstypes.DataRedundancySingleAvailabilityZone)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLocation), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrName: knownvalue.NotNull(),
-							names.AttrType: knownvalue.StringExact("AvailabilityZone"),
+							names.AttrType: tfknownvalue.StringExact(awstypes.LocationTypeAvailabilityZone),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("Directory")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.BucketTypeDirectory)),
 				},
 			},
 			{
@@ -76,7 +95,7 @@ func TestAccS3DirectoryBucket_disappears(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
@@ -99,7 +118,7 @@ func TestAccS3DirectoryBucket_forceDestroy(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
@@ -121,7 +140,7 @@ func TestAccS3DirectoryBucket_forceDestroyWithUnusualKeyBytes(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
@@ -143,29 +162,29 @@ func TestAccS3DirectoryBucket_defaultDataRedundancy(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, "AvailabilityZone"),
+				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, awstypes.LocationTypeAvailabilityZone),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleAvailabilityZone")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), tfknownvalue.StringExact(awstypes.DataRedundancySingleAvailabilityZone)),
 					},
 				},
 			},
 			{
-				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, "LocalZone"),
+				Config: testAccDirectoryBucketConfig_defaultDataRedundancy(rName, awstypes.LocationTypeLocalZone),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleLocalZone")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), tfknownvalue.StringExact(awstypes.DataRedundancySingleLocalZone)),
 					},
 				},
 				ExpectError: regexache.MustCompile(`InvalidRequest: Invalid Data Redundancy value`),
@@ -180,7 +199,7 @@ func TestAccS3DirectoryBucket_upgradeDefaultDataRedundancy(t *testing.T) {
 	resourceName := "aws_s3_directory_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
 		CheckDestroy: testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -198,7 +217,7 @@ func TestAccS3DirectoryBucket_upgradeDefaultDataRedundancy(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), knownvalue.StringExact("SingleAvailabilityZone")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_redundancy"), tfknownvalue.StringExact(awstypes.DataRedundancySingleAvailabilityZone)),
 					},
 				},
 			},
@@ -229,7 +248,7 @@ func testAccCheckDirectoryBucketDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -267,8 +286,9 @@ func testAccConfigDirectoryBucket_availableAZs() string {
 func testAccDirectoryBucketConfig_baseAZ(rName string) string {
 	return acctest.ConfigCompose(testAccConfigDirectoryBucket_availableAZs(), fmt.Sprintf(`
 locals {
-  location_name = data.aws_availability_zones.available.zone_ids[0]
-  bucket        = "%[1]s--${local.location_name}--x-s3"
+  location_name     = data.aws_availability_zones.available.zone_ids[0]
+  bucket            = "%[1]s--${local.location_name}--x-s3"
+  access_point_name = "%[1]s--${local.location_name}--xa-s3"
 }
 `, rName))
 }
@@ -313,7 +333,7 @@ resource "aws_s3_directory_bucket" "test" {
 `)
 }
 
-func testAccDirectoryBucketConfig_defaultDataRedundancy(rName, locationType string) string {
+func testAccDirectoryBucketConfig_defaultDataRedundancy(rName string, locationType awstypes.LocationType) string {
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket

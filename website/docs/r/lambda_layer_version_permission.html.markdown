@@ -3,48 +3,117 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version_permission"
 description: |-
-  Provides a Lambda Layer Version Permission resource.
+  Manages an AWS Lambda Layer Version Permission.
 ---
 
 # Resource: aws_lambda_layer_version_permission
 
-Provides a Lambda Layer Version Permission resource. It allows you to share you own Lambda Layers to another account by account ID, to all accounts in AWS organization or even to all AWS accounts.
+Manages an AWS Lambda Layer Version Permission. Use this resource to share Lambda Layers with other AWS accounts, organizations, or make them publicly accessible.
 
-For information about Lambda Layer Permissions and how to use them, see [Using Resource-based Policies for AWS Lambda][1]
+For information about Lambda Layer Permissions and how to use them, see [Using Resource-based Policies for AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html#permissions-resource-xaccountlayer).
 
-~> **NOTE:** Setting `skip_destroy` to `true` means that the AWS Provider will _not_ destroy any layer version permission, even when running `terraform destroy`. Layer version permissions are thus intentional dangling resources that are _not_ managed by Terraform and may incur extra expense in your AWS account.
+~> **Note:** Setting `skip_destroy` to `true` means that the AWS Provider will not destroy any layer version permission, even when running `terraform destroy`. Layer version permissions are thus intentional dangling resources that are not managed by Terraform and may incur extra expense in your AWS account.
 
 ## Example Usage
 
+### Share Layer with Specific Account
+
 ```terraform
-resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
-  layer_name     = "arn:aws:lambda:us-west-2:123456654321:layer:test_layer1"
-  version_number = 1
+# Lambda layer to share
+resource "aws_lambda_layer_version" "example" {
+  filename            = "layer.zip"
+  layer_name          = "shared_utilities"
+  description         = "Common utilities for Lambda functions"
+  compatible_runtimes = ["nodejs20.x", "python3.12"]
+}
+
+# Grant permission to specific AWS account
+resource "aws_lambda_layer_version_permission" "example" {
+  layer_name     = aws_lambda_layer_version.example.layer_name
+  version_number = aws_lambda_layer_version.example.version
+  principal      = "123456789012" # Target AWS account ID
+  action         = "lambda:GetLayerVersion"
+  statement_id   = "dev-account-access"
+}
+```
+
+### Share Layer with Organization
+
+```terraform
+resource "aws_lambda_layer_version_permission" "example" {
+  layer_name      = aws_lambda_layer_version.example.layer_name
+  version_number  = aws_lambda_layer_version.example.version
+  principal       = "*"
+  organization_id = "o-1234567890" # AWS Organization ID
+  action          = "lambda:GetLayerVersion"
+  statement_id    = "org-wide-access"
+}
+```
+
+### Share Layer Publicly
+
+```terraform
+resource "aws_lambda_layer_version_permission" "example" {
+  layer_name     = aws_lambda_layer_version.example.layer_name
+  version_number = aws_lambda_layer_version.example.version
+  principal      = "*" # All AWS accounts
+  action         = "lambda:GetLayerVersion"
+  statement_id   = "public-access"
+}
+```
+
+### Multiple Account Access
+
+```terraform
+# Share with multiple specific accounts
+resource "aws_lambda_layer_version_permission" "dev_account" {
+  layer_name     = aws_lambda_layer_version.example.layer_name
+  version_number = aws_lambda_layer_version.example.version
   principal      = "111111111111"
   action         = "lambda:GetLayerVersion"
   statement_id   = "dev-account"
+}
+
+resource "aws_lambda_layer_version_permission" "staging_account" {
+  layer_name     = aws_lambda_layer_version.example.layer_name
+  version_number = aws_lambda_layer_version.example.version
+  principal      = "222222222222"
+  action         = "lambda:GetLayerVersion"
+  statement_id   = "staging-account"
+}
+
+resource "aws_lambda_layer_version_permission" "prod_account" {
+  layer_name     = aws_lambda_layer_version.example.layer_name
+  version_number = aws_lambda_layer_version.example.version
+  principal      = "333333333333"
+  action         = "lambda:GetLayerVersion"
+  statement_id   = "prod-account"
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `action` - (Required) Action, which will be allowed. `lambda:GetLayerVersion` value is suggested by AWS documantation.
-* `layer_name` (Required) The name or ARN of the Lambda Layer, which you want to grant access to.
-* `organization_id` - (Optional) An identifier of AWS Organization, which should be able to use your Lambda Layer. `principal` should be equal to `*` if `organization_id` provided.
-* `principal` - (Required) AWS account ID which should be able to use your Lambda Layer. `*` can be used here, if you want to share your Lambda Layer widely.
-* `statement_id` - (Required) The name of Lambda Layer Permission, for example `dev-account` - human readable note about what is this permission for.
-* `version_number` (Required) Version of Lambda Layer, which you want to grant access to. Note: permissions only apply to a single version of a layer.
-* `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
+* `action` - (Required) Action that will be allowed. `lambda:GetLayerVersion` is the standard value for layer access.
+* `layer_name` - (Required) Name or ARN of the Lambda Layer.
+* `principal` - (Required) AWS account ID that should be able to use your Lambda Layer. Use `*` to share with all AWS accounts.
+* `statement_id` - (Required) Unique identifier for the permission statement.
+* `version_number` - (Required) Version of Lambda Layer to grant access to. Note: permissions only apply to a single version of a layer.
+
+The following arguments are optional:
+
+* `organization_id` - (Optional) AWS Organization ID that should be able to use your Lambda Layer. `principal` should be set to `*` when `organization_id` is provided.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `skip_destroy` - (Optional) Whether to retain the permission when the resource is destroyed. Default is `false`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `layer_name` and `version_number`, separated by a comma (`,`).
-* `revision_id` - A unique identifier for the current revision of the policy.
+* `id` - Layer name and version number, separated by a comma (`,`).
 * `policy` - Full Lambda Layer Permission policy.
+* `revision_id` - Unique identifier for the current revision of the policy.
 
 ## Import
 
@@ -53,14 +122,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_layer_version_permission.example
-  id = "arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1"
+  id = "arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1"
 }
 ```
 
-Using `terraform import`, import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
+For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1
+% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1
 ```
-
-[1]: https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html#permissions-resource-xaccountlayer

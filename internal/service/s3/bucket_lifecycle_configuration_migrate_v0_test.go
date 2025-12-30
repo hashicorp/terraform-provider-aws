@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -28,6 +29,24 @@ import (
 const (
 	providerVersionSchemaV0 = "5.85.0"
 )
+
+func schemaV0PreConfig(isSchemaV0 *bool, bar bool) func() {
+	return func() {
+		*isSchemaV0 = bar
+	}
+}
+
+func schemaV0ErrorCheck(t *testing.T, isSchemaV0 *bool) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if *isSchemaV0 {
+			re := regexache.MustCompile(`(?s)creating S3 Bucket \([-a-z0-9]+\) Lifecycle Configuration.+couldn't find resource`)
+			if re.MatchString(err.Error()) {
+				t.Skipf("skipping test: known possible eventual consistency error in schemaV0: %s", err)
+			}
+		}
+		return err
+	}
+}
 
 // Notes on migration testing
 //
@@ -49,19 +68,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_rule_NoFilterOrP
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -86,6 +114,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_rule_NoFilterOrP
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -133,10 +162,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_rule_NoFilterOrP
 						),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -152,19 +181,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -189,6 +227,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -216,7 +255,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -232,10 +271,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_FilterWithPrefix
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -250,19 +289,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_filterWithEmptyP
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterWithEmptyPrefix(rName, date),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterWithEmptyPrefix(rName, date),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -287,6 +335,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_filterWithEmptyP
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithEmptyPrefix(rName, date),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -314,7 +363,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_filterWithEmptyP
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -330,10 +379,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_filterWithEmptyP
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -341,26 +390,36 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_filterWithEmptyP
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSizeGreaterThan(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_objectSizeGreaterThanToPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	var isSchemaV0 bool
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -385,6 +444,216 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, dateUpdated, "tmp/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(dateUpdated),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(dateUpdated),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_objectSizeLessThanToPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	var isSchemaV0 bool
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: providerVersionSchemaV0,
+					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
+				},
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkSchemaV0Filter_LessThan(500),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+			},
+			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, dateUpdated, "tmp/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(dateUpdated),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(dateUpdated),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSizeGreaterThan(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	var isSchemaV0 bool
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: providerVersionSchemaV0,
+					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
+				},
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkSchemaV0Filter_GreaterThan(100),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+			},
+			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -412,7 +681,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -428,10 +697,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -446,19 +715,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -483,6 +761,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -510,7 +789,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -526,10 +805,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -544,19 +823,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -588,6 +876,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -620,7 +909,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -641,10 +930,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -659,19 +948,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -703,6 +1001,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -736,7 +1035,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -758,10 +1057,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_ObjectSiz
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -774,19 +1073,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -821,6 +1129,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -855,7 +1164,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -878,10 +1187,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_Tags(
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -895,19 +1204,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroL
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName, false),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName, false),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -942,6 +1260,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroL
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_Migrate_Filter_And_ZeroLessThan(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1005,10 +1324,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_And_ZeroL
 						),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1021,19 +1340,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_Tag(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1058,6 +1386,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_Tag(t *te
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1085,7 +1414,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_Tag(t *te
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1101,10 +1430,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_Filter_Tag(t *te
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1117,19 +1446,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1152,6 +1490,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1181,7 +1520,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1199,10 +1538,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1215,19 +1554,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1250,6 +1598,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "all_storage_classes_128K"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1297,10 +1646,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_EmptyFilter_NonC
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1313,19 +1662,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1350,6 +1708,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1377,7 +1736,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1393,10 +1752,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_nonCurrentVersio
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1409,19 +1768,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_ruleAbortIncompl
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1446,6 +1814,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_ruleAbortIncompl
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1473,7 +1842,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_ruleAbortIncompl
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
@@ -1489,10 +1858,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_ruleAbortIncompl
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1505,19 +1874,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1542,6 +1920,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1569,7 +1948,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1585,10 +1964,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1601,19 +1980,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1638,6 +2026,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1665,7 +2054,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1681,10 +2070,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RuleExpiration_e
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1697,19 +2086,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RulePrefix(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1734,6 +2132,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RulePrefix(t *te
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1761,7 +2160,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RulePrefix(t *te
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
@@ -1777,10 +2176,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_RulePrefix(t *te
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1796,19 +2195,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionDate(t
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1837,6 +2245,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionDate(t
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1868,7 +2277,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionDate(t
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
@@ -1888,10 +2297,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionDate(t
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1904,19 +2313,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionStorag
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1945,6 +2363,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionStorag
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1976,7 +2395,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionStorag
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
@@ -1996,10 +2415,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionStorag
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -2012,19 +2431,28 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionZeroDa
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isSchemaV0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   schemaV0ErrorCheck(t, &isSchemaV0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: schemaV0PreConfig(&isSchemaV0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersionSchemaV0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_schemaV0(
+					testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -2053,6 +2481,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionZeroDa
 				},
 			},
 			{
+				PreConfig:                schemaV0PreConfig(&isSchemaV0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2084,7 +2513,7 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionZeroDa
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// This is checking the change _after_ the state migration step happens
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
@@ -2104,10 +2533,10 @@ func TestAccS3BucketLifecycleConfiguration_frameworkMigrationV0_TransitionZeroDa
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -2380,4 +2809,15 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   %[2]s
 }`, rName, transition)
+}
+
+func testAccBucketLifecycleConfigurationConfig_schemaV0(config string) string {
+	return acctest.ConfigCompose(
+		config, `
+resource "time_sleep" "eventual_consistency" {
+  depends_on = [aws_s3_bucket_lifecycle_configuration.test]
+
+  create_duration = "2m"
+}
+`)
 }

@@ -1,0 +1,12 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: knownvalue_account_id
+    languages: [go]
+    message: BLAH
+    pattern: |
+      knownvalue.StringExact(acctest.AccountID($CTX))
+    fix: |
+      tfknownvalue.AccountID()
+    severity: ERROR

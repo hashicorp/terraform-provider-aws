@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -94,7 +95,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		PrincipalType:  awstypes.PrincipalType(principalType),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AssociatePrincipalWithPortfolio(ctx, input)
 	}, "profile does not exist")
 
@@ -104,7 +105,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
 		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
@@ -126,7 +127,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 
 	output, err := findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,7 +172,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Principal Portfolio Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
@@ -216,7 +217,7 @@ func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

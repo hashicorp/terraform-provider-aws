@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package qbusiness_test
@@ -10,23 +10,21 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckApplication(ctx, t)
@@ -34,12 +32,12 @@ func TestAccQBusinessApplication_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -59,10 +57,10 @@ func TestAccQBusinessApplication_basic(t *testing.T) {
 func TestAccQBusinessApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckApplication(ctx, t)
@@ -70,12 +68,12 @@ func TestAccQBusinessApplication_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,12 +85,12 @@ func TestAccQBusinessApplication_disappears(t *testing.T) {
 func TestAccQBusinessApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := names.AttrDescription
 	descriptionUpdated := "description updated"
 	resourceName := "aws_qbusiness_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckApplication(ctx, t)
@@ -100,12 +98,12 @@ func TestAccQBusinessApplication_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_update(rName, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
@@ -120,7 +118,7 @@ func TestAccQBusinessApplication_update(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_update(rName, descriptionUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
@@ -133,10 +131,10 @@ func TestAccQBusinessApplication_update(t *testing.T) {
 func TestAccQBusinessApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckApplication(ctx, t)
@@ -144,12 +142,12 @@ func TestAccQBusinessApplication_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -163,7 +161,7 @@ func TestAccQBusinessApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -172,7 +170,7 @@ func TestAccQBusinessApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
@@ -184,10 +182,10 @@ func TestAccQBusinessApplication_tags(t *testing.T) {
 func TestAccQBusinessApplication_attachmentsConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckApplication(ctx, t)
@@ -195,12 +193,12 @@ func TestAccQBusinessApplication_attachmentsConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QBusinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
@@ -208,7 +206,7 @@ func TestAccQBusinessApplication_attachmentsConfiguration(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeDisabled)),
 				),
@@ -218,7 +216,7 @@ func TestAccQBusinessApplication_attachmentsConfiguration(t *testing.T) {
 }
 
 func testAccPreCheckApplication(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).QBusinessClient(ctx)
 
 	input := &qbusiness.ListApplicationsInput{}
 
@@ -233,9 +231,9 @@ func testAccPreCheckApplication(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QBusinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qbusiness_application" {
@@ -244,7 +242,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfqbusiness.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -259,14 +257,14 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *qbusiness.GetApplicationOutput) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, v *qbusiness.GetApplicationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QBusinessClient(ctx)
 
 		output, err := tfqbusiness.FindApplicationByID(ctx, conn, rs.Primary.ID)
 

@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
 * `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost on which to create a local snapshot.
@@ -100,4 +101,4 @@ Using `terraform import`, import EBS Snapshot using the `id`. For example:
 % terraform import aws_ebs_snapshot.id snap-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1e7edd88fa309f9a2fbc01f16873ff7d886c948a085d015d286894010821fe01 -->
+<!-- cache-key: cdktf-0.20.8 input-48fe291581dfd65c3477d070f3de431f0404b92a90ea874b208936074b312bce -->

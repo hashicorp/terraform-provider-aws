@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe
@@ -16,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +123,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -153,7 +154,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -212,7 +213,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ModelStatusInProgress),
 		Target:                    enum.Slice(types.ModelStatusCompleted),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
@@ -229,10 +230,10 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 	return nil, err
 }
 
-func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
+func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -253,7 +254,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	var bre *types.BadRequestException
 	if errors.As(err, &bre) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

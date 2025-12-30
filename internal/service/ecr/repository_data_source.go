@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -61,6 +61,22 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"image_tag_mutability_exclusion_filter": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrFilter: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"most_recent_image_tags": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -113,6 +129,9 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)

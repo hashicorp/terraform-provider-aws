@@ -137,6 +137,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowAssociationToShareableServiceNetwork` (Optional) Allow or Deny the association of this resource to a shareable service network.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resourceConfigurationGroupId` is not.
 * `resourceConfigurationGroupId` (Optional) ID of Resource Configuration where `type` is `CHILD`.
@@ -150,6 +151,7 @@ One of `dnsResource`, `ipResource`, `arnResource` must be specified.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arnResource` - (Optional) Resource DNS Configuration. See [`arnResource` Block](#arn_resource-block) for details.
 * `dnsResource` - (Optional) Resource DNS Configuration. See [`dnsResource` Block](#dns_resource-block) for details.
 * `ipResource` - (Optional) Resource DNS Configuration. See [`ipResource` Block](#ip_resource-block) for details.
@@ -221,4 +223,4 @@ Using `terraform import`, import VPC Lattice Resource Configuration using the `i
 % terraform import aws_vpclattice_resource_configuration.example rcfg-1234567890abcdef1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-19d894b121c68ef0ef68c13df29b8aa4ac401323432e5b0a6c22cbd001b7733f -->
+<!-- cache-key: cdktf-0.20.8 input-6a2898910a4b2e92fead0e523c9bbb1b5179c6a76b4578cad1bcc8729f1bfa66 -->

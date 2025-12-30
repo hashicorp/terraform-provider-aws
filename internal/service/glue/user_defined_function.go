@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -25,12 +25,13 @@ import (
 )
 
 // @SDKResource("aws_glue_user_defined_function", name="User Defined Function")
-func ResourceUserDefinedFunction() *schema.Resource {
+func resourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,
 		ReadWithoutTimeout:   resourceUserDefinedFunctionRead,
 		UpdateWithoutTimeout: resourceUserDefinedFunctionUpdate,
 		DeleteWithoutTimeout: resourceUserDefinedFunctionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -121,29 +122,6 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
-func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
-
-	input := &glue.UpdateUserDefinedFunctionInput{
-		CatalogId:     aws.String(catalogID),
-		DatabaseName:  aws.String(dbName),
-		FunctionName:  aws.String(funcName),
-		FunctionInput: expandUserDefinedFunctionInput(d),
-	}
-
-	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
-
-	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
-}
-
 func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -195,6 +173,29 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	input := &glue.UpdateUserDefinedFunctionInput{
+		CatalogId:     aws.String(catalogID),
+		DatabaseName:  aws.String(dbName),
+		FunctionName:  aws.String(funcName),
+		FunctionInput: expandUserDefinedFunctionInput(d),
+	}
+
+	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
 func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

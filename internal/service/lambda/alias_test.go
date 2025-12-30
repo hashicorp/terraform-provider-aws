@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -12,11 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +51,14 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", functionArnResourcePart)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -55,8 +67,15 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
-				PlanOnly: true,
+				Config: testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -234,7 +253,7 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflambda.FindAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

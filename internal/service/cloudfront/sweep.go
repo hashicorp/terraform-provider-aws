@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -12,10 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,6 +101,8 @@ func RegisterSweepers() {
 		},
 	})
 
+	awsv2.Register("aws_cloudfront_trust_store", sweepTrustStores, "aws_cloudfront_distribution")
+
 	resource.AddTestSweepers("aws_cloudfront_vpc_origin", &resource.Sweeper{
 		Name: "aws_cloudfront_vpc_origin",
 		F:    sweepVPCOrigins,
@@ -109,7 +113,7 @@ func sweepCachePolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListCachePoliciesInput{
@@ -126,7 +130,7 @@ func sweepCachePolicies(region string) error {
 			id := aws.ToString(v.CachePolicy.Id)
 			output, err := findCachePolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -188,7 +192,7 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListDistributionsInput{}
@@ -217,7 +221,7 @@ func sweepDistributionsByProductionOrStaging(region string, staging bool) error 
 			id := aws.ToString(v.Id)
 			output, err := findDistributionByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -251,7 +255,7 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
@@ -293,7 +297,7 @@ func sweepFunctions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListFunctionsInput{}
@@ -308,7 +312,7 @@ func sweepFunctions(region string) error {
 			name := aws.ToString(v.Name)
 			output, err := findFunctionByTwoPartKey(ctx, conn, name, awstypes.FunctionStageDevelopment)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -364,7 +368,7 @@ func sweepKeyGroup(region string) error {
 			id := aws.ToString(v.KeyGroup.Id)
 			output, err := findKeyGroupByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -405,7 +409,7 @@ func sweepMonitoringSubscriptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListDistributionsInput{}
@@ -446,7 +450,7 @@ func sweepRealtimeLogsConfig(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListRealtimeLogConfigsInput{}
@@ -490,7 +494,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
@@ -505,7 +509,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findFieldLevelEncryptionConfigByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -546,7 +550,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
@@ -561,7 +565,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findFieldLevelEncryptionProfileByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -602,7 +606,7 @@ func sweepOriginRequestPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListOriginRequestPoliciesInput{
@@ -619,7 +623,7 @@ func sweepOriginRequestPolicies(region string) error {
 			id := aws.ToString(v.OriginRequestPolicy.Id)
 			output, err := findOriginRequestPolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -660,7 +664,7 @@ func sweepResponseHeadersPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
@@ -677,7 +681,7 @@ func sweepResponseHeadersPolicies(region string) error {
 			id := aws.ToString(v.ResponseHeadersPolicy.Id)
 			output, err := findResponseHeadersPolicyByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -718,7 +722,7 @@ func sweepOriginAccessControls(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListOriginAccessControlsInput{}
@@ -733,7 +737,7 @@ func sweepOriginAccessControls(region string) error {
 			id := aws.ToString(v.Id)
 			output, err := findOriginAccessControlByID(ctx, conn, id)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -770,11 +774,33 @@ func sweepOriginAccessControls(region string) error {
 	return nil
 }
 
+func sweepTrustStores(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudfront.ListTrustStoresInput{}
+	conn := client.CloudFrontClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudfront.NewListTrustStoresPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.TrustStoreList {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTrustStoreResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
 func sweepVPCOrigins(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListVpcOriginsInput{}

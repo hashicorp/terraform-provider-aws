@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,8 +34,8 @@ import (
 
 // @FrameworkResource("aws_athena_capacity_reservation", name="Capacity Reservation")
 // @Tags(identifierAttribute="arn")
-func newResourceCapacityReservation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCapacityReservation{}
+func newCapacityReservationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &capacityReservationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -47,12 +48,12 @@ const (
 	ResNameCapacityReservation = "Capacity Reservation"
 )
 
-type resourceCapacityReservation struct {
-	framework.ResourceWithConfigure
+type capacityReservationResource struct {
+	framework.ResourceWithModel[capacityReservationResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceCapacityReservation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *capacityReservationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allocated_dpus": schema.Int32Attribute{
@@ -87,10 +88,10 @@ func (r *resourceCapacityReservation) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceCapacityReservation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *capacityReservationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AthenaClient(ctx)
 
-	var plan resourceCapacityReservationModel
+	var plan capacityReservationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,17 +130,17 @@ func (r *resourceCapacityReservation) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceCapacityReservation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *capacityReservationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AthenaClient(ctx)
 
-	var state resourceCapacityReservationModel
+	var state capacityReservationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findCapacityReservationByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -161,10 +162,10 @@ func (r *resourceCapacityReservation) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCapacityReservation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *capacityReservationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AthenaClient(ctx)
 
-	var plan, state resourceCapacityReservationModel
+	var plan, state capacityReservationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -208,10 +209,10 @@ func (r *resourceCapacityReservation) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCapacityReservation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *capacityReservationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AthenaClient(ctx)
 
-	var state resourceCapacityReservationModel
+	var state capacityReservationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -258,17 +259,17 @@ func (r *resourceCapacityReservation) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *resourceCapacityReservation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *capacityReservationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
-func (r *resourceCapacityReservation) buildARN(ctx context.Context, name string) string {
+func (r *capacityReservationResource) buildARN(ctx context.Context, name string) string {
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonathena.html#amazonathena-resources-for-iam-policies
 	return r.Meta().RegionalARN(ctx, names.Athena, "capacity-reservation/"+name)
 }
 
 func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusPending, awstypes.CapacityReservationStatusUpdatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusActive),
 		Refresh: statusCapacityReservation(ctx, conn, name),
@@ -284,7 +285,7 @@ func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, nam
 }
 
 func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusActive, awstypes.CapacityReservationStatusCancelling),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusCancelled),
 		Refresh: statusCapacityReservation(ctx, conn, name),
@@ -299,10 +300,10 @@ func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, 
 	return nil, err
 }
 
-func statusCapacityReservation(ctx context.Context, conn *athena.Client, name string) retry.StateRefreshFunc {
+func statusCapacityReservation(ctx context.Context, conn *athena.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCapacityReservationByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -322,7 +323,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	out, err := conn.GetCapacityReservation(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -338,13 +339,14 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	return out.CapacityReservation, nil
 }
 
-type resourceCapacityReservationModel struct {
+type capacityReservationResourceModel struct {
+	framework.WithRegionModel
 	AllocatedDPUs types.Int32    `tfsdk:"allocated_dpus"`
 	ARN           types.String   `tfsdk:"arn"`
 	Name          types.String   `tfsdk:"name"`
 	Status        types.String   `tfsdk:"status"`
 	Tags          tftags.Map     `tfsdk:"tags"`
 	TagsAll       tftags.Map     `tfsdk:"tags_all"`
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 	TargetDPUs    types.Int32    `tfsdk:"target_dpus"`
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 }

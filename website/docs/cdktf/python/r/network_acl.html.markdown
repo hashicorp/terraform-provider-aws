@@ -67,6 +67,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the associated VPC.
 * `subnet_ids` - (Optional) A list of Subnet IDs to apply the ACL to
 * `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
@@ -129,4 +130,4 @@ Using `terraform import`, import Network ACLs using the `id`. For example:
 % terraform import aws_network_acl.main acl-7aaabd18
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5b9f089b5a06ae7544fcc277d74d9e0edb7b4bb28c855db30503815cfb46f3a1 -->
+<!-- cache-key: cdktf-0.20.8 input-42a4d713a4ea4f6846644df4f3a710112261215212b17fe2d0cf6d79a5949bfe -->

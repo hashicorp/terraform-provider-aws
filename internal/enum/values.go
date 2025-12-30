@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package enum
 
 import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type Valueser[T ~string] interface {
@@ -13,15 +14,17 @@ type Valueser[T ~string] interface {
 }
 
 func EnumValues[T Valueser[T]]() []T {
-	return T("").Values()
+	return inttypes.Zero[T]().Values()
 }
 
 func Values[T Valueser[T]]() []string {
-	return Slice(EnumValues[T]()...)
+	return tfslices.Strings(EnumValues[T]())
+}
+
+func EnumSlice[T ~string](l ...T) []T {
+	return l
 }
 
 func Slice[T ~string](l ...T) []string {
-	return tfslices.ApplyToAll(l, func(v T) string {
-		return string(v)
-	})
+	return tfslices.Strings(l)
 }

@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serviceNetworkLogType` - (Optional, Forces new resource) Type of log that monitors your Amazon VPC Lattice service networks. Valid values are: `SERVICE`, `RESOURCE`. Defaults to `SERVICE`.
 
 ## Attribute Reference
@@ -88,4 +89,4 @@ Using `terraform import`, import VPC Lattice Access Log Subscription using the a
 % terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d49c363c05e95a1a2bce9d8c3ba707a2ac4e34511bda7ca56b2f39b66f9796a6 -->
+<!-- cache-key: cdktf-0.20.8 input-7737d7cbf0c0d9c164911abb108046a6683e3664e7d996391270ae9c257a5ce2 -->

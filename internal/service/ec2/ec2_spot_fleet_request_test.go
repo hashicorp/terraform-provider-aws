@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1822,7 +1822,7 @@ func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3114,7 +3114,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceKMSKeyID(rNa
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-
+  enable_key_rotation     = true
   tags = {
     Name = %[1]q
   }
@@ -3160,7 +3160,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceKMSKeyID(rN
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-
+  enable_key_rotation     = true
   tags = {
     Name = %[1]q
   }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -180,7 +180,7 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			_, err := tfredshift.FindSnapshotCopyByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
+			if errs.IsA[*sdkretry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {
@@ -218,23 +218,18 @@ func testAccCheckSnapshotCopyExists(ctx context.Context, name string, snap *type
 }
 
 func testAccSnapshotCopyConfigBase(rName string) string {
-	return acctest.ConfigCompose(
-		// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  multi_az                            = false
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  multi_az              = false
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccSnapshotCopyConfig_basic(rName string) string {

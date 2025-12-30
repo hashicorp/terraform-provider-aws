@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -13,16 +13,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -199,7 +200,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	workspace, err := findWorkspaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -313,7 +314,7 @@ func workspacePropertyUpdate(ctx context.Context, conn *workspaces.Client, d *sc
 			RunningMode: types.RunningMode(d.Get(key).(string)),
 		}
 	case "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes":
-		if d.Get("workspace_properties.0.running_mode") != types.RunningModeAutoStop {
+		if d.Get("workspace_properties.0.running_mode") != string(types.RunningModeAutoStop) {
 			log.Printf("[DEBUG] Property running_mode_auto_stop_timeout_in_minutes makes sense only for AUTO_STOP running mode")
 			return nil
 		}
@@ -351,7 +352,7 @@ func findWorkspaceByID(ctx context.Context, conn *workspaces.Client, id string) 
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
+	if inttypes.IsZero(output) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -385,11 +386,11 @@ func findWorkspaces(ctx context.Context, conn *workspaces.Client, input *workspa
 	return output, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID string) retry.StateRefreshFunc {
+func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, workspaceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -402,7 +403,7 @@ func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID s
 }
 
 func waitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatePending, types.WorkspaceStateStarting),
 		Target:  enum.Slice(types.WorkspaceStateAvailable),
 		Refresh: statusWorkspace(ctx, conn, workspaceID),
@@ -419,7 +420,7 @@ func waitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, worksp
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStateUpdating),
 		Target:  enum.Slice(types.WorkspaceStateAvailable, types.WorkspaceStateStopped),
 		Refresh: statusWorkspace(ctx, conn, workspaceID),
@@ -441,7 +442,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspac
 
 func waitWorkspaceTerminated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
 	// https://docs.aws.amazon.com/workspaces/latest/api/API_TerminateWorkspaces.html
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		// You can terminate a WorkSpace that is in any state except SUSPENDED.
 		// After a WorkSpace is terminated, the TERMINATED state is returned only briefly before the WorkSpace directory metadata is cleaned up.
 		Pending: enum.Slice(tfslices.RemoveAll(enum.EnumValues[types.WorkspaceState](), types.WorkspaceStateSuspended)...),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex_test
@@ -28,7 +28,7 @@ type testResourceData3 struct {
 	Age    types.Int64
 }
 
-func TestCalculate(t *testing.T) {
+func TestDiff(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -44,6 +44,16 @@ func TestCalculate(t *testing.T) {
 			expectedIgnoredFieldNames: []string{
 				"Name",
 				"Number",
+				"Age",
+			},
+			expectedChange: false,
+			expectErr:      false,
+		},
+		"unknown plan": {
+			plan:  testResourceData1{Name: types.StringValue("test"), Number: types.Int64Unknown(), Age: types.Int64Value(100)},
+			state: testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			expectedIgnoredFieldNames: []string{
+				"Name",
 				"Age",
 			},
 			expectedChange: false,
@@ -136,19 +146,19 @@ func TestCalculate(t *testing.T) {
 	}
 }
 
-func TestWithException(t *testing.T) {
+func TestDiffWithChangeOption(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
 		plan                      any
 		state                     any
-		withException             []fwflex.ChangeOption
+		opts                      []fwflex.ChangeOption
 		expectedIgnoredFieldNames []string
 	}{
 		"ignore changed field": {
-			plan:          testResourceData1{Name: types.StringValue("test2"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
-			state:         testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
-			withException: []fwflex.ChangeOption{fwflex.WithIgnoredField("Name")},
+			plan:  testResourceData1{Name: types.StringValue("test2"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			state: testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
+			opts:  []fwflex.ChangeOption{fwflex.WithIgnoredField("Name")},
 			expectedIgnoredFieldNames: []string{
 				"Name",
 				"Number",
@@ -161,7 +171,7 @@ func TestWithException(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			results, _ := fwflex.Diff(context.Background(), test.plan, test.state, test.withException...)
+			results, _ := fwflex.Diff(context.Background(), test.plan, test.state, test.opts...)
 
 			if diff := cmp.Diff(results.IgnoredFieldNames(), test.expectedIgnoredFieldNames); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ssmcontacts_contact" "test" {
@@ -14,7 +14,7 @@ resource "aws_ssmcontacts_contact" "test" {
 
 resource "aws_ssmincidents_replication_set" "test" {
   region {
-    name = data.aws_region.current.name
+    name = data.aws_region.current.region
   }
 }
 

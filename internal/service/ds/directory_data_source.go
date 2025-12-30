@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ds
@@ -194,11 +194,12 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("connect_settings", nil)
 	}
 	d.Set(names.AttrDescription, dir.Description)
-	if dir.Type == awstypes.DirectoryTypeAdConnector {
+	switch dir.Type {
+	case awstypes.DirectoryTypeAdConnector:
 		d.Set("dns_ip_addresses", dir.ConnectSettings.ConnectIps)
-	} else if dir.Type == awstypes.DirectoryTypeSharedMicrosoftAd {
+	case awstypes.DirectoryTypeSharedMicrosoftAd:
 		d.Set("dns_ip_addresses", dir.OwnerDirectoryDescription.DnsIpAddrs)
-	} else {
+	default:
 		d.Set("dns_ip_addresses", dir.DnsIpAddrs)
 	}
 	d.Set("edition", dir.Edition)

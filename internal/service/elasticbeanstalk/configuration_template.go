@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk
@@ -12,10 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,7 +110,7 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 
 	settings, err := findConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Configuration Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,12 +159,44 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 		// conflict. Here we loop through all the initial removables from the set
 		// difference, and we build up a slice of settings not found in the "add"
 		// set
+
+		defaultResourceName := func(ns *string) *string {
+			switch aws.ToString(ns) {
+			case "aws:autoscaling:asg":
+				return aws.String("AWSEBAutoScalingGroup")
+			case "aws:autoscaling:launchconfiguration":
+				return aws.String("AWSEBAutoScalingLaunchConfiguration")
+			default:
+				return nil
+			}
+		}
+		ensureResourceName := func(s *awstypes.ConfigurationOptionSetting) {
+			if s.ResourceName == nil || aws.ToString(s.ResourceName) == "" {
+				if rn := defaultResourceName(s.Namespace); rn != nil {
+					s.ResourceName = rn
+				}
+			}
+		}
+
+		for i := range add {
+			ensureResourceName(&add[i])
+		}
+		for i := range del {
+			ensureResourceName(&del[i])
+		}
+
+		key := func(ns, on, rn *string) string {
+			return aws.ToString(ns) + "|" + aws.ToString(on) + "|" + aws.ToString(rn)
+		}
+
+		addKeys := make(map[string]struct{}, len(add))
+		for _, a := range add {
+			addKeys[key(a.Namespace, a.OptionName, a.ResourceName)] = struct{}{}
+		}
+
 		var remove []awstypes.ConfigurationOptionSetting
 		for _, r := range del {
-			for _, a := range add {
-				if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
-					continue
-				}
+			if _, exists := addKeys[key(r.Namespace, r.OptionName, r.ResourceName)]; !exists {
 				remove = append(remove, r)
 			}
 		}
@@ -176,8 +209,9 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 		for _, v := range remove {
 			input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
-				Namespace:  v.Namespace,
-				OptionName: v.OptionName,
+				Namespace:    v.Namespace,
+				OptionName:   v.OptionName,
+				ResourceName: v.ResourceName,
 			})
 		}
 
@@ -239,7 +273,7 @@ func findConfigurationSettingses(ctx context.Context, conn *elasticbeanstalk.Cli
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

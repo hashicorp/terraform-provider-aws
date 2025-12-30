@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,15 +29,17 @@ import (
 
 // @SDKResource("aws_glue_trigger", name="Trigger")
 // @Tags(identifierAttribute="arn")
-func ResourceTrigger() *schema.Resource {
+func resourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,
 		ReadWithoutTimeout:   resourceTriggerRead,
 		UpdateWithoutTimeout: resourceTriggerUpdate,
 		DeleteWithoutTimeout: resourceTriggerDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
@@ -260,25 +262,22 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %+v", input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateTrigger(ctx, input)
 		if err != nil {
 			// Retry IAM propagation errors
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			// Retry concurrent workflow modification errors
 			if errs.IsAErrorMessageContains[*awstypes.ConcurrentModificationException](err, "was modified while adding trigger") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTrigger(ctx, input)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Trigger (%s): %s", name, err)
 	}
@@ -312,7 +311,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := FindTriggerByName(ctx, conn, d.Id())
+	output, err := findTriggerByName(ctx, conn, d.Id())
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
@@ -476,6 +475,83 @@ func deleteTrigger(ctx context.Context, conn *glue.Client, Name string) error {
 	}
 
 	return nil
+}
+
+func findTriggerByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetTriggerOutput, error) {
+	input := &glue.GetTriggerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetTrigger(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) sdkretry.StateRefreshFunc {
+	const (
+		triggerStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		input := &glue.GetTriggerInput{
+			Name: aws.String(triggerName),
+		}
+
+		output, err := conn.GetTrigger(ctx, input)
+
+		if err != nil {
+			return nil, triggerStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, triggerStatusUnknown, nil
+		}
+
+		return output, string(output.Trigger.State), nil
+	}
+}
+
+func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) { //nolint:unparam
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TriggerStateActivating,
+			awstypes.TriggerStateCreating,
+			awstypes.TriggerStateUpdating,
+		),
+		Target: enum.Slice(
+			awstypes.TriggerStateActivated,
+			awstypes.TriggerStateCreated,
+		),
+		Refresh: statusTrigger(ctx, conn, triggerName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TriggerStateDeleting),
+		Target:  []string{},
+		Refresh: statusTrigger(ctx, conn, triggerName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetTriggerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandActions(l []any) []awstypes.Action {

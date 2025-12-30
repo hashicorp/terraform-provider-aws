@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -224,7 +225,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resourc
 
 			_, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -276,8 +277,8 @@ func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx
 		const (
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
-			return tfec2.FindIPAMPoolAllocationsForVPC(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+			return tfec2.FindIPAMPoolAllocationForResource(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
 		})
 
 		return err

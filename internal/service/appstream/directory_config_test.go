@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -153,6 +153,65 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 	})
 }
 
+func TestAccAppStreamDirectoryConfig_CertificateBasedAuthParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.DirectoryConfig
+	resourceName := "aws_appstream_directory_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rPasswordUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	orgUnitDN := orgUnitFromDomain("Test", domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfigConfig_certifcateBasedAuthParameters(rName, domain, rUserName, rPassword, orgUnitDN, string(awstypes.CertificateBasedAuthStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserName),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPassword),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", string(awstypes.CertificateBasedAuthStatusEnabled)),
+				),
+			},
+			{
+				Config: testAccDirectoryConfigConfig_certifcateBasedAuthParameters(rName, domain, rUserNameUpdated, rPasswordUpdated, orgUnitDN, string(awstypes.CertificateBasedAuthStatusEnabledNoDirectoryLoginFallback)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
+					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_name", rUserNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.0.account_password", rPasswordUpdated),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_based_auth_properties.0.status", string(awstypes.CertificateBasedAuthStatusEnabledNoDirectoryLoginFallback)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"service_account_credentials.0.account_password"},
+			},
+		},
+	})
+}
+
 func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
@@ -164,7 +223,7 @@ func testAccCheckDirectoryConfigDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfappstream.FindDirectoryConfigByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -212,9 +271,9 @@ func testAccCheckDirectoryConfigNotRecreated(i, j *awstypes.DirectoryConfig) res
 
 func orgUnitFromDomain(orgUnit, domainName string) string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("OU=%s", orgUnit))
-	for _, dc := range strings.Split(domainName, ".") {
-		sb.WriteString(fmt.Sprintf(" DC=%s", dc))
+	fmt.Fprintf(&sb, "OU=%s", orgUnit)
+	for dc := range strings.SplitSeq(domainName, ".") {
+		fmt.Fprintf(&sb, " DC=%s", dc)
 	}
 	return sb.String()
 }
@@ -233,7 +292,7 @@ resource "aws_appstream_directory_config" "test" {
   }
 
   depends_on = [
-    aws_directory_service_directory.test
+    aws_directory_service_directory.test,
   ]
 }
 
@@ -281,4 +340,56 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 `, domain, userName, password, orgUnitDN1, orgUnitDN2))
+}
+
+func testAccDirectoryConfigConfig_certifcateBasedAuthParameters(rName, domain, userName, password, orgUnitDN, status string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_appstream_directory_config" "test" {
+  directory_name                          = %[1]q
+  organizational_unit_distinguished_names = [%[4]q]
+
+  service_account_credentials {
+    account_name     = %[2]q
+    account_password = %[3]q
+  }
+
+  certificate_based_auth_properties {
+    certificate_authority_arn = aws_acmpca_certificate_authority.test_ca.arn
+    status                    = %[5]q
+  }
+
+  depends_on = [
+    aws_directory_service_directory.test,
+    aws_acmpca_certificate_authority.test_ca
+  ]
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = %[3]q
+  edition  = "Standard"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "test_ca" {
+  type       = "ROOT"
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_2048"
+    signing_algorithm = "SHA256WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+}
+`, domain, userName, password, orgUnitDN, status))
 }

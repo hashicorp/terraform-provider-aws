@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_dms_s3_endpoint" "test" {
@@ -53,7 +53,9 @@ resource "aws_dms_s3_endpoint" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = var.rName
+  description             = var.rName
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Version = "2012-10-17"

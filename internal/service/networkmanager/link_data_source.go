@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -99,7 +99,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -1,29 +1,26 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
 
 var (
-	NewResourceNamespace         = newResourceNamespace
-	NewResourceTable             = newResourceTable
-	NewResourceTableBucket       = newResourceTableBucket
-	NewResourceTableBucketPolicy = newResourceTableBucketPolicy
-	ResourceTablePolicy          = newResourceTablePolicy
+	ResourceNamespace              = newNamespaceResource
+	ResourceTable                  = newTableResource
+	ResourceTableBucket            = newTableBucketResource
+	ResourceTableBucketPolicy      = newTableBucketPolicyResource
+	ResourceTableBucketReplication = newTableBucketReplicationResource
+	ResourceTablePolicy            = newTablePolicyResource
+	ResourceTableReplication       = newTableReplicationResource
 
-	FindNamespace         = findNamespace
-	FindTable             = findTable
-	FindTableBucket       = findTableBucket
-	FindTableBucketPolicy = findTableBucketPolicy
-	FindTablePolicy       = findTablePolicy
+	FindNamespaceByTwoPartKey       = findNamespaceByTwoPartKey
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTableBucketByARN            = findTableBucketByARN
+	FindTableBucketPolicyByARN      = findTableBucketPolicyByARN
+	FindTableBucketReplicationByARN = findTableBucketReplicationByARN
+	FindTablePolicyByThreePartKey   = findTablePolicyByThreePartKey
+	FindTableReplicationByARN       = findTableReplicationByARN
 
 	TableIDFromTableARN = tableIDFromTableARN
-)
-
-const (
-	ResNameNamespace   = resNameNamespace
-	ResNameTableBucket = resNameTableBucket
-
-	NamespaceIDSeparator = namespaceIDSeparator
 )
 
 type (

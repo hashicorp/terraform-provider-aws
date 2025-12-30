@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -76,6 +76,10 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 			continue
 		}
 
+		if planFieldValue.IsUnknown() {
+			continue
+		}
+
 		if !planFieldValue.Equal(stateFieldValue) {
 			hasChanges = true
 		} else {
@@ -106,6 +110,7 @@ func implementsAttrValue(field reflect.Value) bool {
 
 func skippedFields() []string {
 	return []string{
+		"Region",
 		"Tags",
 		"TagsAll",
 		"Timeouts",

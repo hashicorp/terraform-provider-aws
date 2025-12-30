@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,6 +103,8 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	aliasName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	aliasName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,10 +114,22 @@ func TestAccAMPScraper_alias(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_alias(rName),
+				Config: testAccScraperConfig_alias(rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, aliasName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName2),
 				),
 			},
 			{
@@ -159,6 +173,55 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 		},
 	})
 }
+func TestAccAMPScraper_roleConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_roleConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.source_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.target_role_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_alias(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "role_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -171,7 +234,7 @@ func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -377,11 +440,11 @@ resource "aws_prometheus_scraper" "test" {
 `, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_alias(rName string) string {
+func testAccScraperConfig_alias(rName, alias string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-  alias                = %[1]q
-  scrape_configuration = %[2]q
+  alias                = %[2]q
+  scrape_configuration = %[3]q
 
   source {
     eks {
@@ -396,7 +459,7 @@ resource "aws_prometheus_scraper" "test" {
     }
   }
 }
-`, rName, scrapeConfigBlob))
+`, rName, alias, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_securityGroups(rName string) string {
@@ -417,6 +480,90 @@ resource "aws_prometheus_scraper" "test" {
     amp {
       workspace_arn = aws_prometheus_workspace.test.arn
     }
+  }
+}
+`, rName, scrapeConfigBlob))
+}
+
+func testAccScraperConfig_roleConfiguration(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccScraperConfig_base(rName), fmt.Sprintf(`
+resource "aws_prometheus_workspace" "target" {
+  provider = "awsalternate"
+
+  alias = %[1]q
+
+  tags = {
+    AMPAgentlessScraper = ""
+  }
+}
+
+resource "aws_iam_role" "source" {
+  name = "%[1]s-source"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scraper.aps.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role" "target" {
+  provider = "awsalternate"
+
+  name = "%[1]s-target"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.source.arn}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "target" {
+  provider = "awsalternate"
+
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonPrometheusRemoteWriteAccess"
+  role       = aws_iam_role.target.name
+}
+
+resource "aws_prometheus_scraper" "test" {
+  alias                = %[1]q
+  scrape_configuration = %[2]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.target.arn
+    }
+  }
+
+  role_configuration {
+    source_role_arn = aws_iam_role.source.arn
+    target_role_arn = aws_iam_role.target.arn
   }
 }
 `, rName, scrapeConfigBlob))

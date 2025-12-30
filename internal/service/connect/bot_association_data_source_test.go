@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -84,7 +84,7 @@ resource "aws_connect_instance" "test" {
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {
-    lex_region = data.aws_region.current.name
+    lex_region = data.aws_region.current.region
     name       = aws_lex_bot.test.name
   }
 }

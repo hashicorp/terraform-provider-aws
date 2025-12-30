@@ -1,12 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
 
 import (
-	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -41,7 +41,7 @@ func sweepCompositeAlarms(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return smarterr.NewError(err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -59,7 +59,7 @@ func sweepCompositeAlarms(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudWatch Composite Alarms (%s): %w", region, err)
+			return smarterr.NewError(err)
 		}
 
 		for _, v := range page.CompositeAlarms {
@@ -74,7 +74,7 @@ func sweepCompositeAlarms(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping CloudWatch Composite Alarms (%s): %w", region, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil
@@ -84,7 +84,7 @@ func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return smarterr.NewError(err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.ListDashboardsInput{}
@@ -100,7 +100,7 @@ func sweepDashboards(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudWatch Dashboards (%s): %w", region, err)
+			return smarterr.NewError(err)
 		}
 
 		for _, v := range page.DashboardEntries {
@@ -115,7 +115,7 @@ func sweepDashboards(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping CloudWatch Dashboards (%s): %w", region, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func sweepMetricAlarms(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return smarterr.NewError(err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -143,7 +143,7 @@ func sweepMetricAlarms(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudWatch Metric Alarms (%s): %w", region, err)
+			return smarterr.NewError(err)
 		}
 
 		for _, v := range page.MetricAlarms {
@@ -158,7 +158,7 @@ func sweepMetricAlarms(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping CloudWatch Metric Alarms (%s): %w", region, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func sweepMetricStreams(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return smarterr.NewError(err)
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.ListMetricStreamsInput{}
@@ -184,7 +184,7 @@ func sweepMetricStreams(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudWatch Metric Streams (%s): %w", region, err)
+			return smarterr.NewError(err)
 		}
 
 		for _, v := range page.Entries {
@@ -199,7 +199,7 @@ func sweepMetricStreams(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping CloudWatch Metric Streams (%s): %w", region, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil

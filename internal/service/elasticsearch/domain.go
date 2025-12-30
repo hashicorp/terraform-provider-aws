@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch
@@ -7,18 +7,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,6 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,7 +40,7 @@ import (
 )
 
 // @SDKResource("aws_elasticsearch_domain", name="Domain")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -45,7 +49,20 @@ func resourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceDomainImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				region := d.Get(names.AttrRegion).(string)
+				name := d.Id()
+				d.SetId(arn.ARN{
+					Partition: names.PartitionForRegion(region).ID(),
+					Region:    region,
+					AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+					Service:   "es",
+					Resource:  "domain/" + name,
+				}.String())
+				d.Set(names.AttrDomainName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -92,18 +109,7 @@ func resourceDomain() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"access_policies": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -544,7 +550,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "Elasticsearch Domain (%s) already exists", name)
 	}
 
-	input := &elasticsearch.CreateElasticsearchDomainInput{
+	input := elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
 		TagList:              getTagsIn(ctx),
@@ -609,8 +615,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+	if v, ok := d.GetOk("log_publishing_options"); ok && v.(*schema.Set).Len() > 0 {
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -648,8 +654,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
-			return conn.CreateElasticsearchDomain(ctx, input)
+		func(ctx context.Context) (any, error) {
+			return conn.CreateElasticsearchDomain(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidTypeException](err, "Error setting policy") ||
@@ -659,7 +665,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role has not propagated yet") ||
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Authentication error") ||
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Unauthorized Operation: Elasticsearch must be authorised to describe") ||
-				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon Elasticsearch to describe") {
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon Elasticsearch to describe") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The Resource Access Policy specified for the CloudWatch Logs log group") {
 				return true, err
 			}
 
@@ -678,12 +685,12 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
-		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 			AutoTuneOptions: expandAutoTuneOptions(v.([]any)[0].(map[string]any)),
 			DomainName:      aws.String(name),
 		}
 
-		_, err = conn.UpdateElasticsearchDomainConfig(ctx, input)
+		_, err = conn.UpdateElasticsearchDomainConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
@@ -704,7 +711,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrDomainName).(string)
 	ds, err := findDomainByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -719,7 +726,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) config: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) Config: %s", d.Id(), err)
 	}
 
 	dc := output.DomainConfig
@@ -739,9 +746,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	// DescribeElasticsearchDomainConfig, if enabled, else use
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
-	if ds.AdvancedSecurityOptions != nil {
-		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-		if !aws.ToBool(ds.AdvancedSecurityOptions.Enabled) {
+	if v := ds.AdvancedSecurityOptions; v != nil {
+		advSecOpts := flattenAdvancedSecurityOptions(v)
+		if !aws.ToBool(v.Enabled) {
 			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
 		}
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
@@ -774,6 +781,24 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
+	// Remove any disabled log types that aren't in state.
+	var inStateLogTypes []string
+	if v := d.GetRawState(); !v.IsNull() {
+		if v := v.GetAttr("log_publishing_options"); !v.IsNull() {
+			for _, v := range v.AsValueSet().Values() {
+				if !v.IsNull() {
+					for k, v := range v.AsValueMap() {
+						if k == "log_type" && !v.IsNull() {
+							inStateLogTypes = append(inStateLogTypes, v.AsString())
+						}
+					}
+				}
+			}
+		}
+	}
+	maps.DeleteFunc(ds.LogPublishingOptions, func(k string, v awstypes.LogPublishingOption) bool {
+		return !aws.ToBool(v.Enabled) && !slices.Contains(inStateLogTypes, k)
+	})
 	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
@@ -790,10 +815,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		d.Set(names.AttrEndpoint, endpoints["vpc"])
-
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch Domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
@@ -814,7 +838,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		name := d.Get(names.AttrDomainName).(string)
-		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		}
 
@@ -836,6 +860,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
+		}
+
+		if d.HasChange("cognito_options") {
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
@@ -871,6 +899,27 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 		}
 
+		if d.HasChange("log_publishing_options") {
+			o, n := d.GetChange("log_publishing_options")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+
+			input.LogPublishingOptions = expandLogPublishingOptions(ns.List())
+
+			// Explicitly disable removed log types.
+			oldTypes := tfslices.ApplyToAll(os.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			for _, logType := range remove {
+				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
+					Enabled: aws.Bool(false),
+				}
+			}
+		}
+
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -896,15 +945,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.VPCOptions = expandVPCOptions(v[0].(map[string]any))
 		}
 
-		if d.HasChange("cognito_options") {
-			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
-		}
-
-		if d.HasChange("log_publishing_options") {
-			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
-		}
-
-		_, err := conn.UpdateElasticsearchDomainConfig(ctx, input)
+		_, err := conn.UpdateElasticsearchDomainConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
@@ -915,12 +956,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if d.HasChange("elasticsearch_version") {
-			input := &elasticsearch.UpgradeElasticsearchDomainInput{
+			input := elasticsearch.UpgradeElasticsearchDomainInput{
 				DomainName:    aws.String(name),
 				TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
 			}
 
-			_, err := conn.UpgradeElasticsearchDomain(ctx, input)
+			_, err := conn.UpgradeElasticsearchDomain(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "upgrading Elasticsearch Domain (%s): %s", d.Id(), err)
@@ -939,12 +980,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	name := d.Get(names.AttrDomainName).(string)
-
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
-	_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+	name := d.Get(names.AttrDomainName).(string)
+	input := elasticsearch.DeleteElasticsearchDomainInput{
 		DomainName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteElasticsearchDomain(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -961,22 +1002,6 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
-
-	d.Set(names.AttrDomainName, d.Id())
-
-	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
-
-	if err != nil {
-		return nil, err
-	}
-
-	d.SetId(aws.ToString(ds.ARN))
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainStatus, error) {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(name),
@@ -988,7 +1013,7 @@ func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name stri
 	}
 
 	if aws.ToBool(output.Deleted) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1000,7 +1025,7 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 	output, err := conn.DescribeElasticsearchDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1029,7 +1054,7 @@ func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *el
 	output, err := conn.DescribeElasticsearchDomainConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1058,7 +1083,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 	output, err := conn.GetUpgradeStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1075,7 +1100,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 	return output, nil
 }
 
-func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		// Don't call findDomainByName here as the domain's Deleted flag will be set while DomainProcessingStatus is "Deleting".
 		input := &elasticsearch.DescribeElasticsearchDomainInput{
@@ -1083,7 +1108,7 @@ func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, nam
 		}
 		output, err := findDomain(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1095,11 +1120,11 @@ func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, nam
 	}
 }
 
-func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDomainUpgradeStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1120,7 +1145,7 @@ func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name s
 }
 
 func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
 		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded, awstypes.UpgradeStatusSucceededWithIssues),
 		Refresh:    statusDomainUpgrade(ctx, conn, name),
@@ -1139,7 +1164,7 @@ func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name 
 }
 
 func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeCreating),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
 		Refresh: statusDomainProcessing(ctx, conn, domainName),
@@ -1160,7 +1185,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 }
 
 func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
 		Refresh: statusDomainProcessing(ctx, conn, domainName),
@@ -1181,7 +1206,7 @@ func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, do
 }
 
 func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) (*awstypes.ElasticsearchDomainStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeDeleting),
 		Target:  []string{},
 		Refresh: statusDomainProcessing(ctx, conn, domainName),

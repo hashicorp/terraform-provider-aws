@@ -1,0 +1,34 @@
+# Copyright IBM Corp. 2014, 2025
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_glue_resource_policy" "test" {
+  policy = data.aws_iam_policy_document.glue-example-policy.json
+}
+
+data "aws_iam_policy_document" "glue-example-policy" {
+  statement {
+    actions   = ["glue:CreateTable"]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+  }
+}
+
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.0.0"
+    }
+  }
+}
+
+provider "aws" {}

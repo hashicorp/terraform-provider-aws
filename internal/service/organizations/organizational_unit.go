@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,16 +26,17 @@ import (
 
 // @SDKResource("aws_organizations_organizational_unit", name="Organizational Unit")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.OrganizationalUnit")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
 		ReadWithoutTimeout:   resourceOrganizationalUnitRead,
 		UpdateWithoutTimeout: resourceOrganizationalUnitUpdate,
 		DeleteWithoutTimeout: resourceOrganizationalUnitDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"accounts": {
@@ -93,7 +95,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateOrganizationalUnit(ctx, input)
 	})
 
@@ -112,7 +114,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 
 	ou, err := findOrganizationalUnitByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Organizational Unit (%s) does not exist, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +198,7 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, inp
 	output, err := conn.DescribeOrganizationalUnit(ctx, input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.OrganizationalUnitNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

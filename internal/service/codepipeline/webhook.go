@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codepipeline
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,17 +26,19 @@ import (
 )
 
 // @SDKResource("aws_codepipeline_webhook", name="Webhook")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("webhook:{name}")
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codepipeline/types;awstypes;awstypes.ListWebhookItem")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(requireEnvVar="GITHUB_TOKEN")
 func resourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
 		ReadWithoutTimeout:   resourceWebhookRead,
 		UpdateWithoutTimeout: resourceWebhookUpdate,
 		DeleteWithoutTimeout: resourceWebhookDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -161,7 +164,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	webhook, err := findWebhookByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Webhook %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

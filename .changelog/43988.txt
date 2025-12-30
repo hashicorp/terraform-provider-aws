@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_job: Support `G.12X`, `G.16X`, `R.1X`, `R.2X`, `R.4X`, and `R.8X` as valid values for `worker_type`
+```

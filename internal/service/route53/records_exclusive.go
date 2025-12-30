@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -29,14 +29,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_route53_records_exclusive", name="Records Exclusive")
-func newResourceRecordsExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRecordsExclusive{}
+func newRecordsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &recordsExclusiveResource{}
 
 	r.SetDefaultCreateTimeout(45 * time.Minute)
 	r.SetDefaultUpdateTimeout(45 * time.Minute)
@@ -48,13 +48,13 @@ const (
 	ResNameRecordsExclusive = "Records Exclusive"
 )
 
-type resourceRecordsExclusive struct {
-	framework.ResourceWithConfigure
+type recordsExclusiveResource struct {
+	framework.ResourceWithModel[recordsExclusiveResourceModel]
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
 
-func (r *resourceRecordsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *recordsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"zone_id": schema.StringAttribute{
@@ -266,7 +266,7 @@ func (r *resourceRecordsExclusive) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceRecordsExclusive) syncRecordSets(ctx context.Context, plan resourceRecordsExclusiveModel, timeout time.Duration) diag.Diagnostics {
+func (r *recordsExclusiveResource) syncRecordSets(ctx context.Context, plan recordsExclusiveResourceModel, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := r.Meta().Route53Client(ctx)
 
@@ -345,8 +345,8 @@ func (r *resourceRecordsExclusive) syncRecordSets(ctx context.Context, plan reso
 	return diags
 }
 
-func (r *resourceRecordsExclusive) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceRecordsExclusiveModel
+func (r *recordsExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan recordsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -360,8 +360,8 @@ func (r *resourceRecordsExclusive) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRecordsExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceRecordsExclusiveModel
+func (r *recordsExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state recordsExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -369,7 +369,7 @@ func (r *resourceRecordsExclusive) Read(ctx context.Context, req resource.ReadRe
 
 	conn := r.Meta().Route53Client(ctx)
 	output, err := findResourceRecordSetsForHostedZone(ctx, conn, state.ZoneID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -397,8 +397,8 @@ func (r *resourceRecordsExclusive) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRecordsExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceRecordsExclusiveModel
+func (r *recordsExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan recordsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -412,7 +412,7 @@ func (r *resourceRecordsExclusive) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRecordsExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *recordsExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("zone_id"), req, resp)
 }
 
@@ -438,7 +438,7 @@ func findResourceRecordSetsForHostedZone(ctx context.Context, conn *route53.Clie
 	return findResourceRecordSets(ctx, conn, &input, morePages, filter)
 }
 
-type resourceRecordsExclusiveModel struct {
+type recordsExclusiveResourceModel struct {
 	ResourceRecordSet fwtypes.SetNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_set"`
 	Timeouts          timeouts.Value                                         `tfsdk:"timeouts"`
 	ZoneID            types.String                                           `tfsdk:"zone_id"`

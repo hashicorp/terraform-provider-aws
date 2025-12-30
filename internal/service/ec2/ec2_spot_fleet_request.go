@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -354,9 +354,10 @@ func resourceSpotFleetRequest() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"weighted_capacity": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         nullable.TypeNullableFloat,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 						},
 					},
 				},
@@ -998,7 +999,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
@@ -1029,7 +1030,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findSpotFleetRequestByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Spot Fleet Request %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1186,7 +1187,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		input := ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
@@ -1268,9 +1269,10 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]any, me
 		opts.KeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d["weighted_capacity"]; ok && v != "" {
-		wc, _ := strconv.ParseFloat(v.(string), 64)
-		opts.WeightedCapacity = aws.Float64(wc)
+	if v, ok := d["weighted_capacity"].(string); ok {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+			opts.WeightedCapacity = aws.Float64(v)
+		}
 	}
 
 	var securityGroupIds []string
@@ -1928,7 +1930,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 	m[names.AttrVPCSecurityGroupIDs] = securityGroupIds
 
 	if l.WeightedCapacity != nil {
-		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+		m["weighted_capacity"] = flex.Float64ToStringValue(l.WeightedCapacity)
 	}
 
 	if l.TagSpecifications != nil {
@@ -2064,8 +2066,8 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 func hashEphemeralBlockDevice(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 	return create.StringHashcode(buf.String())
 }
 
@@ -2077,15 +2079,15 @@ func hashRootBlockDevice(v any) int {
 func hashLaunchSpecification(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
+	fmt.Fprintf(&buf, "%s-", m["ami"].(string))
 	if v, ok := m[names.AttrAvailabilityZone].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 	if v, ok := m[names.AttrSubnetID].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType]))
-	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrInstanceType])
+	fmt.Fprintf(&buf, "%s-", m["spot_price"].(string))
 	return create.StringHashcode(buf.String())
 }
 
@@ -2093,10 +2095,10 @@ func hashEBSBlockDevice(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
 	if name, ok := m[names.AttrDeviceName]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
+		fmt.Fprintf(&buf, "%s-", name.(string))
 	}
 	if id, ok := m[names.AttrSnapshotID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
+		fmt.Fprintf(&buf, "%s-", id.(string))
 	}
 	return create.StringHashcode(buf.String())
 }

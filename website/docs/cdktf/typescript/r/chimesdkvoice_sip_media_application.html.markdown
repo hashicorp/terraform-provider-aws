@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `endpoints`
@@ -98,4 +99,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Media Application using the
 % terraform import aws_chimesdkvoice_sip_media_application.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1b6072f4d998c9e513ec72230b13fe8b463d6b65adffbd9a34c66c4336e5e88 -->
+<!-- cache-key: cdktf-0.20.8 input-137ea142934f599c6c30a7b225fcb0a68f865805e48129fc976d4345b9f71de9 -->

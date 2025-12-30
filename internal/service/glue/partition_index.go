@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -12,22 +12,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_partition_index", name="Partition Index")
-func ResourcePartitionIndex() *schema.Resource {
+func resourcePartitionIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionIndexCreate,
 		ReadWithoutTimeout:   resourcePartitionIndexRead,
 		DeleteWithoutTimeout: resourcePartitionIndexDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -124,8 +128,8 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Reading Glue Partition Index: %s", d.Id())
-	partition, err := FindPartitionIndexByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	partition, err := findPartitionIndexByName(ctx, conn, d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Partition Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,6 +178,104 @@ func resourcePartitionIndexDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string) (*awstypes.PartitionIndexDescriptor, error) {
+	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &glue.GetPartitionIndexesInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableName:    aws.String(tableName),
+	}
+
+	var result *awstypes.PartitionIndexDescriptor
+
+	output, err := conn.GetPartitionIndexes(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, partInd := range output.PartitionIndexDescriptorList {
+		if aws.ToString(partInd.IndexName) == partIndex {
+			result = &partInd
+			break
+		}
+	}
+
+	if result == nil {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}
+
+func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findPartitionIndexByName(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.IndexStatus), nil
+	}
+}
+
+func waitPartitionIndexCreated(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PartitionIndexStatusCreating),
+		Target:  enum.Slice(awstypes.PartitionIndexStatusActive),
+		Refresh: statusPartitionIndex(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.PartitionIndexDescriptor); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PartitionIndexStatusDeleting),
+		Target:  []string{},
+		Refresh: statusPartitionIndex(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.PartitionIndexDescriptor); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandPartitionIndex(l []any) *awstypes.PartitionIndex {

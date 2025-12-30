@@ -111,6 +111,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Optional) The configuration set to use by default when sending from this identity. Note that any configuration set defined in the email sending request takes precedence.
 * `dkim_signing_attributes` - (Optional) The configuration of the DKIM authentication settings for an email domain identity.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -138,6 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `tokens` - If you used Easy DKIM to configure DKIM authentication for the domain, then this object contains a set of unique strings that you use to create a set of CNAME records that you add to the DNS configuration for your domain. When Amazon SES detects these records in the DNS configuration for your domain, the DKIM authentication process is complete. If you configured DKIM authentication for the domain by providing your own public-private key pair, then this object contains the selector for the public key.
 * `identity_type` - The email identity type. Valid values: `EMAIL_ADDRESS`, `DOMAIN`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `verification_status` - The verification status of the identity. The status can be one of the following: `PENDING`, `SUCCESS`, `FAILED`, `TEMPORARY_FAILURE`, and `NOT_STARTED`.
 * `verified_for_sending_status` - Specifies whether or not the identity is verified.
 
 ## Import
@@ -165,4 +167,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity using th
 % terraform import aws_sesv2_email_identity.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-28f1021df6e78a4dec2007cff0687b2638fab5bbf6cfb378ee2edfc2129cd0b1 -->
+<!-- cache-key: cdktf-0.20.8 input-88f3c49793b5250ecd3149d0128546a1fab7415acb0656c7679e91af284a6d6f -->

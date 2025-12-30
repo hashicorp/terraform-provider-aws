@@ -1,44 +1,46 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket_policy", name="Table Bucket Policy")
-func newResourceTableBucketPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTableBucketPolicy{}, nil
+// @ArnIdentity("table_bucket_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketPolicyOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preIdentityVersion="6.19.0")
+// @Testing(importIgnore="resource_policy")
+func newTableBucketPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableBucketPolicyResource{}, nil
 }
 
-const (
-	ResNameTableBucketPolicy = "Table Bucket Policy"
-)
-
-type resourceTableBucketPolicy struct {
-	framework.ResourceWithConfigure
+type tableBucketPolicyResource struct {
+	framework.ResourceWithModel[tableBucketPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceTableBucketPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *tableBucketPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"resource_policy": schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
@@ -55,170 +57,146 @@ func (r *resourceTableBucketPolicy) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func (r *resourceTableBucketPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var plan resourceTableBucketPolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *tableBucketPolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data tableBucketPolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	var input s3tables.PutTableBucketPolicyInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.PutTableBucketPolicy(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.TableBucketARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table Bucket Policy (%s)", tableBucketARN), err.Error())
+
 		return
 	}
 
-	out, err := findTableBucketPolicy(ctx, conn, plan.TableBucketARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.TableBucketARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceTableBucketPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableBucketPolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data tableBucketPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableBucketPolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	output, err := findTableBucketPolicyByARN(ctx, conn, tableBucketARN)
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := findTableBucketPolicy(ctx, conn, state.TableBucketARN.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, ResNameTableBucketPolicy, state.TableBucketARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket Policy (%s)", tableBucketARN), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.ResourcePolicy = fwtypes.IAMPolicyValue(aws.ToString(output.ResourcePolicy))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceTableBucketPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var plan resourceTableBucketPolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *tableBucketPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new tableBucketPolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
 	var input s3tables.PutTableBucketPolicyInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.PutTableBucketPolicy(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.TableBucketARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Tables Table Bucket Policy (%s)", tableBucketARN), err.Error())
+
 		return
 	}
 
-	out, err := findTableBucketPolicy(ctx, conn, plan.TableBucketARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.TableBucketARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
 
-func (r *resourceTableBucketPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var state resourceTableBucketPolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *tableBucketPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data tableBucketPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.DeleteTableBucketPolicyInput{
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+	_, err := conn.DeleteTableBucketPolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteTableBucketPolicy(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Tables Table Bucket Policy (%s)", tableBucketARN), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, ResNameTableBucketPolicy, state.TableBucketARN.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceTableBucketPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("table_bucket_arn"), req, resp)
-}
-
-func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
-	in := s3tables.GetTableBucketPolicyInput{
+func findTableBucketPolicyByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
+	input := s3tables.GetTableBucketPolicyInput{
 		TableBucketARN: aws.String(tableBucketARN),
 	}
 
-	out, err := conn.GetTableBucketPolicy(ctx, &in)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findTableBucketPolicy(ctx, conn, &input)
+}
 
+func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableBucketPolicyInput) (*s3tables.GetTableBucketPolicyOutput, error) {
+	output, err := conn.GetTableBucketPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	return out, nil
+	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-type resourceTableBucketPolicyModel struct {
+type tableBucketPolicyResourceModel struct {
+	framework.WithRegionModel
 	ResourcePolicy fwtypes.IAMPolicy `tfsdk:"resource_policy"`
 	TableBucketARN fwtypes.ARN       `tfsdk:"table_bucket_arn"`
 }

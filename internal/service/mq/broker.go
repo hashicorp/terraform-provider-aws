@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package mq
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,13 +30,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
-	"golang.org/x/mod/semver"
 )
 
 // @SDKResource("aws_mq_broker", name="Broker")
@@ -469,7 +470,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findBrokerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfresource.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
+	if !d.IsNewResource() && (retry.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -699,7 +700,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	output, err := conn.DescribeBroker(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -716,11 +717,11 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.StateRefreshFunc {
+func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -733,7 +734,7 @@ func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.St
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
@@ -749,7 +750,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.BrokerStateCreationFailed,
 			types.BrokerStateDeletionInProgress,
@@ -770,7 +771,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
@@ -790,17 +791,17 @@ func resourceUserHash(v any) int {
 
 	m := v.(map[string]any)
 	if ca, ok := m["console_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", ca.(bool)))
+		fmt.Fprintf(&buf, "%t-", ca.(bool))
 	} else {
 		buf.WriteString("false-")
 	}
 	if g, ok := m["groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
+		fmt.Fprintf(&buf, "%v-", g.(*schema.Set).List())
 	}
 	if p, ok := m[names.AttrPassword]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
+		fmt.Fprintf(&buf, "%s-", p.(string))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrUsername].(string))
 
 	return create.StringHashcode(buf.String())
 }
@@ -929,9 +930,8 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []any) (cr []*mq.CreateUserI
 // version is returned unmodified.
 //
 // Ref: https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/upgrading-brokers.html
-// func normalizeEngineVersion(output *mq.DescribeBrokerOutput) string {
 func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVersionUpgrade bool) string {
-	majorMinor := semver.MajorMinor("v" + engineVersion)
+	majorMinor, _ := semver.MajorMinor(engineVersion)
 
 	// initial versions where `auto_minor_version_upgrade` triggers automatic
 	// patch updates, and only the major/minor should be supplied to the update API
@@ -942,9 +942,9 @@ func normalizeEngineVersion(engineType string, engineVersion string, autoMinorVe
 		return engineVersion
 	}
 
-	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.Compare(majorMinor, minRabbit) >= 0) ||
-		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.Compare(majorMinor, minActive) >= 0) {
-		return majorMinor[1:]
+	if (strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) && semver.GreaterThanOrEqual(majorMinor, minRabbit)) ||
+		(strings.EqualFold(engineType, string(types.EngineTypeActivemq)) && semver.GreaterThanOrEqual(majorMinor, minActive)) {
+		return majorMinor
 	}
 
 	return engineVersion

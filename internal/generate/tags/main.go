@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -69,6 +68,7 @@ var (
 	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
+	listTagsOpPaginatorCustom  = flag.Bool("ListTagsOpPaginatorCustom", false, "whether ListTagsOp has a custom paginator")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 
 	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
@@ -86,6 +86,7 @@ var (
 	tagOpBatchSize        = flag.Int("TagOpBatchSize", 0, "tagOpBatchSize")
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagResTypeElemType    = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
+	tagResTypeIsAccountID = flag.Bool("TagResTypeIsAccountID", false, "tagResTypeIsAccountID")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -161,6 +162,7 @@ type TemplateData struct {
 	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
+	ListTagsOpPaginatorCustom  bool
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
@@ -178,9 +180,9 @@ type TemplateData struct {
 	TagKeyType                 string
 	TagOp                      string
 	TagOpBatchSize             int
-	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
+	TagResTypeIsAccountID      bool
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -241,8 +243,11 @@ func main() {
 		createTagsFunc = ""
 	}
 
+	if *tagResTypeIsAccountID && *tagResTypeElem == "" {
+		g.Errorf("TagResTypeIsAccountID requires TagResTypeElem")
+	}
+
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
-	tagPackage := awsPkg
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
 		AWSService:        awsPkg,
@@ -261,6 +266,7 @@ func main() {
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,
+		ListTagsOpPaginatorCustom:  *listTagsOpPaginatorCustom,
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
@@ -278,9 +284,9 @@ func main() {
 		TagKeyType:                 *tagKeyType,
 		TagOp:                      *tagOp,
 		TagOpBatchSize:             *tagOpBatchSize,
-		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
 		TagResTypeElemType:         *tagResTypeElemType,
+		TagResTypeIsAccountID:      *tagResTypeIsAccountID,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,
@@ -315,13 +321,6 @@ func main() {
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
-		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-sdk-go	service package does not need to be imported
-		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
-			templateData.AWSService = ""
-			templateData.TagPackage = ""
-		}
-
 		if err := d.BufferTemplate("header", templateBody.header, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}

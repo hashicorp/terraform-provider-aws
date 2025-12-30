@@ -61,6 +61,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_writes` - (Optional) Whether to allow write operations for a datashare.
 * `associate_entire_account` - (Optional) Whether the datashare is associated with the entire account. Conflicts with `consumer_arn` and `consumer_region`.
 * `consumer_arn` - (Optional) Amazon Resource Name (ARN) of the consumer that is associated with the datashare. Conflicts with `associate_entire_account` and `consumer_region`.
@@ -99,4 +100,4 @@ Using `terraform import`, import Redshift Data Share Consumer Association using 
 % terraform import aws_redshift_data_share_consumer_association.example arn:aws:redshift:us-west-2:123456789012:datashare:b3bfde75-73fd-408b-9086-d6fccfd6d588/example,,,us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-05170dbded7a840a44136f651895110c0d440531e138d9457fd4ed97cc5cce0c -->
+<!-- cache-key: cdktf-0.20.8 input-ef35d51e49dcf0cb93b7acf6a396fd4ef87677b89cfcd302e13aabbd61a2be6b -->

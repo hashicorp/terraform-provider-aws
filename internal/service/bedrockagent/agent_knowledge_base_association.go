@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,12 +38,13 @@ func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.Resourc
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
 
 type agentKnowledgeBaseAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentKnowledgeBaseAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -109,7 +111,12 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 		return
 	}
 
-	_, err := conn.AssociateAgentKnowledgeBase(ctx, input)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentKnowledgeBaseOutput, error) {
+			return conn.AssociateAgentKnowledgeBase(ctx, input)
+		})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base Association", err.Error())
@@ -124,7 +131,7 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 	}
 	data.ID = types.StringValue(id)
 
-	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout)
 	if err != nil {
 		response.Diagnostics.AddError("preparing Agent", err.Error())
 
@@ -151,7 +158,7 @@ func (r *agentKnowledgeBaseAssociationResource) Read(ctx context.Context, reques
 
 	output, err := findAgentKnowledgeBaseAssociationByThreePartKey(ctx, conn, data.AgentID.ValueString(), data.AgentVersion.ValueString(), data.KnowledgeBaseID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -191,17 +198,21 @@ func (r *agentKnowledgeBaseAssociationResource) Update(ctx context.Context, requ
 		return
 	}
 
-	_, err := conn.UpdateAgentKnowledgeBase(ctx, input)
+	timeout := r.UpdateTimeout(ctx, new.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentKnowledgeBaseOutput, error) {
+			return conn.UpdateAgentKnowledgeBase(ctx, input)
+		})
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Knowledge Base Association (%s)", new.ID.ValueString()), err.Error())
-
 		return
 	}
-	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
+	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), timeout)
 	if err != nil {
 		response.Diagnostics.AddError("preparing Agent", err.Error())
-
 		return
 	}
 
@@ -222,7 +233,13 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
 	}
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
+
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentKnowledgeBaseOutput, error) {
+			return conn.DisassociateAgentKnowledgeBase(ctx, &input)
+		})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -230,7 +247,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Knowledge Base Association (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
 
+	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout)
+	if err != nil {
+		response.Diagnostics.AddError("preparing Agent", err.Error())
 		return
 	}
 }
@@ -245,7 +267,7 @@ func findAgentKnowledgeBaseAssociationByThreePartKey(ctx context.Context, conn *
 	output, err := conn.GetAgentKnowledgeBase(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -263,6 +285,7 @@ func findAgentKnowledgeBaseAssociationByThreePartKey(ctx context.Context, conn *
 }
 
 type agentKnowledgeBaseAssociationResourceModel struct {
+	framework.WithRegionModel
 	AgentID            types.String                                    `tfsdk:"agent_id"`
 	AgentVersion       types.String                                    `tfsdk:"agent_version"`
 	Description        types.String                                    `tfsdk:"description"`

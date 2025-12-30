@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,8 +32,8 @@ import (
 
 // @FrameworkResource("aws_route53profiles_profile", name="Profile")
 // @Tags("identifierAttribute=arn")
-func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProfile{}
+func newProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &profileResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultReadTimeout(30 * time.Minute)
@@ -45,14 +46,13 @@ const (
 	ResNameProfile = "Profile"
 )
 
-type resourceProfile struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceProfileData]
+type profileResource struct {
+	framework.ResourceWithModel[profileResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *profileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -102,10 +102,10 @@ func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var data resourceProfileData
+	var data profileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -153,17 +153,17 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var state resourceProfileData
+	var state profileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findProfileByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -183,10 +183,10 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *profileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var state resourceProfileData
+	var state profileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,7 +220,7 @@ func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusProfile(ctx, conn, id),
@@ -238,7 +238,7 @@ func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id st
 }
 
 func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusProfile(ctx, conn, id),
@@ -253,10 +253,10 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	return nil, err
 }
 
-func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findProfileByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -276,7 +276,7 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	out, err := conn.GetProfile(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -292,7 +292,8 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	return out.Profile, nil
 }
 
-type resourceProfileData struct {
+type profileResourceModel struct {
+	framework.WithRegionModel
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	Name          types.String                               `tfsdk:"name"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2
@@ -18,20 +18,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_resourceexplorer2_index", name="Index")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -43,8 +48,8 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type indexResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[indexResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -52,7 +57,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
-			names.AttrID:      framework.IDAttribute(),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
@@ -140,7 +145,7 @@ func (r *indexResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	output, err := findIndex(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -236,6 +241,7 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
 type indexResourceModel struct {
+	framework.WithRegionModel
 	ARN      types.String                           `tfsdk:"arn"`
 	ID       types.String                           `tfsdk:"id"`
 	Tags     tftags.Map                             `tfsdk:"tags"`
@@ -250,7 +256,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	output, err := conn.GetIndex(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -265,7 +271,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -274,11 +280,11 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) retry.StateRefreshFunc {
+func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findIndex(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -291,7 +297,7 @@ func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) retry.Stat
 }
 
 func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateCreating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -308,7 +314,7 @@ func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateUpdating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -325,7 +331,7 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
 		Refresh: statusIndex(ctx, conn),

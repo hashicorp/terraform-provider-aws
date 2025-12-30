@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +36,7 @@ func newEIPDomainNameResource(_ context.Context) (resource.ResourceWithConfigure
 }
 
 type eipDomainNameResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[eipDomainNameResourceModel]
 	framework.WithTimeouts
 }
 
@@ -120,7 +120,7 @@ func (r *eipDomainNameResource) Read(ctx context.Context, request resource.ReadR
 
 	output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, data.AllocationID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -212,6 +212,7 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 }
 
 type eipDomainNameResourceModel struct {
+	framework.WithRegionModel
 	AllocationID types.String   `tfsdk:"allocation_id"`
 	ID           types.String   `tfsdk:"id"`
 	DomainName   types.String   `tfsdk:"domain_name"`

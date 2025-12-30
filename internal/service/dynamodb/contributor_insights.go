@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,6 +47,12 @@ func resourceContributorInsights() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ContributorInsightsMode](),
+			},
 			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -60,7 +67,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName := d.Get(names.AttrTableName).(string)
-	input := &dynamodb.UpdateContributorInsightsInput{
+	input := dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: awstypes.ContributorInsightsActionEnable,
 		TableName:                 aws.String(tableName),
 	}
@@ -71,7 +78,11 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		input.IndexName = aws.String(indexName)
 	}
 
-	_, err := conn.UpdateContributorInsights(ctx, input)
+	if v, ok := d.GetOk(names.AttrMode); ok {
+		input.ContributorInsightsMode = awstypes.ContributorInsightsMode(v.(string))
+	}
+
+	_, err := conn.UpdateContributorInsights(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Contributor Insights for table (%s): %s", tableName, err)
@@ -97,7 +108,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Contributor Insights (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -108,6 +119,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("index_name", output.IndexName)
+	d.Set(names.AttrMode, output.ContributorInsightsMode)
 	d.Set(names.AttrTableName, output.TableName)
 
 	return diags
@@ -122,17 +134,16 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &dynamodb.UpdateContributorInsightsInput{
+	input := dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: awstypes.ContributorInsightsActionDisable,
 		TableName:                 aws.String(tableName),
 	}
-
 	if indexName != "" {
 		input.IndexName = aws.String(indexName)
 	}
 
 	log.Printf("[INFO] Deleting DynamoDB Contributor Insights: %s", d.Id())
-	_, err = conn.UpdateContributorInsights(ctx, input)
+	_, err = conn.UpdateContributorInsights(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -168,21 +179,21 @@ func contributorInsightsParseResourceID(id string) (string, string, error) {
 }
 
 func findContributorInsightsByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	input := &dynamodb.DescribeContributorInsightsInput{
+	input := dynamodb.DescribeContributorInsightsInput{
 		TableName: aws.String(tableName),
 	}
 	if indexName != "" {
 		input.IndexName = aws.String(indexName)
 	}
 
-	output, err := findContributorInsights(ctx, conn, input)
+	output, err := findContributorInsights(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if status := output.ContributorInsightsStatus; status == awstypes.ContributorInsightsStatusDisabled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -199,7 +210,7 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	output, err := conn.DescribeContributorInsights(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -216,11 +227,11 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	return output, nil
 }
 
-func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -237,7 +248,7 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, table
 }
 
 func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ContributorInsightsStatusEnabling),
 		Target:  enum.Slice(awstypes.ContributorInsightsStatusEnabled),
 		Timeout: timeout,
@@ -258,7 +269,7 @@ func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, 
 }
 
 func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ContributorInsightsStatusDisabling),
 		Target:  []string{},
 		Timeout: timeout,

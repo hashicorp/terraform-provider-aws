@@ -37,10 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** At least one of `size` or `snapshot_id` is required.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Required) Availability zone where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `final_snapshot` - (Optional) If true, snapshot will be created before volume deletion. Any tags on the volume will be migrated to the snapshot. By default set to false
@@ -53,6 +52,9 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) Throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 * `type` - (Optional) Type of EBS volume. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
+* `volume_initialization_rate` - (Optional) EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume. This argument can only be set if `snapshot_id` is specified.
+
+~> **NOTE:** At least one of `size` or `snapshot_id` is required.
 
 ~> **NOTE:** When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
 
@@ -98,4 +100,4 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d3946511e5459dcf59f33fff8fdf60894c5cc7a1d184d890f2ec9176c23c83e2 -->
+<!-- cache-key: cdktf-0.20.8 input-a9ea1d78e382394d8a27b8c9cf535dddafb3feee92faa9feef5a99220ddf2398 -->

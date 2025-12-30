@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts
@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,20 +38,24 @@ const (
 
 // @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(serialize=true)
-func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRotation{}
+// Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
+func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &rotationResource{}
 
 	return r, nil
 }
 
-type resourceRotation struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type rotationResource struct {
+	framework.ResourceWithModel[rotationResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -185,9 +190,9 @@ func handOffTimeSchema(ctx context.Context, size *int) schema.ListNestedBlock {
 	return listSchema
 }
 
-func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *rotationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var plan resourceRotationData
+	var plan rotationResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -265,9 +270,9 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRotation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *rotationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state resourceRotationData
+	var state rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -277,7 +282,7 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 
 	output, err := findRotationByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -325,9 +330,9 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *rotationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state, plan resourceRotationData
+	var state, plan rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -407,9 +412,9 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *rotationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state resourceRotationData
+	var state rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -438,7 +443,8 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-type resourceRotationData struct {
+type rotationResourceModel struct {
+	framework.WithRegionModel
 	ARN        types.String                                    `tfsdk:"arn"`
 	ContactIds fwtypes.ListValueOf[types.String]               `tfsdk:"contact_ids"`
 	ID         types.String                                    `tfsdk:"id"`
@@ -568,7 +574,7 @@ func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) 
 	out, err := conn.GetRotation(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

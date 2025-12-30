@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -17,7 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,8 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,6 +40,7 @@ const (
 )
 
 // @SDKResource("aws_cloudformation_stack_set_instance", name="Stack Set Instance")
+// @Region(overrideEnabled=false)
 func resourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
@@ -180,10 +182,12 @@ func resourceStackSetInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"stack_set_instance_region"},
+				Deprecated:    "region is deprecated. Use stack_set_instance_region instead.",
 			},
 			"retain_stack": {
 				Type:     schema.TypeBool,
@@ -216,6 +220,13 @@ func resourceStackSetInstance() *schema.Resource {
 					},
 				},
 			},
+			"stack_set_instance_region": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrRegion},
+			},
 			"stack_set_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -231,7 +242,9 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
+	if v, ok := d.GetOk("stack_set_instance_region"); ok {
+		region = v.(string)
+	} else if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -279,8 +292,8 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
 	}
 
-	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*cloudformation.CreateStackInstancesOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
 			return conn.CreateStackInstances(ctx, input)
@@ -312,15 +325,16 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	d.Set(names.AttrRegion, region)
+	d.Set("stack_set_instance_region", region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)
 
-	if itypes.IsAWSAccountID(accountOrOrgID) {
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
 		// Stack instances deployed by account ID
 		stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -344,7 +358,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 		summaries, err := findStackInstanceSummariesByFourPartKey(ctx, conn, stackSetName, region, callAs, orgIDs)
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -442,7 +456,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteStackInstances(ctx, input)
 	})
 
@@ -489,7 +503,7 @@ func findStackInstanceSummariesByFourPartKey(ctx context.Context, conn *cloudfor
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.StackSetNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -522,7 +536,7 @@ func findStackInstanceByFourPartKey(ctx context.Context, conn *cloudformation.Cl
 	output, err := conn.DescribeStackInstance(ctx, input)
 
 	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

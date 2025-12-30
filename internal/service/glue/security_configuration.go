@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -21,11 +21,12 @@ import (
 )
 
 // @SDKResource("aws_glue_security_configuration", name="Security Configuration")
-func ResourceSecurityConfiguration() *schema.Resource {
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
 		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -180,7 +181,7 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
-	err := DeleteSecurityConfiguration(ctx, conn, d.Id())
+	err := deleteSecurityConfiguration(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Security Configuration (%s): %s", d.Id(), err)
 	}
@@ -188,7 +189,7 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func DeleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name string) error {
+func deleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteSecurityConfigurationInput{
 		Name: aws.String(name),
 	}

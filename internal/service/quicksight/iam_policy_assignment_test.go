@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func TestAccQuickSightIAMPolicyAssignment_basic(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", string(awstypes.AssignmentStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", string(awstypes.AssignmentStatusDraft)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", string(awstypes.AssignmentStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", string(awstypes.AssignmentStatusDisabled)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 				),
 			},
 		},
@@ -141,7 +141,7 @@ func TestAccQuickSightIAMPolicyAssignment_identities(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", string(awstypes.AssignmentStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 					resource.TestCheckResourceAttr(resourceName, "identities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identities.0.user.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "identities.0.user.0", userResourceName, names.AttrUserName),
@@ -188,7 +188,7 @@ func testAccCheckIAMPolicyAssignmentDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfquicksight.FindIAMPolicyAssignmentByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], rs.Primary.Attributes["assignment_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

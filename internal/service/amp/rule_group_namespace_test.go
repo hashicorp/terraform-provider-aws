@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -13,14 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var rgn types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
@@ -65,7 +64,6 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	var rgn types.RuleGroupsNamespaceDescription
 
@@ -122,7 +120,7 @@ func testAccCheckRuleGroupNamespaceDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfamp.FindRuleGroupNamespaceByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

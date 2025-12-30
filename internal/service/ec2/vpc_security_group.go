@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -15,7 +15,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,8 +36,11 @@ import (
 
 // @SDKResource("aws_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroup")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -45,10 +48,6 @@ func resourceSecurityGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceSecurityGroupRead,
 		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
 		DeleteWithoutTimeout: resourceSecurityGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -187,7 +186,6 @@ var (
 
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -267,12 +265,12 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	sg, err := findSecurityGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -294,14 +292,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
 
 	ownerID := aws.ToString(sg.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("security-group/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, securityGroupARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, sg.Description)
 	d.Set(names.AttrName, sg.GroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(sg.GroupName)))
@@ -323,7 +314,6 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	group, err := findSecurityGroupByID(ctx, conn, d.Id())
@@ -354,7 +344,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 	ctx = tflog.SetField(ctx, names.AttrVPCID, d.Get(names.AttrVPCID))
 
-	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteLingeringENIs(ctx, conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
@@ -378,7 +368,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		firstShortRetry, // short initial attempt followed by full length attempt
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
 			})
@@ -398,7 +388,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
 			remainingRetry,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
 					GroupId: aws.String(d.Id()),
 				})
@@ -415,7 +405,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecurityGroupByID(ctx, conn, d.Id())
 	})
 
@@ -424,6 +414,10 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func securityGroupARN(ctx context.Context, c *conns.AWSClient, accountID, sgID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "security-group/"+sgID)
 }
 
 // forceRevokeSecurityGroupRules revokes all of the security group's ingress & egress rules
@@ -438,7 +432,7 @@ func forceRevokeSecurityGroupRules(ctx context.Context, conn *ec2.Client, id str
 
 	rules, err := rulesInSGsTouchingThis(ctx, conn, id, searchAll)
 	if err != nil {
-		return fmt.Errorf("describing security group rules: %s", err)
+		return fmt.Errorf("describing security group rules: %w", err)
 	}
 
 	for _, rule := range rules {
@@ -502,7 +496,7 @@ func rulesInSGsTouchingThis(ctx context.Context, conn *ec2.Client, id string, se
 	} else {
 		sgs, err := relatedSGs(ctx, conn, id)
 		if err != nil {
-			return nil, fmt.Errorf("describing security group rules: %s", err)
+			return nil, fmt.Errorf("describing security group rules: %w", err)
 		}
 
 		input = &ec2.DescribeSecurityGroupRulesInput{
@@ -583,11 +577,11 @@ func relatedSGs(ctx context.Context, conn *ec2.Client, id string) ([]string, err
 func securityGroupRuleHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
+	fmt.Fprintf(&buf, "%d-", m["from_port"].(int))
+	fmt.Fprintf(&buf, "%d-", m["to_port"].(int))
 	p := protocolForValue(m[names.AttrProtocol].(string))
-	buf.WriteString(fmt.Sprintf("%s-", p))
-	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
+	fmt.Fprintf(&buf, "%s-", p)
+	fmt.Fprintf(&buf, "%t-", m["self"].(bool))
 
 	// We need to make sure to sort the strings below so that we always
 	// generate the same hash code no matter what is in the set.
@@ -600,7 +594,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m["ipv6_cidr_blocks"]; ok {
@@ -612,7 +606,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m["prefix_list_ids"]; ok {
@@ -624,7 +618,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m[names.AttrSecurityGroups]; ok {
@@ -636,11 +630,11 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if m[names.AttrDescription].(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDescription].(string)))
+		fmt.Fprintf(&buf, "%s-", m[names.AttrDescription].(string))
 	}
 
 	return create.StringHashcode(buf.String())
@@ -1431,11 +1425,11 @@ func securityGroupExpandRules(rules *schema.Set) *schema.Set {
 // to a hash to use as a key in Set.
 func idCollapseHash(rType, protocol string, toPort, fromPort int32, description string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", rType))
-	buf.WriteString(fmt.Sprintf("%d-", toPort))
-	buf.WriteString(fmt.Sprintf("%d-", fromPort))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
-	buf.WriteString(fmt.Sprintf("%s-", description))
+	fmt.Fprintf(&buf, "%s-", rType)
+	fmt.Fprintf(&buf, "%d-", toPort)
+	fmt.Fprintf(&buf, "%d-", fromPort)
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(protocol))
+	fmt.Fprintf(&buf, "%s-", description)
 
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
@@ -1444,11 +1438,11 @@ func idCollapseHash(rType, protocol string, toPort, fromPort int32, description 
 // maps
 func idHash(rType, protocol string, toPort, fromPort int32, self bool) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", rType))
-	buf.WriteString(fmt.Sprintf("%d-", toPort))
-	buf.WriteString(fmt.Sprintf("%d-", fromPort))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
-	buf.WriteString(fmt.Sprintf("%t-", self))
+	fmt.Fprintf(&buf, "%s-", rType)
+	fmt.Fprintf(&buf, "%d-", toPort)
+	fmt.Fprintf(&buf, "%d-", fromPort)
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(protocol))
+	fmt.Fprintf(&buf, "%t-", self)
 
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }

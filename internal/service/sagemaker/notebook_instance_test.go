@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +43,6 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
@@ -51,7 +50,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
@@ -410,10 +409,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v1"),
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
 				),
 			},
 			{
@@ -422,17 +421,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v2"),
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2023-v1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
-				),
-			},
-			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v3"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2023-v1"),
 				),
 			},
 		},
@@ -462,7 +454,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 			{
@@ -477,7 +469,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 		},
@@ -689,7 +681,7 @@ func testAccCheckNotebookInstanceDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfsagemaker.FindNotebookInstanceByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -959,7 +951,9 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccNotebookInstanceConfig_kms(rName string) string {
 	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

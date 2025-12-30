@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -21,9 +21,41 @@ func dataSourceDirectory() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
+			"active_directory_config": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDomainName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account_secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"customer_user_name": {
 				Type:     schema.TypeString,
@@ -113,6 +145,14 @@ func dataSourceDirectory() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_identity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -181,7 +221,19 @@ func dataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
+			"workspace_directory_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"workspace_directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"workspace_security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"workspace_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -201,7 +253,13 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.SetId(directoryID)
+	if err := d.Set("active_directory_config", flattenActiveDirectoryConfig(directory.ActiveDirectoryConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting active_directory_config: %s", err)
+	}
 	d.Set(names.AttrAlias, directory.Alias)
+	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
+	}
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
@@ -216,13 +274,18 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
 	}
 	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
+	d.Set("user_identity_type", directory.UserIdentityType)
 	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
 	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
+	d.Set("workspace_directory_description", directory.WorkspaceDirectoryDescription)
+	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
+	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }

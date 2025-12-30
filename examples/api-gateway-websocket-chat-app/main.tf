@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 #
@@ -226,7 +226,7 @@ resource "aws_iam_policy" "OnConnectCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -235,7 +235,7 @@ resource "aws_iam_policy" "OnConnectCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnConnectFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnConnectFunction.function_name}:*"
       ]
     }
   ]
@@ -310,7 +310,7 @@ resource "aws_iam_policy" "OnDisconnectCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -319,7 +319,7 @@ resource "aws_iam_policy" "OnDisconnectCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnDisconnectFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnDisconnectFunction.function_name}:*"
       ]
     }
   ]
@@ -394,7 +394,7 @@ resource "aws_iam_policy" "SendMessageCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -403,7 +403,7 @@ resource "aws_iam_policy" "SendMessageCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.SendMessageFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.SendMessageFunction.function_name}:*"
       ]
     }
   ]

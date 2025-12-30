@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -11,13 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +38,8 @@ func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          types.MetricTypeAggregateLatency,
-				ValidateDiagFunc: enum.Validate[types.MetricType](),
+				Default:          awstypes.MetricTypeAggregateLatency,
+				ValidateDiagFunc: enum.Validate[awstypes.MetricType](),
 			},
 			"period": {
 				Type:     schema.TypeString,
@@ -54,8 +54,8 @@ func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          types.StatisticTypeP50,
-				ValidateDiagFunc: enum.Validate[types.StatisticType](),
+				Default:          awstypes.StatisticTypeP50,
+				ValidateDiagFunc: enum.Validate[awstypes.StatisticType](),
 			},
 		},
 	}
@@ -72,9 +72,9 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	id := networkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
 	input := &ec2.EnableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
-		Metric:      types.MetricType(metric),
+		Metric:      awstypes.MetricType(metric),
 		Source:      aws.String(source),
-		Statistic:   types.StatisticType(statistic),
+		Statistic:   awstypes.StatisticType(statistic),
 	}
 
 	_, err := conn.EnableAwsNetworkPerformanceMetricSubscription(ctx, input)
@@ -99,7 +99,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 
 	subscription, err := findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 AWS Network Performance Metric Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,9 +130,9 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 	log.Printf("[DEBUG] Deleting EC2 AWS Network Performance Metric Subscriptione: %s", d.Id())
 	input := ec2.DisableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
-		Metric:      types.MetricType(metric),
+		Metric:      awstypes.MetricType(metric),
 		Source:      aws.String(source),
-		Statistic:   types.StatisticType(statistic),
+		Statistic:   awstypes.StatisticType(statistic),
 	}
 	_, err = conn.DisableAwsNetworkPerformanceMetricSubscription(ctx, &input)
 

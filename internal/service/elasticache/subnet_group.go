@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -13,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -131,7 +131,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	group, err := findCacheSubnetGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,7 +178,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteCacheSubnetGroup(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
@@ -235,8 +235,7 @@ func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input 
 
 		if errs.IsA[*awstypes.CacheSubnetGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

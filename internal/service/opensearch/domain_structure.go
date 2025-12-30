@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -52,6 +52,52 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 	}
 
 	return &config
+}
+
+func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AIMLOptionsInput{}
+
+	if v, ok := tfMap["natural_language_query_generation_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NaturalLanguageQueryGenerationOptions = expandNaturalLanguageQueryGenerationOptionsInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_vectors_engine"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3VectorsEngine = expandS3VectorsEngine(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandNaturalLanguageQueryGenerationOptionsInput(tfMap map[string]any) *awstypes.NaturalLanguageQueryGenerationOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NaturalLanguageQueryGenerationOptionsInput{}
+
+	if v, ok := tfMap["desired_state"].(string); ok && v != "" {
+		apiObject.DesiredState = awstypes.NaturalLanguageQueryGenerationDesiredState(v)
+	}
+
+	return apiObject
+}
+
+func expandS3VectorsEngine(tfMap map[string]any) *awstypes.S3VectorsEngine {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3VectorsEngine{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
 func expandAutoTuneOptions(tfMap map[string]any) *awstypes.AutoTuneOptions {
@@ -248,6 +294,48 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 	return []map[string]any{m}
 }
 
+func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.NaturalLanguageQueryGenerationOptions; v != nil {
+		tfMap["natural_language_query_generation_options"] = []any{flattenNaturalLanguageQueryGenerationOptionsOutput(v)}
+	}
+
+	if v := apiObject.S3VectorsEngine; v != nil {
+		tfMap["s3_vectors_engine"] = []any{flattenS3VectorsEngine(v)}
+	}
+
+	return tfMap
+}
+
+func flattenNaturalLanguageQueryGenerationOptionsOutput(apiObject *awstypes.NaturalLanguageQueryGenerationOptionsOutput) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"desired_state": apiObject.DesiredState,
+	}
+
+	return tfMap
+}
+
+func flattenS3VectorsEngine(apiObject *awstypes.S3VectorsEngine) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
+}
+
 func flattenAutoTuneOptions(autoTuneOptions *awstypes.AutoTuneOptions) map[string]any {
 	if autoTuneOptions == nil {
 		return nil
@@ -349,35 +437,109 @@ func getMasterUserOptions(d *schema.ResourceData) []any {
 	return []any{}
 }
 
-func expandLogPublishingOptions(m *schema.Set) map[string]awstypes.LogPublishingOption {
-	options := make(map[string]awstypes.LogPublishingOption)
+func expandIdentityCenterOptions(tfList []any) *awstypes.IdentityCenterOptionsInput {
+	if len(tfList) == 0 {
+		return nil
+	}
 
-	for _, vv := range m.List() {
-		lo := vv.(map[string]any)
-		options[lo["log_type"].(string)] = awstypes.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
-			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
+	if tfList[0] == nil {
+		return &awstypes.IdentityCenterOptionsInput{}
+	}
+
+	apiObject := &awstypes.IdentityCenterOptionsInput{}
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["enabled_api_access"].(bool); ok {
+		apiObject.EnabledAPIAccess = aws.Bool(v)
+	}
+
+	if apiObject.EnabledAPIAccess != nil && aws.ToBool(apiObject.EnabledAPIAccess) {
+		if v, ok := tfMap["identity_center_instance_arn"].(string); ok && v != "" {
+			apiObject.IdentityCenterInstanceARN = aws.String(v)
+		}
+
+		if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+			apiObject.RolesKey = awstypes.RolesKeyIdCOption(v)
+		}
+
+		if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+			apiObject.SubjectKey = awstypes.SubjectKeyIdCOption(v)
 		}
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenLogPublishingOptions(o map[string]awstypes.LogPublishingOption) []map[string]any {
-	m := make([]map[string]any, 0)
-	for logType, val := range o {
-		mm := map[string]any{
-			"log_type":        logType,
-			names.AttrEnabled: aws.ToBool(val.Enabled),
-		}
-
-		if val.CloudWatchLogsLogGroupArn != nil {
-			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
-		}
-
-		m = append(m, mm)
+func flattenIdentityCenterOptions(apiObject *awstypes.IdentityCenterOptions) []any {
+	if apiObject == nil {
+		return nil
 	}
-	return m
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnabledAPIAccess; v != nil {
+		tfMap["enabled_api_access"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IdentityCenterInstanceARN; v != nil {
+		tfMap["identity_center_instance_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RolesKey; v != "" {
+		tfMap["roles_key"] = v
+	}
+
+	if v := apiObject.SubjectKey; v != "" {
+		tfMap["subject_key"] = v
+	}
+
+	return []any{tfMap}
+}
+
+func expandLogPublishingOptions(tfList []any) map[string]awstypes.LogPublishingOption {
+	apiObjects := make(map[string]awstypes.LogPublishingOption)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.LogPublishingOption{
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		}
+
+		if v, ok := tfMap[names.AttrCloudWatchLogGroupARN].(string); ok && v != "" {
+			apiObject.CloudWatchLogsLogGroupArn = aws.String(v)
+		}
+
+		apiObjects[tfMap["log_type"].(string)] = apiObject
+	}
+
+	return apiObjects
+}
+
+func flattenLogPublishingOptions(apiObjects map[string]awstypes.LogPublishingOption) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0)
+
+	for k, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+			"log_type":        k,
+		}
+
+		if v := apiObject.CloudWatchLogsLogGroupArn; v != nil {
+			tfMap[names.AttrCloudWatchLogGroupARN] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenOffPeakWindowOptions(apiObject *awstypes.OffPeakWindowOptions) map[string]any {

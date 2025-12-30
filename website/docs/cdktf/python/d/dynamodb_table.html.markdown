@@ -35,11 +35,14 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DynamoDB table.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-1f59fb72cfbdb2e6f0ab733246fe01d5f9b99e7b551e1073e5c40c8c404bd9ef -->
+<!-- cache-key: cdktf-0.20.8 input-0bfdf8c95cbe08da6f8968a1ec67a8cd912dda60ce5c03027c5c468eeb38ff17 -->

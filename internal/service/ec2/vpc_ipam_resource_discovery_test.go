@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -219,7 +219,7 @@ func testAccCheckIPAMResourceDiscoveryDestroy(ctx context.Context) resource.Test
 
 			_, err := tfec2.FindIPAMResourceDiscoveryByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -240,7 +240,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `
@@ -251,7 +251,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test ipam"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `
@@ -268,10 +268,10 @@ data "aws_region" "alternate" {
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   operating_regions {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `)
@@ -284,7 +284,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tags = {
     %[1]q = %[2]q
@@ -300,7 +300,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "test" {
   description = "test"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tags = {
     %[1]q = %[2]q

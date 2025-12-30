@@ -40,6 +40,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `comment` (Optional) - An optional comment for the origin access identity.
 
 ## Attribute Reference
@@ -165,4 +167,4 @@ Using `terraform import`, import Cloudfront Origin Access Identities using the `
 % terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d6ab820ca9c6701346daa4f24f66335dfd1791bcfe90ac8786425aadde39b3b3 -->
+<!-- cache-key: cdktf-0.20.8 input-f9e3ca020e7da859af5c121870556deeefa2c6e2dd34de273fcd4a5eb73a8ce0 -->

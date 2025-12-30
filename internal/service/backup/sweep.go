@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -84,7 +84,7 @@ func sweepFrameworks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListFrameworksInput{}
@@ -123,7 +123,7 @@ func sweepPlans(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupPlansInput{}
@@ -169,7 +169,7 @@ func sweepSelections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupPlansInput{}
@@ -231,7 +231,7 @@ func sweepReportPlans(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListReportPlansInput{}
@@ -270,7 +270,7 @@ func sweepRestoreTestingPlans(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListRestoreTestingPlansInput{}
@@ -306,7 +306,7 @@ func sweepRestoreTestingSelections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListRestoreTestingPlansInput{}
@@ -359,7 +359,7 @@ func sweepVaultLockConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupVaultsInput{}
@@ -398,7 +398,7 @@ func sweepVaultNotifications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupVaultsInput{}

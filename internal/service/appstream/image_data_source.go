@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -33,7 +33,7 @@ func newImageDataSource(context.Context) (datasource.DataSourceWithConfigure, er
 }
 
 type imageDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[imageDataSourceModel]
 }
 
 func (d *imageDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -190,7 +190,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -207,6 +207,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 }
 
 type imageDataSourceModel struct {
+	framework.WithRegionModel
 	Applications                fwtypes.ListNestedObjectValueOf[applicationModel]            `tfsdk:"applications"`
 	AppStreamAgentVersion       types.String                                                 `tfsdk:"appstream_agent_version"`
 	ARN                         fwtypes.ARN                                                  `tfsdk:"arn"`

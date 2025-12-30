@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -13,18 +13,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_ssoadmin_permission_set_inline_policy", name="Permission Set Inline Policy")
-func ResourcePermissionSetInlinePolicy() *schema.Resource {
+func resourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetInlinePolicyPut,
 		ReadWithoutTimeout:   resourcePermissionSetInlinePolicyRead,
@@ -110,9 +111,9 @@ func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set Inline Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -166,7 +167,7 @@ func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func FindPermissionSetInlinePolicy(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (string, error) {
+func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (string, error) {
 	input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -175,7 +176,7 @@ func FindPermissionSetInlinePolicy(ctx context.Context, conn *ssoadmin.Client, p
 	output, err := conn.GetInlinePolicyForPermissionSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

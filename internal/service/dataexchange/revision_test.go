@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,10 +38,13 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{revision_id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+/revisions/.+`)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -164,7 +169,7 @@ func testAccCheckRevisionExists(ctx context.Context, n string, v *dataexchange.G
 			return err
 		}
 
-		resp, err := tfdataexchange.FindRevisionById(ctx, conn, dataSetId, revisionId)
+		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
 		if err != nil {
 			return err
 		}
@@ -193,8 +198,8 @@ func testAccCheckRevisionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Try to find the resource
-			_, err = tfdataexchange.FindRevisionById(ctx, conn, dataSetId, revisionId)
-			if tfresource.NotFound(err) {
+			_, err = tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -6,13 +6,11 @@ package ec2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -23,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -808,11 +806,12 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Fleet %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -822,14 +821,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Fleet (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("fleet/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, fleetARN(ctx, c, d.Id()))
 	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 	if fleet.Instances != nil {
@@ -1625,4 +1617,7 @@ func flattenTargetCapacitySpecification(apiObject *awstypes.TargetCapacitySpecif
 	}
 
 	return tfMap
+}
+func fleetARN(ctx context.Context, c *conns.AWSClient, fleetID string) string {
+	return c.RegionalARN(ctx, names.EC2, "fleet/"+fleetID)
 }

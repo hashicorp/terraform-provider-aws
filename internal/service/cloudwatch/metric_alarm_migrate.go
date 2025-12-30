@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -17,7 +18,7 @@ func MetricAlarmMigrateState(
 		log.Println("[INFO] Found AWS CloudWatch Metric Alarm State v0; migrating to v1")
 		return migrateMetricAlarmStateV0toV1(is)
 	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
+		return is, smarterr.NewError(fmt.Errorf("Unexpected schema version: %d", v))
 	}
 }
 

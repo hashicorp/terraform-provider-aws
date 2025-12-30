@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -15,58 +15,41 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_quicksight_role_membership", name="Role Membership")
-func newResourceRoleMembership(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceRoleMembership{}, nil
+func newRoleMembershipResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &roleMembershipResource{}, nil
 }
 
-const (
-	ResNameRoleMembership = "Role Membership"
-)
-
-type resourceRoleMembership struct {
-	framework.ResourceWithConfigure
+type roleMembershipResource struct {
+	framework.ResourceWithModel[roleMembershipResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceRoleMembership) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *roleMembershipResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"member_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrNamespace: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("default"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrNamespace: quicksightschema.NamespaceAttribute(),
 			names.AttrRole: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.Role](),
 				Required:   true,
@@ -78,153 +61,159 @@ func (r *resourceRoleMembership) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceRoleMembership) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan resourceRoleMembershipModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *roleMembershipResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data roleMembershipResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
-	input := quicksight.CreateRoleMembershipInput{
-		AwsAccountId: plan.AWSAccountID.ValueStringPointer(),
-		MemberName:   plan.MemberName.ValueStringPointer(),
-		Namespace:    plan.Namespace.ValueStringPointer(),
-		Role:         plan.Role.ValueEnum(),
+	conn := r.Meta().QuickSightClient(ctx)
+
+	var input quicksight.CreateRoleMembershipInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := conn.CreateRoleMembership(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameRoleMembership, plan.MemberName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Quicksight Role (%s) Membership (%s)", data.Role.ValueString(), data.MemberName.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceRoleMembership) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *roleMembershipResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data roleMembershipResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRoleMembershipModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	err := findRoleMembershipByFourPartKey(ctx, conn, data.AWSAccountID.ValueString(), data.Namespace.ValueString(), data.Role.ValueEnum(), data.MemberName.ValueString())
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	err := findRoleMembershipByMultiPartKey(ctx, conn, state.AWSAccountID.ValueString(), state.Namespace.ValueString(), state.Role.ValueEnum(), state.MemberName.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, ResNameRoleMembership, state.MemberName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Quicksight Role (%s) Membership (%s)", data.Role.ValueString(), data.MemberName.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceRoleMembership) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var state resourceRoleMembershipModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *roleMembershipResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data roleMembershipResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := quicksight.DeleteRoleMembershipInput{
-		AwsAccountId: state.AWSAccountID.ValueStringPointer(),
-		MemberName:   state.MemberName.ValueStringPointer(),
-		Namespace:    state.Namespace.ValueStringPointer(),
-		Role:         state.Role.ValueEnum(),
+	conn := r.Meta().QuickSightClient(ctx)
+
+	var input quicksight.DeleteRoleMembershipInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := conn.DeleteRoleMembership(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, ResNameRoleMembership, state.MemberName.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Quicksight Role (%s) Membership (%s)", data.Role.ValueString(), data.MemberName.ValueString()), err.Error())
+
 		return
 	}
 }
 
-const roleMembershipIDParts = 4
+func (r *roleMembershipResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		roleMembershipIDParts = 4
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, roleMembershipIDParts, false)
 
-func (r *resourceRoleMembership) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, roleMembershipIDParts, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: aws_account_id,namespace,role,member_name. Got: %q", req.ID),
-		)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAWSAccountID), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrNamespace), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrRole), parts[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("member_name"), parts[3])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrAWSAccountID), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrNamespace), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRole), parts[2])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("member_name"), parts[3])...)
 }
 
-// findRoleMembershipByMultiPartKey verifies the existence of a role membership
+// findRoleMembershipByFourPartKey verifies the existence of a role membership
 //
 // No value is returned, but the error will be non-nil if no matching member name
 // is found in the list of group members for the provided role.
-func findRoleMembershipByMultiPartKey(ctx context.Context, conn *quicksight.Client, accountID string, namespace string, role awstypes.Role, member string) error {
+func findRoleMembershipByFourPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string, role awstypes.Role, member string) error {
 	input := quicksight.ListRoleMembershipsInput{
-		AwsAccountId: aws.String(accountID),
+		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 		Role:         role,
 	}
 
-	out, err := findRoleMemberships(ctx, conn, &input)
+	members, err := findRoleMembers(ctx, conn, &input)
+
 	if err != nil {
 		return err
 	}
 
-	if slices.Contains(out, member) {
+	if slices.Contains(members, member) {
 		return nil
 	}
 
-	return &retry.NotFoundError{
+	return &sdkretry.NotFoundError{
 		LastRequest: input,
 	}
 }
 
-func findRoleMemberships(ctx context.Context, conn *quicksight.Client, input *quicksight.ListRoleMembershipsInput) ([]string, error) {
-	paginator := quicksight.NewListRoleMembershipsPaginator(conn, input)
+func findRoleMembers(ctx context.Context, conn *quicksight.Client, input *quicksight.ListRoleMembershipsInput) ([]string, error) {
+	var output []string
 
-	var memberNames []string
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := quicksight.NewListRoleMembershipsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
 			return nil, err
 		}
 
-		memberNames = append(memberNames, page.MembersList...)
+		output = append(output, page.MembersList...)
 	}
 
-	return memberNames, nil
+	return output, nil
 }
 
-type resourceRoleMembershipModel struct {
+type roleMembershipResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID types.String                      `tfsdk:"aws_account_id"`
 	MemberName   types.String                      `tfsdk:"member_name"`
 	Namespace    types.String                      `tfsdk:"namespace"`

@@ -1,23 +1,20 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -122,40 +119,35 @@ func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resour
 				continue
 			}
 
-			_, err := tfredshift.FindDataShareConsumerAssociationByID(ctx, conn, rs.Primary.ID)
-			if errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
-				errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "either doesn't exist or isn't associated with this data consumer") {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameDataShareConsumerAssociation, rs.Primary.ID, err)
+			_, err := tfredshift.FindDataShareConsumerAssociationByFourPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["associate_entire_account"], rs.Primary.Attributes["consumer_arn"], rs.Primary.Attributes["consumer_region"])
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameDataShareConsumerAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Data Share Consumer Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDataShareConsumerAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckDataShareConsumerAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareConsumerAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareConsumerAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		_, err := tfredshift.FindDataShareConsumerAssociationByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareConsumerAssociation, rs.Primary.ID, err)
-		}
 
-		return nil
+		_, err := tfredshift.FindDataShareConsumerAssociationByFourPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["associate_entire_account"], rs.Primary.Attributes["consumer_arn"], rs.Primary.Attributes["consumer_region"])
+
+		return err
 	}
 }
 
@@ -198,7 +190,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -222,7 +214,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   depends_on = [aws_redshift_data_share_authorization.test]
 
   data_share_arn  = local.data_share_arn
-  consumer_region = data.aws_region.current.name
+  consumer_region = data.aws_region.current.region
 }
 `)
 }

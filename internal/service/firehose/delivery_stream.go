@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package firehose
@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -858,6 +859,12 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"append_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 							"buffering_interval": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -1534,7 +1541,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 		return conn.CreateDeliveryStream(ctx, input)
 	})
 
@@ -1577,7 +1584,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 	sn := d.Get(names.AttrName).(string)
 	s, err := findDeliveryStreamByName(ctx, conn, sn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1730,7 +1737,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 		}
 
-		_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
 
@@ -1802,7 +1809,7 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func retryDeliveryStreamOp(ctx context.Context, f func() (any, error)) (any, error) {
+func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, error)) (any, error) {
 	return tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
@@ -1836,7 +1843,7 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	output, err := conn.DescribeDeliveryStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1853,11 +1860,11 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	return output.DeliveryStreamDescription, nil
 }
 
-func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
+func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeliveryStreamByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1870,7 +1877,7 @@ func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name strin
 }
 
 func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamStatusCreating),
 		Target:  enum.Slice(types.DeliveryStreamStatusActive),
 		Refresh: statusDeliveryStream(ctx, conn, name),
@@ -1891,7 +1898,7 @@ func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name 
 }
 
 func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDeliveryStream(ctx, conn, name),
@@ -1924,11 +1931,11 @@ func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *
 	return output.DeliveryStreamEncryptionConfiguration, nil
 }
 
-func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
+func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeliveryStreamEncryptionConfigurationByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1941,7 +1948,7 @@ func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *fire
 }
 
 func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamEncryptionStatusEnabling),
 		Target:  enum.Slice(types.DeliveryStreamEncryptionStatusEnabled),
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
@@ -1962,7 +1969,7 @@ func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Cli
 }
 
 func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamEncryptionConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamEncryptionStatusDisabling),
 		Target:  enum.Slice(types.DeliveryStreamEncryptionStatusDisabled),
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
@@ -2543,6 +2550,10 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
+	}
+
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
@@ -2574,6 +2585,10 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		RoleARN: aws.String(roleARN),
+	}
+
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
 	}
 
 	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
@@ -4243,6 +4258,7 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 	}
 
 	tfMap := map[string]any{
+		"append_only":      aws.ToBool(apiObject.AppendOnly),
 		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
 		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
 		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),

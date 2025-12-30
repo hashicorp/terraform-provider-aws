@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1035,7 +1035,7 @@ func testAccCheckClusterInstanceDestroyWithProvider(ctx context.Context) acctest
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1136,7 +1136,7 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1399,7 +1399,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1663,7 +1665,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -1714,6 +1716,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName,
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {
@@ -1743,6 +1746,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rN
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {

@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `taskDefinition` - (Required) Family for the latest ACTIVE revision, family and revision (family:revision) for a specific revision in the family, the ARN of the task definition to access to.
 
 ## Attribute Reference
@@ -74,12 +75,11 @@ This data source exports the following attributes in addition to the arguments a
 * `arnWithoutRevision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
 * `containerDefinitions` - A list of valid [container definitions](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html) provided as a single valid JSON document. Please note that you should only provide values that are part of the container definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
 * `cpu` - Number of cpu units used by the task. If the `requiresCompatibilities` is `FARGATE` this field is required.
-* `enable_fault_injection` - Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
+* `enableFaultInjection` - Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
 * `ephemeralStorage` - The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
 * `executionRoleArn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `family` - A unique name for your task definition.
 The following arguments are optional:
-* `inferenceAccelerator` - Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipcMode` - IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - Amount (in MiB) of memory used by the task. If the `requiresCompatibilities` is `FARGATE` this field is required.
 * `networkMode` - Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -96,11 +96,6 @@ The following arguments are optional:
 ### ephemeral_storage
 
 * `sizeInGib` - The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
-
-### inference_accelerator
-
-* `deviceName` - Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `deviceType` - Elastic Inference accelerator type to use.
 
 ### placement_constraints
 
@@ -166,4 +161,4 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 * `credentialsParameter` - The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
 * `domain` - A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
-<!-- cache-key: cdktf-0.20.8 input-6305043748207f7a0a834f43375e35cec6369e4696dce4b7463f006e7e3e311e -->
+<!-- cache-key: cdktf-0.20.8 input-573bbdf52af72c6f171581e27c36299ff28f1cb070c1bc075da4c0617ea4dfba -->

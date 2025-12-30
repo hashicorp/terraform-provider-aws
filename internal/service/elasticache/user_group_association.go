@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -13,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -72,7 +72,7 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 		UserIdsToAdd: []string{userID},
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.ModifyUserGroup(ctx, input)
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
@@ -99,7 +99,7 @@ func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	err = findUserGroupAssociationByTwoPartKey(ctx, conn, userGroupID, userID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,7 +126,7 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	userGroupID, userID := parts[0], parts[1]
 
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.InvalidUserGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.ModifyUserGroup(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
 			UserIdsToRemove: []string{userID},

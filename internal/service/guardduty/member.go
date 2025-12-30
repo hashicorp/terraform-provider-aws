@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -25,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_member", name="Member")
-func ResourceMember() *schema.Resource {
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
@@ -253,34 +252,25 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 
 	// wait until e-mail verification finishes
 	var out *guardduty.GetMembersOutput
-	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		log.Printf("[DEBUG] Reading GuardDuty Member: %+v", input)
 		var err error
 		out, err = conn.GetMembers(ctx, &input)
 
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %s", accountID, err))
+			return tfresource.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %w", accountID, err))
 		}
 
 		retryable, err := memberInvited(out, accountID)
 		if err != nil {
 			if retryable {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.GetMembers(ctx, &input)
-
-		if err != nil {
-			return fmt.Errorf("reading GuardDuty member: %w", err)
-		}
-		_, err = memberInvited(out, accountID)
-		return err
-	}
 	if err != nil {
 		return fmt.Errorf("waiting for GuardDuty email verification: %w", err)
 	}

@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -53,7 +51,8 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 
 func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: newAttributeFilterList(map[string]string{
@@ -92,14 +91,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 
 	d.SetId(aws.ToString(transitGatewayAttachment.TransitGatewayAttachmentId))
 	resourceOwnerID := aws.ToString(transitGatewayAttachment.ResourceOwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: resourceOwnerID,
-		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, resourceOwnerID, d.Id()))
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 

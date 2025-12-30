@@ -1,0 +1,52 @@
+# Copyright IBM Corp. 2014, 2025
+# SPDX-License-Identifier: MPL-2.0
+
+provider "null" {}
+
+resource "aws_appsync_api" "test" {
+  name = var.rName
+
+  event_config {
+    auth_provider {
+      auth_type = "API_KEY"
+    }
+
+    connection_auth_mode {
+      auth_type = "API_KEY"
+    }
+
+    default_publish_auth_mode {
+      auth_type = "API_KEY"
+    }
+
+    default_subscribe_auth_mode {
+      auth_type = "API_KEY"
+    }
+  }
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
+}
+
+resource "aws_appsync_channel_namespace" "test" {
+  api_id = aws_appsync_api.test.api_id
+  name   = var.rName
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
+}
+
+resource "null_resource" "test" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}

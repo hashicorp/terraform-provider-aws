@@ -64,14 +64,13 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detector_id` - (Required) The detector ID of the member GuardDuty account.
 * `master_account_id` - (Required) AWS account ID for primary account.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - GuardDuty member detector ID
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -104,4 +103,4 @@ Using `terraform import`, import `aws_guardduty_invite_accepter` using the membe
 % terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b368eea7537bdd5e2ab4ccd975cb44eb377f3627dcb046e902234d27ed097808 -->
+<!-- cache-key: cdktf-0.20.8 input-ec2ae241fea545d13f2559428d0029b6a08c250cf7ac0fbaa67a597aba8ecee5 -->

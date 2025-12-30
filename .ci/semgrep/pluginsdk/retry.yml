@@ -1,0 +1,21 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: retry
+    languages: [go]
+    message: Don't use Plugin SDK retry functionality, use internal/retry instead
+    patterns:
+      - pattern: |
+          retry.RetryContext(...)
+      - pattern: |
+          sdkretry.RetryContext(...)
+      - pattern: |
+          retry.RetryableError(...)
+      - pattern: |
+          sdkretry.RetryableError(...)
+      - pattern: |
+          retry.NonRetryableError(...)
+      - pattern: |
+          sdkretry.NonRetryableError(...)
+    severity: WARNING

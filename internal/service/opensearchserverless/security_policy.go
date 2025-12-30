@@ -1,69 +1,58 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_security_policy", name="Security Policy")
-func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSecurityPolicy{}, nil
+func newSecurityPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &securityPolicyResource{}, nil
 }
 
-type resourceSecurityPolicyData struct {
-	Description   types.String                                    `tfsdk:"description"`
-	ID            types.String                                    `tfsdk:"id"`
-	Name          types.String                                    `tfsdk:"name"`
-	Policy        fwtypes.SmithyJSON[document.Interface]          `tfsdk:"policy"`
-	PolicyVersion types.String                                    `tfsdk:"policy_version"`
-	Type          fwtypes.StringEnum[awstypes.SecurityPolicyType] `tfsdk:"type"`
+type securityPolicyResource struct {
+	framework.ResourceWithModel[securityPolicyResourceModel]
 }
 
-const (
-	ResNameSecurityPolicy = "Security Policy"
-)
-
-type resourceSecurityPolicy struct {
-	framework.ResourceWithConfigure
-}
-
-func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *securityPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -72,18 +61,21 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-				Required:   true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				CustomType:  jsontypes.NormalizedType{},
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
 				},
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
-				Required:   true,
+				Description: "Type of security policy. One of `encryption` or `network`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -92,162 +84,161 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceSecurityPolicyData
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
+func (r *securityPolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data securityPolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	in := &opensearchserverless.CreateSecurityPolicyInput{}
-
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input opensearchserverless.CreateSecurityPolicyInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateSecurityPolicy(ctx, in)
+	output, err := conn.CreateSecurityPolicy(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityPolicy, plan.Name.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Serverless Security Policy (%s)", name), err.Error())
+
 		return
 	}
 
-	state := plan
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.SecurityPolicyDetail, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Set values for unknowns.
+	data.ID = fwflex.StringValueToFramework(ctx, name)
+	data.PolicyVersion = fwflex.StringToFramework(ctx, output.SecurityPolicyDetail.PolicyVersion)
 
-	state.ID = flex.StringToFramework(ctx, out.SecurityPolicyDetail.Name)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchServerlessClient(ctx)
-
-	var state resourceSecurityPolicyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *securityPolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data securityPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findSecurityPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findSecurityPolicyByNameAndType(ctx, conn, name, data.Type.ValueString())
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityPolicy, state.ID.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Serverless Security Policy (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *securityPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old securityPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceSecurityPolicyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	diff, diags := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if diff.HasChanges() {
-		input := &opensearchserverless.UpdateSecurityPolicyInput{}
-
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
-		if resp.Diagnostics.HasError() {
+	if !new.Description.Equal(old.Description) || !new.Policy.Equal(old.Policy) {
+		name := fwflex.StringValueFromFramework(ctx, new.ID)
+		var input opensearchserverless.UpdateSecurityPolicyInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input.ClientToken = aws.String(id.UniqueId())
-		input.PolicyVersion = state.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.PolicyVersion = old.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
-		out, err := conn.UpdateSecurityPolicy(ctx, input)
+		output, err := conn.UpdateSecurityPolicy(ctx, &input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Serverless Security Policy (%s)", name), err.Error())
+
 			return
 		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.SecurityPolicyDetail, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+
+		// Set values for unknowns.
+		new.PolicyVersion = fwflex.StringToFramework(ctx, output.SecurityPolicyDetail.PolicyVersion)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *securityPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data securityPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceSecurityPolicyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.ID)
+	input := opensearchserverless.DeleteSecurityPolicyInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Name:        aws.String(name),
+		Type:        data.Type.ValueEnum(),
+	}
+	_, err := conn.DeleteSecurityPolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Name:        state.Name.ValueStringPointer(),
-		Type:        state.Type.ValueEnum(),
-	})
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityPolicy, state.Name.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Serverless Security Policy (%s)", name), err.Error())
+
+		return
 	}
 }
 
-func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, idSeparator)
+func (r *securityPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts := strings.Split(request.ID, resourceIDSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
-		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", request.ID, resourceIDSeparator)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	state := resourceSecurityPolicyData{
-		ID:   types.StringValue(parts[0]),
-		Name: types.StringValue(parts[0]),
-		Type: fwtypes.StringEnumValue(awstypes.SecurityPolicyType(parts[1])),
-	}
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[1])...)
+}
 
-	diags := resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+type securityPolicyResourceModel struct {
+	framework.WithRegionModel
+	Description   types.String                                    `tfsdk:"description"`
+	ID            types.String                                    `tfsdk:"id"`
+	Name          types.String                                    `tfsdk:"name"`
+	Policy        jsontypes.Normalized                            `tfsdk:"policy"`
+	PolicyVersion types.String                                    `tfsdk:"policy_version"`
+	Type          fwtypes.StringEnum[awstypes.SecurityPolicyType] `tfsdk:"type"`
 }

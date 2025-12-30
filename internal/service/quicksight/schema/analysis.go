@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -106,7 +106,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 }
 
 func AnalysisDefinitionDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(AnalysisDefinitionSchema())
+	return sdkv2.ComputedOnlyFromSchema(AnalysisDefinitionSchema())
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {

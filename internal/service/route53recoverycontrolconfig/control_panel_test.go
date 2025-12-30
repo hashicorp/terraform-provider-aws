@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoverycontrolconfig_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +40,8 @@ func testAccControlPanel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "routing_control_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -51,6 +53,65 @@ func testAccControlPanel_basic(t *testing.T) {
 	})
 }
 
+func testAccControlPanel_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckControlPanelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccControlPanelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControlPanelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "routing_control_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccControlPanelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControlPanelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "routing_control_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccControlPanelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControlPanelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "routing_control_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
 func testAccControlPanel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -88,7 +149,7 @@ func testAccCheckControlPanelDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfroute53recoverycontrolconfig.FindControlPanelByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -133,4 +194,29 @@ resource "aws_route53recoverycontrolconfig_control_panel" "test" {
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
 }
 `, rName))
+}
+
+func testAccControlPanelConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccClusterSetUp(rName), fmt.Sprintf(`
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccControlPanelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccClusterSetUp(rName), fmt.Sprintf(`
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

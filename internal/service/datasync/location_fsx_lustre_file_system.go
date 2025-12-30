@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync
@@ -14,13 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,7 +30,11 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx for Lustre File System")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @WrappedImport(false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxLustreOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importStateIdFunc="testAccLocationFSxLustreImportStateID")
 func resourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxLustreFileSystemCreate,
@@ -43,11 +49,13 @@ func resourceLocationFSxLustreFileSystem() *schema.Resource {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxArn", d.Id())
 				}
 
-				DSArn := idParts[0]
+				locationARN := idParts[0]
 				FSxArn := idParts[1]
 
+				if err := importer.RegionalARNValue(ctx, d, names.AttrARN, locationARN); err != nil {
+					return nil, err
+				}
 				d.Set("fsx_filesystem_arn", FSxArn)
-				d.SetId(DSArn)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -128,7 +136,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 
 	output, err := findLocationFSxLustreByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -191,7 +199,7 @@ func findLocationFSxLustreByARN(ctx context.Context, conn *datasync.Client, arn 
 	output, err := conn.DescribeLocationFsxLustre(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

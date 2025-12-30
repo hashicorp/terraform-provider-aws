@@ -48,8 +48,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `network_interface_id` - (Required) The ID of the network interface.
 * `aws_account_id` - (Required) The Amazon Web Services account ID.
 * `permission` - (Required) The type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.
@@ -85,4 +86,4 @@ Using `terraform import`, import Network Interface Permissions using the `networ
 % terraform import aws_network_interface_permission.example eni-perm-056ad97ce2ac377ed
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e26af006e237502162169f9728de6b76e3399b580830ae416e079275252b00db -->
+<!-- cache-key: cdktf-0.20.8 input-e08ff2da3c3c712310790bfe46a4dc45da3e461a4648b91909a843cb15519f1a -->

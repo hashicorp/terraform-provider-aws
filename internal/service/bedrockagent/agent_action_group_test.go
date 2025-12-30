@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -20,8 +20,8 @@ import (
 	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,6 +114,40 @@ func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgentActionGroup_parentActionGroupSignature(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v awstypes.AgentActionGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentActionGroupConfig_parentActionGroupSignature(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action_group_state", "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "agent_id", "aws_bedrockagent_agent.test", "agent_id"),
+					resource.TestCheckResourceAttr(resourceName, "agent_version", "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "parent_action_group_signature", "AMAZON.UserInput"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -291,7 +325,7 @@ func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfbedrockagent.FindAgentActionGroupByThreePartKey(ctx, conn, rs.Primary.Attributes["action_group_id"], rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -342,6 +376,20 @@ resource "aws_bedrockagent_agent_action_group" "test" {
   api_schema {
     payload = file("${path.module}/test-fixtures/api_schema.yaml")
   }
+}
+`, rName))
+}
+
+func testAccAgentActionGroupConfig_parentActionGroupSignature(rName string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentActionGroupConfig_lambda(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_action_group" "test" {
+  action_group_name             = %[1]q
+  agent_id                      = aws_bedrockagent_agent.test.agent_id
+  agent_version                 = "DRAFT"
+  parent_action_group_signature = "AMAZON.UserInput"
+  skip_resource_in_use_check    = true
 }
 `, rName))
 }

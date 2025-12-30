@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkdiag
@@ -72,24 +72,22 @@ func pathString(path cty.Path) string {
 			}
 			buf.WriteString(x.Name)
 		case cty.IndexStep:
-			val := x.Key
-			typ := val.Type()
 			var s string
-			switch {
-			case typ == cty.String:
+			switch val := x.Key; val.Type() {
+			case cty.String:
 				s = val.AsString()
-			case typ == cty.Number:
+			case cty.Number:
 				num := val.AsBigFloat()
 				s = num.String()
 			default:
-				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+				s = fmt.Sprintf("<unexpected index: %s>", val.Type().FriendlyName())
 			}
-			buf.WriteString(fmt.Sprintf("[%s]", s))
+			fmt.Fprintf(&buf, "[%s]", s)
 		default:
 			if i != 0 {
 				buf.WriteString(".")
 			}
-			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+			fmt.Fprintf(&buf, "<unexpected step: %[1]T %[1]v>", x)
 		}
 	}
 	return buf.String()
@@ -104,4 +102,12 @@ func DiagnosticsString(diags diag.Diagnostics) string {
 	}
 
 	return buf.String()
+}
+
+func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  "AWS resource not found during refresh",
+		Detail:   "Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: " + err.Error(),
+	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rum
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rum"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -134,8 +135,19 @@ func resourceAppMonitor() *schema.Resource {
 			},
 			names.AttrDomain: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
 				ValidateFunc: validation.StringLenBetween(1, 253),
+			},
+			"domain_list": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     5,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 253),
+				},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -157,7 +169,6 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &rum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -167,6 +178,14 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("custom_events"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.CustomEvents = expandCustomEvents(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrDomain); ok {
+		input.Domain = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+		input.DomainList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	_, err := conn.CreateAppMonitor(ctx, input)
@@ -186,7 +205,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	appMon, err := findAppMonitorByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM App Monitor %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,6 +236,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
 	d.Set(names.AttrDomain, appMon.Domain)
+	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
 
 	setTagsOut(ctx, appMon.Tags)
@@ -246,7 +266,15 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrDomain) {
-			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
+			if v, ok := d.GetOk(names.AttrDomain); ok {
+				input.Domain = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("domain_list") {
+			if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+				input.DomainList = flex.ExpandStringValueList(v.([]any))
+			}
 		}
 
 		_, err := conn.UpdateAppMonitor(ctx, input)
@@ -287,7 +315,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 	output, err := conn.GetAppMonitor(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

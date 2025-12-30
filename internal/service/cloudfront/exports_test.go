@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -12,19 +12,19 @@ var (
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
-	ResourceKeyValueStore               = newKeyValueStoreResource
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
+	ResourceMultiTenantDistribution     = newMultiTenantDistributionResource
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy
 	ResourcePublicKey                   = resourcePublicKey
 	ResourceRealtimeLogConfig           = resourceRealtimeLogConfig
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
+	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
-	FindDistributionByID                       = findDistributionByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
@@ -37,6 +37,8 @@ var (
 	FindPublicKeyByID                          = findPublicKeyByID
 	FindRealtimeLogConfigByARN                 = findRealtimeLogConfigByARN
 	FindResponseHeadersPolicyByID              = findResponseHeadersPolicyByID
+	FindTrustStoreByID                         = findTrustStoreByID
 	FindVPCOriginByID                          = findVPCOriginByID
-	WaitDistributionDeployed                   = waitDistributionDeployed
+
+	WaitDistributionDeployed = waitDistributionDeployed
 )

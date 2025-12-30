@@ -22,6 +22,8 @@ data "aws_cloudfront_origin_access_control" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` (Required) -  The identifier for the origin access control settings. For example: `E2T5VTFBZJ3BJB`.
 
 ## Attribute Reference

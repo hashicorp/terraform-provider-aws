@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -97,7 +97,7 @@ func sweepDNSSECConfig(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
@@ -139,7 +139,7 @@ func sweepEndpoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverEndpointsInput{}
@@ -180,7 +180,7 @@ func sweepFirewallConfigs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallConfigsInput{}
@@ -222,7 +222,7 @@ func sweepFirewallDomainLists(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallDomainListsInput{}
@@ -263,7 +263,7 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupAssociationsInput{}
@@ -304,7 +304,7 @@ func sweepFirewallRuleGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupsInput{}
@@ -352,7 +352,7 @@ func sweepFirewallRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListFirewallRuleGroupsInput{}
@@ -420,7 +420,7 @@ func sweepQueryLogConfigAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverQueryLogConfigAssociationsInput{}
@@ -463,7 +463,7 @@ func sweepQueryLogsConfig(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
@@ -504,7 +504,7 @@ func sweepRuleAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverRuleAssociationsInput{}
@@ -547,7 +547,7 @@ func sweepRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53ResolverClient(ctx)
 	input := &route53resolver.ListResolverRulesInput{}

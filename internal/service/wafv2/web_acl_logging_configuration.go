@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -148,10 +149,10 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 40),
+												validation.StringLenBetween(1, 64),
 												// The value is returned in lower case by the API.
 												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-												validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "Must be any string that contains at least one non-whitespace character"),
 											),
 										},
 									},
@@ -218,7 +219,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 
 	loggingConfig, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Logging Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,7 +272,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *wafv2.Client, arn 
 	output, err := conn.GetLoggingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -579,7 +580,7 @@ func redactedFieldsHash(v any) int {
 		sh, ok := v[0].(map[string]any)
 		if ok {
 			if name, ok := sh[names.AttrName].(string); ok {
-				buf.WriteString(fmt.Sprintf("%s-", name))
+				fmt.Fprintf(&buf, "%s-", name)
 			}
 		}
 	}

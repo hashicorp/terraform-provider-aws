@@ -1,167 +1,167 @@
-name: "Report a Bug"
-description: "Choose this option to let us know about an unexpected error, a crash, or otherwise incorrect behavior."
-title: "[Bug]: "
-labels: ["bug"]
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Report a Bug
+description: Choose this option to let us know about an unexpected error, a crash, or otherwise incorrect behavior.
+labels:
+  - bug
 body:
   - type: markdown
     attributes:
       value: |
-        # Thank you for raising a bug report!
+        ## Thank you for raising a bug report!
 
-        Before submitting a bug report, we ask that you first search existing issues to see if someone else may have experienced the same issue. This helps to keep all relevant information in one place, including any potential workarounds.
+        Before submitting a bug report, we ask that you first [search existing issues and pull requests](https://github.com/hashicorp/terraform-provider-aws/issues?q=label%3Abug) to see if someone else may have experienced the same issue or may have already submitted a fix for it. This helps to keep all relevant information in one place, including any potential workarounds.
+
+        ### A Note on Terraform Core Issues
 
         We also ask that you consider whether your issue may be related to Terraform Core. If you are running into one of the following scenarios, we recommend [opening an issue](https://github.com/hashicorp/terraform/issues/new/choose) in the Terraform Core repository instead:
 
-        * [Configuration Language](https://www.terraform.io/docs/configuration/index.html) or resource ordering issues
-        * [State](https://www.terraform.io/docs/state/index.html) and [State Backend](https://www.terraform.io/docs/backends/index.html) issues
-        * [Provisioner](https://www.terraform.io/docs/provisioners/index.html) issues
+        * [Configuration Language](https://developer.hashicorp.com/terraform/language) or resource ordering issues
+        * [State](https://developer.hashicorp.com/terraform/language/state) and [State Backend](https://developer.hashicorp.com/terraform/language/backend) issues
+        * [Provisioner](https://developer.hashicorp.com/terraform/language/resources/provisioners/syntax) issues
         * [Registry](https://registry.terraform.io/) issues
-        * Spans resources across multiple providers
-
-  - type: markdown
-    attributes:
-      value: |
-        # Terraform and AWS Provider Versions
-
-        Please run `terraform -v` to show the Terraform Core and provider version(s). If you are not running the latest version of either the provider or Terraform Core, please consider upgrading, as your issue may have already been fixed.
-
-        [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions)
-
-  - type: input
-    id: tf_version
-    attributes:
-      label: Terraform Core Version
-      description: The semantic version of Terraform Core used when experiencing the bug. If multiple versions have been tested, a comma separated list.
-      placeholder: "X.Y.Z"
-    validations:
-      required: true
-
-  - type: input
-    id: aws_version
-    attributes:
-      label: AWS Provider Version
-      description: The semantic version of the AWS Provider used when experiencing the bug. If multiple versions have been tested, a comma separated list.
-      placeholder: "X.Y.Z"
-    validations:
-      required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        # Description
-
-        In the next few fields, please provide any useful information you can around what resources are affected, what you expected to happen, and what actually happened. There is also a field to optionally provide a small snippet of any relevant error or panic output.
-
-        Note that there is a section later in the form to provide more complete Terraform configuration and logging information. These fields should instead be thought of as the place to briefly describe the bug.
+        * Issues that span resources across multiple providers
 
   - type: textarea
-    id: affected
+    id: tf_version
     attributes:
-      label: Affected Resource(s)
-      description: Please list the affected resource(s) and/or data source(s).
-      placeholder: "* aws_xxx"
+      label: Terraform and AWS Provider Version
+      description: |
+        Please run `terraform --version` to collect the Terraform and AWS Provider versions and paste the result below. If multiple versions have been tested, feel free to add that additional information here as well.
+      placeholder: |
+        ...output of `terraform --version`...
+      render: console
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_resource
+    attributes:
+      label: Affected Resource(s) or Data Source(s)
+      description: |
+        If applicable, please list the affected resource(s) and/or data source(s).
+      placeholder: |
+        * `aws_example_resource`
+        * `aws_example_data_source`
     validations:
       required: false
 
   - type: textarea
-    id: expected
+    id: expected_behavior
     attributes:
       label: Expected Behavior
-      description: What should have happened?
+      description: |
+        Use this section to describe what behavior should have happened that isn't currently. Note that there is a section later in the template for providing a sample configuration, so a short description is all that's necessary here.
     validations:
       required: true
 
   - type: textarea
-    id: actual
+    id: actual_behavior
     attributes:
       label: Actual Behavior
-      description: What actually happened?
+      description: |
+        Use this section to describe how the the provider is currently behaving and how it differs from the behavior outlined in the Expected Behavior section.
     validations:
       required: true
 
   - type: textarea
     id: log_snippet
     attributes:
-      label: Relevant Error/Panic Output Snippet
+      label: Relevant Error/Panic Output
       description: |
-        If applicable, provide a relevant snippet from the error or panic output. This will be rendered as `shell`, so there is no need to add a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
-      render: shell
+        If applicable, provide a snippet of output logging that contains the error or panic. Note that there is a section later in the template for providing more complete debug output, so a small snippet is all that's necessary here.
+
+        For convenience, we pre-populate this section with a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) to help with formatting in the resulting issue. Placing the log output between the sets of backticks (\```) will result in a well-formatted issue.
+      value: |
+        ```console
+
+        ```
     validations:
       required: false
 
   - type: markdown
     attributes:
       value: |
-        # Configuration and Logging
+        ## Providing Configurations and Logging
 
-        Here, we ask that you provide the Terraform configuration and, when possible, the debug logs. For configurations or logs of more than just a few lines, it's preferred to either share a Gist link or zip the files and upload them.
+        When providing a reproduction configuration and/or debug logging, please paste, upload, or link to a file or [public Gist](https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists) containing the relevant information. Files under 25MB may be [attached directly](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) in the relevant field. Files larger than this should be uploaded to a file hosting service and a link shared. For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
 
-        Terraform configurations or debug logs under 25MB may be [attached directly in the field](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files). Files larger than this should be uploaded to a file hosting service and a link shared.
+        Configurations should be applyable with minimal modifications, and should not rely on external modules. This helps maintainers and contributors efficiently reproduce issues and implement acceptance tests to prevent future regressions.
 
-        For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
-
-        **Note:** These form fields do not automatically render, so you will need to use [code fence(s)](https://help.github.com/articles/basic-writing-and-formatting-syntax/#quoting-code) to achieve proper formatting.
+        > [!WARNING]
+        > Bug reports without a functional and standalone sample configuration may be closed without further investigation.
 
   - type: textarea
     id: tf_config
     attributes:
-      label: Terraform Configuration Files
+      label: Sample Terraform Configuration
       description: |
-        Please paste, upload, or link to a file or Gist containing all Terraform configurations required to reproduce the bug. See note above for additional information on file size restrictions and encrypting.
+        Please provide a sample Terraform configuration that can be used to reproduce the issue.
 
-        Bug reports without a functional reproduction may be closed without investigation.
+        For convenience, we pre-populate this section such that configurations pasted between the backticks (\```) will be contained within a disclosure triangle and have syntax highlighting as appropriate for HCL in the resulting issue. Where appropriate, feel free to delete this.
+      value: |
+        <details open>
+        <summary>Click to expand configuration</summary>
+
+        ```hcl
+
+        ```
+        </details>
     validations:
       required: true
 
   - type: textarea
-    id: repro
+    id: reproduction_steps
     attributes:
       label: Steps to Reproduce
-      description: Please list the steps required to reproduce the issue.
+      description: |
+        Please list the steps necessary to reproduce the issue.
+      placeholder: |
+        1. Apply the configuration
+        2. Make a change
+        3. etc.
     validations:
       required: true
 
   - type: textarea
-    id: debug_logs
+    id: extended_logs
     attributes:
-      label: Debug Output
+      label: Debug Logging
       description: |
-        If possible, please paste, upload, or link to a file or Gist containing debug logs. See note above for additional information on file size restrictions and encrypting.
+        If possible, please provide log output captured while reproducing the issue with [debug logging enabled](https://developer.hashicorp.com/terraform/internals/debugging). If a panic is produced, that information should be included.
 
-        To obtain the debug output, see the [Terraform documentation on debugging](https://www.terraform.io/docs/internals/debugging.html).
-    validations:
-      required: false
-
-  - type: textarea
-    id: panic_logs
-    attributes:
-      label: Panic Output
-      description: If Terraform produced a panic, please paste, upload, or link to a file or Gist containing the output of the `crash.log`.
-    validations:
-      required: false
-
-  - type: markdown
-    attributes:
+        For convenience, we pre-populate this section such that logs pasted between the backticks (\```) will be contained within a disclosure triangle and have syntax highlighting associated with console output in the resulting issue.
       value: |
-        # Additional Information
+        <details open>
+        <summary>Click to expand log output</summary>
 
-        For the final two fields, optionally provide any additional context that might help the community or maintainers to investigate the bug. This might be additional references that you found when troubleshooting, similar bug reports, or specifics about your environment that might be unique.
+        ```console
 
-  - type: textarea
-    attributes:
-      label: Important Factoids
-      description: Are there anything atypical about your configuration or environment that we should know about?
+        ```
+        </details>
     validations:
       required: false
 
   - type: textarea
-    id: references
+    id: genai_llm
     attributes:
-      label: References
+      label: GenAI / LLM Assisted Development
       description: |
-        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+        If you used a generative AI / LLM tool to assist in the development of your config, please let us know which tool you used here.
+      value: n/a
+    validations:
+      required: false
 
-        [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
+  - type: textarea
+    attributes:
+      label: Important Facts and References
+      description: |
+        If there is any additional information that might be relevant, provide those details here. This might include information such as, but not limited to:
+
+        * Any atypical situations that might apply (airgapped environments, specific [AWS partitions](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html), etc.)
+        * [References to other GitHub issues](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#referencing-issues-and-pull-requests)
+        * Links to external references such as AWS or other vendor documentation, third party articles, etc.
     validations:
       required: false
 
@@ -170,9 +170,13 @@ body:
     attributes:
       label: Would you like to implement a fix?
       description: |
-        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+        Indicate to the maintainers and community as to whether you plan to implement a fix for this (you can update this later if you change your mind). This helps prevent duplication of effort, as many of our contributors look for recently filed issues as a source for their next contribution.
+
+        If this would be your first contribution, refer to the [contributor guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
         - "Yes"
+      multiple: false
+      default: 0
     validations:
       required: false

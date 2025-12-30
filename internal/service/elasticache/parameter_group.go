@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -125,7 +125,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	parameterGroup, err := findCacheParameterGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -193,7 +193,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			// above, which may become out of date, here we add logic to
 			// workaround this API behavior
 
-			if tfresource.TimedOut(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Parameter reserved-memory doesn't exist") {
+			if retry.TimedOut(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Parameter reserved-memory doesn't exist") {
 				for i, paramToModify := range paramsToModify {
 					if aws.ToString(paramToModify.ParameterName) != "reserved-memory" {
 						continue
@@ -292,7 +292,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 			CacheParameterGroupName: aws.String(name),
 		})
@@ -303,7 +303,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ElastiCache Parameter Group (%s): %s", name, err)
+		return fmt.Errorf("deleting ElastiCache Parameter Group (%s): %w", name, err)
 	}
 
 	return err
@@ -359,13 +359,14 @@ func resourceResetParameterGroup(ctx context.Context, conn *elasticache.Client, 
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     tfslices.Values(parameters),
 	}
-	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
+
+	return tfresource.Retry(ctx, 30*time.Second, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.ResetCacheParameterGroup(ctx, &input)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheParameterGroupStateFault](err, " has pending changes") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -408,8 +409,7 @@ func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, inp
 
 		if errs.IsA[*awstypes.CacheParameterGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

@@ -1,13 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
 
 var (
-	Route53Profile                   = newResourceProfile
+	Route53Profile                   = newProfileResource
 	FindProfileByID                  = findProfileByID
-	Route53ProfileAssocation         = newResourceAssociation
+	Route53ProfileAssocation         = newAssociationResource
 	FindAssociationByID              = findAssociationByID
-	Route53ProfileResourceAssocation = newResourceResourceAssociation
+	Route53ProfileResourceAssocation = newResourceAssociationResource
 	FindResourceAssociationByID      = findResourceAssociationByID
 )

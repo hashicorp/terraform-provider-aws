@@ -118,10 +118,9 @@ from cdktf import TerraformStack
 from imports.aws.security_group import SecurityGroup
 from imports.aws.vpc_endpoint import VpcEndpoint
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, serviceName, vpcId):
+    def __init__(self, scope, name, *, vpcId):
         super().__init__(scope, name)
         my_endpoint = VpcEndpoint(self, "my_endpoint",
-            service_name=service_name,
             vpc_id=vpc_id
         )
         SecurityGroup(self, "example",
@@ -312,6 +311,7 @@ resource "null_resource" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) Security group description. Defaults to `Managed by Terraform`. Cannot be `""`. **NOTE**: This field maps to the AWS `GroupDescription` attribute, for which there is no Update API. If you'd like to classify your security groups in a way that can be updated, use `tags`.
 * `egress` - (Optional, VPC only) Configuration block for egress rules. Can be specified multiple times for each egress rule. Each egress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `ingress` - (Optional) Configuration block for ingress rules. Can be specified multiple times for each ingress rule. Each ingress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -381,6 +381,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_security_group.example
+  identity = {
+    id = "sg-903004f8"
+  }
+}
+
+resource "aws_security_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the security group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
 ```python
@@ -395,13 +421,13 @@ from imports.aws.security_group import SecurityGroup
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SecurityGroup.generate_config_for_import(self, "elbSg", "sg-903004f8")
+        SecurityGroup.generate_config_for_import(self, "example", "sg-903004f8")
 ```
 
 Using `terraform import`, import Security Groups using the security group `id`. For example:
 
 ```console
-% terraform import aws_security_group.elb_sg sg-903004f8
+% terraform import aws_security_group.example sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f27b2ddd1b96fb8f3101f366dcdd7ee739c133499a9b5dbadc26b5d39c054f26 -->
+<!-- cache-key: cdktf-0.20.8 input-d4e60d2efea20e14bf320472528dbe53cf0d5156e1fb519a9588c52fed0c1bcd -->

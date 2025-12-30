@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -255,6 +255,101 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInsightsPath_filterAtSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsPathConfig_filterAtSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "filter_at_source.0.destination_address", "aws_network_interface.test.1", "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.to_port", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, "filter_at_source.0.source_address", "aws_network_interface.test.0", "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.source_port_range.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.source_port_range.0.to_port", "65535"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkInsightsPath_filterAtSourceWithoutSourceInfo(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsPathConfig_filterAtSourceWithoutSourceInfo(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "filter_at_source.0.destination_address", "aws_network_interface.test.1", "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.to_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.source_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.source_port_range.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkInsightsPath_filterAtDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInsightsPathConfig_filterAtDestination(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "filter_at_destination.0.destination_address", "aws_network_interface.test.1", "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.destination_port_range.0.from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.destination_port_range.0.to_port", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, "filter_at_destination.0.source_address", "aws_network_interface.test.0", "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.source_port_range.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.source_port_range.0.to_port", "65535"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkInsightsPathExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -281,7 +376,7 @@ func testAccCheckNetworkInsightsPathDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfec2.FindNetworkInsightsPathByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -470,4 +565,105 @@ resource "aws_ec2_network_insights_path" "test" {
   }
 }
 `, rName, destinationPort))
+}
+
+func testAccVPCNetworkInsightsPathConfig_filterAtSource(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  count = 2
+
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_network_insights_path" "test" {
+  source = aws_network_interface.test[0].id
+  filter_at_source {
+    destination_address = aws_network_interface.test[1].private_ip
+    destination_port_range {
+      from_port = 80
+      to_port   = 80
+    }
+    source_address = aws_network_interface.test[0].private_ip
+    source_port_range {
+      from_port = 0
+      to_port   = 65535
+    }
+  }
+  protocol = "tcp"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCNetworkInsightsPathConfig_filterAtSourceWithoutSourceInfo(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  count = 2
+
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_network_insights_path" "test" {
+  source = aws_network_interface.test[0].id
+  filter_at_source {
+    destination_address = aws_network_interface.test[1].private_ip
+    destination_port_range {
+      from_port = 80
+      to_port   = 80
+    }
+  }
+  protocol = "tcp"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCNetworkInsightsPathConfig_filterAtDestination(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  count = 2
+
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_network_insights_path" "test" {
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
+  filter_at_destination {
+    destination_address = aws_network_interface.test[1].private_ip
+    destination_port_range {
+      from_port = 80
+      to_port   = 80
+    }
+    source_address = aws_network_interface.test[0].private_ip
+    source_port_range {
+      from_port = 0
+      to_port   = 65535
+    }
+  }
+  protocol = "tcp"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }

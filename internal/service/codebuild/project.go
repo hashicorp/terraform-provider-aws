@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -13,6 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,26 +23,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_project", name="Project")
 // @Tags
+// @ArnIdentity
+// @V60SDKv2Fix
+// @ArnFormat("project/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
 		ReadWithoutTimeout:   resourceProjectRead,
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -123,6 +133,12 @@ func resourceProject() *schema.Resource {
 					},
 				},
 			},
+			"auto_retry_limit": {
+				Description: "Maximum number of additional automatic retries after a failed build. The default value is 0.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -198,6 +214,10 @@ func resourceProject() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cache_namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -250,6 +270,26 @@ func resourceProject() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
+						},
+						"docker_server": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"compute_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ComputeType](),
+									},
+									names.AttrSecurityGroupIDs: {
+										Type:     schema.TypeList,
+										MaxItems: 5,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
 						},
 						"fleet": {
 							Type:     schema.TypeList,
@@ -794,6 +834,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("auto_retry_limit"); ok {
+		input.AutoRetryLimit = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("badge_enabled"); ok {
 		input.BadgeEnabled = aws.Bool(v.(bool))
 	}
@@ -860,7 +904,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// InvalidInputException: CodeBuild is not authorized to perform
 	// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, "ot authorized to perform")
 
@@ -898,7 +942,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	project, err := findProjectByNameOrARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -916,6 +960,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("artifacts", nil)
 	}
+	d.Set("auto_retry_limit", project.AutoRetryLimit)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1008,6 +1053,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("artifacts"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("auto_retry_limit") {
+			input.AutoRetryLimit = aws.Int32(int32(d.Get("auto_retry_limit").(int)))
 		}
 
 		if d.HasChange("badge_enabled") {
@@ -1124,7 +1173,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		// But its a slice of pointers so if not set for every update, they get removed.
 		input.Tags = getTagsIn(ctx)
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateProject(ctx, input)
 		}, "ot authorized to perform")
 
@@ -1372,6 +1421,10 @@ func expandProjectCache(tfMap map[string]any) *types.ProjectCache {
 		}
 	}
 
+	if v, ok := tfMap["cache_namespace"]; ok && v != "" {
+		apiObject.CacheNamespace = aws.String(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -1390,6 +1443,21 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 
 	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
 		apiObject.ComputeType = types.ComputeType(v)
+	}
+
+	if v, ok := tfMap["docker_server"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		dockerServer := &types.DockerServer{}
+
+		if v, ok := tfMap["compute_type"]; ok && v.(string) != "" {
+			dockerServer.ComputeType = types.ComputeType(v.(string))
+		}
+		if v, ok := tfMap[names.AttrSecurityGroupIDs].([]any); ok && len(v) > 0 {
+			dockerServer.SecurityGroupIds = flex.ExpandStringyValueList[string](v)
+		}
+
+		apiObject.DockerServer = dockerServer
 	}
 
 	if v, ok := tfMap["fleet"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -1827,39 +1895,39 @@ func resourceProjectArtifactsHash(v any) int {
 	tfMap := v.(map[string]any)
 
 	if v, ok := tfMap["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["bucket_owner_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["encryption_disabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap[names.AttrLocation]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["namespace_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["override_artifact_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap["packaging"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrPath]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	return create.StringHashcode(buf.String())
@@ -1876,6 +1944,10 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 		names.AttrType:     apiObject.Type,
 	}
 
+	if apiObject.CacheNamespace != nil {
+		tfMap["cache_namespace"] = aws.ToString(apiObject.CacheNamespace)
+	}
+
 	return []any{tfMap}
 }
 
@@ -1886,6 +1958,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 		names.AttrType:                apiObject.Type,
 	}
 
+	tfMap["docker_server"] = flattenDockerServer(apiObject.DockerServer)
 	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
@@ -1894,6 +1967,22 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDockerServer(apiObject *types.DockerServer) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"compute_type": apiObject.ComputeType,
+	}
+
+	if apiObject.SecurityGroupIds != nil {
+		tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	}
 
 	return []any{tfMap}
@@ -2124,4 +2213,93 @@ func validProjectS3LogsLocation(v any, k string) (ws []string, errors []error) {
 	}
 
 	return
+}
+
+// @SDKListResource("aws_codebuild_project")
+func projectResourceAsListResource() inttypes.ListResourceForSDK {
+	l := projectListResource{}
+	l.SetResourceSchema(resourceProject())
+	return &l
+}
+
+type projectListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type projectListResourceModel struct {
+	framework.WithRegionModel
+}
+
+func (l *projectListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks:     map[string]listschema.Block{},
+	}
+}
+
+func (l *projectListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.CodeBuildClient(ctx)
+
+	var query projectListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input codebuild.ListProjectsInput
+
+	tflog.Info(ctx, "Listing CodeBuild projects")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := codebuild.NewListProjectsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, projectName := range page.Projects {
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), projectName)
+
+				result := request.NewListResult(ctx)
+
+				rd := l.ResourceData()
+				rd.SetId(projectName)
+
+				tflog.Info(ctx, "Reading CodeBuild project")
+				diags := resourceProjectRead(ctx, rd, awsClient)
+				if diags.HasError() {
+					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading CodeBuild project %s", projectName))
+					yield(result)
+					return
+				}
+
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				result.DisplayName = projectName
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

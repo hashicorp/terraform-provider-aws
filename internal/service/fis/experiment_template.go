@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fis
@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -145,6 +146,73 @@ func resourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
+			"experiment_report_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_sources": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloudwatch_dashboard": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dashboard_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"outputs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrBucketName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrPrefix: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"post_experiment_duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+						},
+						"pre_experiment_duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+						},
+					},
+				},
+			},
 			"log_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -160,6 +228,10 @@ func resourceExperimentTemplate() *schema.Resource {
 									"log_group_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											verify.ValidARN,
+											validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+										),
 									},
 								},
 							},
@@ -301,9 +373,9 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
-	input := &fis.CreateExperimentTemplateInput{
+	input := fis.CreateExperimentTemplateInput{
 		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
-		ClientToken:      aws.String(id.UniqueId()),
+		ClientToken:      aws.String(sdkid.UniqueId()),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
 		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -315,13 +387,17 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input.ExperimentOptions = expandCreateExperimentTemplateExperimentOptionsInput(v.([]any))
 	}
 
+	if v, ok := d.GetOk("experiment_report_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ExperimentReportConfiguration = expandCreateExperimentTemplateReportConfigurationInput(v.([]any)[0].(map[string]any))
+	}
+
 	if targets, err := expandExperimentTemplateTargets(d.Get(names.AttrTarget).(*schema.Set)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
 		input.Targets = targets
 	}
 
-	output, err := conn.CreateExperimentTemplate(ctx, input)
+	output, err := conn.CreateExperimentTemplate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FIS Experiment Template: %s", err)
@@ -338,7 +414,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	experimentTemplate, err := findExperimentTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FIS Experiment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -356,6 +432,9 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrDescription, experimentTemplate.Description)
 	if err := d.Set("experiment_options", flattenExperimentTemplateExperimentOptions(experimentTemplate.ExperimentOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting experiment_options: %s", err)
+	}
+	if err := d.Set("experiment_report_configuration", flattenExperimentTemplateReportConfiguration(experimentTemplate.ExperimentReportConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting experiment_report_configuration: %s", err)
 	}
 	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
@@ -378,7 +457,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &fis.UpdateExperimentTemplateInput{
+		input := fis.UpdateExperimentTemplateInput{
 			Id: aws.String(d.Id()),
 		}
 
@@ -392,6 +471,12 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("experiment_options") {
 			input.ExperimentOptions = expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]any))
+		}
+
+		if d.HasChange("experiment_report_configuration") {
+			if v, ok := d.GetOk("experiment_report_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ExperimentReportConfiguration = expandUpdateExperimentTemplateReportConfigurationInput(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange("log_configuration") {
@@ -415,7 +500,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		_, err := conn.UpdateExperimentTemplate(ctx, input)
+		_, err := conn.UpdateExperimentTemplate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FIS Experiment Template (%s): %s", d.Id(), err)
@@ -430,9 +515,10 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	log.Printf("[DEBUG] Deleting FIS Experiment Template: %s", d.Id())
-	_, err := conn.DeleteExperimentTemplate(ctx, &fis.DeleteExperimentTemplateInput{
+	input := fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExperimentTemplate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -446,14 +532,14 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string) (*awstypes.ExperimentTemplate, error) {
-	input := &fis.GetExperimentTemplateInput{
+	input := fis.GetExperimentTemplateInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetExperimentTemplate(ctx, input)
+	output, err := conn.GetExperimentTemplate(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -901,6 +987,182 @@ func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string
 	return attrs
 }
 
+func expandCreateExperimentTemplateReportConfigurationInput(tfMap map[string]any) *awstypes.CreateExperimentTemplateReportConfigurationInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CreateExperimentTemplateReportConfigurationInput{}
+
+	if v, ok := tfMap["data_sources"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataSources = expandExperimentTemplateReportConfigurationDataSourcesInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["outputs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Outputs = expandExperimentTemplateReportConfigurationOutputsInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["post_experiment_duration"].(string); ok && v != "" {
+		apiObject.PostExperimentDuration = aws.String(v)
+	}
+
+	if v, ok := tfMap["pre_experiment_duration"].(string); ok && v != "" {
+		apiObject.PreExperimentDuration = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandUpdateExperimentTemplateReportConfigurationInput(tfMap map[string]any) *awstypes.UpdateExperimentTemplateReportConfigurationInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.UpdateExperimentTemplateReportConfigurationInput{}
+
+	if v, ok := tfMap["data_sources"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataSources = expandExperimentTemplateReportConfigurationDataSourcesInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["outputs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Outputs = expandExperimentTemplateReportConfigurationOutputsInput(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["post_experiment_duration"].(string); ok && v != "" {
+		apiObject.PostExperimentDuration = aws.String(v)
+	}
+
+	if v, ok := tfMap["pre_experiment_duration"].(string); ok && v != "" {
+		apiObject.PreExperimentDuration = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandExperimentTemplateReportConfigurationDataSourcesInput(tfMap map[string]any) *awstypes.ExperimentTemplateReportConfigurationDataSourcesInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ExperimentTemplateReportConfigurationDataSourcesInput{}
+
+	if v, ok := tfMap["cloudwatch_dashboard"].([]any); ok && len(v) > 0 {
+		dashboards := make([]awstypes.ReportConfigurationCloudWatchDashboardInput, 0, len(v))
+
+		for _, tfMapRaw := range v {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			if v, ok := tfMap["dashboard_arn"].(string); ok && v != "" {
+				dashboards = append(dashboards, awstypes.ReportConfigurationCloudWatchDashboardInput{
+					DashboardIdentifier: aws.String(v),
+				})
+			}
+		}
+
+		apiObject.CloudWatchDashboards = dashboards
+	}
+
+	return apiObject
+}
+
+func expandExperimentTemplateReportConfigurationOutputsInput(tfMap map[string]any) *awstypes.ExperimentTemplateReportConfigurationOutputsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ExperimentTemplateReportConfigurationOutputsInput{}
+
+	if v, ok := tfMap["s3_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3Configuration = expandExperimentTemplateReportConfigurationS3Configuration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandExperimentTemplateReportConfigurationS3Configuration(tfMap map[string]any) *awstypes.ReportConfigurationS3OutputInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ReportConfigurationS3OutputInput{
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
+	}
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenExperimentTemplateReportConfiguration(apiObject *awstypes.ExperimentTemplateReportConfiguration) []any {
+	if apiObject == nil {
+		return make([]any, 0)
+	}
+
+	tfMap := map[string]any{
+		"data_sources":             flattenExperimentTemplateExperimentReportConfigurationDataSources(apiObject.DataSources),
+		"outputs":                  flattenExperimentTemplateExperimentReportConfigurationOutputs(apiObject.Outputs),
+		"post_experiment_duration": aws.ToString(apiObject.PostExperimentDuration),
+		"pre_experiment_duration":  aws.ToString(apiObject.PreExperimentDuration),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationOutputs(apiObject *awstypes.ExperimentTemplateReportConfigurationOutputs) []any {
+	if apiObject == nil {
+		return make([]any, 0)
+	}
+
+	tfMap := map[string]any{
+		"s3_configuration": flattenReportConfigurationS3Output(apiObject.S3Configuration),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenExperimentTemplateExperimentReportConfigurationDataSources(apiObject *awstypes.ExperimentTemplateReportConfigurationDataSources) []any {
+	if apiObject == nil {
+		return make([]any, 0)
+	}
+
+	tfMap := map[string]any{
+		"cloudwatch_dashboard": flattenExperimentTemplateReportConfigurationCloudWatchDashboards(apiObject.CloudWatchDashboards),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenExperimentTemplateReportConfigurationCloudWatchDashboards(apiObjects []awstypes.ExperimentTemplateReportConfigurationCloudWatchDashboard) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"dashboard_arn": aws.ToString(apiObject.DashboardIdentifier),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenReportConfigurationS3Output(apiObject *awstypes.ReportConfigurationS3Output) []any {
+	if apiObject == nil {
+		return make([]any, 0)
+	}
+
+	tfMap := map[string]any{
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
+		names.AttrPrefix:     aws.ToString(apiObject.Prefix),
+	}
+
+	return []any{tfMap}
+}
+
 func flattenExperimentTemplateActions(configured map[string]awstypes.ExperimentTemplateAction) []map[string]any {
 	dataResources := make([]map[string]any, 0, len(configured))
 
@@ -1072,7 +1334,9 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Cluster",
 		"Clusters",
 		"DBInstances",
+		"Functions",
 		"Instances",
+		"ManagedResources",
 		"Nodegroups",
 		"Pods",
 		"ReplicationGroups",

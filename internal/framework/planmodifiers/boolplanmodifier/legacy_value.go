@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package boolplanmodifier
@@ -27,13 +27,13 @@ func (m legacyValueModifier) MarkdownDescription(ctx context.Context) string {
 }
 
 func (m legacyValueModifier) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
-	// Use value from Config if set
-	if !req.ConfigValue.IsNull() {
+	// Exit if another planmodifier has set the value
+	if !req.PlanValue.IsUnknown() {
 		return
 	}
 
-	// Exit if another planmodifier has set the value
-	if !req.PlanValue.IsUnknown() {
+	// Use value from Config if set
+	if !req.ConfigValue.IsNull() {
 		return
 	}
 
@@ -42,8 +42,5 @@ func (m legacyValueModifier) PlanModifyBool(ctx context.Context, req planmodifie
 		return
 	}
 
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.BoolValue(false)
-		return
-	}
+	resp.PlanValue = types.BoolValue(false)
 }

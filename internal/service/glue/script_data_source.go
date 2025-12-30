@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -19,9 +19,10 @@ import (
 )
 
 // @SDKDataSource("aws_glue_script", name="Script")
-func DataSourceScript() *schema.Resource {
+func dataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
+
 		Schema: map[string]*schema.Schema{
 			"dag_edge": {
 				Type:     schema.TypeList,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,7 +32,7 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
-func ResourceInput() *schema.Resource {
+func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
 		ReadWithoutTimeout:   resourceInputRead,
@@ -226,7 +227,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	// IAM propagation
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -260,9 +261,9 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputByID(ctx, conn, d.Id())
+	out, err := findInputByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Input (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -323,7 +324,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
@@ -377,7 +378,7 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
@@ -396,7 +397,7 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
@@ -415,7 +416,7 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.InputStateDeleting),
 		Target:  enum.Slice(types.InputStateDeleted),
 		Refresh: statusInput(ctx, conn, id),
@@ -430,10 +431,10 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	return nil, err
 }
 
-func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
+func statusInput(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindInputByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		out, err := findInputByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -445,7 +446,7 @@ func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.S
 	}
 }
 
-func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
+func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
 	in := &medialive.DescribeInputInput{
 		InputId: aws.String(id),
 	}
@@ -453,7 +454,7 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

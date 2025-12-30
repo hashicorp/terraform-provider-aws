@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -219,7 +219,7 @@ func testAccCheckCACertificateDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfiot.FindCACertificateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -465,7 +465,7 @@ resource "aws_iot_ca_certificate" "test" {
     "policy": {
       "Type": "AWS::IoT::Policy",
       "Properties": {
-        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
+        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
       }
     }
   } 

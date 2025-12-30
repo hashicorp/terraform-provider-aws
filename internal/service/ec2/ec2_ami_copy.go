@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -125,8 +125,8 @@ func resourceAMICopy() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -160,8 +160,8 @@ func resourceAMICopy() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -195,6 +195,10 @@ func resourceAMICopy() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			// Not a public attribute; used to let the aws_ami_copy and aws_ami_from_instance
 			// resources record that they implicitly created new EBS snapshots that we should

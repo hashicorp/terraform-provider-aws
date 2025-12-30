@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -24,19 +24,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_datazone_domain", name="Domain")
-func newDataSourceDomain(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDomain{}, nil
+func newDomainDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &domainDataSource{}, nil
 }
 
 const (
 	DSNameDomain = "Domain Data Source"
 )
 
-type dataSourceDomain struct {
-	framework.DataSourceWithConfigure
+type domainDataSource struct {
+	framework.DataSourceWithModel[domainDataSourceModel]
 }
 
-func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *domainDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -65,6 +65,9 @@ func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 			},
+			"root_domain_unit_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"portal_url": schema.StringAttribute{
 				Computed: true,
 			},
@@ -75,10 +78,10 @@ func (d *dataSourceDomain) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *domainDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
-	var data dataSourceDomainModel
+	var data domainDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -115,7 +118,7 @@ func (d *dataSourceDomain) Read(ctx context.Context, request datasource.ReadRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *dataSourceDomain) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.AtLeastOneOf(
 			path.MatchRoot(names.AttrName),
@@ -124,13 +127,23 @@ func (d *dataSourceDomain) ConfigValidators(_ context.Context) []datasource.Conf
 	}
 }
 
-func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*awstypes.DomainSummary, error) {
+func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*datazone.GetDomainOutput, error) {
 	domain, err := findDomains(ctx, conn, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(domain)
+	domain1, err := tfresource.AssertSingleValueResult(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := findDomainByID(ctx, conn, aws.ToString(domain1.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) ([]awstypes.DomainSummary, error) {
@@ -153,7 +166,8 @@ func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Pre
 	return output, nil
 }
 
-type dataSourceDomainModel struct {
+type domainDataSourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String      `tfsdk:"arn"`
 	CreatedAt        timetypes.RFC3339 `tfsdk:"created_at"`
 	Description      types.String      `tfsdk:"description"`
@@ -162,6 +176,7 @@ type dataSourceDomainModel struct {
 	LastUpdatedAt    timetypes.RFC3339 `tfsdk:"last_updated_at"`
 	ManagedAccountID types.String      `tfsdk:"managed_account_id"`
 	Name             types.String      `tfsdk:"name"`
+	RootDomainUnitID types.String      `tfsdk:"root_domain_unit_id"`
 	PortalURL        types.String      `tfsdk:"portal_url"`
 	Status           types.String      `tfsdk:"status"`
 }

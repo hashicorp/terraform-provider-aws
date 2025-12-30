@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -25,7 +25,7 @@ func createTags(ctx context.Context, conn *ec2.Client, identifier string, tags [
 
 	newTagsMap := keyValueTags(ctx, tags)
 
-	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func(ctx context.Context) (any, error) {
 		return nil, updateTags(ctx, conn, identifier, nil, newTagsMap, optFns...)
 	}, ".NotFound")
 

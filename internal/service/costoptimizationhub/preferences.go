@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package costoptimizationhub
@@ -15,20 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_costoptimizationhub_preferences", name="Preferences")
-func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePreferences{}
+func newPreferencesResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &preferencesResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -41,13 +41,13 @@ const (
 	resNamePreferences = "Preferences"
 )
 
-type resourcePreferences struct {
-	framework.ResourceWithConfigure
+type preferencesResource struct {
+	framework.ResourceWithModel[preferencesResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *preferencesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -71,10 +71,10 @@ func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *preferencesResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var plan resourcePreferencesData
+	var plan preferencesResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,10 +114,10 @@ func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *preferencesResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var state resourcePreferencesData
+	var state preferencesResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,7 +125,7 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 
 	out, err := findPreferences(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 
@@ -147,10 +147,10 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *preferencesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var plan, state resourcePreferencesData
+	var plan, state preferencesResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -193,10 +193,10 @@ func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateReq
 }
 
 // For this "Preferences" resource, deletion is just resetting the preferences back to the default values.
-func (r *resourcePreferences) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *preferencesResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var state resourcePreferencesData
+	var state preferencesResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -230,8 +230,7 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "AWS account is not enrolled for recommendations") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -246,7 +245,7 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 	return output, nil
 }
 
-type resourcePreferencesData struct {
+type preferencesResourceModel struct {
 	ID                              types.String `tfsdk:"id"`
 	MemberAccountDiscountVisibility types.String `tfsdk:"member_account_discount_visibility"`
 	SavingsEstimationMode           types.String `tfsdk:"savings_estimation_mode"`

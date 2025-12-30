@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -10,7 +10,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,40 +17,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDelivery_basic(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -78,33 +66,23 @@ func testAccDelivery_basic(t *testing.T) {
 }
 
 func testAccDelivery_disappears(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDelivery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,33 +92,23 @@ func testAccDelivery_disappears(t *testing.T) {
 }
 
 func testAccDelivery_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -165,7 +133,7 @@ func testAccDelivery_tags(t *testing.T) {
 			{
 				Config: testAccDeliveryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -182,7 +150,7 @@ func testAccDelivery_tags(t *testing.T) {
 			{
 				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -200,33 +168,23 @@ func testAccDelivery_tags(t *testing.T) {
 }
 
 func testAccDelivery_update(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -253,7 +211,7 @@ func testAccDelivery_update(t *testing.T) {
 			{
 				Config: testAccDeliveryConfig_allAttributes(rName, "", "{region}/{yyyy}/{MM}/{dd}/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -284,10 +242,10 @@ func testAccDelivery_update(t *testing.T) {
 func testAccDelivery_cloudFrontDistribution(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// CloudFront distribution delivery source must be in us-east-1.
@@ -295,12 +253,12 @@ func testAccDelivery_cloudFrontDistribution(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_cloudFrontDistribution(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryExists(ctx, resourceName, &v),
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -317,9 +275,9 @@ func testAccDelivery_cloudFrontDistribution(t *testing.T) {
 	})
 }
 
-func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeliveryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_delivery" {
@@ -328,7 +286,7 @@ func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflogs.FindDeliveryByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -343,14 +301,14 @@ func testAccCheckDeliveryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeliveryExists(ctx context.Context, n string, v *awstypes.Delivery) resource.TestCheckFunc {
+func testAccCheckDeliveryExists(ctx context.Context, t *testing.T, n string, v *awstypes.Delivery) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindDeliveryByID(ctx, conn, rs.Primary.ID)
 

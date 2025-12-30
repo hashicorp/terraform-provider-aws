@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -26,7 +26,7 @@ func newIPAMDataSource(context.Context) (datasource.DataSourceWithConfigure, err
 }
 
 type ipamDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[ipamDataSourceModel]
 }
 
 func (d *ipamDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -43,6 +43,9 @@ func (d *ipamDataSource) Schema(ctx context.Context, request datasource.SchemaRe
 				Computed: true,
 			},
 			"enable_private_gua": schema.BoolAttribute{
+				Computed: true,
+			},
+			"metered_account": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
@@ -111,18 +114,20 @@ func (d *ipamDataSource) Read(ctx context.Context, request datasource.ReadReques
 }
 
 type ipamDataSourceModel struct {
+	framework.WithRegionModel
 	ipamModel
 	Tags tftags.Map `tfsdk:"tags"`
 }
 
 type ipamModel struct {
-	DefaultResourceDiscoveryAssociationId types.String                                              `tfsdk:"default_resource_discovery_association_id"`
-	DefaultResourceDiscoveryId            types.String                                              `tfsdk:"default_resource_discovery_id"`
+	DefaultResourceDiscoveryAssociationID types.String                                              `tfsdk:"default_resource_discovery_association_id"`
+	DefaultResourceDiscoveryID            types.String                                              `tfsdk:"default_resource_discovery_id"`
 	Description                           types.String                                              `tfsdk:"description"`
 	EnablePrivateGUA                      types.Bool                                                `tfsdk:"enable_private_gua"`
 	IpamARN                               types.String                                              `tfsdk:"arn"`
 	IpamID                                types.String                                              `tfsdk:"id"`
 	IpamRegion                            types.String                                              `tfsdk:"ipam_region"`
+	MeteredAccount                        types.String                                              `tfsdk:"metered_account"`
 	OperatingRegions                      fwtypes.ListNestedObjectValueOf[ipamOperatingRegionModel] `tfsdk:"operating_regions"`
 	OwnerID                               types.String                                              `tfsdk:"owner_id"`
 	PrivateDefaultScopeID                 types.String                                              `tfsdk:"private_default_scope_id"`

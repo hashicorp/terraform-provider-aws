@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -16,6 +16,7 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 		"Template": {
 			acctest.CtBasic:      testAccTemplate_basic,
 			acctest.CtDisappears: testAccTemplate_disappears,
+			"region":             testAccTemplate_region,
 			"value":              testAccTemplate_value,
 		},
 		"TemplateAssociation": {
@@ -25,6 +26,7 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 		},
 		"TemplatesDataSource": {
 			acctest.CtBasic: testAccTemplatesDataSource_basic,
+			"region":        testAccTemplatesDataSource_region,
 		},
 	}
 

@@ -1,7 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
-package statecheck
+package knownvalue
 
 import (
 	"context"
@@ -75,6 +75,17 @@ func RegionalARNThirdRegionExact(service, resource string) knownvalue.Check {
 	return regionalARNExact{
 		check:    "RegionalARNThirdRegionExact",
 		region:   acctest.ThirdRegion(),
+		service:  service,
+		resource: resource,
+	}
+}
+
+// RegionalARNExact is a known value check that ensures the value is a string
+// that matches the expected ARN for the given service and resource.
+func RegionalARNFourthExact(service, resource string) knownvalue.Check {
+	return regionalARNExact{
+		check:    "RegionalARNFourthRegionExact",
+		region:   acctest.FourthRegion(),
 		service:  service,
 		resource: resource,
 	}

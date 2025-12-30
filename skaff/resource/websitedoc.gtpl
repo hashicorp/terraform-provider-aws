@@ -3,22 +3,25 @@ subcategory: "{{ .HumanFriendlyService }}"
 layout: "aws"
 page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
 description: |-
-  Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
+  Manages an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
 ---
 
 {{- if .IncludeComments }}
 <!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+Documentation guidelines:
+- Begin resource descriptions with "Manages..."
+- Use simple language and avoid jargon
+- Focus on brevity and clarity
+- Use present tense and active voice
+- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
+- Boolean arguments should begin with "Whether to"
+- Use "example" instead of "test" in examples
+--->
 {{- end }}
+
 # Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
 
-Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
+Manages an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
 
 ## Example Usage
 
@@ -33,11 +36,11 @@ resource "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `example_arg` - (Required) Brief description of the required argument.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `optional_arg` - (Optional) Brief description of the optional argument.
 {{- if .IncludeTags }}
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 {{- end }}
@@ -46,8 +49,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the {{ .HumanResourceName }}. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the {{ .HumanResourceName }}.
+* `example_attribute` - Brief description of the attribute.
 {{- if .IncludeTags }}
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 {{- end }}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkmediapipelines
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,17 +43,16 @@ var (
 
 // @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration", name="Media Insights Pipeline Configuration")
 // @Tags(identifierAttribute="arn")
-func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
+func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
 		CreateWithoutTimeout: resourceMediaInsightsPipelineConfigurationCreate,
 		ReadWithoutTimeout:   resourceMediaInsightsPipelineConfigurationRead,
 		UpdateWithoutTimeout: resourceMediaInsightsPipelineConfigurationUpdate,
 		DeleteWithoutTimeout: resourceMediaInsightsPipelineConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		// Resource creation/update/deletion is atomic and synchronous with the API calls. The timeouts for
 		// create and update are dominated by timeout waiting for IAM role changes to propagate.
@@ -498,15 +498,15 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 
 	// Retry when forbidden exception is received; iam role propagation is eventually consistent
 	var out *chimesdkmediapipelines.CreateMediaInsightsPipelineConfigurationOutput
-	createError := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
+	createError := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.CreateMediaInsightsPipelineConfiguration(ctx, in)
 		if err != nil {
 			var forbiddenException *awstypes.ForbiddenException
 			if errors.As(err, &forbiddenException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
@@ -529,9 +529,9 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
-	out, err := FindMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
+	out, err := findMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -582,15 +582,15 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 		}
 
 		// Retry when forbidden exception is received; iam role propagation is eventually consistent
-		updateError := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
+		updateError := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 			var err error
 			_, err = conn.UpdateMediaInsightsPipelineConfiguration(ctx, in)
 			if err != nil {
 				var forbiddenException *awstypes.ForbiddenException
 				if errors.As(err, &forbiddenException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			return nil
@@ -611,7 +611,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
 	// eventual consistency may cause an initial failure
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func(ctx context.Context) (any, error) {
 		return conn.DeleteMediaInsightsPipelineConfiguration(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
 			Identifier: aws.String(d.Id()),
 		})
@@ -628,13 +628,13 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	return diags
 }
 
-func FindMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.Client, id string) (*awstypes.MediaInsightsPipelineConfiguration, error) {
+func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.Client, id string) (*awstypes.MediaInsightsPipelineConfiguration, error) {
 	in := &chimesdkmediapipelines.GetMediaInsightsPipelineConfigurationInput{
 		Identifier: aws.String(id),
 	}
 	out, err := conn.GetMediaInsightsPipelineConfiguration(ctx, in)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -680,8 +680,8 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		Type: awstypes.MediaInsightsPipelineConfigurationElementType(inputMapRaw[names.AttrType].(string)),
 	}
 
-	switch {
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
+	switch element.Type {
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
 		var configuration []any
 		if configuration, ok = inputMapRaw["amazon_transcribe_call_analytics_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -751,7 +751,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		if vocabularyName, ok := rawConfiguration["vocabulary_name"].(string); ok && vocabularyName != "" {
 			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.VocabularyName = aws.String(vocabularyName)
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
 		var configuration []any
 		if configuration, ok = inputMapRaw["amazon_transcribe_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -805,7 +805,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		if vocabularyName, ok := rawConfiguration["vocabulary_name"].(string); ok && vocabularyName != "" {
 			element.AmazonTranscribeProcessorConfiguration.VocabularyName = aws.String(vocabularyName)
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
 		var configuration []any
 		if configuration, ok = inputMapRaw["kinesis_data_stream_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -815,7 +815,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		element.KinesisDataStreamSinkConfiguration = &awstypes.KinesisDataStreamSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
 		var configuration []any
 		if configuration, ok = inputMapRaw["sns_topic_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -825,7 +825,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		element.SnsTopicSinkConfiguration = &awstypes.SnsTopicSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
 		var configuration []any
 		if configuration, ok = inputMapRaw["sqs_queue_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -835,7 +835,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		element.SqsQueueSinkConfiguration = &awstypes.SqsQueueSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
 		var configuration []any
 		if configuration, ok = inputMapRaw["lambda_function_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -845,7 +845,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		element.LambdaFunctionSinkConfiguration = &awstypes.LambdaFunctionSinkConfiguration{
 			InsightsTarget: aws.String(rawConfiguration["insights_target"].(string)),
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
 		var configuration []any
 		if configuration, ok = inputMapRaw["s3_recording_sink_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -855,7 +855,7 @@ func expandElement(inputElement any) (awstypes.MediaInsightsPipelineConfiguratio
 		element.S3RecordingSinkConfiguration = &awstypes.S3RecordingSinkConfiguration{
 			Destination: aws.String(rawConfiguration[names.AttrDestination].(string)),
 		}
-	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		var configuration []any
 		if configuration, ok = inputMapRaw["voice_analytics_processor_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.MediaInsightsPipelineConfigurationElement{}, errConvertingElement
@@ -898,8 +898,8 @@ func expandRealTimeAlertRule(inputRule any) (awstypes.RealTimeAlertRule, error) 
 		Type: ruleType,
 	}
 
-	switch {
-	case ruleType == awstypes.RealTimeAlertRuleTypeIssueDetection:
+	switch ruleType {
+	case awstypes.RealTimeAlertRuleTypeIssueDetection:
 		var configuration []any
 		if configuration, ok = inputRuleRaw["issue_detection_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
@@ -911,7 +911,7 @@ func expandRealTimeAlertRule(inputRule any) (awstypes.RealTimeAlertRule, error) 
 		}
 
 		apiRule.IssueDetectionConfiguration = apiConfiguration
-	case ruleType == awstypes.RealTimeAlertRuleTypeKeywordMatch:
+	case awstypes.RealTimeAlertRuleTypeKeywordMatch:
 		var configuration []any
 		if configuration, ok = inputRuleRaw["keyword_match_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
@@ -928,7 +928,7 @@ func expandRealTimeAlertRule(inputRule any) (awstypes.RealTimeAlertRule, error) 
 		}
 
 		apiRule.KeywordMatchConfiguration = apiConfiguration
-	case ruleType == awstypes.RealTimeAlertRuleTypeSentiment:
+	case awstypes.RealTimeAlertRuleTypeSentiment:
 		var configuration []any
 		if configuration, ok = inputRuleRaw["sentiment_configuration"].([]any); !ok || len(configuration) != 1 {
 			return awstypes.RealTimeAlertRule{}, errConvertingRuleConfiguration
@@ -969,8 +969,8 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 
 	configuration := map[string]any{}
 
-	switch {
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
+	switch apiElement.Type {
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
 		processorConfiguration := apiElement.AmazonTranscribeCallAnalyticsProcessorConfiguration
 		configuration["call_analytics_stream_categories"] = processorConfiguration.CallAnalyticsStreamCategories
 		configuration["content_identification_type"] = processorConfiguration.ContentIdentificationType
@@ -995,7 +995,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["vocabulary_filter_name"] = processorConfiguration.VocabularyFilterName
 		configuration["vocabulary_name"] = processorConfiguration.VocabularyName
 		tfMap["amazon_transcribe_call_analytics_processor_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
 		processorConfiguration := apiElement.AmazonTranscribeProcessorConfiguration
 		configuration["content_identification_type"] = processorConfiguration.ContentIdentificationType
 		configuration["content_redaction_type"] = processorConfiguration.ContentRedactionType
@@ -1010,27 +1010,27 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["vocabulary_filter_name"] = processorConfiguration.VocabularyFilterName
 		configuration["vocabulary_name"] = processorConfiguration.VocabularyName
 		tfMap["amazon_transcribe_processor_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
 		processorConfiguration := apiElement.KinesisDataStreamSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
 		tfMap["kinesis_data_stream_sink_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
 		processorConfiguration := apiElement.LambdaFunctionSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
 		tfMap["lambda_function_sink_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
 		processorConfiguration := apiElement.SnsTopicSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
 		tfMap["sns_topic_sink_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
 		processorConfiguration := apiElement.SqsQueueSinkConfiguration
 		configuration["insights_target"] = processorConfiguration.InsightsTarget
 		tfMap["sqs_queue_sink_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
 		processorConfiguration := apiElement.S3RecordingSinkConfiguration
 		configuration[names.AttrDestination] = processorConfiguration.Destination
 		tfMap["s3_recording_sink_configuration"] = []any{configuration}
-	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
+	case awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		processorConfiguration := apiElement.VoiceAnalyticsProcessorConfiguration
 		configuration["speaker_search_status"] = processorConfiguration.SpeakerSearchStatus
 		configuration["voice_tone_analysis_status"] = processorConfiguration.VoiceToneAnalysisStatus
@@ -1069,18 +1069,18 @@ func flattenRealTimeAlertRule(apiRule awstypes.RealTimeAlertRule) any {
 
 	configuration := map[string]any{}
 
-	switch {
-	case apiRule.Type == awstypes.RealTimeAlertRuleTypeIssueDetection:
+	switch apiRule.Type {
+	case awstypes.RealTimeAlertRuleTypeIssueDetection:
 		issueDetectionConfiguration := apiRule.IssueDetectionConfiguration
 		configuration["rule_name"] = issueDetectionConfiguration.RuleName
 		tfMap["issue_detection_configuration"] = []any{configuration}
-	case apiRule.Type == awstypes.RealTimeAlertRuleTypeKeywordMatch:
+	case awstypes.RealTimeAlertRuleTypeKeywordMatch:
 		keywordMatchConfiguration := apiRule.KeywordMatchConfiguration
 		configuration["rule_name"] = keywordMatchConfiguration.RuleName
 		configuration["keywords"] = keywordMatchConfiguration.Keywords
 		configuration["negate"] = keywordMatchConfiguration.Negate
 		tfMap["keyword_match_configuration"] = []any{configuration}
-	case apiRule.Type == awstypes.RealTimeAlertRuleTypeSentiment:
+	case awstypes.RealTimeAlertRuleTypeSentiment:
 		sentimentConfiguration := apiRule.SentimentConfiguration
 		configuration["rule_name"] = sentimentConfiguration.RuleName
 		configuration["sentiment_type"] = sentimentConfiguration.SentimentType

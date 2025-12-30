@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package location
@@ -94,7 +94,7 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
 	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
-	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
+	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
 
 	return diags
 }

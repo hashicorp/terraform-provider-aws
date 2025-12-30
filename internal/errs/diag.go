@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package errs
@@ -75,19 +75,6 @@ func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {
 	return d
 }
 
-// newAttributeConflictsError is included for use with NewAttributeConflictsWillBeError.
-// The typical behavior is covered using the schema ConflictsWith parameter.
-func newAttributeConflictsError(path, otherPath cty.Path) diag.Diagnostic {
-	return NewAttributeErrorDiagnostic(
-		path,
-		"Invalid Attribute Combination",
-		fmt.Sprintf("Attribute %q cannot be specified when %q is specified.",
-			PathString(path),
-			PathString(otherPath),
-		),
-	)
-}
-
 // NewAttributeConflictsWhenError returns an error diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath has the given value.
 func NewAttributeConflictsWhenError(path, otherPath cty.Path, otherValue string) diag.Diagnostic {
@@ -144,15 +131,6 @@ func NewAttributeRequiredWillBeError(parentPath cty.Path, attrname string) diag.
 	)
 }
 
-// NewAttributeConflictsWillBeError returns a warning diagnostic indicating that the attribute at the given path cannot be
-// specified when the attribute at otherPath is set.
-// This is intended to be used for situations where the conflict will become an error in a future release.
-func NewAttributeConflictsWillBeError(path, otherPath cty.Path) diag.Diagnostic {
-	return willBeError(
-		newAttributeConflictsError(path, otherPath),
-	)
-}
-
 // NewAttributeConflictsWhenWillBeError returns a warning diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath has the given value.
 // This is intended to be used for situations where the conflict will become an error in a future release.
@@ -172,24 +150,22 @@ func PathString(path cty.Path) string {
 			}
 			buf.WriteString(x.Name)
 		case cty.IndexStep:
-			val := x.Key
-			typ := val.Type()
 			var s string
-			switch {
-			case typ == cty.String:
+			switch val := x.Key; val.Type() {
+			case cty.String:
 				s = val.AsString()
-			case typ == cty.Number:
+			case cty.Number:
 				num := val.AsBigFloat()
 				s = num.String()
 			default:
-				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+				s = fmt.Sprintf("<unexpected index: %s>", val.Type().FriendlyName())
 			}
-			buf.WriteString(fmt.Sprintf("[%s]", s))
+			fmt.Fprintf(&buf, "[%s]", s)
 		default:
 			if i != 0 {
 				buf.WriteString(".")
 			}
-			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+			fmt.Fprintf(&buf, "<unexpected step: %[1]T %[1]v>", x)
 		}
 	}
 	return buf.String()

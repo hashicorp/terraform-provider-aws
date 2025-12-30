@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elb
@@ -21,7 +21,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -304,7 +305,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateLoadBalancer(ctx, input)
 	})
 
@@ -323,7 +324,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	lb, err := findLoadBalancerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -469,7 +470,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.CreateLoadBalancerListeners(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -699,7 +700,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Subnets:          add,
 			}
 
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerToSubnets(ctx, input)
 			}, "cannot be attached to multiple subnets in the same AZ")
 
@@ -742,7 +743,7 @@ func findLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Clie
 	output, err := conn.DescribeLoadBalancers(ctx, input)
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -763,7 +764,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -783,13 +784,13 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 func listenerHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["instance_protocol"].(string))))
-	buf.WriteString(fmt.Sprintf("%d-", m["lb_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["lb_protocol"].(string))))
+	fmt.Fprintf(&buf, "%d-", m["instance_port"].(int))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["instance_protocol"].(string)))
+	fmt.Fprintf(&buf, "%d-", m["lb_port"].(int))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m["lb_protocol"].(string)))
 
 	if v, ok := m["ssl_certificate_id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	return create.StringHashcode(buf.String())

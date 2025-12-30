@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -17,6 +17,7 @@ func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccIndexingConfiguration_basic,
 		"allAttributes": testAccIndexingConfiguration_allAttributes,
+		"Identity":      testAccIoTIndexingConfiguration_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

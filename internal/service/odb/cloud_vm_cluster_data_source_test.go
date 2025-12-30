@@ -1,0 +1,188 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
+package odb_test
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/odb"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+type cloudVmClusterDSTest struct {
+	vmClusterDisplayNamePrefix string
+	exaInfraDisplayNamePrefix  string
+	odbNetDisplayNamePrefix    string
+}
+
+var vmClusterTestDS = cloudVmClusterDSTest{
+	vmClusterDisplayNamePrefix: "Ofake-vmc",
+	exaInfraDisplayNamePrefix:  "Ofake-exa-infra",
+	odbNetDisplayNamePrefix:    "odb-net",
+}
+
+func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudvmcluster odbtypes.CloudVmCluster
+	odbNetRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.odbNetDisplayNamePrefix)
+	exaInfraRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.exaInfraDisplayNamePrefix)
+	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestDS.vmClusterDisplayNamePrefix)
+	dataSourceName := "data.aws_odb_cloud_vm_cluster.test"
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestDS.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestDS.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: vmClusterTestDS.cloudVMClusterConfig(odbNetRName, exaInfraRName, vmcDisplayName, publicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestDS.testAccCheckCloudVmClusterExists(ctx, dataSourceName, &cloudvmcluster),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDisplayName, vmcDisplayName),
+				),
+			},
+		},
+	})
+}
+
+func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_odb_cloud_vm_cluster" {
+				continue
+			}
+			_, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
+			}
+			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameCloudVmCluster, rs.Primary.ID, errors.New("not destroyed"))
+		}
+		return nil
+	}
+}
+
+func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context, name string, cloudvmcluster *odbtypes.CloudVmCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not found"))
+		}
+		if rs.Primary.ID == "" {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not set"))
+		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		resp, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
+		}
+		*cloudvmcluster = *resp
+		return nil
+	}
+}
+
+func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	input := odb.ListCloudVmClustersInput{}
+	_, err := conn.ListCloudVmClusters(ctx, &input)
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func (cloudVmClusterDSTest) cloudVMClusterConfig(odbNet, exaInfra, displayName, sshKey string) string {
+	dsTfCodeVmCluster := fmt.Sprintf(`
+
+
+resource "aws_odb_network" "test" {
+  display_name         = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+}
+
+resource "aws_odb_cloud_exadata_infrastructure" "test" {
+  display_name         = %[1]q
+  shape                = "Exadata.X9M"
+  storage_count        = 3
+  compute_count        = 2
+  availability_zone_id = "use1-az6"
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
+  }
+}
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+  tags = {
+    "env" = "dev"
+  }
+
+}
+
+data "aws_odb_cloud_vm_cluster" "test" {
+  id = aws_odb_cloud_vm_cluster.test.id
+}
+`, odbNet, exaInfra, displayName, sshKey)
+	return dsTfCodeVmCluster
+}

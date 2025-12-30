@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -171,7 +173,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	queue, err := findQueueByTwoPartKey(ctx, conn, instanceID, queueID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -307,31 +309,38 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
+		// API only supports adding or removing 50 at a time.
+		const batchSize = 50
+
 		if len(add) > 0 {
-			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId:      aws.String(instanceID),
-				QueueId:         aws.String(queueID),
-				QuickConnectIds: add,
-			}
+			for chunk := range slices.Chunk(add, batchSize) {
+				input := &connect.AssociateQueueQuickConnectsInput{
+					InstanceId:      aws.String(instanceID),
+					QueueId:         aws.String(queueID),
+					QuickConnectIds: chunk,
+				}
 
-			_, err = conn.AssociateQueueQuickConnects(ctx, input)
+				_, err = conn.AssociateQueueQuickConnects(ctx, input)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "associating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "associating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				}
 			}
 		}
 
 		if len(del) > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId:      aws.String(instanceID),
-				QueueId:         aws.String(queueID),
-				QuickConnectIds: del,
-			}
+			for chunk := range slices.Chunk(del, batchSize) {
+				input := &connect.DisassociateQueueQuickConnectsInput{
+					InstanceId:      aws.String(instanceID),
+					QueueId:         aws.String(queueID),
+					QuickConnectIds: chunk,
+				}
 
-			_, err = conn.DisassociateQueueQuickConnects(ctx, input)
+				_, err = conn.DisassociateQueueQuickConnects(ctx, input)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "disassociating Connect Queue (%s) Quick Connects: %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -352,7 +361,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
 			InstanceId: aws.String(instanceID),
 			QueueId:    aws.String(queueID),
@@ -402,7 +411,7 @@ func findQueue(ctx context.Context, conn *connect.Client, input *connect.Describ
 	output, err := conn.DescribeQueue(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -438,7 +447,7 @@ func findQueueQuickConnectSummaries(ctx context.Context, conn *connect.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

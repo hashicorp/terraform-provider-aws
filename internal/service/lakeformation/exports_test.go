@@ -1,18 +1,32 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
 
 // exports used for testing only.
 var (
-	ResourceDataCellsFilter = newResourceDataCellsFilter
-	ResourceResourceLFTag   = newResourceResourceLFTag
-	ResourceOptIn           = newResourceOptIn
+	ResourceDataCellsFilter             = newDataCellsFilterResource
+	ResourceLFTagExpression             = newLFTagExpressionResource
+	ResourceResourceLFTag               = newResourceLFTagResource
+	ResourceOptIn                       = newOptInResource
+	ResourceIdentityCenterConfiguration = newResourceIdentityCenterConfiguration
 
-	FindDataCellsFilterByID = findDataCellsFilterByID
-	FindResourceLFTagByID   = findResourceLFTagByID
-	LFTagParseResourceID    = lfTagParseResourceID
-	FindOptInByID           = findOptInByID
+	FindDataCellsFilterByID             = findDataCellsFilterByID
+	FindLFTagExpression                 = findLFTagExpression
+	LFTagParseResourceID                = lfTagParseResourceID
+	FindOptInByID                       = findOptInByID
+	FindIdentityCenterConfigurationByID = findIdentityCenterConfigurationByID
 
 	ValidPrincipal = validPrincipal
+
+	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
+
+	FilterCatalogPermissions          = filterCatalogPermissions
+	FilterDataCellsFilter             = filterDataCellsFilter
+	FilterDataLocationPermissions     = filterDataLocationPermissions
+	FilterDatabasePermissions         = filterDatabasePermissions
+	FilterLFTagPermissions            = filterLFTagPermissions
+	FilterLFTagPolicyPermissions      = filterLFTagPolicyPermissions
+	FilterTablePermissions            = filterTablePermissions
+	FilterTableWithColumnsPermissions = filterTableWithColumnsPermissions
 )

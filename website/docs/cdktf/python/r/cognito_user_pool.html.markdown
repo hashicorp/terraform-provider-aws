@@ -93,12 +93,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the user pool.
-
-The following arguments are optional:
-
 * `account_recovery_setting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
@@ -106,18 +104,18 @@ The following arguments are optional:
 * `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
-* `email_mfa_configuration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `account_recovery_setting` entries; requires an `email_configuration` configuration block. [Detailed below](#email_mfa_configuration).
+* `email_mfa_configuration` -  (Optional) Configuration block for configuring email Multi-Factor Authentication (MFA); requires at least 2 `account_recovery_setting` entries; requires an `email_configuration` configuration block. Effective only when `mfa_configuration` is `ON` or `OPTIONAL`. [Detailed below](#email_mfa_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
-* `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
+* `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `email_mfa_configuration`, `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `email_mfa_configuration`, `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
 * `sign_in_policy` - (Optional) Configuration block for information about the user pool sign in policy. [Detailed below](#sign_in_policy).
 * `sms_authentication_message` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
-* `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
+* `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). SMS MFA is activated only when `mfa_configuration` is set to `ON` or `OPTIONAL` along with this block. Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `sms_verification_message` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
-* `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. [Detailed below](#software_token_mfa_configuration).
+* `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. Effective only when `mfa_configuration` is `ON` or `OPTIONAL`. [Detailed below](#software_token_mfa_configuration).
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_attribute_update_settings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
@@ -288,7 +286,12 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### user_pool_add_ons
 
+* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
+
+### advanced_security_additional_flows
+
+* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 
@@ -342,4 +345,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1de089d90b5bc7a6d3a592c8987de03ad29aa1c45f9f1fa7b61945e93c3552b1 -->
+<!-- cache-key: cdktf-0.20.8 input-bca4950da2c2c584aca2853714292fb121daa097f5248e0bc2a1c42edb6c828d -->

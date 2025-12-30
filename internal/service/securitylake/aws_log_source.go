@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +39,7 @@ func newAWSLogSourceResource(context.Context) (resource.ResourceWithConfigure, e
 }
 
 type awsLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[awsLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -113,7 +114,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
 	})
 
@@ -158,7 +159,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -211,7 +212,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteAwsLogSourceOutput, error) {
 		return conn.DeleteAwsLogSource(ctx, input)
 	})
 
@@ -235,7 +236,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -272,6 +273,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 }
 
 type awsLogSourceResourceModel struct {
+	framework.WithRegionModel
 	ID     types.String                                             `tfsdk:"id"`
 	Source fwtypes.ListNestedObjectValueOf[awsLogSourceSourceModel] `tfsdk:"source"`
 }

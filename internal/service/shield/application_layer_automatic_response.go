@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -9,21 +9,22 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,6 +44,11 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 }
 
 // @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/shield/types;awstypes;awstypes.ApplicationLayerAutomaticResponseConfiguration")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preIdentityVersion="v5.100.0")
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
@@ -54,9 +60,9 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 }
 
 type applicationLayerAutomaticResponseResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -66,7 +72,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
 				Required:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrResourceARN)),
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -134,19 +140,12 @@ func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, re
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().ShieldClient(ctx)
 
 	resourceARN := data.ID.ValueString()
 	output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -259,7 +258,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	}
 
 	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: arn,
 		}
@@ -268,11 +267,11 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	return output.ApplicationLayerAutomaticResponseConfiguration, nil
 }
 
-func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) retry.StateRefreshFunc {
+func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.Client, resourceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationLayerAutomaticResponseByResourceARN(ctx, conn, resourceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -285,7 +284,7 @@ func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.C
 }
 
 func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Refresh:                   statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
@@ -304,7 +303,7 @@ func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shi
 }
 
 func waitApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
 		Target:  []string{},
 		Refresh: statusApplicationLayerAutomaticResponse(ctx, conn, resourceARN),
@@ -325,17 +324,6 @@ type applicationLayerAutomaticResponseResourceModel struct {
 	ID          types.String                                                `tfsdk:"id"`
 	ResourceARN fwtypes.ARN                                                 `tfsdk:"resource_arn"`
 	Timeouts    timeouts.Value                                              `tfsdk:"timeouts"`
-}
-
-func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
 }
 
 func (data *applicationLayerAutomaticResponseResourceModel) setID() {

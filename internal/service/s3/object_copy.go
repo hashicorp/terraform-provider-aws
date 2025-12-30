@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -24,15 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
-// @Testing(noImport=true)
+// @NoImport
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -385,7 +385,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta an
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -826,16 +826,16 @@ func grantHash(v any) int {
 	}
 
 	if v, ok := m[names.AttrID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m[names.AttrURI]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if p, ok := m[names.AttrPermissions]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
+		fmt.Fprintf(&buf, "%v-", p.(*schema.Set).List())
 	}
 	return create.StringHashcode(buf.String())
 }

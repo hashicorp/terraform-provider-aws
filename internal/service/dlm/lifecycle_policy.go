@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dlm
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dlm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,6 +51,11 @@ func resourceLifecyclePolicy() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
 					validation.StringLenBetween(1, 500),
 				),
+			},
+			"default_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
 			},
 			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
@@ -132,6 +137,63 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
+						"copy_tags": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							Default:       false,
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
+						},
+						"create_interval": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Default:       1,
+							ValidateFunc:  validation.IntBetween(1, 7),
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("default_policy").(string) == "" {
+									if old == "0" && new == "1" {
+										return true
+									}
+								}
+								return false
+							},
+						},
+						"exclusions": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							RequiredWith:  []string{"default_policy"},
+							ConflictsWith: []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"exclude_boot_volumes": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"exclude_tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"exclude_volume_types": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 6,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"extend_deletion": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							Default:       false,
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
+						},
 						"event_source": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -174,25 +236,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
-						"resource_types": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							},
-						},
-						"resource_locations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
-							},
-						},
 						names.AttrParameters: {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -210,11 +253,59 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
+						"policy_language": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PolicyLanguageValues](),
+						},
 						"policy_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
 							ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
+						},
+						"resource_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
+							},
+						},
+						names.AttrResourceType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+							RequiredWith:     []string{"default_policy"},
+						},
+						"resource_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+							},
+							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
+						},
+						"retain_interval": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Default:       7,
+							ValidateFunc:  validation.IntBetween(2, 14),
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("default_policy").(string) == "" {
+									if old == "0" && new == "7" {
+										return true
+									}
+								}
+								return false
+							},
 						},
 						names.AttrSchedule: {
 							Type:     schema.TypeList,
@@ -223,6 +314,48 @@ func resourceLifecyclePolicy() *schema.Resource {
 							MaxItems: 4,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"archive_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"archive_retain_rule": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"retention_archive_tier": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"count": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntBetween(1, 1000),
+																		},
+																		names.AttrInterval: {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"interval_unit": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.RetentionIntervalUnitValues](),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"copy_tags": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -256,6 +389,56 @@ func resourceLifecyclePolicy() *schema.Resource {
 													Optional:         true,
 													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.LocationValues](),
+												},
+												"scripts": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"execute_operation_on_script_failure": {
+																Type:     schema.TypeBool,
+																Computed: true,
+																Optional: true,
+															},
+															"execution_handler": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(0, 200),
+																	validation.StringMatch(regexache.MustCompile("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+																),
+															},
+															"execution_handler_service": {
+																Type:             schema.TypeString,
+																Computed:         true,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.ExecutionHandlerServiceValues](),
+															},
+															"execution_timeout": {
+																Type:         schema.TypeInt,
+																Computed:     true,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(1, 120),
+															},
+															"maximum_retry_count": {
+																Type:         schema.TypeInt,
+																Computed:     true,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(1, 3),
+															},
+															"stages": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 1,
+																MaxItems: 2,
+																Elem: &schema.Schema{
+																	Type:             schema.TypeString,
+																	ValidateDiagFunc: enum.Validate[awstypes.StageValues](),
+																},
+															},
+														},
+													},
 												},
 												"times": {
 													Type:     schema.TypeList,
@@ -330,8 +513,13 @@ func resourceLifecyclePolicy() *schema.Resource {
 												},
 												names.AttrTarget: {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+												},
+												"target_region": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidRegionName,
 												},
 											},
 										},
@@ -486,19 +674,25 @@ const (
 )
 
 func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	const createRetryTimeout = 2 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
-		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]any)),
+		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]any), d.Get("default_policy").(string)),
 		State:            awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (any, error) {
+	if v, ok := d.GetOk("default_policy"); ok {
+		input.DefaultPolicy = awstypes.DefaultPolicyTypeValues(v.(string))
+	}
+
+	const (
+		timeout = 2 * time.Minute
+	)
+	output, err := tfresource.RetryWhenIsA[*dlm.CreateLifecyclePolicyOutput, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (*dlm.CreateLifecyclePolicyOutput, error) {
 		return conn.CreateLifecyclePolicy(ctx, &input)
 	})
 
@@ -506,7 +700,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "creating DLM Lifecycle Policy: %s", err)
 	}
 
-	d.SetId(aws.ToString(out.(*dlm.CreateLifecyclePolicyOutput).PolicyId))
+	d.SetId(aws.ToString(output.PolicyId))
 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
@@ -515,10 +709,9 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
-	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
-	out, err := findLifecyclePolicyByID(ctx, conn, d.Id())
+	output, err := findLifecyclePolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -528,15 +721,18 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Policy.PolicyArn)
-	d.Set(names.AttrDescription, out.Policy.Description)
-	d.Set(names.AttrExecutionRoleARN, out.Policy.ExecutionRoleArn)
-	d.Set(names.AttrState, out.Policy.State)
-	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
+	d.Set(names.AttrARN, output.Policy.PolicyArn)
+	if aws.ToBool(output.Policy.DefaultPolicy) {
+		d.Set("default_policy", d.Get("default_policy"))
+	}
+	d.Set(names.AttrDescription, output.Policy.Description)
+	d.Set(names.AttrExecutionRoleARN, output.Policy.ExecutionRoleArn)
+	if err := d.Set("policy_details", flattenPolicyDetails(output.Policy.PolicyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
+	d.Set(names.AttrState, output.Policy.State)
 
-	setTagsOut(ctx, out.Policy.Tags)
+	setTagsOut(ctx, output.Policy.Tags)
 
 	return diags
 }
@@ -556,15 +752,15 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 		if d.HasChange(names.AttrExecutionRoleARN) {
 			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
+		if d.HasChange("policy_details") {
+			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]any), d.Get("default_policy").(string))
+		}
 		if d.HasChange(names.AttrState) {
 			input.State = awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string))
 		}
-		if d.HasChange("policy_details") {
-			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]any))
-		}
 
-		log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
 		_, err := conn.UpdateLifecyclePolicy(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DLM Lifecycle Policy (%s): %s", d.Id(), err)
 		}
@@ -595,16 +791,19 @@ func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findLifecyclePolicyByID(ctx context.Context, conn *dlm.Client, id string) (*dlm.GetLifecyclePolicyOutput, error) {
-	input := &dlm.GetLifecyclePolicyInput{
+	input := dlm.GetLifecyclePolicyInput{
 		PolicyId: aws.String(id),
 	}
 
+	return findLifecyclePolicy(ctx, conn, &input)
+}
+
+func findLifecyclePolicy(ctx context.Context, conn *dlm.Client, input *dlm.GetLifecyclePolicyInput) (*dlm.GetLifecyclePolicyOutput, error) {
 	output, err := conn.GetLifecyclePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			LastError:   err,
+			LastError: err,
 		}
 	}
 
@@ -619,670 +818,875 @@ func findLifecyclePolicyByID(ctx context.Context, conn *dlm.Client, id string) (
 	return output, nil
 }
 
-func expandPolicyDetails(cfg []any) *awstypes.PolicyDetails {
-	if len(cfg) == 0 || cfg[0] == nil {
-		return nil
-	}
-	m := cfg[0].(map[string]any)
-	policyType := m["policy_type"].(string)
-
-	policyDetails := &awstypes.PolicyDetails{
-		PolicyType: awstypes.PolicyTypeValues(policyType),
-	}
-	if v, ok := m["resource_types"].([]any); ok && len(v) > 0 {
-		policyDetails.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
-	}
-	if v, ok := m["resource_locations"].([]any); ok && len(v) > 0 {
-		policyDetails.ResourceLocations = flex.ExpandStringyValueList[awstypes.ResourceLocationValues](v)
-	}
-	if v, ok := m[names.AttrSchedule].([]any); ok && len(v) > 0 {
-		policyDetails.Schedules = expandSchedules(v)
-	}
-	if v, ok := m[names.AttrAction].([]any); ok && len(v) > 0 {
-		policyDetails.Actions = expandActions(v)
-	}
-	if v, ok := m["event_source"].([]any); ok && len(v) > 0 {
-		policyDetails.EventSource = expandEventSource(v)
-	}
-	if v, ok := m["target_tags"].(map[string]any); ok && len(v) > 0 {
-		policyDetails.TargetTags = expandTags(v)
-	}
-	if v, ok := m[names.AttrParameters].([]any); ok && len(v) > 0 {
-		policyDetails.Parameters = expandParameters(v, policyType)
-	}
-
-	return policyDetails
-}
-
-func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]any {
-	result := make(map[string]any)
-	result["resource_types"] = flex.FlattenStringyValueList(policyDetails.ResourceTypes)
-	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
-	result[names.AttrAction] = flattenActions(policyDetails.Actions)
-	result["event_source"] = flattenEventSource(policyDetails.EventSource)
-	result[names.AttrSchedule] = flattenSchedules(policyDetails.Schedules)
-	result["target_tags"] = flattenTags(policyDetails.TargetTags)
-	result["policy_type"] = string(policyDetails.PolicyType)
-
-	if policyDetails.Parameters != nil {
-		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)
-	}
-
-	return []map[string]any{result}
-}
-
-func expandSchedules(cfg []any) []awstypes.Schedule {
-	schedules := make([]awstypes.Schedule, len(cfg))
-	for i, c := range cfg {
-		schedule := awstypes.Schedule{}
-		m := c.(map[string]any)
-		if v, ok := m["copy_tags"]; ok {
-			schedule.CopyTags = aws.Bool(v.(bool))
-		}
-		if v, ok := m["create_rule"]; ok {
-			schedule.CreateRule = expandCreateRule(v.([]any))
-		}
-		if v, ok := m["cross_region_copy_rule"].(*schema.Set); ok && v.Len() > 0 {
-			schedule.CrossRegionCopyRules = expandCrossRegionCopyRules(v.List())
-		}
-		if v, ok := m[names.AttrName]; ok {
-			schedule.Name = aws.String(v.(string))
-		}
-		if v, ok := m["deprecate_rule"]; ok {
-			schedule.DeprecateRule = expandDeprecateRule(v.([]any))
-		}
-		if v, ok := m["fast_restore_rule"]; ok {
-			schedule.FastRestoreRule = expandFastRestoreRule(v.([]any))
-		}
-		if v, ok := m["share_rule"]; ok {
-			schedule.ShareRules = expandShareRule(v.([]any))
-		}
-		if v, ok := m["retain_rule"]; ok {
-			schedule.RetainRule = expandRetainRule(v.([]any))
-		}
-		if v, ok := m["tags_to_add"]; ok {
-			schedule.TagsToAdd = expandTags(v.(map[string]any))
-		}
-		if v, ok := m["variable_tags"]; ok {
-			schedule.VariableTags = expandTags(v.(map[string]any))
-		}
-
-		schedules[i] = schedule
-	}
-
-	return schedules
-}
-
-func flattenSchedules(schedules []awstypes.Schedule) []map[string]any {
-	result := make([]map[string]any, len(schedules))
-	for i, s := range schedules {
-		m := make(map[string]any)
-		m["copy_tags"] = aws.ToBool(s.CopyTags)
-		m["create_rule"] = flattenCreateRule(s.CreateRule)
-		m["cross_region_copy_rule"] = flattenCrossRegionCopyRules(s.CrossRegionCopyRules)
-		m[names.AttrName] = aws.ToString(s.Name)
-		m["retain_rule"] = flattenRetainRule(s.RetainRule)
-		m["tags_to_add"] = flattenTags(s.TagsToAdd)
-		m["variable_tags"] = flattenTags(s.VariableTags)
-
-		if s.DeprecateRule != nil {
-			m["deprecate_rule"] = flattenDeprecateRule(s.DeprecateRule)
-		}
-
-		if s.FastRestoreRule != nil {
-			m["fast_restore_rule"] = flattenFastRestoreRule(s.FastRestoreRule)
-		}
-
-		if s.ShareRules != nil {
-			m["share_rule"] = flattenShareRule(s.ShareRules)
-		}
-
-		result[i] = m
-	}
-
-	return result
-}
-
-func expandActions(cfg []any) []awstypes.Action {
-	actions := make([]awstypes.Action, len(cfg))
-	for i, c := range cfg {
-		action := awstypes.Action{}
-		m := c.(map[string]any)
-		if v, ok := m["cross_region_copy"].(*schema.Set); ok {
-			action.CrossRegionCopy = expandActionCrossRegionCopyRules(v.List())
-		}
-		if v, ok := m[names.AttrName]; ok {
-			action.Name = aws.String(v.(string))
-		}
-
-		actions[i] = action
-	}
-
-	return actions
-}
-
-func flattenActions(actions []awstypes.Action) []map[string]any {
-	result := make([]map[string]any, len(actions))
-	for i, s := range actions {
-		m := make(map[string]any)
-
-		m[names.AttrName] = aws.ToString(s.Name)
-
-		if s.CrossRegionCopy != nil {
-			m["cross_region_copy"] = flattenActionCrossRegionCopyRules(s.CrossRegionCopy)
-		}
-
-		result[i] = m
-	}
-
-	return result
-}
-
-func expandActionCrossRegionCopyRules(l []any) []awstypes.CrossRegionCopyAction {
-	if len(l) == 0 || l[0] == nil {
+func expandPolicyDetails(tfList []any, defaultPolicyValue string) *awstypes.PolicyDetails {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var rules []awstypes.CrossRegionCopyAction
+	tfMap := tfList[0].(map[string]any)
+	policyType := awstypes.PolicyTypeValues(tfMap["policy_type"].(string))
+	apiObject := &awstypes.PolicyDetails{
+		PolicyType: policyType,
+	}
 
-	for _, tfMapRaw := range l {
-		m, ok := tfMapRaw.(map[string]any)
+	if defaultPolicyValue != "" {
+		if v, ok := tfMap["copy_tags"].(bool); ok {
+			apiObject.CopyTags = aws.Bool(v)
+		}
+		if v, ok := tfMap["create_interval"].(int); ok {
+			apiObject.CreateInterval = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["exclusions"].([]any); ok && len(v) > 0 {
+			apiObject.Exclusions = expandExclusions(v)
+		}
+		if v, ok := tfMap["extend_deletion"].(bool); ok {
+			apiObject.ExtendDeletion = aws.Bool(v)
+		}
+		if v, ok := tfMap[names.AttrResourceType].(string); ok {
+			apiObject.ResourceType = awstypes.ResourceTypeValues(v)
+		}
+		if v, ok := tfMap["retain_interval"].(int); ok {
+			apiObject.RetainInterval = aws.Int32(int32(v))
+		}
+	}
 
+	if v, ok := tfMap[names.AttrAction].([]any); ok && len(v) > 0 {
+		apiObject.Actions = expandActions(v)
+	}
+	if v, ok := tfMap["event_source"].([]any); ok && len(v) > 0 {
+		apiObject.EventSource = expandEventSource(v)
+	}
+	if v, ok := tfMap[names.AttrParameters].([]any); ok && len(v) > 0 {
+		apiObject.Parameters = expandParameters(v, policyType)
+	}
+	if v, ok := tfMap["policy_language"].(string); ok {
+		apiObject.PolicyLanguage = awstypes.PolicyLanguageValues(v)
+	}
+	if v, ok := tfMap["resource_types"].([]any); ok && len(v) > 0 {
+		apiObject.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
+	}
+	if v, ok := tfMap["resource_locations"].([]any); ok && len(v) > 0 {
+		apiObject.ResourceLocations = flex.ExpandStringyValueList[awstypes.ResourceLocationValues](v)
+	}
+	if v, ok := tfMap[names.AttrSchedule].([]any); ok && len(v) > 0 {
+		apiObject.Schedules = expandSchedules(v)
+	}
+	if v, ok := tfMap["target_tags"].(map[string]any); ok && len(v) > 0 {
+		apiObject.TargetTags = expandTags(v)
+	}
+
+	return apiObject
+}
+
+func flattenPolicyDetails(apiObject *awstypes.PolicyDetails) []any {
+	tfMap := make(map[string]any)
+	tfMap[names.AttrAction] = flattenActions(apiObject.Actions)
+	tfMap["copy_tags"] = aws.ToBool(apiObject.CopyTags)
+	tfMap["create_interval"] = aws.ToInt32(apiObject.CreateInterval)
+	tfMap["event_source"] = flattenEventSource(apiObject.EventSource)
+	tfMap["exclusions"] = flattenExclusions(apiObject.Exclusions)
+	tfMap["extend_deletion"] = aws.ToBool(apiObject.ExtendDeletion)
+	if apiObject.Parameters != nil {
+		tfMap[names.AttrParameters] = flattenParameters(apiObject.Parameters)
+	}
+	tfMap["policy_language"] = apiObject.PolicyLanguage
+	tfMap["policy_type"] = apiObject.PolicyType
+	tfMap[names.AttrResourceType] = apiObject.ResourceType
+	tfMap["resource_types"] = apiObject.ResourceTypes
+	tfMap["resource_locations"] = apiObject.ResourceLocations
+	tfMap["retain_interval"] = aws.ToInt32(apiObject.RetainInterval)
+	tfMap[names.AttrSchedule] = flattenSchedules(apiObject.Schedules)
+	tfMap["target_tags"] = flattenTags(apiObject.TargetTags)
+
+	return []any{tfMap}
+}
+
+func expandSchedules(tfList []any) []awstypes.Schedule {
+	apiObjects := make([]awstypes.Schedule, len(tfList))
+
+	for i, tfMapRaw := range tfList {
+		apiObject := awstypes.Schedule{}
+		tfMap := tfMapRaw.(map[string]any)
+
+		if v, ok := tfMap["archive_rule"].([]any); ok && len(v) > 0 {
+			apiObject.ArchiveRule = expandArchiveRule(v)
+		}
+		if v, ok := tfMap["copy_tags"]; ok {
+			apiObject.CopyTags = aws.Bool(v.(bool))
+		}
+		if v, ok := tfMap["create_rule"]; ok {
+			apiObject.CreateRule = expandCreateRule(v.([]any))
+		}
+		if v, ok := tfMap["cross_region_copy_rule"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.CrossRegionCopyRules = expandCrossRegionCopyRules(v.List())
+		}
+		if v, ok := tfMap["deprecate_rule"]; ok {
+			apiObject.DeprecateRule = expandDeprecateRule(v.([]any))
+		}
+		if v, ok := tfMap["fast_restore_rule"]; ok {
+			apiObject.FastRestoreRule = expandFastRestoreRule(v.([]any))
+		}
+		if v, ok := tfMap[names.AttrName]; ok {
+			apiObject.Name = aws.String(v.(string))
+		}
+		if v, ok := tfMap["retain_rule"]; ok {
+			apiObject.RetainRule = expandRetainRule(v.([]any))
+		}
+		if v, ok := tfMap["share_rule"]; ok {
+			apiObject.ShareRules = expandShareRule(v.([]any))
+		}
+		if v, ok := tfMap["tags_to_add"]; ok {
+			apiObject.TagsToAdd = expandTags(v.(map[string]any))
+		}
+		if v, ok := tfMap["variable_tags"]; ok {
+			apiObject.VariableTags = expandTags(v.(map[string]any))
+		}
+
+		apiObjects[i] = apiObject
+	}
+
+	return apiObjects
+}
+
+func flattenSchedules(apiObjects []awstypes.Schedule) []any {
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		tfMap["archive_rule"] = flattenArchiveRule(apiObject.ArchiveRule)
+		tfMap["copy_tags"] = aws.ToBool(apiObject.CopyTags)
+		tfMap["create_rule"] = flattenCreateRule(apiObject.CreateRule)
+		tfMap["cross_region_copy_rule"] = flattenCrossRegionCopyRules(apiObject.CrossRegionCopyRules)
+		if apiObject.DeprecateRule != nil {
+			tfMap["deprecate_rule"] = flattenDeprecateRule(apiObject.DeprecateRule)
+		}
+		if apiObject.FastRestoreRule != nil {
+			tfMap["fast_restore_rule"] = flattenFastRestoreRule(apiObject.FastRestoreRule)
+		}
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+		tfMap["retain_rule"] = flattenRetainRule(apiObject.RetainRule)
+		if apiObject.ShareRules != nil {
+			tfMap["share_rule"] = flattenShareRule(apiObject.ShareRules)
+		}
+		tfMap["tags_to_add"] = flattenTags(apiObject.TagsToAdd)
+		tfMap["variable_tags"] = flattenTags(apiObject.VariableTags)
+
+		tfList[i] = tfMap
+	}
+
+	return tfList
+}
+
+func expandActions(tfList []any) []awstypes.Action {
+	apiObjects := make([]awstypes.Action, len(tfList))
+
+	for i, tfMapRaw := range tfList {
+		apiObject := awstypes.Action{}
+		tfMap := tfMapRaw.(map[string]any)
+
+		if v, ok := tfMap["cross_region_copy"].(*schema.Set); ok {
+			apiObject.CrossRegionCopy = expandActionCrossRegionCopyRules(v.List())
+		}
+		if v, ok := tfMap[names.AttrName]; ok {
+			apiObject.Name = aws.String(v.(string))
+		}
+
+		apiObjects[i] = apiObject
+	}
+
+	return apiObjects
+}
+
+func flattenActions(apiObjects []awstypes.Action) []any {
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		if apiObject.CrossRegionCopy != nil {
+			tfMap["cross_region_copy"] = flattenActionCrossRegionCopyRules(apiObject.CrossRegionCopy)
+		}
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+
+		tfList[i] = tfMap
+	}
+
+	return tfList
+}
+
+func expandActionCrossRegionCopyRules(tfList []any) []awstypes.CrossRegionCopyAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	var apiObjects []awstypes.CrossRegionCopyAction
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		rule := awstypes.CrossRegionCopyAction{}
-		if v, ok := m[names.AttrEncryptionConfiguration].([]any); ok {
-			rule.EncryptionConfiguration = expandActionCrossRegionCopyRuleEncryptionConfiguration(v)
+		apiObject := awstypes.CrossRegionCopyAction{}
+		if v, ok := tfMap[names.AttrEncryptionConfiguration].([]any); ok {
+			apiObject.EncryptionConfiguration = expandActionCrossRegionCopyRuleEncryptionConfiguration(v)
 		}
-		if v, ok := m["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
-			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
+		if v, ok := tfMap["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
-		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
-			rule.Target = aws.String(v)
+		if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
+			apiObject.Target = aws.String(v)
 		}
 
-		rules = append(rules, rule)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return rules
+	return apiObjects
 }
 
-func flattenActionCrossRegionCopyRules(rules []awstypes.CrossRegionCopyAction) []any {
-	if len(rules) == 0 {
+func flattenActionCrossRegionCopyRules(apiObjects []awstypes.CrossRegionCopyAction) []any {
+	if len(apiObjects) == 0 {
 		return []any{}
 	}
 
-	var result []any
+	var tfList []any
 
-	for _, rule := range rules {
-		m := map[string]any{
-			names.AttrEncryptionConfiguration: flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
-			"retain_rule":                     flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			names.AttrTarget:                  aws.ToString(rule.Target),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrEncryptionConfiguration: flattenActionCrossRegionCopyRuleEncryptionConfiguration(apiObject.EncryptionConfiguration),
+			"retain_rule":                     flattenCrossRegionCopyRuleRetainRule(apiObject.RetainRule),
+			names.AttrTarget:                  aws.ToString(apiObject.Target),
 		}
 
-		result = append(result, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }
 
-func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []any) *awstypes.EncryptionConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandActionCrossRegionCopyRuleEncryptionConfiguration(tfList []any) *awstypes.EncryptionConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-	config := &awstypes.EncryptionConfiguration{
-		Encrypted: aws.Bool(m[names.AttrEncrypted].(bool)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.EncryptionConfiguration{
+		Encrypted: aws.Bool(tfMap[names.AttrEncrypted].(bool)),
 	}
 
-	if v, ok := m["cmk_arn"].(string); ok && v != "" {
-		config.CmkArn = aws.String(v)
+	if v, ok := tfMap["cmk_arn"].(string); ok && v != "" {
+		apiObject.CmkArn = aws.String(v)
 	}
-	return config
+
+	return apiObject
 }
 
-func flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule *awstypes.EncryptionConfiguration) []any {
-	if rule == nil {
+func flattenActionCrossRegionCopyRuleEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		names.AttrEncrypted: aws.ToBool(rule.Encrypted),
-		"cmk_arn":           aws.ToString(rule.CmkArn),
+	tfMap := map[string]any{
+		"cmk_arn":           aws.ToString(apiObject.CmkArn),
+		names.AttrEncrypted: aws.ToBool(apiObject.Encrypted),
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func expandEventSource(l []any) *awstypes.EventSource {
-	if len(l) == 0 || l[0] == nil {
+func expandEventSource(tfList []any) *awstypes.EventSource {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-	config := &awstypes.EventSource{
-		Type: awstypes.EventSourceValues(m[names.AttrType].(string)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.EventSource{
+		Type: awstypes.EventSourceValues(tfMap[names.AttrType].(string)),
 	}
 
-	if v, ok := m[names.AttrParameters].([]any); ok && len(v) > 0 {
-		config.Parameters = expandEventSourceParameters(v)
+	if v, ok := tfMap[names.AttrParameters].([]any); ok && len(v) > 0 {
+		apiObject.Parameters = expandEventSourceParameters(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenEventSource(rule *awstypes.EventSource) []any {
-	if rule == nil {
+func flattenEventSource(apiObject *awstypes.EventSource) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		names.AttrParameters: flattenEventSourceParameters(rule.Parameters),
-		names.AttrType:       string(rule.Type),
+	tfMap := map[string]any{
+		names.AttrParameters: flattenEventSourceParameters(apiObject.Parameters),
+		names.AttrType:       apiObject.Type,
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func expandEventSourceParameters(l []any) *awstypes.EventParameters {
-	if len(l) == 0 || l[0] == nil {
+func expandEventSourceParameters(tfList []any) *awstypes.EventParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
-	config := &awstypes.EventParameters{
-		DescriptionRegex: aws.String(m["description_regex"].(string)),
-		EventType:        awstypes.EventTypeValues(m["event_type"].(string)),
-		SnapshotOwner:    flex.ExpandStringValueSet(m["snapshot_owner"].(*schema.Set)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.EventParameters{
+		DescriptionRegex: aws.String(tfMap["description_regex"].(string)),
+		EventType:        awstypes.EventTypeValues(tfMap["event_type"].(string)),
+		SnapshotOwner:    flex.ExpandStringValueSet(tfMap["snapshot_owner"].(*schema.Set)),
 	}
 
-	return config
+	return apiObject
 }
 
-func flattenEventSourceParameters(rule *awstypes.EventParameters) []any {
-	if rule == nil {
+func flattenEventSourceParameters(apiObject *awstypes.EventParameters) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		"description_regex": aws.ToString(rule.DescriptionRegex),
-		"event_type":        string(rule.EventType),
-		"snapshot_owner":    flex.FlattenStringValueSet(rule.SnapshotOwner),
+	tfMap := map[string]any{
+		"description_regex": aws.ToString(apiObject.DescriptionRegex),
+		"event_type":        apiObject.EventType,
+		"snapshot_owner":    apiObject.SnapshotOwner,
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func expandCrossRegionCopyRules(l []any) []awstypes.CrossRegionCopyRule {
-	if len(l) == 0 || l[0] == nil {
+func expandCrossRegionCopyRules(tfList []any) []awstypes.CrossRegionCopyRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var rules []awstypes.CrossRegionCopyRule
+	var apiObjects []awstypes.CrossRegionCopyRule
 
-	for _, tfMapRaw := range l {
-		m, ok := tfMapRaw.(map[string]any)
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		rule := awstypes.CrossRegionCopyRule{}
+		apiObject := awstypes.CrossRegionCopyRule{}
 
-		if v, ok := m["cmk_arn"].(string); ok && v != "" {
-			rule.CmkArn = aws.String(v)
+		if v, ok := tfMap["cmk_arn"].(string); ok && v != "" {
+			apiObject.CmkArn = aws.String(v)
 		}
-		if v, ok := m["copy_tags"].(bool); ok {
-			rule.CopyTags = aws.Bool(v)
+		if v, ok := tfMap["copy_tags"].(bool); ok {
+			apiObject.CopyTags = aws.Bool(v)
 		}
-		if v, ok := m["deprecate_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
-			rule.DeprecateRule = expandCrossRegionCopyRuleDeprecateRule(v)
+		if v, ok := tfMap["deprecate_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.DeprecateRule = expandCrossRegionCopyRuleDeprecateRule(v)
 		}
-		if v, ok := m[names.AttrEncrypted].(bool); ok {
-			rule.Encrypted = aws.Bool(v)
+		if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
+			apiObject.Encrypted = aws.Bool(v)
 		}
-		if v, ok := m["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
-			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
+		if v, ok := tfMap["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
-		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
-			rule.Target = aws.String(v)
+		if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
+			apiObject.Target = aws.String(v)
+		}
+		if v, ok := tfMap["target_region"].(string); ok && v != "" {
+			apiObject.TargetRegion = aws.String(v)
 		}
 
-		rules = append(rules, rule)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return rules
+	return apiObjects
 }
 
-func flattenCrossRegionCopyRules(rules []awstypes.CrossRegionCopyRule) []any {
-	if len(rules) == 0 {
+func flattenCrossRegionCopyRules(apiObjects []awstypes.CrossRegionCopyRule) []any {
+	if len(apiObjects) == 0 {
 		return []any{}
 	}
 
-	var result []any
+	var tfList []any
 
-	for _, rule := range rules {
-		m := map[string]any{
-			"cmk_arn":           aws.ToString(rule.CmkArn),
-			"copy_tags":         aws.ToBool(rule.CopyTags),
-			"deprecate_rule":    flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
-			names.AttrEncrypted: aws.ToBool(rule.Encrypted),
-			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			names.AttrTarget:    aws.ToString(rule.Target),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"cmk_arn":           aws.ToString(apiObject.CmkArn),
+			"copy_tags":         aws.ToBool(apiObject.CopyTags),
+			"deprecate_rule":    flattenCrossRegionCopyRuleDeprecateRule(apiObject.DeprecateRule),
+			names.AttrEncrypted: aws.ToBool(apiObject.Encrypted),
+			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(apiObject.RetainRule),
+			names.AttrTarget:    aws.ToString(apiObject.Target),
+			"target_region":     aws.ToString(apiObject.TargetRegion),
 		}
 
-		result = append(result, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }
 
-func expandCrossRegionCopyRuleDeprecateRule(l []any) *awstypes.CrossRegionCopyDeprecateRule {
-	if len(l) == 0 || l[0] == nil {
+func expandCrossRegionCopyRuleDeprecateRule(tfList []any) *awstypes.CrossRegionCopyDeprecateRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &awstypes.CrossRegionCopyDeprecateRule{
-		Interval:     aws.Int32(int32(m[names.AttrInterval].(int))),
-		IntervalUnit: awstypes.RetentionIntervalUnitValues(m["interval_unit"].(string)),
+		Interval:     aws.Int32(int32(tfMap[names.AttrInterval].(int))),
+		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap["interval_unit"].(string)),
 	}
 }
 
-func expandCrossRegionCopyRuleRetainRule(l []any) *awstypes.CrossRegionCopyRetainRule {
-	if len(l) == 0 || l[0] == nil {
+func expandCrossRegionCopyRuleRetainRule(tfList []any) *awstypes.CrossRegionCopyRetainRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
 	return &awstypes.CrossRegionCopyRetainRule{
-		Interval:     aws.Int32(int32(m[names.AttrInterval].(int))),
-		IntervalUnit: awstypes.RetentionIntervalUnitValues(m["interval_unit"].(string)),
+		Interval:     aws.Int32(int32(tfMap[names.AttrInterval].(int))),
+		IntervalUnit: awstypes.RetentionIntervalUnitValues(tfMap["interval_unit"].(string)),
 	}
 }
 
-func flattenCrossRegionCopyRuleDeprecateRule(rule *awstypes.CrossRegionCopyDeprecateRule) []any {
-	if rule == nil {
+func flattenCrossRegionCopyRuleDeprecateRule(apiObject *awstypes.CrossRegionCopyDeprecateRule) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		names.AttrInterval: int(aws.ToInt32(rule.Interval)),
-		"interval_unit":    string(rule.IntervalUnit),
+	tfMap := map[string]any{
+		names.AttrInterval: aws.ToInt32(apiObject.Interval),
+		"interval_unit":    apiObject.IntervalUnit,
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func flattenCrossRegionCopyRuleRetainRule(rule *awstypes.CrossRegionCopyRetainRule) []any {
-	if rule == nil {
+func flattenCrossRegionCopyRuleRetainRule(apiObject *awstypes.CrossRegionCopyRetainRule) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		names.AttrInterval: int(aws.ToInt32(rule.Interval)),
-		"interval_unit":    string(rule.IntervalUnit),
+	tfMap := map[string]any{
+		names.AttrInterval: aws.ToInt32(apiObject.Interval),
+		"interval_unit":    apiObject.IntervalUnit,
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func expandCreateRule(cfg []any) *awstypes.CreateRule {
-	if len(cfg) == 0 || cfg[0] == nil {
+func expandCreateRule(tfList []any) *awstypes.CreateRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	c := cfg[0].(map[string]any)
-	createRule := &awstypes.CreateRule{}
 
-	if v, ok := c["times"].([]any); ok && len(v) > 0 {
-		createRule.Times = flex.ExpandStringValueList(v)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CreateRule{}
+
+	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
+		apiObject.Interval = aws.Int32(int32(v))
 	}
-
-	if v, ok := c[names.AttrInterval].(int); ok && v > 0 {
-		createRule.Interval = aws.Int32(int32(v))
-	}
-
-	if v, ok := c[names.AttrLocation].(string); ok && v != "" {
-		createRule.Location = awstypes.LocationValues(v)
-	}
-
-	if v, ok := c["interval_unit"].(string); ok && v != "" {
-		createRule.IntervalUnit = awstypes.IntervalUnitValues(v)
+	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+		apiObject.IntervalUnit = awstypes.IntervalUnitValues(v)
 	} else {
-		createRule.IntervalUnit = awstypes.IntervalUnitValuesHours
+		apiObject.IntervalUnit = awstypes.IntervalUnitValuesHours
+	}
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
+		apiObject.Location = awstypes.LocationValues(v)
+	}
+	if v, ok := tfMap["scripts"]; ok {
+		apiObject.Scripts = expandScripts(v.([]any))
+	}
+	if v, ok := tfMap["times"].([]any); ok && len(v) > 0 {
+		apiObject.Times = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := c["cron_expression"].(string); ok && v != "" {
-		createRule.CronExpression = aws.String(v)
-		createRule.IntervalUnit = "" // sets interval unit to empty string so that all fields related to interval are ignored
+	if v, ok := tfMap["cron_expression"].(string); ok && v != "" {
+		apiObject.CronExpression = aws.String(v)
+		apiObject.IntervalUnit = "" // sets interval unit to empty string so that all fields related to interval are ignored
 	}
 
-	return createRule
+	return apiObject
 }
 
-func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]any {
-	if createRule == nil {
-		return []map[string]any{}
+func flattenCreateRule(apiObject *awstypes.CreateRule) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	result := make(map[string]any)
-	result["times"] = flex.FlattenStringValueList(createRule.Times)
-
-	if createRule.Interval != nil {
-		result[names.AttrInterval] = aws.ToInt32(createRule.Interval)
+	tfMap := make(map[string]any)
+	if apiObject.CronExpression != nil {
+		tfMap["cron_expression"] = aws.ToString(apiObject.CronExpression)
 	}
-
-	result["interval_unit"] = string(createRule.IntervalUnit)
-
-	result[names.AttrLocation] = string(createRule.Location)
-
-	if createRule.CronExpression != nil {
-		result["cron_expression"] = aws.ToString(createRule.CronExpression)
+	if apiObject.Interval != nil {
+		tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
 	}
+	tfMap["interval_unit"] = apiObject.IntervalUnit
+	tfMap[names.AttrLocation] = apiObject.Location
+	if apiObject.Scripts != nil {
+		tfMap["scripts"] = flattenScripts(apiObject.Scripts)
+	}
+	tfMap["times"] = apiObject.Times
 
-	return []map[string]any{result}
+	return []any{tfMap}
 }
 
-func expandRetainRule(cfg []any) *awstypes.RetainRule {
-	if len(cfg) == 0 || cfg[0] == nil {
-		return nil
-	}
-	m := cfg[0].(map[string]any)
-	rule := &awstypes.RetainRule{}
-
-	if v, ok := m["count"].(int); ok && v > 0 {
-		rule.Count = aws.Int32(int32(v))
-	}
-
-	if v, ok := m[names.AttrInterval].(int); ok && v > 0 {
-		rule.Interval = aws.Int32(int32(v))
-	}
-
-	if v, ok := m["interval_unit"].(string); ok && v != "" {
-		rule.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
-	}
-
-	return rule
-}
-
-func flattenRetainRule(retainRule *awstypes.RetainRule) []map[string]any {
-	result := make(map[string]any)
-	result["count"] = aws.ToInt32(retainRule.Count)
-	result["interval_unit"] = string(retainRule.IntervalUnit)
-	result[names.AttrInterval] = aws.ToInt32(retainRule.Interval)
-
-	return []map[string]any{result}
-}
-
-func expandDeprecateRule(cfg []any) *awstypes.DeprecateRule {
-	if len(cfg) == 0 || cfg[0] == nil {
-		return nil
-	}
-	m := cfg[0].(map[string]any)
-	rule := &awstypes.DeprecateRule{}
-
-	if v, ok := m["count"].(int); ok && v > 0 {
-		rule.Count = aws.Int32(int32(v))
-	}
-
-	if v, ok := m[names.AttrInterval].(int); ok && v > 0 {
-		rule.Interval = aws.Int32(int32(v))
-	}
-
-	if v, ok := m["interval_unit"].(string); ok && v != "" {
-		rule.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
-	}
-
-	return rule
-}
-
-func flattenDeprecateRule(rule *awstypes.DeprecateRule) []map[string]any {
-	result := make(map[string]any)
-	result["count"] = aws.ToInt32(rule.Count)
-	result["interval_unit"] = string(rule.IntervalUnit)
-	result[names.AttrInterval] = aws.ToInt32(rule.Interval)
-
-	return []map[string]any{result}
-}
-
-func expandFastRestoreRule(cfg []any) *awstypes.FastRestoreRule {
-	if len(cfg) == 0 || cfg[0] == nil {
-		return nil
-	}
-	m := cfg[0].(map[string]any)
-	rule := &awstypes.FastRestoreRule{
-		AvailabilityZones: flex.ExpandStringValueSet(m[names.AttrAvailabilityZones].(*schema.Set)),
-	}
-
-	if v, ok := m["count"].(int); ok && v > 0 {
-		rule.Count = aws.Int32(int32(v))
-	}
-
-	if v, ok := m[names.AttrInterval].(int); ok && v > 0 {
-		rule.Interval = aws.Int32(int32(v))
-	}
-
-	if v, ok := m["interval_unit"].(string); ok && v != "" {
-		rule.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
-	}
-
-	return rule
-}
-
-func flattenFastRestoreRule(rule *awstypes.FastRestoreRule) []map[string]any {
-	result := make(map[string]any)
-	result["count"] = aws.ToInt32(rule.Count)
-	result["interval_unit"] = string(rule.IntervalUnit)
-	result[names.AttrInterval] = aws.ToInt32(rule.Interval)
-	result[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(rule.AvailabilityZones)
-
-	return []map[string]any{result}
-}
-
-func expandShareRule(cfg []any) []awstypes.ShareRule {
-	if len(cfg) == 0 || cfg[0] == nil {
+func expandRetainRule(tfList []any) *awstypes.RetainRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	rules := make([]awstypes.ShareRule, 0)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.RetainRule{}
 
-	for _, shareRule := range cfg {
-		m := shareRule.(map[string]any)
-
-		rule := awstypes.ShareRule{
-			TargetAccounts: flex.ExpandStringValueSet(m["target_accounts"].(*schema.Set)),
-		}
-
-		if v, ok := m["unshare_interval"].(int); ok && v > 0 {
-			rule.UnshareInterval = aws.Int32(int32(v))
-		}
-
-		if v, ok := m["unshare_interval_unit"].(string); ok && v != "" {
-			rule.UnshareIntervalUnit = awstypes.RetentionIntervalUnitValues(v)
-		}
-
-		rules = append(rules, rule)
+	if v, ok := tfMap["count"].(int); ok && v > 0 {
+		apiObject.Count = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
+		apiObject.Interval = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
 	}
 
-	return rules
+	return apiObject
 }
 
-func flattenShareRule(rules []awstypes.ShareRule) []map[string]any {
-	values := make([]map[string]any, 0)
+func flattenRetainRule(apiObject *awstypes.RetainRule) []any {
+	tfMap := make(map[string]any)
+	tfMap["count"] = aws.ToInt32(apiObject.Count)
+	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
+	tfMap["interval_unit"] = apiObject.IntervalUnit
 
-	for _, v := range rules {
-		rule := make(map[string]any)
+	return []any{tfMap}
+}
 
-		if v.TargetAccounts != nil {
-			rule["target_accounts"] = flex.FlattenStringValueSet(v.TargetAccounts)
-		}
-
-		rule["unshare_interval_unit"] = string(v.UnshareIntervalUnit)
-
-		if v.UnshareInterval != nil {
-			rule["unshare_interval"] = aws.ToInt32(v.UnshareInterval)
-		}
-
-		values = append(values, rule)
+func expandDeprecateRule(tfList []any) *awstypes.DeprecateRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
 	}
 
-	return values
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DeprecateRule{}
+
+	if v, ok := tfMap["count"].(int); ok && v > 0 {
+		apiObject.Count = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
+		apiObject.Interval = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
+	}
+
+	return apiObject
 }
 
-func expandTags(m map[string]any) []awstypes.Tag {
-	var result []awstypes.Tag
-	for k, v := range m {
-		result = append(result, awstypes.Tag{
+func flattenDeprecateRule(apiObject *awstypes.DeprecateRule) []any {
+	tfMap := make(map[string]any)
+	tfMap["count"] = aws.ToInt32(apiObject.Count)
+	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
+	tfMap["interval_unit"] = apiObject.IntervalUnit
+
+	return []any{tfMap}
+}
+
+func expandFastRestoreRule(tfList []any) *awstypes.FastRestoreRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.FastRestoreRule{
+		AvailabilityZones: flex.ExpandStringValueSet(tfMap[names.AttrAvailabilityZones].(*schema.Set)),
+	}
+
+	if v, ok := tfMap["count"].(int); ok && v > 0 {
+		apiObject.Count = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
+		apiObject.Interval = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
+	}
+
+	return apiObject
+}
+
+func flattenFastRestoreRule(apiObject *awstypes.FastRestoreRule) []any {
+	tfMap := make(map[string]any)
+	tfMap[names.AttrAvailabilityZones] = apiObject.AvailabilityZones
+	tfMap["count"] = aws.ToInt32(apiObject.Count)
+	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
+	tfMap["interval_unit"] = apiObject.IntervalUnit
+
+	return []any{tfMap}
+}
+
+func expandShareRule(tfList []any) []awstypes.ShareRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.ShareRule, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+
+		apiObject := awstypes.ShareRule{
+			TargetAccounts: flex.ExpandStringValueSet(tfMap["target_accounts"].(*schema.Set)),
+		}
+
+		if v, ok := tfMap["unshare_interval"].(int); ok && v > 0 {
+			apiObject.UnshareInterval = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["unshare_interval_unit"].(string); ok && v != "" {
+			apiObject.UnshareIntervalUnit = awstypes.RetentionIntervalUnitValues(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenShareRule(apiObjects []awstypes.ShareRule) []any {
+	tfList := make([]any, 0)
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		if apiObject.TargetAccounts != nil {
+			tfMap["target_accounts"] = apiObject.TargetAccounts
+		}
+		if apiObject.UnshareInterval != nil {
+			tfMap["unshare_interval"] = aws.ToInt32(apiObject.UnshareInterval)
+		}
+		tfMap["unshare_interval_unit"] = apiObject.UnshareIntervalUnit
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandTags(tfMap map[string]any) []awstypes.Tag {
+	var apiObjects []awstypes.Tag
+
+	for k, v := range tfMap {
+		apiObjects = append(apiObjects, awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
 	}
 
-	return result
+	return apiObjects
 }
 
-func flattenTags(tags []awstypes.Tag) map[string]string {
-	result := make(map[string]string)
-	for _, t := range tags {
-		result[aws.ToString(t.Key)] = aws.ToString(t.Value)
+func flattenTags(apiObjects []awstypes.Tag) map[string]string {
+	tfMap := make(map[string]string)
+
+	for _, apiObject := range apiObjects {
+		tfMap[aws.ToString(apiObject.Key)] = aws.ToString(apiObject.Value)
 	}
 
-	return result
+	return tfMap
 }
 
-func expandParameters(cfg []any, policyType string) *awstypes.Parameters {
-	if len(cfg) == 0 || cfg[0] == nil {
+func expandParameters(tfList []any, policyType awstypes.PolicyTypeValues) *awstypes.Parameters {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]any)
-	parameters := &awstypes.Parameters{}
 
-	if v, ok := m["exclude_boot_volume"].(bool); ok && policyType == string(awstypes.PolicyTypeValuesEbsSnapshotManagement) {
-		parameters.ExcludeBootVolume = aws.Bool(v)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.Parameters{}
+
+	if v, ok := tfMap["exclude_boot_volume"].(bool); ok && policyType == awstypes.PolicyTypeValuesEbsSnapshotManagement {
+		apiObject.ExcludeBootVolume = aws.Bool(v)
 	}
 
-	if v, ok := m["no_reboot"].(bool); ok && policyType == string(awstypes.PolicyTypeValuesImageManagement) {
-		parameters.NoReboot = aws.Bool(v)
+	if v, ok := tfMap["no_reboot"].(bool); ok && policyType == awstypes.PolicyTypeValuesImageManagement {
+		apiObject.NoReboot = aws.Bool(v)
 	}
 
-	return parameters
+	return apiObject
 }
 
-func flattenParameters(parameters *awstypes.Parameters) []map[string]any {
-	result := make(map[string]any)
-	if parameters.ExcludeBootVolume != nil {
-		result["exclude_boot_volume"] = aws.ToBool(parameters.ExcludeBootVolume)
+func flattenParameters(apiObject *awstypes.Parameters) []any {
+	tfMap := make(map[string]any)
+	if apiObject.ExcludeBootVolume != nil {
+		tfMap["exclude_boot_volume"] = aws.ToBool(apiObject.ExcludeBootVolume)
+	}
+	if apiObject.NoReboot != nil {
+		tfMap["no_reboot"] = aws.ToBool(apiObject.NoReboot)
 	}
 
-	if parameters.NoReboot != nil {
-		result["no_reboot"] = aws.ToBool(parameters.NoReboot)
+	return []any{tfMap}
+}
+
+func expandScripts(tfList []any) []awstypes.Script {
+	apiObjects := make([]awstypes.Script, len(tfList))
+
+	for i, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.Script{}
+
+		if v, ok := tfMap["execute_operation_on_script_failure"].(bool); ok {
+			apiObject.ExecuteOperationOnScriptFailure = aws.Bool(v)
+		}
+		if v, ok := tfMap["execution_handler"].(string); ok {
+			apiObject.ExecutionHandler = aws.String(v)
+		}
+		if v, ok := tfMap["execution_handler_service"].(string); ok && v != "" {
+			apiObject.ExecutionHandlerService = awstypes.ExecutionHandlerServiceValues(v)
+		}
+		if v, ok := tfMap["execution_timeout"].(int); ok && v > 0 {
+			apiObject.ExecutionTimeout = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["maximum_retry_count"].(int); ok && v > 0 {
+			apiObject.MaximumRetryCount = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["stages"].([]any); ok && len(v) > 0 {
+			apiObject.Stages = flex.ExpandStringyValueList[awstypes.StageValues](v)
+		}
+
+		apiObjects[i] = apiObject
 	}
 
-	return []map[string]any{result}
+	return apiObjects
+}
+
+func flattenScripts(apiObjects []awstypes.Script) []any {
+	tfList := make([]any, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		tfMap["execute_operation_on_script_failure"] = aws.ToBool(apiObject.ExecuteOperationOnScriptFailure)
+		tfMap["execution_handler"] = aws.ToString(apiObject.ExecutionHandler)
+		tfMap["execution_handler_service"] = apiObject.ExecutionHandlerService
+		tfMap["execution_timeout"] = aws.ToInt32(apiObject.ExecutionTimeout)
+		tfMap["maximum_retry_count"] = aws.ToInt32(apiObject.MaximumRetryCount)
+		tfMap["stages"] = apiObject.Stages
+
+		tfList[i] = tfMap
+	}
+
+	return tfList
+}
+
+func expandArchiveRule(tfList []any) *awstypes.ArchiveRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.ArchiveRule{
+		RetainRule: expandArchiveRetainRule(tfMap["archive_retain_rule"].([]any)),
+	}
+}
+
+func flattenArchiveRule(apiObject *awstypes.ArchiveRule) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+	tfMap["archive_retain_rule"] = flattenArchiveRetainRule(apiObject.RetainRule)
+
+	return []any{tfMap}
+}
+
+func expandArchiveRetainRule(tfList []any) *awstypes.ArchiveRetainRule {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.ArchiveRetainRule{
+		RetentionArchiveTier: expandRetentionArchiveTier(tfMap["retention_archive_tier"].([]any)),
+	}
+}
+
+func flattenArchiveRetainRule(apiObject *awstypes.ArchiveRetainRule) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+	tfMap["retention_archive_tier"] = flattenRetentionArchiveTier(apiObject.RetentionArchiveTier)
+
+	return []any{tfMap}
+}
+
+func expandRetentionArchiveTier(tfList []any) *awstypes.RetentionArchiveTier {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.RetentionArchiveTier{}
+
+	if v, ok := tfMap["count"].(int); ok && v > 0 {
+		apiObject.Count = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrInterval].(int); ok && v > 0 {
+		apiObject.Interval = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["interval_unit"].(string); ok && v != "" {
+		apiObject.IntervalUnit = awstypes.RetentionIntervalUnitValues(v)
+	}
+
+	return apiObject
+}
+
+func flattenRetentionArchiveTier(apiObject *awstypes.RetentionArchiveTier) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+	tfMap["count"] = aws.ToInt32(apiObject.Count)
+	tfMap[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
+	tfMap["interval_unit"] = apiObject.IntervalUnit
+
+	return []any{tfMap}
+}
+
+func expandExclusions(tfList []any) *awstypes.Exclusions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.Exclusions{}
+
+	if v, ok := tfMap["exclude_boot_volumes"].(bool); ok {
+		apiObject.ExcludeBootVolumes = aws.Bool(v)
+	}
+	if v, ok := tfMap["exclude_tags"].(map[string]any); ok {
+		apiObject.ExcludeTags = expandTags(v)
+	}
+	if v, ok := tfMap["exclude_volume_types"].([]any); ok && len(v) > 0 {
+		apiObject.ExcludeVolumeTypes = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
+func flattenExclusions(apiObject *awstypes.Exclusions) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+	tfMap["exclude_boot_volumes"] = aws.ToBool(apiObject.ExcludeBootVolumes)
+	tfMap["exclude_tags"] = flattenTags(apiObject.ExcludeTags)
+	tfMap["exclude_volume_types"] = apiObject.ExcludeVolumeTypes
+
+	return []any{tfMap}
 }

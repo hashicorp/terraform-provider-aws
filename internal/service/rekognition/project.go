@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition
@@ -16,13 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,8 +31,8 @@ import (
 
 // @FrameworkResource("aws_rekognition_project", name="Project")
 // @Tags(identifierAttribute="arn")
-func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProject{}
+func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &projectResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
@@ -39,8 +40,8 @@ func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, erro
 	return r, nil
 }
 
-type resourceProject struct {
-	framework.ResourceWithConfigure
+type projectResource struct {
+	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -49,7 +50,7 @@ const (
 	ResNameProject = "Project"
 )
 
-func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -88,10 +89,10 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan resourceProjectData
+	var plan projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -151,10 +152,10 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceProjectData
+	var state projectResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -163,7 +164,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 
 	out, err := findProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -201,8 +202,8 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceProjectData
+func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -212,10 +213,10 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceProjectData
+	var state projectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -250,7 +251,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
 		Target:                    enum.Slice(awstypes.ProjectStatusCreated),
 		Refresh:                   statusProject(ctx, conn, name, feature),
@@ -268,7 +269,7 @@ func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name stri
 }
 
 func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusDeleting),
 		Target:                    []string{},
 		Refresh:                   statusProject(ctx, conn, name, feature),
@@ -304,7 +305,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 	out, err := conn.DescribeProjects(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -321,10 +322,10 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 	return &out.ProjectDescriptions[0], nil
 }
 
-func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
+func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findProjectByName(ctx, conn, name, feature)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -336,7 +337,8 @@ func statusProject(ctx context.Context, conn *rekognition.Client, name string, f
 	}
 }
 
-type resourceProjectData struct {
+type projectResourceModel struct {
+	framework.WithRegionModel
 	ARN        types.String                                      `tfsdk:"arn"`
 	AutoUpdate fwtypes.StringEnum[awstypes.ProjectAutoUpdate]    `tfsdk:"auto_update"`
 	Feature    fwtypes.StringEnum[awstypes.CustomizationFeature] `tfsdk:"feature"`

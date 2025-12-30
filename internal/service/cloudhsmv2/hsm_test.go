@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudhsmv2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func testAccHSM_basic(t *testing.T) {
 					testAccCheckHSMExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", names.AttrID),
-					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
@@ -141,7 +141,7 @@ func testAccCheckHSMDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,9 +32,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -189,20 +191,10 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ConflictsWith: []string{
+					"replicate_source_db",
 					"s3_import",
-				},
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					for _, conflictAttr := range []string{
-						"replicate_source_db",
-						// s3_import is handled by the schema ConflictsWith
-						"snapshot_identifier",
-						"restore_to_point_in_time",
-					} {
-						if _, ok := d.GetOk(conflictAttr); ok {
-							return true
-						}
-					}
-					return false
+					"restore_to_point_in_time",
+					"snapshot_identifier",
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -686,6 +678,10 @@ func resourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"upgrade_storage_config": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -770,23 +766,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
-
-	if _, ok := d.GetOk("character_set_name"); ok {
-		charSetPath := cty.GetAttrPath("character_set_name")
-		for _, conflictAttr := range []string{
-			"replicate_source_db",
-			// s3_import is handled by the schema ConflictsWith
-			"snapshot_identifier",
-			"restore_to_point_in_time",
-		} {
-			if _, ok := d.GetOk(conflictAttr); ok {
-				diags = append(diags, errs.NewAttributeConflictsWillBeError(
-					charSetPath,
-					cty.GetAttrPath(conflictAttr),
-				))
-			}
-		}
-	}
 
 	// get write-only value from configuration
 	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
@@ -1185,7 +1164,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1440,7 +1419,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromDBSnapshot(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1656,7 +1635,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceToPointInTime(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1876,7 +1855,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateDBInstance(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1965,10 +1944,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			// Retry with `identifier`
 			v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
@@ -2095,6 +2074,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
+	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
 	d.Set(names.AttrUsername, v.MasterUsername)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
@@ -2127,7 +2107,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -2291,7 +2271,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				timeout = 5 * time.Minute
 			)
 			_, err = tfresource.RetryWhen(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.DeleteDBInstance(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -2396,7 +2376,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),
 						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
@@ -2456,7 +2436,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta any)
 
 func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDBInstanceReadReplica(ctx, input)
 		},
 		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
@@ -2515,6 +2495,9 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	if d.HasChange("database_insights_mode") {
 		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		if v, ok := d.Get("performance_insights_kms_key_id").(string); ok && v != "" {
+			input.PerformanceInsightsKMSKeyId = aws.String(v)
+		}
 		input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
 	}
 
@@ -2731,7 +2714,7 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -2841,7 +2824,7 @@ func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns
 	output, err := findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if idLooksLikeDbiResourceID && tfresource.NotFound(err) {
+	if idLooksLikeDbiResourceID && retry.NotFound(err) {
 		input = &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
@@ -2874,7 +2857,7 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2894,11 +2877,11 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2935,11 +2918,13 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusResettingMasterCredentials,
 			instanceStatusStarting,
 			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
 			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2973,7 +2958,7 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusUpgrading,
 		},
 		Target:                    []string{instanceStatusStopped},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 		Delay:                     10 * time.Second,
@@ -3017,7 +3002,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3044,7 +3029,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -3070,7 +3055,7 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -3090,11 +3075,11 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 	return output, nil
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -3107,8 +3092,9 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string)
 
 func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
-		PollInterval: 10 * time.Second,
-		Delay:        1 * time.Minute,
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
 	}
 	for _, fn := range optFns {
 		fn(&options)
@@ -3117,7 +3103,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3143,7 +3129,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3173,7 +3159,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)

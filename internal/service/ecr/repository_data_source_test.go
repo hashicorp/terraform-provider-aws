@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -71,6 +71,29 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 	})
 }
 
+func TestAccECRRepositoryDataSource_mutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_repository.test"
+	dataSourceName := "data.aws_ecr_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryDataSourceConfig_mutabilityWithExclusion(rName, "test*"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "image_tag_mutability_exclusion_filter.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability_exclusion_filter.0.filter", dataSourceName, "image_tag_mutability_exclusion_filter.0.filter"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", dataSourceName, "image_tag_mutability_exclusion_filter.0.filter_type"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,7 +134,10 @@ data "aws_ecr_repository" "test" {
 
 func testAccRepositoryDataSourceConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -126,4 +152,21 @@ data "aws_ecr_repository" "test" {
   name = aws_ecr_repository.test.name
 }
 `, rName)
+}
+
+func testAccRepositoryDataSourceConfig_mutabilityWithExclusion(rName, filter string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "MUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+}
+data "aws_ecr_repository" "test" {
+  name = aws_ecr_repository.test.name
+}
+`, rName, filter)
 }

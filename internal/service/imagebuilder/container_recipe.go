@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -14,12 +14,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,16 +30,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_container_recipe", name="Container Recipe")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerRecipeCreate,
 		ReadWithoutTimeout:   resourceContainerRecipeRead,
 		UpdateWithoutTimeout: resourceContainerRecipeUpdate,
 		DeleteWithoutTimeout: resourceContainerRecipeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -178,7 +177,7 @@ func resourceContainerRecipe() *schema.Resource {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(125, 1000),
+													ValidateFunc: validation.IntBetween(125, 2000),
 												},
 												names.AttrVolumeSize: {
 													Type:         schema.TypeInt,
@@ -371,7 +370,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 
 	containerRecipe, err := findContainerRecipeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Container Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -449,7 +448,7 @@ func findContainerRecipeByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	output, err := conn.GetContainerRecipe(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

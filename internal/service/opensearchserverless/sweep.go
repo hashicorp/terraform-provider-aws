@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -50,7 +50,7 @@ func sweepAccessPolicies(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListAccessPoliciesInput{
@@ -74,7 +74,7 @@ func sweepAccessPolicies(region string) error {
 			name := aws.ToString(ap.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Access Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, ap.Type),
@@ -97,7 +97,7 @@ func sweepCollections(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListCollectionsInput{}
@@ -119,7 +119,7 @@ func sweepCollections(region string) error {
 			id := aws.ToString(collection.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Collection: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newCollectionResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -140,7 +140,7 @@ func sweepSecurityConfigs(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListSecurityConfigsInput{
@@ -164,7 +164,7 @@ func sweepSecurityConfigs(region string) error {
 			id := aws.ToString(sc.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityConfig, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityConfigResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -185,7 +185,7 @@ func sweepSecurityPolicies(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	inputEncryption := &opensearchserverless.ListSecurityPoliciesInput{
@@ -209,7 +209,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -236,7 +236,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -259,7 +259,7 @@ func sweepVPCEndpoints(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.OpenSearchServerlessClient(ctx)
 	input := &opensearchserverless.ListVpcEndpointsInput{}

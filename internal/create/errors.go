@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package create
@@ -37,6 +37,7 @@ const (
 	ErrActionWaitingForDeletion     = "waiting for delete"
 	ErrActionWaitingForUpdate       = "waiting for update"
 	ErrActionWaitingForCancellation = "waiting for cancellation"
+	ErrActionSynchronizing          = "synchronizing"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings

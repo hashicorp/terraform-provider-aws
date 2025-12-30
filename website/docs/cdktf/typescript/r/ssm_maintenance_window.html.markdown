@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
@@ -63,6 +64,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window.example
+  identity = {
+    id = "mw-0123456789"
+  }
+}
+
+resource "aws_ssm_maintenance_window" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the maintenance window.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```typescript
@@ -79,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SsmMaintenanceWindow.generateConfigForImport(
       this,
-      "importedWindow",
+      "example",
       "mw-0123456789"
     );
   }
@@ -90,7 +117,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
+% terraform import aws_ssm_maintenance_window.example mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d84f015c687fb4fc29d800deeadde46a79d5a86fb911ce2556a835a7fea71234 -->
+<!-- cache-key: cdktf-0.20.8 input-9e83810a75b33423a7768988cc21c809ea25322601fb5a1bc1fdfcbd1143eb16 -->

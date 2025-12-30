@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -8,17 +8,19 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +35,12 @@ func resourceVPCAssociationAuthorization() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -73,7 +81,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		input.VPC.VPCRegion = awstypes.VPCRegion(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateVPCAssociationAuthorization(ctx, input)
 	})
 
@@ -97,9 +105,13 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpc, err := findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	// InvalidPaginationToken errors can manifest when many authorization resources are
+	// managed concurrently. Retry these errors for a short duration.
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
+		return findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 VPC Association Authorization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,8 +121,9 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCID, vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
+	output := outputRaw.(*awstypes.VPC)
+	d.Set(names.AttrVPCID, output.VPCId)
+	d.Set("vpc_region", output.VPCRegion)
 	d.Set("zone_id", zoneID)
 
 	return diags
@@ -126,7 +139,7 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[INFO] Deleting Route53 VPC Association Authorization: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.DeleteVPCAssociationAuthorization(ctx, &route53.DeleteVPCAssociationAuthorizationInput{
 			HostedZoneId: aws.String(zoneID),
 			VPC: &awstypes.VPC{
@@ -204,7 +217,7 @@ func findVPCAssociationAuthorizations(ctx context.Context, conn *route53.Client,
 	})
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

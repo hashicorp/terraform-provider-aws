@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,7 +79,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AssociateRouteTable(ctx, input)
 		},
 		errCodeInvalidRouteTableIDNotFound,
@@ -101,11 +102,11 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	association, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.RouteTableAssociation, error) {
 		return findRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,8 +115,6 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
-
-	association := outputRaw.(*awstypes.RouteTableAssociation)
 
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)

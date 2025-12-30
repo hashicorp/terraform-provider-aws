@@ -226,6 +226,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
 * `autoscaling_group_name` - (Required) Name of the autoscaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
@@ -515,4 +518,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bfcacf068546bfa1b5c7e223a786a592fd90b8a657cf18f4e5f816197174ee8d -->
+<!-- cache-key: cdktf-0.20.8 input-21629d43d2455d1b0c27aa8d1d6c5975e7723854b46ec9353e2cb54dd861f3b7 -->

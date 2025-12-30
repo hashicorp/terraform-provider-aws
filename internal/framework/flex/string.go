@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -82,19 +82,6 @@ func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, 
 
 	sv := fwdiag.Must(styp.ValueFromString(ctx, types.StringPointerValue(v)))
 	return sv.(T)
-}
-
-func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	s := v.ValueString()
-	if s == "" {
-		return nil
-	}
-
-	return aws.String(s)
 }
 
 func EmptyStringAsNull(v types.String) types.String {

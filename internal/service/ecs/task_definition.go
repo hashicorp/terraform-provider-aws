@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -150,25 +151,6 @@ func resourceTaskDefinition() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
 				),
 			},
-			"inference_accelerator": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"device_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
 			"ipc_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -252,6 +234,7 @@ func resourceTaskDefinition() *schema.Resource {
 						"EC2",
 						"FARGATE",
 						"EXTERNAL",
+						"MANAGED_INSTANCES",
 					}, false),
 				},
 			},
@@ -580,10 +563,6 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
-	}
-
 	if v, ok := d.GetOk("ipc_mode"); ok {
 		input.IpcMode = awstypes.IpcMode(v.(string))
 	}
@@ -674,7 +653,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -694,9 +673,6 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
-	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting inference accelerators: %s", err)
-	}
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
@@ -773,7 +749,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -810,7 +786,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -822,7 +798,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 func validTaskDefinitionContainerDefinitions(v any, k string) (ws []string, errors []error) {
 	_, err := expandContainerDefinitions(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %w", err))
 	}
 	return
 }
@@ -889,36 +865,6 @@ func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []any {
 	return []any{
 		tfMap,
 	}
-}
-
-func flattenInferenceAccelerators(apiObjects []awstypes.InferenceAccelerator) []any {
-	tfList := make([]any, 0, len(apiObjects))
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			names.AttrDeviceName: aws.ToString(apiObject.DeviceName),
-			"device_type":        aws.ToString(apiObject.DeviceType),
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func expandInferenceAccelerators(tfList []any) []awstypes.InferenceAccelerator {
-	apiObjects := make([]awstypes.InferenceAccelerator, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]any)
-		apiObject := awstypes.InferenceAccelerator{
-			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
-			DeviceType: aws.String(tfMap["device_type"].(string)),
-		}
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
 }
 
 func expandTaskDefinitionPlacementConstraints(tfList []any) ([]awstypes.TaskDefinitionPlacementConstraint, error) {

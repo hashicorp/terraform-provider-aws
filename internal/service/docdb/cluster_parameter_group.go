@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -14,16 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -137,7 +138,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	dbClusterParameterGroup, err := findDBClusterParameterGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,7 +209,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
 		return findDBClusterParameterGroupByName(ctx, conn, d.Id())
 	})
 
@@ -252,7 +253,7 @@ func findDBClusterParameterGroupByName(ctx context.Context, conn *docdb.Client, 
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterParameterGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -278,7 +279,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -289,7 +290,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -306,7 +307,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -317,7 +318,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		}
 
 		for _, v := range page.Parameters {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

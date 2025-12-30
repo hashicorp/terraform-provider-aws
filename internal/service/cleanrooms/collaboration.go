@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms
@@ -14,12 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,16 +30,15 @@ import (
 // @SDKResource("aws_cleanrooms_collaboration", name="Collaboration")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetCollaborationOutput")
+// @Testing(preIdentityVersion="v6.26.0")
 func ResourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
 		ReadWithoutTimeout:   resourceCollaborationRead,
 		UpdateWithoutTimeout: resourceCollaborationUpdate,
 		DeleteWithoutTimeout: resourceCollaborationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
@@ -46,6 +47,11 @@ func ResourceCollaboration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"analytics_engine": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,6 +176,10 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:                   getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("analytics_engine"); ok {
+		input.AnalyticsEngine = types.AnalyticsEngine(v.(string))
+	}
+
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
@@ -204,7 +214,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := findCollaborationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CleanRooms Collaboration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -218,6 +228,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, collaboration.Arn)
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("analytics_engine", collaboration.AnalyticsEngine)
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
 	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())
@@ -256,6 +267,10 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChanges(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChanges("analytics_engine") {
+			input.AnalyticsEngine = types.AnalyticsEngine(d.Get("analytics_engine").(string))
 		}
 
 		_, err := conn.UpdateCollaboration(ctx, input)
@@ -297,7 +312,7 @@ func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id stri
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		//We throw Access Denied for NFE in Cleanrooms for collaborations since they are cross account
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -321,7 +336,7 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 	out, err := conn.ListMembers(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

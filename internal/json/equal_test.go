@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package json_test
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func TestEqualStrings(t *testing.T) {
@@ -64,7 +64,7 @@ func TestEqualStrings(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			equal := json.EqualStrings(testCase.x, testCase.y)
+			equal := tfjson.EqualStrings(testCase.x, testCase.y)
 			if got, want := equal, testCase.wantEqual; !cmp.Equal(got, want) {
 				t.Errorf("EqualStrings(%s, %s) = %t, want %t", testCase.x, testCase.y, got, want)
 			}

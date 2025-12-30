@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -10,11 +10,12 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,6 +62,11 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
@@ -68,10 +74,22 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
-				PlanOnly: true,
+				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -118,7 +136,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 
 			_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

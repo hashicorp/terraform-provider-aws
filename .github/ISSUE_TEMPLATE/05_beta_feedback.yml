@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Beta Release Feedback
 description: Choose this option to provide feedback or report issues related to beta versions of the provider
 labels:
@@ -35,9 +38,9 @@ body:
   - type: textarea
     id: affected_resource
     attributes:
-      label: Affected Resource(s) or Data Sources
+      label: Affected Resource(s) or Data Source(s)
       description: |
-        If applicable, please list the affected Resource(s) and/or Data Source(s).
+        If applicable, please list the affected resource(s) and/or data source(s).
       placeholder: |
         * `aws_example_resource`
         * `aws_example_data_source`
@@ -71,7 +74,7 @@ body:
     attributes:
       label: Relevant Error/Panic Output
       description: |
-        If applicable, provide a snippet of output logging that contains the error or panic. Note that here is a section later in the template for providing more complete debug output, so a small snippet is all that's necessary here.
+        If applicable, provide a snippet of output logging that contains the error or panic. Note that there is a section later in the template for providing more complete debug output, so a small snippet is all that's necessary here.
 
         For convenience, we pre-populate this section with a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) to help with formatting in the resulting issue. Placing the log output between the sets of backticks (\```) will result in a well-formatted issue.
       value: |
@@ -88,7 +91,7 @@ body:
 
         When providing a reproduction configuration and/or debug logging, please paste, upload, or link to a file or [public Gist](https://docs.github.com/en/get-started/writing-on-github/editing-and-sharing-content-with-gists/creating-gists) containing the relevant information. Files under 25MB may be [attached directly](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) in the relevant field. Files larger than this should be uploaded to a file hosting service and a link shared. For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
 
-        Configurations should be applyable with minimal modifications, and should not rely on external modules. This helps maintainers and contributors efficiently reproduce issues and implement acceptance tests to ensure any fixes do not regress.
+        Configurations should be applyable with minimal modifications, and should not rely on external modules. This helps maintainers and contributors efficiently reproduce issues and implement acceptance tests to prevent future regressions.
 
         > [!WARNING]
         > Bug reports without a functional and standalone sample configuration may be closed without further investigation.
@@ -104,7 +107,7 @@ body:
 
         When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand configuration</summary>
 
         ```hcl
@@ -138,7 +141,7 @@ body:
 
         When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand log output</summary>
 
         ```console

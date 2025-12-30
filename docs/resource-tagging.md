@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Tagging Support
 
@@ -472,6 +475,16 @@ If a resource or data source type supports tags but does not use transparent tag
 
 Additional `@Testing(...)` parameters can be used to control the generated tests.
 
+##### PreCheck parameters
+
+All generated tagging tests include the standard `acctest.PreCheck` PreCheck function.
+In some cases, acceptance tests will require additional PreCheck functions.
+Specify them with the annotation `@Testing(preCheck=<reference>)`.
+The reference optionally contains a Go package path and package alias, using the format
+`[<package path>;[<package alias>;]]<function name>`.
+The function is assumed to have the signature `func(ctx context.Context, t *testing.T)`.
+Multiple `@Testing(preCheck)` annotations are allowed.
+
 ##### Required Argument parameters
 
 Most testing configurations take a single parameter, often a name or a domain name.
@@ -493,6 +506,20 @@ By default, the common name for the certificate is `example.com`.
 To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
+
+Some acceptance tests require a TLS ECDSA public key PEM.
+This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.
+The Terraform variable name will be `rTlsEcdsaPublicKeyPem`.
+
+Some acceptance tests related to networking require a random BGP ASN value.
+This can be included by setting the annotation `@Testing(randomBsgAsn="<low end>;<high end>)`,
+where `<low end>` and `<high end>` are the upper and lower bounds for the randomly-generated ASN value.
+The Terraform variable name will be `rBgpAsn`.
+
+Some acceptance tests related to networking require a random IPv4 address.
+This can be included by setting the annotation `@Testing(randomIPv4Address="<CIDR range>)`.
+The randomly-generated IPv4 address value will be contained within the `<CIDR range>`.
+The Terraform variable name will be `rIPv4Address`.
 
 No additional parameters can be defined currently.
 If additional parameters are required, and cannot be derived from `rName`, the resource type must use manually created acceptance tests as described below.
@@ -537,7 +564,7 @@ For example, 3 minutes and 30 seconds is `3m30s`.
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 
-Some services do not support tags with an null string value.
+Some services do not support tags with a null string value.
 In that case, use the annotation `@Testing(skipNullTags=true)`.
 
 ##### Tag Update parameters

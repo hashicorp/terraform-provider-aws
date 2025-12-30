@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -22,6 +22,7 @@ func TestAccMacie2_serial(t *testing.T) {
 		},
 		"ClassificationExportConfiguration": {
 			acctest.CtBasic: testAccClassificationExportConfiguration_basic,
+			"Identity":      testAccMacie2ClassificationExportConfiguration_IdentitySerial,
 		},
 		"ClassificationJob": {
 			acctest.CtBasic:      testAccClassificationJob_basic,

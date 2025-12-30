@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -25,7 +25,7 @@ func newRecordsDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type recordsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[recordsDataSourceModel]
 }
 
 func (d *recordsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,22 +19,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
+// @IdentityAttribute("name")
+// @ArnFormat("connectorprofile/{name}", attribute="arn")
+// @V60SDKv2Fix(v60RefreshError="true")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
+// @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
+// @Testing(idAttrDuplicates="name")
 func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
 		ReadWithoutTimeout:   resourceConnectorProfileRead,
 		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
 		DeleteWithoutTimeout: resourceConnectorProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -1457,13 +1459,13 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		input.KmsArn = aws.String(v)
 	}
 
-	output, err := conn.CreateConnectorProfile(ctx, input)
+	_, err := conn.CreateConnectorProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppFlow Connector Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.ConnectorProfileArn))
+	d.SetId(name)
 
 	return append(diags, resourceConnectorProfileRead(ctx, d, meta)...)
 }
@@ -1473,9 +1475,9 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	connectorProfile, err := findConnectorProfileByARN(ctx, conn, d.Id())
+	connectorProfile, err := findConnectorProfileByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1549,32 +1551,21 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func findConnectorProfileByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.ConnectorProfile, error) {
-	input := &appflow.DescribeConnectorProfilesInput{}
-
-	pages := appflow.NewDescribeConnectorProfilesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.ConnectorProfileDetails {
-			if aws.ToString(v.ConnectorProfileArn) == arn {
-				return &v, nil
-			}
-		}
+func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name string) (*types.ConnectorProfile, error) {
+	input := appflow.DescribeConnectorProfilesInput{
+		ConnectorProfileNames: []string{name},
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	output, err := conn.DescribeConnectorProfiles(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ConnectorProfileDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)
 }
 
 func expandConnectorProfileConfig(m map[string]any) *types.ConnectorProfileConfig {

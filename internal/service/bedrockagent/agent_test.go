@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +40,7 @@ func TestAccBedrockAgentAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "prepared_at"),
 				),
 			},
 			{
@@ -496,6 +497,11 @@ func TestAccBedrockAgentAgent_memoryConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 					resource.TestCheckResourceAttr(resourceName, "memory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.0", "SESSION_SUMMARY"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.storage_days", "15"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.0.max_recent_sessions", "5"),
 					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
 				),
 			},
@@ -520,7 +526,7 @@ func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbedrockagent.FindAgentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -939,6 +945,9 @@ resource "aws_bedrockagent_agent" "test" {
   memory_configuration {
     enabled_memory_types = ["SESSION_SUMMARY"]
     storage_days         = 15
+    session_summary_configuration {
+      max_recent_sessions = 5
+    }
   }
 }
 `, rName, model, description))

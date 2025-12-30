@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -36,14 +36,17 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
+// @Testing(idAttrDuplicates="security_group_rule_id")
+// @Testing(preIdentityVersion="v6.12.0")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
@@ -167,8 +170,8 @@ type securityGroupRule interface {
 
 type securityGroupRuleResource struct {
 	securityGroupRule
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[securityGroupRuleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -243,7 +246,7 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	securityGroupRuleID, err := r.securityGroupRule.create(ctx, &data)
+	securityGroupRuleID, err := r.create(ctx, &data)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating VPC Security Group Rule", err.Error())
@@ -272,9 +275,9 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	output, err := r.securityGroupRule.findByID(ctx, data.ID.ValueString())
+	output, err := r.findByID(ctx, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -365,7 +368,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
-	err := r.securityGroupRule.delete(ctx, &data)
+	err := r.delete(ctx, &data)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupRuleIdNotFound) {
 		return
@@ -426,6 +429,7 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 }
 
 type securityGroupRuleResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String `tfsdk:"arn"`
 	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
 	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`

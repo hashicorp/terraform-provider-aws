@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fms
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -207,6 +208,12 @@ func resourcePolicy() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
+				"resource_tag_logical_operator": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResourceTagLogicalOperator](),
+				},
 				"resource_type_list": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -328,7 +335,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InternalErrorException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.PutPolicy(ctx, input)
 	})
 
@@ -347,7 +354,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FMS Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -375,6 +382,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
 		diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
+	d.Set("resource_tag_logical_operator", policy.ResourceTagLogicalOperator)
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
 	d.Set("resource_set_ids", policy.ResourceSetIds)
@@ -405,7 +413,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InternalErrorException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.PutPolicy(ctx, input)
 		})
 
@@ -446,7 +454,7 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 	output, err := conn.GetPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -493,6 +501,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
+			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 		}
 	}
 

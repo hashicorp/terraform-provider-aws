@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -23,7 +23,9 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "aliases.#", resourceName, "aliases.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "anycast_ip_list_id", resourceName, "anycast_ip_list_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -32,7 +34,6 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(dataSourceName, "web_acl_id", resourceName, "web_acl_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "aliases.#", resourceName, "aliases.#"),
 				),
 			},
 		},

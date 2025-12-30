@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocolType` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `apiKeySelectionExpression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
@@ -78,6 +79,7 @@ Applicable for WebSocket APIs.
 * `disableExecuteApiEndpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
+* `ipAddressType` - (Optional) The IP address types that can invoke the API. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your API, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your API. Defaults to `ipv4`.
 * `routeKey` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `routeSelectionExpression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
@@ -145,4 +147,4 @@ Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier
 % terraform import aws_apigatewayv2_api.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aa8c33d1b4534c72e0765acdfd063cd72de93dec3553988cad57b268051e01d2 -->
+<!-- cache-key: cdktf-0.20.8 input-98d6e7b7b70154ad6c2106a94f00cf739e406da481a9585c8e450c28f6152114 -->

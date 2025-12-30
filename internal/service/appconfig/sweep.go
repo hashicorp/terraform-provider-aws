@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig
@@ -6,6 +6,7 @@ package appconfig
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -180,9 +181,16 @@ func sweepExtensions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		}
 
 		for _, v := range page.Items {
+			id := aws.ToString(v.Id)
+
+			if strings.HasPrefix(id, "AWS.") {
+				log.Printf("[INFO] Skipping AppConfig Extension %s", id)
+				continue
+			}
+
 			r := resourceExtension()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Id))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

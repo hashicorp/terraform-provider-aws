@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -13,10 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_backup_global_settings", name="Global Settings")
+// @Region(global=true)
 func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -65,7 +67,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findGlobalSettings(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Global Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

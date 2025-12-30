@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -25,7 +25,6 @@ func TestAccEMRSupportedInstanceTypesDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSupportedInstanceTypesDataSourceConfig_basic(releaseLabel),

@@ -1,7 +1,10 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 site_name: Terraform AWS Provider - Contributor Guide
 site_description: 'Contributor documentation and reference for the
                    Terraform AWS Provider'
-copyright: HashiCorp
+copyright: IBM Corp.
 repo_name: hashicorp/terraform-provider-aws
 repo_url: https://github.com/hashicorp/terraform-provider-aws
 edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/main/docs"
@@ -32,13 +35,20 @@ nav:
       - How We Prioritize: prioritization.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
+      - AI Agents: ai-agents.md
+      - AI Agent Guides:
+          - ARN-Based Resource Identity: ai-agent-guides/arn-based-resource-identity.md
+          - Parameterized Resource Identity: ai-agent-guides/parameterized-resource-identity.md
+          - Smarterr: ai-agent-guides/smarterr.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
+      - Enhanced Region Support: enhanced-region-support.md
       - Error Handling: error-handling.md
+      - Go-VCR: go-vcr.md
       - ID Attributes: id-attributes.md
       - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -24,28 +25,57 @@ import (
 // This file contains tests for validating updates from resources deployed using v5.86.0 of the provider,
 // where the migration to the Terraform Plugin Framework caused "inconsisten result" errors.
 
+// These tests may fail on the first step in regions, such as eu-west-2, where eventual consistency takes longer to resolve.
+
 const (
 	providerVersion_5_86_0 = "5.86.0"
 )
+
+func v5_86_0PreConfig(isV5_86_0 *bool, bar bool) func() {
+	return func() {
+		*isV5_86_0 = bar
+	}
+}
+
+func v5_86_0_ErrorCheck(t *testing.T, isV5_86_0 *bool) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if *isV5_86_0 {
+			re := regexache.MustCompile(`(?s)creating S3 Bucket \([-a-z0-9]+\) Lifecycle Configuration.+couldn't find resource`)
+			if re.MatchString(err.Error()) {
+				t.Skipf("skipping test: known possible eventual consistency error in v5.86.0: %s", err)
+			}
+		}
+		return err
+	}
+}
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -70,6 +100,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -96,13 +127,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -118,19 +149,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *te
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -155,17 +195,18 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *te
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -180,19 +221,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -217,6 +267,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -243,13 +294,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -264,19 +315,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -301,6 +361,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -327,13 +388,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -348,19 +409,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -392,6 +462,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -423,13 +494,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -444,19 +515,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -488,6 +568,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -520,13 +601,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -539,19 +620,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -586,6 +676,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -619,13 +710,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -638,19 +729,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -675,6 +775,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -701,13 +802,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -720,19 +821,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -755,6 +865,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -783,13 +894,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -802,19 +913,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -837,6 +957,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "all_storage_classes_128K"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -884,10 +1005,10 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -900,19 +1021,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -937,6 +1067,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -963,13 +1094,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -982,19 +1113,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1019,6 +1159,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1045,13 +1186,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1064,19 +1205,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1101,6 +1251,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1127,13 +1278,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1146,19 +1297,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1183,6 +1343,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1209,13 +1370,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1228,19 +1389,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1265,6 +1435,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1291,13 +1462,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1313,19 +1484,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1354,6 +1534,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1384,13 +1565,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1403,19 +1584,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1444,6 +1634,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1474,13 +1665,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1493,19 +1684,28 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
+	var isV5_86_0 bool
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
 		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: providerVersion_5_86_0,
 					},
+					"time": {
+						Source:            "hashicorp/time",
+						VersionConstraint: "0.13.0",
+					},
 				},
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_V5_86_0(
+					testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -1534,6 +1734,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 				},
 			},
 			{
+				PreConfig:                v5_86_0PreConfig(&isV5_86_0, false),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1564,13 +1765,13 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1661,4 +1862,15 @@ func schemaProvider5_86_0FilterDefaults() map[string]knownvalue.Check {
 		names.AttrPrefix:           knownvalue.StringExact(""),
 		"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
 	}
+}
+
+func testAccBucketLifecycleConfigurationConfig_V5_86_0(config string) string {
+	return acctest.ConfigCompose(
+		config, `
+resource "time_sleep" "eventual_consistency" {
+  depends_on = [aws_s3_bucket_lifecycle_configuration.test]
+
+  create_duration = "2m"
+}
+`)
 }

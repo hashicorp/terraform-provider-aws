@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package events
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -262,6 +263,14 @@ func resourceConnection() *schema.Resource {
 						},
 					},
 				},
+				"kms_key_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+					),
+				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -285,7 +294,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateConnectionInput{
+	input := eventbridge.CreateConnectionInput{
 		AuthorizationType: types.ConnectionAuthorizationType(d.Get("authorization_type").(string)),
 		AuthParameters:    expandCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]any)),
 		Name:              aws.String(name),
@@ -299,7 +308,11 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.CreateConnection(ctx, input)
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	_, err := conn.CreateConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Connection (%s): %s", name, err)
@@ -320,7 +333,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findConnectionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -345,6 +358,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("invocation_connectivity_parameters", nil)
 	}
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
@@ -355,7 +369,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateConnectionInput{
+	input := eventbridge.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
 	}
 
@@ -375,7 +389,11 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.InvocationConnectivityParameters = expandConnectivityResourceParameters(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.UpdateConnection(ctx, input)
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	_, err := conn.UpdateConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Connection (%s): %s", d.Id(), err)
@@ -393,9 +411,10 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(ctx, &eventbridge.DeleteConnectionInput{
+	input := eventbridge.DeleteConnectionInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -413,14 +432,14 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
-	input := &eventbridge.DescribeConnectionInput{
+	input := eventbridge.DescribeConnectionInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeConnection(ctx, input)
+	output, err := conn.DescribeConnection(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -437,11 +456,11 @@ func findConnectionByName(ctx context.Context, conn *eventbridge.Client, name st
 	return output, nil
 }
 
-func statusConnectionState(ctx context.Context, conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -457,7 +476,7 @@ func waitConnectionCreated(ctx context.Context, conn *eventbridge.Client, name s
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateCreating, types.ConnectionStateAuthorizing),
 		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
 		Refresh: statusConnectionState(ctx, conn, name),
@@ -479,7 +498,7 @@ func waitConnectionUpdated(ctx context.Context, conn *eventbridge.Client, name s
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateUpdating, types.ConnectionStateAuthorizing, types.ConnectionStateDeauthorizing),
 		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
 		Refresh: statusConnectionState(ctx, conn, name),
@@ -501,7 +520,7 @@ func waitConnectionDeleted(ctx context.Context, conn *eventbridge.Client, name s
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnectionState(ctx, conn, name),

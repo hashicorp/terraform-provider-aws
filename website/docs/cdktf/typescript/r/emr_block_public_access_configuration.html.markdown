@@ -134,6 +134,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `permittedPublicSecurityGroupRuleRange` - (Optional) Configuration block for defining permitted public security group rule port ranges. Can be defined multiple times per resource. Only valid if `blockPublicSecurityGroupRules` is set to `true`.
 
 ### `permittedPublicSecurityGroupRuleRange`
@@ -179,4 +180,4 @@ Using `terraform import`, import the current EMR Block Public Access Configurati
 % terraform import aws_emr_block_public_access_configuration.example current
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aa7683c154001c04829343267ab3b769046fafe4a515b4091bc80943f1f89917 -->
+<!-- cache-key: cdktf-0.20.8 input-3e1047e8a5bd123ea9321b8ed8b56c686d9574732dec139f5477aee4e6db3311 -->

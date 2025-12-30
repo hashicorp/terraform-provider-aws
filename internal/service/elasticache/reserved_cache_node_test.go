@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -11,14 +11,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +31,7 @@ func TestAccElastiCacheReservedCacheNode_Redis_basic(t *testing.T) {
 	resourceName := "aws_elasticache_reserved_cache_node.test"
 	dataSourceName := "data.aws_elasticache_reserved_cache_node_offering.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -42,7 +40,7 @@ func TestAccElastiCacheReservedCacheNode_Redis_basic(t *testing.T) {
 			{
 				Config: testAccReservedInstanceConfig_Redis_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccReservedInstanceExists(ctx, resourceName, &reservation),
+					testAccReservedInstanceExists(ctx, t, resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`reserved-instance:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cache_node_count", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cache_node_type", resourceName, "cache_node_type"),
@@ -76,7 +74,7 @@ func TestAccElastiCacheReservedCacheNode_Valkey_basic(t *testing.T) {
 	resourceName := "aws_elasticache_reserved_cache_node.test"
 	dataSourceName := "data.aws_elasticache_reserved_cache_node_offering.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -85,7 +83,7 @@ func TestAccElastiCacheReservedCacheNode_Valkey_basic(t *testing.T) {
 			{
 				Config: testAccReservedInstanceConfig_Valkey_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccReservedInstanceExists(ctx, resourceName, &reservation),
+					testAccReservedInstanceExists(ctx, t, resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`reserved-instance:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cache_node_count", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cache_node_type", resourceName, "cache_node_type"),
@@ -116,10 +114,10 @@ func TestAccElastiCacheReservedCacheNode_ID(t *testing.T) {
 	}
 
 	var reservation awstypes.ReservedCacheNode
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_reserved_cache_node.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -128,7 +126,7 @@ func TestAccElastiCacheReservedCacheNode_ID(t *testing.T) {
 			{
 				Config: testAccReservedInstanceConfig_ID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccReservedInstanceExists(ctx, resourceName, &reservation),
+					testAccReservedInstanceExists(ctx, t, resourceName, &reservation),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "usage_price"),
 				),
@@ -137,26 +135,21 @@ func TestAccElastiCacheReservedCacheNode_ID(t *testing.T) {
 	})
 }
 
-func testAccReservedInstanceExists(ctx context.Context, n string, reservation *awstypes.ReservedCacheNode) resource.TestCheckFunc {
+func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReservedCacheNode) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
-
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache Reserved Cache Node reservation id is set")
-		}
-
-		resp, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
+		output, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*reservation = resp
+		*v = *output
 
 		return nil
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -201,7 +201,7 @@ data "aws_iam_policy_document" "test" {
       type = "Service"
 
       identifiers = [
-        "servicecatalog.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}",
+        "servicecatalog.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}",
       ]
     }
 

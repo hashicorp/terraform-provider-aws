@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -14,13 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,8 +36,13 @@ const (
 )
 
 // @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
-// @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority", generator="acctest.RandomDomainName()", importIgnore="permanent_deletion_time_in_days")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
+// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(importIgnore="permanent_deletion_time_in_days")
 func resourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -46,6 +53,12 @@ func resourceCertificateAuthority() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+					return nil, err
+				}
+
 				d.Set("permanent_deletion_time_in_days", certificateAuthorityPermanentDeletionTimeInDaysDefault)
 
 				return []*schema.ResourceData{d}, nil
@@ -355,7 +368,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateCertificateAuthority(ctx, &input)
 	}, "ValidationException", "Check your S3 bucket permissions and try again")
 
@@ -378,7 +391,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 
 	certificateAuthority, err := findCertificateAuthorityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -456,7 +469,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}
@@ -537,16 +550,13 @@ func findCertificateAuthorityByARN(ctx context.Context, conn *acmpca.Client, arn
 
 	if status := output.Status; status == types.CertificateAuthorityStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.Arn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -557,8 +567,7 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -573,11 +582,11 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 	return output.CertificateAuthority, nil
 }
 
-func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) retry.StateRefreshFunc {
+func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCertificateAuthorityByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -590,7 +599,7 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 }
 
 func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, arn string, timeout time.Duration) (*types.CertificateAuthority, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateAuthorityStatusCreating),
 		Target:  enum.Slice(types.CertificateAuthorityStatusActive, types.CertificateAuthorityStatusPendingCertificate),
 		Refresh: statusCertificateAuthority(ctx, conn, arn),

@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_iam_openid_connect_provider: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_iam_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_iam_saml_provider: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_iam_service_linked_role: Add resource identity support
+```

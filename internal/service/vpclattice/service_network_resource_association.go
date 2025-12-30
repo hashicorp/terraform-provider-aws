@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
@@ -15,18 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,8 +47,7 @@ func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.R
 }
 
 type serviceNetworkResourceAssociationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[serviceNetworkResourceAssociationResourceModel]
+	framework.ResourceWithModel[serviceNetworkResourceAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -57,6 +58,14 @@ func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, 
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"dns_entry":   framework.ResourceComputedListOfObjectsAttribute[dnsEntryModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrID:  framework.IDAttribute(),
+			"private_dns_enabled": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -141,7 +150,7 @@ func (r *serviceNetworkResourceAssociationResource) Read(ctx context.Context, re
 
 	output, err := findServiceNetworkResourceAssociationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -202,7 +211,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	output, err := conn.GetServiceNetworkResourceAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -219,11 +228,11 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	return output, nil
 }
 
-func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -236,7 +245,7 @@ func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclatti
 }
 
 func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive),
 		Refresh:                   statusServiceNetworkResourceAssociation(ctx, conn, id),
@@ -256,7 +265,7 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 }
 
 func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive, awstypes.ServiceNetworkServiceAssociationStatusDeleteInProgress),
 		Target:  []string{},
 		Refresh: statusServiceNetworkResourceAssociation(ctx, conn, id),
@@ -275,9 +284,11 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 }
 
 type serviceNetworkResourceAssociationResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                   `tfsdk:"arn"`
 	ID                      types.String                                   `tfsdk:"id"`
 	DNSEntry                fwtypes.ListNestedObjectValueOf[dnsEntryModel] `tfsdk:"dns_entry"`
+	PrivateDNSEnabled       types.Bool                                     `tfsdk:"private_dns_enabled"`
 	ResourceConfigurationID types.String                                   `tfsdk:"resource_configuration_identifier"`
 	ServiceNetworkID        types.String                                   `tfsdk:"service_network_identifier"`
 	Tags                    tftags.Map                                     `tfsdk:"tags"`

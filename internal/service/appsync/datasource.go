@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -10,18 +10,21 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -334,12 +337,12 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	_, err := conn.CreateDataSource(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appsync Data Source (%s): %s", id, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, id)
 	}
 
 	d.SetId(id)
 
-	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDataSourceRead(ctx, d, meta))
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -348,45 +351,45 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	apiID, name, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	dataSource, err := findDataSourceByTwoPartKey(ctx, conn, apiID, name)
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", apiID)
 	d.Set(names.AttrARN, dataSource.DataSourceArn)
 	d.Set(names.AttrDescription, dataSource.Description)
 	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dynamodb_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting elasticsearch_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("event_bridge_config", flattenEventBridgeDataSourceConfig(dataSource.EventBridgeConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting event_bridge_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting http_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set(names.AttrName, dataSource.Name)
 	if err := d.Set("opensearchservice_config", flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting opensearchservice_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set(names.AttrServiceRoleARN, dataSource.ServiceRoleArn)
 	d.Set(names.AttrType, dataSource.Type)
@@ -401,7 +404,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	apiID, name, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	input := &appsync.UpdateDataSourceInput{
@@ -445,10 +448,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	_, err = conn.UpdateDataSource(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDataSourceRead(ctx, d, meta))
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -457,7 +460,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	apiID, name, err := dataSourceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Appsync Data Source: %s", d.Id())
@@ -472,7 +475,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -491,7 +494,7 @@ func dataSourceParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, dataSourceResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sDATA-SOURCE-NAME", id, dataSourceResourceIDSeparator)
+		return "", "", smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sDATA-SOURCE-NAME", id, dataSourceResourceIDSeparator))
 	}
 
 	return parts[0], parts[1], nil
@@ -506,18 +509,15 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output.DataSource, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -1480,7 +1480,7 @@ resource "aws_iam_role" "access_cw" {
         {
           Action   = ["logs:CreateLogGroup"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
         },
         {
           Action = [
@@ -1489,7 +1489,7 @@ resource "aws_iam_role" "access_cw" {
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
         },
       ]
     })
@@ -1524,7 +1524,7 @@ resource "aws_iam_role" "access_sm" {
         {
           Action   = ["logs:CreateLogGroup"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
         },
         {
           Action = [
@@ -1533,17 +1533,17 @@ resource "aws_iam_role" "access_sm" {
             "logs:PutLogEvents"
           ]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+          Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
         },
         {
           Action   = ["secretsmanager:GetSecretValue"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:example"
+          Resource = "arn:${data.aws_partition.current.partition}:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:example"
         },
         {
           Action   = ["kms:Decrypt"]
           Effect   = "Allow"
-          Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/example"
+          Resource = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:key/example"
           Condition = {
             StringLike = {
               "kms:ViaService" = ["secretsmanager.*.amazonaws.com"]

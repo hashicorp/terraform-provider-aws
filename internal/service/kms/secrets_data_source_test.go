@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -168,6 +168,7 @@ func testAccSecretsDataSourceDecryptAsymmetric(ctx context.Context, t *testing.T
 const testAccSecretsDataSourceConfig_key = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Testing the Terraform AWS KMS Secrets data_source"
 }
 `
@@ -190,6 +191,7 @@ data "aws_kms_secrets" "test" {
 const testAccSecretsDataSourceConfig_asymmetricKey = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days  = 7
+  enable_key_rotation      = true
   description              = "Testing the Terraform AWS KMS Secrets data_source"
   customer_master_key_spec = "RSA_2048"
 }

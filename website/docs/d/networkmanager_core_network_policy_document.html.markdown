@@ -3,7 +3,7 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
-  Generates an Core Network policy document in JSON format
+  Generates a Core Network policy document in JSON format
 ---
 
 # Data Source: aws_networkmanager_core_network_policy_document
@@ -164,13 +164,16 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 ## Argument Reference
 
-The following arguments are available:
+This data source supports the following arguments:
 
 * `attachment_policies` (Optional) - In a core network, all attachments use the block argument `attachment_policies` section to map an attachment to a segment. Instead of manually associating a segment to each attachment, attachments use tags, and then the tags are used to associate the attachment to the specified segment. Detailed below.
+* `attachment_routing_policy_rules` (Optional) - Block argument that applies routing policies to attachments. Available in policy version `2025.11` and later. Detailed below.
 * `core_network_configuration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
+* `network_function_groups` (Optional) - Block argument that defines the service insertion actions you want to include. Detailed below.
+* `routing_policies` (Optional) - Block argument that defines routing policies for controlling route propagation. Routing policies allow you to filter, modify, and control BGP routes advertised to and from your core network. Available in policy version `2025.11` and later. Detailed below.
 * `segments` (Required) - Block argument that defines the different segments in the network. Here you can provide descriptions, change defaults, and provide explicit Regional operational and route filters. The names defined for each segment are used in the `segment_actions` and `attachment_policies` section. Each segment is created, and operates, as a completely separated routing domain. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
 * `segment_actions` (Optional) - A block argument, `segment_actions` define how routing works between segments. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
-* `network_function_groups` (Optional) - Block argument that defines the service insertion actions you want to include. Detailed below.
+* `version` (Optional) - Version of the core network policy. Valid values: `2021.12`, `2025.11`. Default: `2021.12`.
 
 ### `attachment_policies`
 
@@ -198,10 +201,31 @@ The conditions block has 4 arguments `type`, `operator`, `key`, `value`. Setting
 
 The following arguments are available:
 
-* `type` (Required) - Valid values include: `account-id`, `any`, `tag-value`, `tag-exists`, `resource-id`, `region`, `attachment-type`.
+* `type` (Required) - Valid values include: `account`, `any`, `tag-value`, `tag-name`, `tag-exists`, `resource-id`, `region`, `attachment-type`. Note: `account-id` is deprecated in favor of `account` in policy version `2025.11` and later.
 * `operator` (Optional) - Valid values include: `equals`, `not-equals`, `contains`, `begins-with`.
 * `key` (Optional) - string value
 * `value` (Optional) - string value
+
+### `attachment_routing_policy_rules`
+
+Applies routing policies to attachments. Available in policy version `2025.11` and later.
+
+The following arguments are available:
+
+* `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched.
+* `description` (Optional) - A user-defined description that further helps identify the rule.
+* `edge_locations` (Optional) - A set of AWS Region codes where this rule applies.
+* `conditions` (Required) - A block argument. Detailed below.
+* `action` (Required) - Block defining the action to take when conditions match. Detailed below.
+
+#### `conditions` (attachment routing policy rules)
+
+* `type` (Required) - Must be `routing-policy-label`.
+* `value` (Required) - Routing policy label to match.
+
+#### `action` (attachment routing policy rules)
+
+* `associate_routing_policies` (Required) - Set of routing policy names to associate when the conditions match.
 
 ### `core_network_configuration`
 
@@ -211,6 +235,8 @@ The following arguments are available:
 * `inside_cidr_blocks` (Optional) - The Classless Inter-Domain Routing (CIDR) block range used to create tunnels for AWS Transit Gateway Connect. The format is standard AWS CIDR range (for example, `10.0.1.0/24`). You can optionally define the inside CIDR in the Core Network Edges section per Region. The minimum is a `/24` for IPv4 or `/64` for IPv6. You can provide multiple `/24` subnets or a larger CIDR range. If you define a larger CIDR range, new Core Network Edges will be automatically assigned `/24` and `/64` subnets from the larger CIDR. an Inside CIDR block is required for attaching Connect attachments to a Core Network Edge.
 * `vpn_ecmp_support` (Optional) - Indicates whether the core network forwards traffic over multiple equal-cost routes using VPN. The value can be either `true` or `false`. The default is `true`.
 * `edge_locations` (Required) - A block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
+* `dns_support` (Optional) - Indicates whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
+* `security_group_referencing_support` — (Optional) Indicates whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
 
 ### `edge_locations`
 
@@ -240,10 +266,11 @@ The following arguments are available:
 
 The following arguments are available:
 
-* `action` (Required) - Action to take for the chosen segment. Valid values: `create-route`, `share`, `send-via` and `send-to`.
+* `action` (Required) - Action to take for the chosen segment. Valid values: `create-route`, `share`, `send-via`, `send-to`, and `associate-routing-policy` (available in policy version `2025.11` and later).
 * `description` (Optional) - A user-defined string describing the segment action.
 * `destination_cidr_blocks` (Optional) - List of strings containing CIDRs. You can define the IPv4 and IPv6 CIDR notation for each AWS Region. For example, `10.1.0.0/16` or `2001:db8::/56`. This is an array of CIDR notation strings.
 * `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment ids.
+* `edge_location_association` (Optional) - Associates routing policies with specific edge location pairs. Available in policy version `2025.11` and later. Detailed below.
 * `mode` (Optional) - String. When `action` is `share`, a `mode` value of `attachment-route` places the attachment and return routes in each of the `share_with` segments. When `action` is `send-via`, indicates the mode used for packets. Valid values: `attachment-route`, `single-hop`, `dual-hop`.
 * `segment` (Optional) - Name of the segment.
 * `share_with` (Optional) - A list of strings to share with. Must be a substring is all segments. Valid values include: `["*"]` or `["<segment-names>"]`.
@@ -257,11 +284,60 @@ The following arguments are available:
         * `use_edge_location` (Optional) - The preferred edge to use.
         * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
 
+### `edge_location_association`
+
+The following arguments are available:
+
+* `edge_location` (Required) - The AWS Region code for the first edge location in the association (e.g., `us-east-1`).
+* `peer_edge_location` (Required) - The AWS Region code for the second edge location in the association (e.g., `us-west-2`).
+* `routing_policy_names` (Required) - A set of routing policy names to apply to this edge location pair.
+
 ### `network_function_groups`
 
 * `name` (Required) - This identifies the network function group container.
 * `description` (Optional) - Optional description of the network function group.
 * `require_attachment_acceptance` (Required) - This will be either `true`, that attachment acceptance is required, or `false`, that it is not required.
+
+### `routing_policies`
+
+Routing policies control how BGP routes are propagated between your core network and attachments. Available in policy version `2025.11` and later.
+
+The following arguments are available:
+
+* `routing_policy_name` (Required) - Name of the routing policy. Must be 1-100 alphanumeric characters.
+* `routing_policy_description` (Optional) - Description of the routing policy.
+* `routing_policy_direction` (Required) - Direction of the routing policy. Valid values: `inbound`, `outbound`.
+* `routing_policy_number` (Required) - Priority number for the routing policy. Must be between 1 and 9999. Lower numbers are evaluated first.
+* `routing_policy_rules` (Required) - List of routing policy rules. Each rule defines match conditions and actions. Detailed below.
+
+### `routing_policy_rules`
+
+The following arguments are available:
+
+* `rule_number` (Required) - Priority number for the rule within the routing policy. Must be between 1 and 9999. Lower numbers are evaluated first.
+* `rule_definition` (Required) - Defines the match conditions and actions for the rule. Detailed below.
+
+### `rule_definition`
+
+The following arguments are available:
+
+* `condition_logic` (Optional) - Logic to apply when multiple match conditions are present. Valid values: `and`, `or`.
+* `match_conditions` (Optional) - List of conditions to match against routes. Detailed below.
+* `action` (Required) - Block defining the action to take when conditions match. Detailed below.
+
+### `match_conditions`
+
+The following arguments are available:
+
+* `type` (Required) - Type of condition to match. Valid values: `prefix-equals`, `prefix-in-cidr`, `prefix-in-prefix-list`, `asn-in-as-path`, `community-in-list`, `med-equals`.
+* `value` (Required) - Value to match against, depending on the condition type.
+
+### `action` (routing policy)
+
+The following arguments are available:
+
+* `type` (Required) - Type of action to perform. Valid values: `drop`, `allow`, `summarize`, `prepend-asn-list`, `remove-asn-list`, `replace-asn-list`, `add-community`, `remove-community`, `set-med`, `set-local-preference`.
+* `value` (Optional) - Value for the action, required for certain action types.
 
 ## Attribute Reference
 

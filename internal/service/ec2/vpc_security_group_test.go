@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -954,6 +955,11 @@ func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "data.aws_vpc.default", names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -962,12 +968,26 @@ func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config:   testAccVPCSecurityGroupConfig_defaultVPC(rName),
-				PlanOnly: true,
+				Config: testAccVPCSecurityGroupConfig_defaultVPC(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccVPCSecurityGroupConfig_noVPC(rName),
-				PlanOnly: true,
+				Config: testAccVPCSecurityGroupConfig_noVPC(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1117,7 +1137,7 @@ func TestAccVPCSecurityGroup_allowAll(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -1173,7 +1193,7 @@ func TestAccVPCSecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -1201,7 +1221,7 @@ func TestAccVPCSecurityGroup_ipRangesWithSameRules(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress"},
 			},
 		},
 	})
@@ -2491,7 +2511,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 					match, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
-					if tfresource.NotFound(err) {
+					if retry.NotFound(err) {
 						t.Fatalf("PreConfig check failed: Security Group (%s) not found: %s", id, err)
 					}
 					if err != nil {
@@ -2627,6 +2647,11 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// Add a bad rule to trigger API error
 			{
@@ -2635,8 +2660,15 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 			},
 			// All originally added rules must survive. This will return non-empty plan if anything changed.
 			{
-				Config:   testAccVPCSecurityGroupConfig_rulesDropOnErrorInit(rName),
-				PlanOnly: true,
+				Config: testAccVPCSecurityGroupConfig_rulesDropOnErrorInit(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -2777,7 +2809,7 @@ func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2830,7 +2862,7 @@ func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc
 
 		limit, err := strconv.Atoi(rs.Primary.Attributes[names.AttrValue])
 		if err != nil {
-			return fmt.Errorf("converting value to int: %s", err)
+			return fmt.Errorf("converting value to int: %w", err)
 		}
 
 		*v = limit
@@ -2850,7 +2882,7 @@ func testSecurityGroupRuleCount(ctx context.Context, id string, expectedIngressC
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	group, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return fmt.Errorf("Security Group (%s) not found: %w", id, err)
 	}
 	if err != nil {
@@ -4122,7 +4154,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 
   tags = {
@@ -4185,7 +4217,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 
   tags = {
@@ -4248,7 +4280,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 
   policy = <<POLICY

@@ -1,16 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -20,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -145,11 +143,12 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	host, err := findHostByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Host %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -159,14 +158,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Host (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: aws.ToString(host.OwnerId),
-		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, hostARN(ctx, c, aws.ToString(host.OwnerId), d.Id()))
 	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set(names.AttrAvailabilityZone, host.AvailabilityZone)
@@ -251,4 +243,7 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	return diags
+}
+func hostARN(ctx context.Context, c *conns.AWSClient, ownerID, hostID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, ownerID, "dedicated-host/"+hostID)
 }

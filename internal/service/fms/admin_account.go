@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fms
@@ -13,18 +13,20 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_fms_admin_account", name="Admin Account")
+// @Region(global=true)
 func resourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAdminAccountCreate,
@@ -56,16 +58,20 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
-	// Ensure there is not an existing FMS Admin Account.
-	output, err := findAdminAccount(ctx, conn)
-
-	if !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
-	}
-
 	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
+	}
+
+	// Ensure there is not an existing FMS Admin Account.
+	output, err := findAdminAccount(ctx, conn)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", accountID, err)
+	default:
+		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
 	}
 
 	if _, err := waitAdminAccountCreated(ctx, conn, accountID, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -83,7 +89,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findAdminAccount(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FMS Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -125,7 +131,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	output, err := conn.GetAdminAccount(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -140,7 +146,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	}
 
 	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -149,7 +155,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	return output, nil
 }
 
-func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
+func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) sdkretry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
 	return func() (any, string, error) {
@@ -187,11 +193,11 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 	}
 }
 
-func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
+func statusAdminAccount(ctx context.Context, conn *fms.Client) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -204,7 +210,7 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefres
 }
 
 func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleted, // Recreating association can return this status.
 			awstypes.AccountRoleStatusCreating,
@@ -225,7 +231,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleting,
 			awstypes.AccountRoleStatusPendingDeletion,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -239,12 +239,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
 resource "aws_dynamodb_tag" "test" {
-  resource_arn = replace(aws_dynamodb_table.test.arn, data.aws_region.alternate.name, data.aws_region.current.name)
+  resource_arn = replace(aws_dynamodb_table.test.arn, data.aws_region.alternate.name, data.aws_region.current.region)
   key          = "testkey"
   value        = "testvalue"
 }

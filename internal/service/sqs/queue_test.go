@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -16,6 +16,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -440,10 +441,22 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccQueueConfig_policyNewEquivalent(rName),
-				PlanOnly: true,
+				Config: testAccQueueConfig_policyNewEquivalent(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -866,6 +879,34 @@ func TestAccSQSQueue_timeouts(t *testing.T) {
 	})
 }
 
+// SQS does not return kms_data_key_reuse_period_seconds when not using encryption, even if it is sent in the
+// request, causing hanging when statusQueueAttributeState() waited for the attributes to propagate.
+// https://github.com/hashicorp/terraform-provider-aws/pull/41234
+func TestAccSQSQueue_noEncryptionKMSDataKeyReusePeriodSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
@@ -880,7 +921,7 @@ func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n", expectedPolicy, actualPolicyText)
@@ -926,7 +967,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			// SQS seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func() (any, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func(ctx context.Context) (any, error) {
 				return tfsqs.FindQueueAttributesByURL(ctx, conn, rs.Primary.ID)
 			})
 			if errors.Is(err, tfresource.ErrFoundResource) {
@@ -1025,7 +1066,7 @@ resource "aws_sqs_queue" "test" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
+      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
       "Condition": {
         "ArnEquals": {
           "aws:SourceArn": "${aws_sns_topic.test.arn}"
@@ -1077,7 +1118,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:DeleteMessage",
         "sqs:ListQueues",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn
@@ -1127,7 +1168,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:SendMessage",
         "sqs:DeleteMessage",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn
@@ -1276,7 +1317,7 @@ func testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName stri
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   kms_data_key_reuse_period_seconds = "60"
-  max_message_size                  = "261244"
+  max_message_size                  = "1048576"
   message_retention_seconds         = "60"
   name                              = %[1]q
   sqs_managed_sse_enabled           = true
@@ -1321,6 +1362,21 @@ resource "aws_sqs_queue_policy" "test" {
       }
     }]
   })
+}
+`, rName)
+}
+
+func testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  fifo_queue                        = true
+  kms_data_key_reuse_period_seconds = "60"
+  max_message_size                  = "1048576"
+  message_retention_seconds         = "60"
+  name                              = "%[1]s.fifo"
+  receive_wait_time_seconds         = "10"
+  sqs_managed_sse_enabled           = false
+  visibility_timeout_seconds        = "60"
 }
 `, rName)
 }

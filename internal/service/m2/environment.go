@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package m2
@@ -30,13 +30,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,7 +57,7 @@ func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type environmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -331,7 +332,7 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findEnvironmentByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -459,7 +460,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	output, err := conn.GetEnvironment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -476,11 +477,11 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *m2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -493,7 +494,7 @@ func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.St
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleCreating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
 		Refresh: statusEnvironment(ctx, conn, id),
@@ -512,7 +513,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleUpdating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
 		Refresh: statusEnvironment(ctx, conn, id),
@@ -531,7 +532,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
 		Target:     []string{},
 		Refresh:    statusEnvironment(ctx, conn, id),
@@ -552,6 +553,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 type environmentResourceModel struct {
+	framework.WithRegionModel
 	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
 	Description                  types.String                                                 `tfsdk:"description"`
 	EngineType                   fwtypes.StringEnum[awstypes.EngineType]                      `tfsdk:"engine_type"`

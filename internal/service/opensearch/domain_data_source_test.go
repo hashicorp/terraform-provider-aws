@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -73,6 +73,7 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_center_options.#", resourceName, "identity_center_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),

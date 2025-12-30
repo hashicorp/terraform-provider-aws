@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -22,12 +22,13 @@ import (
 )
 
 // @SDKResource("aws_glue_partition", name="Partition")
-func ResourcePartition() *schema.Resource {
+func resourcePartition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionCreate,
 		ReadWithoutTimeout:   resourcePartitionRead,
 		UpdateWithoutTimeout: resourcePartitionUpdate,
 		DeleteWithoutTimeout: resourcePartitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -242,7 +243,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
-	partition, err := FindPartitionByValues(ctx, conn, d.Id())
+	partition, err := findPartitionByValues(ctx, conn, d.Id())
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
@@ -329,6 +330,31 @@ func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
 	}
 	return diags
+}
+
+func findPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*awstypes.Partition, error) {
+	catalogID, dbName, tableName, values, err := readPartitionID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &glue.GetPartitionInput{
+		CatalogId:       aws.String(catalogID),
+		DatabaseName:    aws.String(dbName),
+		TableName:       aws.String(tableName),
+		PartitionValues: values,
+	}
+
+	output, err := conn.GetPartition(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Partition == nil {
+		return nil, nil
+	}
+
+	return output.Partition, nil
 }
 
 func expandPartitionInput(d *schema.ResourceData) *awstypes.PartitionInput {

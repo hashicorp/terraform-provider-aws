@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh
@@ -55,7 +55,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualGatewaySpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualGatewaySpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},

@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` argument to support dual-stack (IPv4 and IPv6) endpoints
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_rest_api: Add `endpoint_configuration.ip_address_type` attribute
+```
+
+```release-note:enhancement
+data-source/aws_api_gateway_domain_name: Add `endpoint_configuration.ip_address_type` attribute
+```

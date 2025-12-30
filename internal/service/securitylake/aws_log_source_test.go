@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,6 +24,10 @@ func testAccAWSLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_aws_log_source.test"
 	var logSource types.AwsLogSourceConfiguration
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -72,6 +76,10 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_aws_log_source.test"
 	var logSource types.AwsLogSourceConfiguration
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -127,6 +135,10 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var logSource types.AwsLogSourceConfiguration
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region(), acctest.AlternateRegion())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -163,6 +175,10 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 	resourceName := "aws_securitylake_aws_log_source.test"
 	var logSource types.AwsLogSourceConfiguration
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -190,6 +206,10 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 	resourceName := "aws_securitylake_aws_log_source.test"
 	resourceName2 := "aws_securitylake_aws_log_source.test2"
 	var logSource, logSource2 types.AwsLogSourceConfiguration
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -236,7 +256,7 @@ func testAccCheckAWSLogSourceDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfsecuritylake.FindAWSLogSourceBySourceName(ctx, conn, types.AwsLogSourceName(rs.Primary.ID))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -273,12 +293,11 @@ func testAccCheckAWSLogSourceExists(ctx context.Context, n string, v *types.AwsL
 }
 
 func testAccAWSLogSourceConfig_basic() string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), `
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "ROUTE53"
   }
   depends_on = [aws_securitylake_data_lake.test]
@@ -289,12 +308,11 @@ data "aws_region" "current" {}
 }
 
 func testAccAWSLogSourceConfig_sourceVersion(version string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.current.account_id]
-    regions        = [data.aws_region.current.name]
+    regions        = [data.aws_region.current.region]
     source_name    = "ROUTE53"
     source_version = %[1]q
   }
@@ -306,13 +324,11 @@ data "aws_region" "current" {}
 }
 
 func testAccAWSLogSourceConfig_multiRegion(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		testAccDataLakeConfig_replication(rName), `
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), testAccDataLakeConfig_replication(rName), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name, data.aws_region.alternate.name]
+    regions     = [data.aws_region.current.region, data.aws_region.alternate.region]
     source_name = "ROUTE53"
   }
 
@@ -328,12 +344,11 @@ data "aws_region" "alternate" {
 }
 
 func testAccAWSLogSourceConfig_multiple() string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), `
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "ROUTE53"
   }
   depends_on = [aws_securitylake_data_lake.test]
@@ -342,7 +357,7 @@ resource "aws_securitylake_aws_log_source" "test" {
 resource "aws_securitylake_aws_log_source" "test2" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "S3_DATA"
   }
   depends_on = [aws_securitylake_data_lake.test]

@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the custom asset type.
 * `formsInput` - (Optional) The metadata forms that are to be attached to the custom asset type.
 
@@ -98,4 +99,4 @@ Using `terraform import`, import DataZone Asset Type using the `domain_identifie
 % terraform import aws_datazone_asset_type.example domain-id-12345678,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-461d9e23525d2105789a40430d6f6b05212237a6eabf758eb111ccee45680ec8 -->
+<!-- cache-key: cdktf-0.20.8 input-f0d75533836e937b6799ea6cdffb8843330bc6f2644cc24d6c937acec2c705c2 -->

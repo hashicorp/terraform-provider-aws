@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -126,29 +126,22 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSigningCertificateExists(ctx context.Context, n string, cred *awstypes.SigningCertificate) resource.TestCheckFunc {
+func testAccCheckSigningCertificateExists(ctx context.Context, n string, v *awstypes.SigningCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Server Cert ID is set")
-		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
+		output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
+
 		if err != nil {
 			return err
 		}
 
-		output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
-		if err != nil {
-			return err
-		}
-
-		*cred = *output
+		*v = *output
 
 		return nil
 	}
@@ -163,19 +156,14 @@ func testAccCheckSigningCertificateDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			output, err := tfiam.FindSigningCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["certificate_id"])
 
-			output, err := tfiam.FindSigningCertificate(ctx, conn, userName, certId)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if output != nil {
-				return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("IAM Signing Certificate (%s) still exists", rs.Primary.ID)
 			}
 		}
 
