@@ -130,7 +130,7 @@ var (
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
 )
 
-// Provider is the "main" provider instance
+// Provider is the "default" provider instance.
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
@@ -141,6 +141,12 @@ var (
 )
 
 type ProviderFunc func() *schema.Provider
+
+var (
+	DefaultProviderFunc ProviderFunc = func() *schema.Provider {
+		return Provider
+	}
+)
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -1180,7 +1186,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
-	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
@@ -1216,7 +1222,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1238,7 +1244,7 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1271,6 +1277,12 @@ func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func PreCheckRAMSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1376,7 +1388,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
 
-	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, DefaultProviderFunc, pathPrefix)
 }
 
 func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
