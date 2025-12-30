@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,9 +107,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("emit_system_fields"); ok {
-		input.EmitSystemFields = tfslices.ApplyToAll(v.(*schema.Set).List(), func(v any) string {
-			return v.(string)
-		})
+		input.EmitSystemFields = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
