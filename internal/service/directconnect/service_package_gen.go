@@ -96,7 +96,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceGateway,
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID,
 				inttypes.WithV6_0SDKv2Fix(),
 			),
