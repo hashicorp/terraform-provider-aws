@@ -4,6 +4,8 @@ FEATURES:
 
 * **New List Resource:** `aws_kms_alias` ([#45700](https://github.com/hashicorp/terraform-provider-aws/issues/45700))
 * **New List Resource:** `aws_sqs_queue` ([#45691](https://github.com/hashicorp/terraform-provider-aws/issues/45691))
+* **New Resource:** `aws_appstream_application_entitlement_association` ([#45505](https://github.com/hashicorp/terraform-provider-aws/issues/45505))
+* **New Resource:** `aws_appstream_entitlement` ([#45505](https://github.com/hashicorp/terraform-provider-aws/issues/45505))
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
 * **New Resource:** `aws_organizations_tag` ([#45730](https://github.com/hashicorp/terraform-provider-aws/issues/45730))
 * **New Resource:** `aws_sesv2_tenant` ([#45706](https://github.com/hashicorp/terraform-provider-aws/issues/45706))
