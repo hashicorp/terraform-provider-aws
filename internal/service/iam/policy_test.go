@@ -416,40 +416,11 @@ func TestAccIAMPolicy_malformedCondition(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicy_updateWithoutDelay(t *testing.T) {
-	ctx := acctest.Context(t)
-	var out awstypes.Policy
-	resourceName := "aws_iam_policy.test"
-	name := "test"
-	description := "policy_create_update_with_delay"
-	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyConfig_description(name, description),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "-1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out awstypes.Policy
-	var updatedPolicyOut awstypes.Policy
-	name := "test"
+	var out1, out2 awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
-	description := "policy_create_update_with_delay"
-	delayAfterPolicyCreationVariable := "delay_after_policy_creation_in_ms"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -458,20 +429,16 @@ func TestAccIAMPolicy_updateWithDelay(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_updateWithDelay(name, description, -1),
+				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "-1"),
+					testAccCheckPolicyExists(ctx, resourceName, &out1),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_updateWithDelay(name, description, 3000),
+				Config: testAccPolicyConfig_delayAfterCreation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &updatedPolicyOut),
-					testAccVerifyLatestPolicyId(&out, &updatedPolicyOut),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, delayAfterPolicyCreationVariable, "3000"),
+					testAccCheckPolicyExists(ctx, resourceName, &out2),
+					testAccVerifyLatestPolicyId(&out1, &out2),
 				),
 			},
 		},
@@ -483,10 +450,6 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -545,8 +508,8 @@ func testAccVerifyLatestPolicyId(before *awstypes.Policy, after *awstypes.Policy
 func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description = %q
-  name        = %q
+  description = %[1]q
+  name        = %[2]q
 
   policy = <<EOF
 {
@@ -569,7 +532,7 @@ EOF
 func testAccPolicyConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -615,7 +578,7 @@ EOF
 func testAccPolicyConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name_prefix = %q
+  name_prefix = %[1]q
 
   policy = <<EOF
 {
@@ -638,8 +601,8 @@ EOF
 func testAccPolicyConfig_path(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
-  path = %q
+  name = %[1]q
+  path = %[2]q
 
   policy = <<EOF
 {
@@ -662,13 +625,13 @@ EOF
 func testAccPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name   = %q
-  policy = %q
+  name   = %[1]q
+  policy = %[2]q
 }
 `, rName, policy)
 }
 
-func testAccPolicyConfig_diffs(rName string, tags string) string {
+func testAccPolicyConfig_diffs(rName, tags string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -770,7 +733,7 @@ EOF
 func testAccPolicyConfig_MalformedCondition_setup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -791,7 +754,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_MalformedCondition_failure(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -815,7 +778,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_MalformedCondition_fix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -838,12 +801,11 @@ resource "aws_iam_policy" "test" {
 `, rName)
 }
 
-func testAccPolicyConfig_updateWithDelay(rName, description string, delay int) string {
+func testAccPolicyConfig_delayAfterCreation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  description                       = %q
-  name                              = %q
-  delay_after_policy_creation_in_ms = %d
+  name                              = %[1]q
+  delay_after_policy_creation_in_ms = 3000
 
   policy = <<EOF
 {
@@ -851,7 +813,8 @@ resource "aws_iam_policy" "test" {
   "Statement": [
     {
       "Action": [
-        "ec2:Describe*"
+        "ec2:Describe*",
+        "ec2:Get*"
       ],
       "Effect": "Allow",
       "Resource": "*"
@@ -860,5 +823,5 @@ resource "aws_iam_policy" "test" {
 }
 EOF
 }
-`, description, rName, delay)
+`, rName)
 }

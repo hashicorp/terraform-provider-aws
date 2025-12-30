@@ -66,6 +66,10 @@ func resourcePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"delay_after_policy_creation_in_ms": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -111,11 +115,6 @@ func resourcePolicy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"delay_after_policy_creation_in_ms": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  -1,
-			},
 		},
 	}
 }
@@ -230,7 +229,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("delay_after_policy_creation_in_ms", names.AttrTags, names.AttrTagsAll) {
 		if err := policyPruneVersions(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -240,54 +239,49 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		delayAfterPolicyCreationInMs := d.Get("delay_after_policy_creation_in_ms").(int)
-
-		if delayAfterPolicyCreationInMs == -1 {
-			input := &iam.CreatePolicyVersionInput{
-				PolicyArn:      aws.String(d.Id()),
-				PolicyDocument: aws.String(policy),
-				SetAsDefault:   true,
-			}
-			_, err = conn.CreatePolicyVersion(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
-			}
-		} else {
-
+		if v, ok := d.GetOk("delay_after_policy_creation_in_ms"); ok {
 			// Creating a policy and setting its version as default in a single operation can expose a brief interval where
 			// valid STS tokens with attached Session Policies are rejected by AWS authorization servers that have
 			// not received the new default policy version. Separating this into two distinct actions of creating a policy version,
 			// pausing briefly, and then setting that to the default version can avoid this issue, and may be required
 			// in environments with very high S3 IO loads.
-
-			input := &iam.CreatePolicyVersionInput{
+			inputCPV := iam.CreatePolicyVersionInput{
 				PolicyArn:      aws.String(d.Id()),
 				PolicyDocument: aws.String(policy),
 				SetAsDefault:   false,
 			}
 
-			var policyVersionOutput *iam.CreatePolicyVersionOutput
-			policyVersionOutput, err = conn.CreatePolicyVersion(ctx, input)
+			output, err := conn.CreatePolicyVersion(ctx, &inputCPV)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s) version: %s", d.Id(), err)
 			}
 
-			// Ensuring Thread Sleeps for n ms before Setting version as default version
-			// The value is passed through a variable.
-			time.Sleep(time.Duration(delayAfterPolicyCreationInMs) * time.Millisecond)
+			versionID := aws.ToString(output.PolicyVersion.VersionId)
 
-			policyInput := &iam.SetDefaultPolicyVersionInput{
+			time.Sleep(time.Duration(v.(int)) * time.Millisecond)
+
+			inputSDPV := iam.SetDefaultPolicyVersionInput{
 				PolicyArn: aws.String(d.Id()),
-				VersionId: policyVersionOutput.PolicyVersion.VersionId,
+				VersionId: aws.String(versionID),
 			}
 
-			_, err = conn.SetDefaultPolicyVersion(ctx, policyInput)
+			_, err = conn.SetDefaultPolicyVersion(ctx, &inputSDPV)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting Default Policy version for IAM Policy (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "setting IAM Policy (%s) default version (%s): %s", d.Id(), versionID, err)
 			}
+		} else {
+			input := iam.CreatePolicyVersionInput{
+				PolicyArn:      aws.String(d.Id()),
+				PolicyDocument: aws.String(policy),
+				SetAsDefault:   true,
+			}
+			_, err = conn.CreatePolicyVersion(ctx, &input)
 
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
