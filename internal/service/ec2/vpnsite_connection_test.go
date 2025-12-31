@@ -585,10 +585,28 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 			},
 			{
 				Config: testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d208/126", "fdff:2001:db8:2:2d1:81ff:fe41:d20c/126"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d208/126"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d20c/126"),
 				),
 			},
 			// NOTE: Import does not currently have access to the Terraform configuration,
