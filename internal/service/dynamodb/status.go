@@ -9,12 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTable(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
 		if retry.NotFound(err) {
@@ -29,8 +28,8 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) s
 	}
 }
 
-func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTableWarmThroughput(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
 		if retry.NotFound(err) {
@@ -49,8 +48,8 @@ func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, table
 	}
 }
 
-func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusImport(conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)
 
 		if retry.NotFound(err) {
@@ -69,8 +68,8 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 	}
 }
 
-func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicaUpdate(conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if retry.NotFound(err) {
@@ -91,8 +90,8 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, 
 	}
 }
 
-func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicaDelete(conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if retry.NotFound(err) {
@@ -113,8 +112,8 @@ func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, 
 	}
 }
 
-func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGSI(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if retry.NotFound(err) {
@@ -133,8 +132,34 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
-func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAllGSI(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		for _, g := range output.GlobalSecondaryIndexes {
+			if g.IndexStatus != awstypes.IndexStatusActive {
+				return output, string(g.IndexStatus), nil
+			}
+		}
+
+		return output, string(awstypes.IndexStatusActive), nil
+	}
+}
+
+func statusGSIWarmThroughput(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if retry.NotFound(err) {
@@ -153,8 +178,8 @@ func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableNa
 	}
 }
 
-func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPITR(conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
 		if retry.NotFound(err) {
@@ -173,8 +198,8 @@ func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, op
 	}
 }
 
-func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTTL(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTTLByTableName(ctx, conn, tableName)
 
 		if retry.NotFound(err) {
@@ -193,8 +218,8 @@ func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) sdk
 	}
 }
 
-func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSSE(conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if retry.NotFound(err) {

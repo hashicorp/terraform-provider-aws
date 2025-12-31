@@ -21,7 +21,7 @@ variable "{{ . }}" {
 }
 
 {{ end -}}
-{{- range .RequiredEnvVars }}
+{{- range .RequiredEnvVarValues }}
 variable "{{ . }}" {
   type     = string
   nullable = false
