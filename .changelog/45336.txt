@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table: Added new fields available in the Glue API for ViewDefinition.
+```
