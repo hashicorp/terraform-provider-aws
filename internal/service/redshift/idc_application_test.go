@@ -155,7 +155,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdcApplicationConfig_serviceIntegrationsRedshift(rName),
+				Config: testAccIdcApplicationConfig_serviceIntegrationsRshift(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
@@ -415,7 +415,7 @@ resource "aws_redshift_idc_application" "test" {
 `, rName))
 }
 
-func testAccIdcApplicationConfig_serviceIntegrationsRedshift(rName string) string {
+func testAccIdcApplicationConfig_serviceIntegrationsRshift(rName string) string {
 	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
