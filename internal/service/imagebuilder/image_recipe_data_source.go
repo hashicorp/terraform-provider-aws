@@ -160,6 +160,22 @@ func dataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -169,12 +185,13 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	arn := d.Get(names.AttrARN).(string)
-	imageRecipe, err := findImageRecipeByARN(ctx, conn, arn)
+	output, err := findImageRecipeByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", arn, err)
 	}
 
+	imageRecipe := output.ImageRecipe
 	arn = aws.ToString(imageRecipe.Arn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
@@ -200,6 +217,13 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, imageRecipe.Tags)
 

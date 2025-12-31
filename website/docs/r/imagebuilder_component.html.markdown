@@ -76,6 +76,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - (Required) Amazon Resource Name (ARN) of the component.
 * `date_created` - Date the component was created.
 * `encrypted` - Encryption status of the component.
+* `latest_major_version_arn` - Amazon Resource Name (ARN) of the latest major version of the component.
+* `latest_minor_version_arn` - Amazon Resource Name (ARN) of the latest minor version of the component.
+* `latest_patch_version_arn` - Amazon Resource Name (ARN) of the latest patch version of the component.
+* `latest_version_arn` - Amazon Resource Name (ARN) of the latest version of the component.
 * `owner` - Owner of the component.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the component.
