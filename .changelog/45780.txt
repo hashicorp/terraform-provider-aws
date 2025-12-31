@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_vpc: Fix `reading EC2 VPC (...) default Security Group: empty result` and `reading EC2 VPC (...) main Route Table: empty result` errors when importing RAM-shared VPCs
