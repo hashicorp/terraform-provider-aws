@@ -6,6 +6,7 @@ package timestreaminfluxdb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -571,30 +572,38 @@ func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, parameterGroupID string) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, parameterGroupID string) (isV3 bool, determined bool, diags diag.Diagnostics) {
 	out, err := findDBParameterGroupByID(ctx, conn, parameterGroupID)
 
 	if retry.NotFound(err) {
-		return false, diags
+		// Parameter group not found - this is a configuration error
+		diags.AddAttributeError(
+			path.Root("db_parameter_group_identifier"),
+			"Parameter Group Not Found",
+			fmt.Sprintf("The specified parameter group '%s' does not exist.", parameterGroupID),
+		)
+		return false, false, diags
 	}
 
 	if err != nil {
+		// API error (network, permissions, etc.) - cannot determine type
+		// This might be temporary, so we skip validation rather than error
 		diags.AddWarning(
 			"Unable to query parameter group",
-			"Could not determine parameter group type. Validation will be skipped.",
+			fmt.Sprintf("Could not query parameter group '%s' to determine type. Validation will be skipped. Error: %s", parameterGroupID, err.Error()),
 		)
-		return false, diags
+		return false, false, diags
 	}
 
+	// Successfully queried parameter group - type can be determined
 	switch out.Parameters.(type) {
 	case *awstypes.ParametersMemberInfluxDBv3Core:
-		return true, diags
+		return true, true, diags
 	case *awstypes.ParametersMemberInfluxDBv3Enterprise:
-		return true, diags
+		return true, true, diags
 	default:
-		return false, diags
+		// Confirmed to be V2 (or other non-V3 type)
+		return false, true, diags
 	}
 }
 
@@ -626,6 +635,12 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		}
 	}
 
+	// If parameter group identifier is unknown, skip validation to avoid false errors
+	// (it might be computed or set elsewhere)
+	if data.DBParameterGroupIdentifier.IsUnknown() {
+		return
+	}
+
 	hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
 		!isNullOrUnknown(data.Bucket) ||
 		!isNullOrUnknown(data.DeploymentType) ||
@@ -634,26 +649,37 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		!isNullOrUnknown(data.Username)
 
 	var isV3Cluster bool
-	if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
-		meta := r.Meta()
-		if meta == nil {
-			return
-		}
+	var typeDetermined bool
+	if !data.DBParameterGroupIdentifier.IsNull() {
 		paramGroupID := data.DBParameterGroupIdentifier.ValueString()
-		isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		isV3Cluster = isV3
+		if paramGroupID == "" {
+			// Empty parameter group identifier - treat as V2
+			typeDetermined = true
+		} else {
+			meta := r.Meta()
+			if meta == nil {
+				return
+			}
+			isV3, determined, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			isV3Cluster = isV3
+			typeDetermined = determined
 
-		if !hasV2Fields && !isV3Cluster {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("db_parameter_group_identifier"),
-				"Invalid Parameter Group Type",
-				"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
-			)
+			// Only validate parameter group type if we successfully determined it
+			if typeDetermined && !hasV2Fields && !isV3Cluster {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("db_parameter_group_identifier"),
+					"Invalid Parameter Group Type",
+					"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
+				)
+			}
 		}
+	} else {
+		// No parameter group identifier means it's V2
+		typeDetermined = true
 	}
 
 	if isV3Cluster {
@@ -676,7 +702,10 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				)
 			}
 		}
-	} else {
+	} else if typeDetermined {
+		// Only validate as V2 if we successfully determined it's not V3
+		// If typeDetermined is false, we couldn't determine the parameter group type,
+		// so we skip validation to avoid incorrectly requiring V2 fields
 		for _, v := range []struct {
 			val  attr.Value
 			path string
@@ -707,16 +736,29 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		}
 
 		var isV3Cluster bool
+		var typeDetermined bool
 		if !data.DBParameterGroupIdentifier.IsNull() {
-			isV3, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), data.DBParameterGroupIdentifier.ValueString())
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
+			paramGroupID := data.DBParameterGroupIdentifier.ValueString()
+			if paramGroupID == "" {
+				// Empty parameter group identifier - treat as V2
+				typeDetermined = true
+			} else {
+				isV3, determined, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), paramGroupID)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				isV3Cluster = isV3
+				typeDetermined = determined
 			}
-			isV3Cluster = isV3
+		} else {
+			// No parameter group identifier means it's V2
+			typeDetermined = true
 		}
 
-		if !isV3Cluster && data.DeploymentType.IsUnknown() {
+		// Only set default deployment type if we're certain it's not V3
+		// If we couldn't determine the type (e.g., parameter group not found), we skip setting the default
+		if typeDetermined && !isV3Cluster && data.DeploymentType.IsUnknown() {
 			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
 		}
 	}
