@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func TestAccRedshiftIDCApplication_basic(t *testing.T) {
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idc_display_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "idc_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
@@ -97,7 +97,7 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer_list.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.0", "client_id"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.0", names.AttrClientID),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIDCApplication_serviceIntegrationsRedshift(t *testing.T) {
+func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -258,7 +258,7 @@ func testAccCheckIDCApplicationDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, arn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
