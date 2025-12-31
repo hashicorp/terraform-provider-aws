@@ -1510,46 +1510,42 @@ func findSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, co
 		SubnetId: aws.String(subnetID),
 	}
 
-	var err error
-	for {
-		output, err := conn.GetSubnetCidrReservations(ctx, &input)
+	output, err := findSubnetCIDRReservations(ctx, conn, &input)
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-			return nil, &sdkretry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-
-		for _, r := range output.SubnetIpv4CidrReservations {
-			if aws.ToString(r.SubnetCidrReservationId) == reservationID {
-				return &r, nil
-			}
-		}
-		for _, r := range output.SubnetIpv6CidrReservations {
-			if aws.ToString(r.SubnetCidrReservationId) == reservationID {
-				return &r, nil
-			}
-		}
-
-		if output.NextToken == nil {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastError:   err,
-		LastRequest: &input,
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.SubnetCidrReservation) bool {
+		return aws.ToString(v.SubnetCidrReservationId) == reservationID
+	}))
+}
+
+func findSubnetCIDRReservations(ctx context.Context, conn *ec2.Client, input *ec2.GetSubnetCidrReservationsInput) ([]awstypes.SubnetCidrReservation, error) {
+	var output []awstypes.SubnetCidrReservation
+
+	err := getSubnetCIDRReservationsPages(ctx, conn, input, func(page *ec2.GetSubnetCidrReservationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.SubnetIpv4CidrReservations...)
+		output = append(output, page.SubnetIpv6CidrReservations...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.SubnetIpv6CidrBlockAssociation, error) {
