@@ -24,7 +24,7 @@ import (
 )
 
 func findAllowedImagesSettings(ctx context.Context, conn *ec2.Client) (*ec2.GetAllowedImagesSettingsOutput, error) {
-	input := ec2.GetAllowedImagesSettingsInput{}
+	var input ec2.GetAllowedImagesSettingsInput
 	output, err := conn.GetAllowedImagesSettings(ctx, &input)
 
 	if err != nil {
@@ -551,7 +551,7 @@ func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, 
 }
 
 func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
-	input := ec2.GetInstanceMetadataDefaultsInput{}
+	var input ec2.GetInstanceMetadataDefaultsInput
 	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
 
 	if err != nil {
@@ -902,7 +902,7 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 }
 
 func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
-	input := ec2.DescribeLaunchTemplateVersionsInput{}
+	var input ec2.DescribeLaunchTemplateVersionsInput
 
 	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
 		input.LaunchTemplateId = aws.String(v)
@@ -1340,8 +1340,7 @@ func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id 
 }
 
 func findSpotDatafeedSubscription(ctx context.Context, conn *ec2.Client) (*awstypes.SpotDatafeedSubscription, error) {
-	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
-
+	var input ec2.DescribeSpotDatafeedSubscriptionInput
 	output, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotDatafeedNotFound) {
@@ -1426,8 +1425,8 @@ func findSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id strin
 
 func findSpotPrices(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotPriceHistoryInput) ([]awstypes.SpotPrice, error) {
 	var output []awstypes.SpotPrice
-	pages := ec2.NewDescribeSpotPriceHistoryPaginator(conn, input)
 
+	pages := ec2.NewDescribeSpotPriceHistoryPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -4655,7 +4654,7 @@ func findImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 }
 
 func findImageBlockPublicAccessState(ctx context.Context, conn *ec2.Client) (*string, error) {
-	input := ec2.GetImageBlockPublicAccessStateInput{}
+	var input ec2.GetImageBlockPublicAccessStateInput
 	output, err := conn.GetImageBlockPublicAccessState(ctx, &input)
 
 	if err != nil {
@@ -4708,7 +4707,7 @@ func findImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, a
 }
 
 func findSerialConsoleAccessStatus(ctx context.Context, conn *ec2.Client) (*ec2.GetSerialConsoleAccessStatusOutput, error) {
-	input := ec2.GetSerialConsoleAccessStatusInput{}
+	var input ec2.GetSerialConsoleAccessStatusInput
 	output, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 
 	if err != nil {
@@ -6218,8 +6217,7 @@ func findNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2.Cl
 }
 
 func findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2.Client, source, destination, metric, statistic string) (*awstypes.Subscription, error) {
-	input := ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
-
+	var input ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput
 	output, err := findNetworkPerformanceMetricSubscriptions(ctx, conn, &input)
 
 	if err != nil {
@@ -7012,8 +7010,7 @@ func findCapacityBlockOfferings(ctx context.Context, conn *ec2.Client, input *ec
 }
 
 func findVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) (*awstypes.VpcBlockPublicAccessOptions, error) {
-	input := ec2.DescribeVpcBlockPublicAccessOptionsInput{}
-
+	var input ec2.DescribeVpcBlockPublicAccessOptionsInput
 	output, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &input)
 
 	if err != nil {
