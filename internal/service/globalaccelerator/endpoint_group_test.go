@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -503,7 +503,7 @@ func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfglobalaccelerator.FindEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -526,7 +526,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2t
 
 		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Already gone.
 			return nil
 		}

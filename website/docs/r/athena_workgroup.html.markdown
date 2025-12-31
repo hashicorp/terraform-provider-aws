@@ -47,14 +47,21 @@ This resource supports the following arguments:
 ### Configuration
 
 * `bytes_scanned_cutoff_per_query` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
+* `customer_content_encryption_configuration` - (Optional) Configuration block to specify the KMS key that is used to encrypt the user's data stores in Athena. This setting applies to the PySpark engine for Athena notebooks. See [Customer Content Encryption Configuration](#customer-content-encryption-configuration) below.
+* `enable_minimum_encryption_configuration` - (Optional) Boolean indicating whether a minimum level of encryption is enforced for the workgroup for query and calculation results written to Amazon S3.
 * `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `engine_version` - (Optional) Configuration block for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). See [Engine Version](#engine-version) below.
 * `execution_role` - (Optional) Role used to access user resources in notebook sessions and IAM Identity Center enabled workgroups. The property is required for IAM Identity Center enabled workgroups.
 * `identity_center_configuration` - (Optional) Configuration block to set up an IAM Identity Center enabled workgroup. See [Identity Center Configuration](#identity-center-configuration) below.
+* `monitoring_configuration` - (Optional) Configuration block for managed log persistence, delivering logs to Amazon S3 buckets, Amazon CloudWatch log groups etc. Only applicable to Apache Spark engine. See [Monitoring Configuration](#monitoring-configuration) below.
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 * `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `managed_query_results_configuration` - (Optional) Configuration block for storing results in Athena owned storage. See [Managed Query Results Configuration](#managed-query-results-configuration) below.
+
+#### Customer Content Encryption Configuration
+
+* `kms_key_arn` - (Required) Customer managed KMS key that is used to encrypt the user's data stores in Athena.
 
 #### Engine Version
 
@@ -64,6 +71,32 @@ This resource supports the following arguments:
 
 * `enable_identity_center` - (Optional) Specifies whether the workgroup is IAM Identity Center supported.
 * `identity_center_instance_arn` - (Optional) The IAM Identity Center instance ARN that the workgroup associates to.
+
+#### Monitoring Configuration
+
+* `cloud_watch_logging_configuration` - (Optional) Configuration block for delivering logs to Amazon CloudWatch log groups. See [CloudWatch Logging Configuration](#cloudwatch-logging-configuration) below.
+* `managed_logging_configuration` - (Optional) Configuration block for managed log persistence. See [Managed Logging Configuration](#managed-logging-configuration) below.
+* `s3_logging_configuration` - (Optional) Configuration block for delivering logs to Amazon S3 buckets. See [S3 Logging Configuration](#s3-logging-configuration) below.
+
+##### CloudWatch Logging Configuration
+
+* `enabled` - (Required) Boolean whether Amazon CloudWatch logging is enabled for the workgroup.
+* `log_group` - (Optional) Name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
+* `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
+* `log_type` - (Optional) Repeatable block defining log types to be delivered to CloudWatch.
+    * `key` - (Required) Type of worker to deliver logs to CloudWatch (for example, `SPARK_DRIVER` and `SPARK_EXECUTOR`).
+    * `values` - (Required) List of log types to be delivered to CloudWatch (for example, `STDOUT` and `STDERR`).
+
+#### Managed Logging Configuration
+
+* `enabled` - (Required) Boolean whether managed log persistence is enabled for the workgroup.
+* `kms_keys` - (Optional) KMS key ARN to encrypt the logs stored in managed log persistence.
+
+#### S3 Logging Configuration
+
+* `enabled` - (Required) Boolean whether Amazon S3 logging is enabled for the workgroup.
+* `kms_key` - (Optional) KMS key ARN to encrypt the logs published to the given Amazon S3 destination.
+* `log_location` - (Optional) Amazon S3 destination URI (`s3://bucket/prefix`) for log publishing.
 
 #### Result Configuration
 

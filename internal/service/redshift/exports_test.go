@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -29,27 +29,28 @@ var (
 	ResourceSubnetGroup                  = resourceSubnetGroup
 	ResourceUsageLimit                   = resourceUsageLimit
 
-	FindAuthenticationProfileByID               = findAuthenticationProfileByID
-	FindClusterByID                             = findClusterByID
-	FindClusterSnapshotByID                     = findClusterSnapshotByID
-	FindDataShareAuthorizationByID              = findDataShareAuthorizationByID
-	FindDataShareConsumerAssociationByID        = findDataShareConsumerAssociationByID
-	FindEndpointAccessByName                    = findEndpointAccessByName
-	FindEndpointAuthorizationByID               = findEndpointAuthorizationByID
-	FindEventSubscriptionByName                 = findEventSubscriptionByName
-	FindHSMClientCertificateByID                = findHSMClientCertificateByID
-	FindHSMConfigurationByID                    = findHSMConfigurationByID
-	FindIntegrationByARN                        = findIntegrationByARN
-	FindLoggingByID                             = findLoggingByID
-	FindParameterGroupByName                    = findParameterGroupByName
-	FindPartnerByID                             = findPartnerByID
-	FindResourcePolicyByARN                     = findResourcePolicyByARN
-	FindScheduledActionByName                   = findScheduledActionByName
-	FindSnapshotCopyByID                        = findSnapshotCopyByID
-	FindSnapshotCopyGrantByName                 = findSnapshotCopyGrantByName
-	FindSnapshotScheduleAssociationByTwoPartKey = findSnapshotScheduleAssociationByTwoPartKey
-	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
-	FindSubnetGroupByName                       = findSubnetGroupByName
-	FindUsageLimitByID                          = findUsageLimitByID
-	WaitSnapshotScheduleAssociationCreated      = waitSnapshotScheduleAssociationCreated
+	FindAuthenticationProfileByID                 = findAuthenticationProfileByID
+	FindClusterByID                               = findClusterByID
+	FindClusterSnapshotByID                       = findClusterSnapshotByID
+	FindDataShareAuthorizationByTwoPartKey        = findDataShareAuthorizationByTwoPartKey
+	FindDataShareConsumerAssociationByFourPartKey = findDataShareConsumerAssociationByFourPartKey
+	FindEndpointAccessByName                      = findEndpointAccessByName
+	FindEndpointAuthorizationByTwoPartKey         = findEndpointAuthorizationByTwoPartKey
+	FindEventSubscriptionByName                   = findEventSubscriptionByName
+	FindHSMClientCertificateByID                  = findHSMClientCertificateByID
+	FindHSMConfigurationByID                      = findHSMConfigurationByID
+	FindIntegrationByARN                          = findIntegrationByARN
+	FindLoggingStatusByID                         = findLoggingStatusByID
+	FindParameterGroupByName                      = findParameterGroupByName
+	FindPartnerByFourPartKey                      = findPartnerByFourPartKey
+	FindResourcePolicyByARN                       = findResourcePolicyByARN
+	FindScheduledActionByName                     = findScheduledActionByName
+	FindSnapshotCopyByID                          = findSnapshotCopyByID
+	FindSnapshotCopyGrantByName                   = findSnapshotCopyGrantByName
+	FindSnapshotScheduleAssociationByTwoPartKey   = findSnapshotScheduleAssociationByTwoPartKey
+	FindSnapshotScheduleByID                      = findSnapshotScheduleByID
+	FindSubnetGroupByName                         = findSubnetGroupByName
+	FindUsageLimitByID                            = findUsageLimitByID
+
+	WaitSnapshotScheduleAssociationCreated = waitSnapshotScheduleAssociationCreated
 )

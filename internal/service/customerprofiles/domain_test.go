@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package customerprofiles_test
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
+	tfcustomerprofiles "github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 )
 
 func TestAccCustomerProfilesDomain_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_base(rName, 120),
+				Config: testAccDomainConfig_basic(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
@@ -38,7 +38,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_base(rName, 365),
+				Config: testAccDomainConfig_basic(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
@@ -206,10 +206,10 @@ func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_base(rName, 365),
+				Config: testAccDomainConfig_basic(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcustomerprofiles.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,7 +226,7 @@ func testAccCheckDomainExists(ctx context.Context, t *testing.T, n string) resou
 
 		conn := acctest.ProviderMeta(ctx, t).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
+		_, err := tfcustomerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -241,7 +241,7 @@ func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			_, err := customerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
+			_, err := tfcustomerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
 
 			if retry.NotFound(err) {
 				continue
@@ -258,7 +258,7 @@ func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestC
 	}
 }
 
-func testAccDomainConfig_base(rName string, defaultExpirationDays int) string {
+func testAccDomainConfig_basic(rName string, defaultExpirationDays int) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q

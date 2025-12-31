@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -66,6 +66,7 @@ type Config struct {
 	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
+	UserAgent                      awsbase.UserAgentProducts
 }
 
 // ConfigureProvider configures the provided provider Meta (instance data).
@@ -117,6 +118,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		TokenBucketRateLimiterCapacity: c.TokenBucketRateLimiterCapacity,
 		UseDualStackEndpoint:           c.UseDualStackEndpoint,
 		UseFIPSEndpoint:                c.UseFIPSEndpoint,
+		UserAgent:                      c.UserAgent,
 	}
 
 	if c.CustomCABundle != "" {

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Tags Generator
 
 This generator (`main.go`) generates files named `tags_gen`, such as `internal/service/ecs/tags_gen.go`. These files provide consistency in handling AWS resource tags. Initiate generating by calling `make gen` from the provider directory.

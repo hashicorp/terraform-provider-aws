@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package odb
@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -575,40 +576,10 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	plan.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
-	odbNetwork = plan.OdbNetworkId
-	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
-		odbNetwork = plan.OdbNetworkArn
-	}
-	getOdbNetworkInput := odb.GetOdbNetworkInput{
-		OdbNetworkId: odbNetwork.ValueStringPointer(),
-	}
-	odbNetworkOutput, err := conn.GetOdbNetwork(ctx, &getOdbNetworkInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	plan.OdbNetworkId = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkId)
-	plan.OdbNetworkArn = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkArn)
-	cloudExadataInfra = plan.CloudExadataInfrastructureId
-	if cloudExadataInfra.IsNull() || cloudExadataInfra.IsUnknown() {
-		cloudExadataInfra = plan.CloudExadataInfrastructureArn
-	}
-	getCloudExadataInfraInput := odb.GetCloudExadataInfrastructureInput{
-		CloudExadataInfrastructureId: cloudExadataInfra.ValueStringPointer(),
-	}
-	cloudExadataInfraOutput, err := conn.GetCloudExadataInfrastructure(ctx, &getCloudExadataInfraInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureId)
-	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureArn)
+	plan.OdbNetworkId = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkId)
+	plan.OdbNetworkArn = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkArn)
+	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureId)
+	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -624,7 +595,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	out, err := findCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -651,32 +622,10 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	state.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
-	getOdbNetworkInput := odb.GetOdbNetworkInput{
-		OdbNetworkId: out.OdbNetworkId,
-	}
-	odbNetworkOutput, err := conn.GetOdbNetwork(ctx, &getOdbNetworkInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	state.OdbNetworkId = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkId)
-	state.OdbNetworkArn = flex.StringToFramework(ctx, odbNetworkOutput.OdbNetwork.OdbNetworkArn)
-	getCloudExadataInfraInput := odb.GetCloudExadataInfrastructureInput{
-		CloudExadataInfrastructureId: out.CloudExadataInfrastructureId,
-	}
-	cloudExadataInfraOutput, err := conn.GetCloudExadataInfrastructure(ctx, &getCloudExadataInfraInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureId)
-	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, cloudExadataInfraOutput.CloudExadataInfrastructure.CloudExadataInfrastructureArn)
+	state.OdbNetworkId = flex.StringToFramework(ctx, out.OdbNetworkId)
+	state.OdbNetworkArn = flex.StringToFramework(ctx, out.OdbNetworkArn)
+	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, out.CloudExadataInfrastructureId)
+	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, out.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -729,7 +678,7 @@ func computeHostnamePrefix(hostnamePrefixComputed *string) *string {
 	}
 }
 func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:                   statusCloudVmCluster(ctx, conn, id),
@@ -747,7 +696,7 @@ func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string,
 }
 
 func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
 		Refresh: statusCloudVmCluster(ctx, conn, id),
@@ -762,10 +711,10 @@ func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 	return nil, err
 }
 
-func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
+func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCloudVmClusterForResourceByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -784,7 +733,7 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	out, err := conn.GetCloudVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}

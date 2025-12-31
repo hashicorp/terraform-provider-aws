@@ -1,52 +1,36 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_sesv2_configuration_set", &resource.Sweeper{
-		Name: "aws_sesv2_configuration_set",
-		F:    sweepConfigurationSets,
-	})
-
-	resource.AddTestSweepers("aws_sesv2_contact_list", &resource.Sweeper{
-		Name: "aws_sesv2_contact_list",
-		F:    sweepContactLists,
-	})
+	awsv2.Register("aws_sesv2_configuration_set", sweepConfigurationSets)
+	awsv2.Register("aws_sesv2_contact_list", sweepContactLists)
+	awsv2.Register("aws_sesv2_tenant", sweepTenants)
 }
 
-func sweepConfigurationSets(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepConfigurationSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SESV2Client(ctx)
-	input := &sesv2.ListConfigurationSetsInput{}
+	var input sesv2.ListConfigurationSetsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := sesv2.NewListConfigurationSetsPaginator(conn, input)
+	pages := sesv2.NewListConfigurationSetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SESv2 Configuration Set sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing SESv2 Configuration Sets (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ConfigurationSets {
@@ -58,36 +42,20 @@ func sweepConfigurationSets(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping SESv2 Configuration Sets (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepContactLists(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepContactLists(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SESV2Client(ctx)
-	input := &sesv2.ListContactListsInput{}
+	var input sesv2.ListContactListsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := sesv2.NewListContactListsPaginator(conn, input)
+	pages := sesv2.NewListContactListsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SESv2 Contact List sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing SESv2 Contact Lists (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ContactLists {
@@ -99,11 +67,27 @@ func sweepContactLists(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	return sweepResources, nil
+}
 
-	if err != nil {
-		return fmt.Errorf("error sweeping SESv2 Contact Lists (%s): %w", region, err)
+func sweepTenants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SESV2Client(ctx)
+	var input sesv2.ListTenantsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sesv2.NewListTenantsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Tenants {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTenantResource, client,
+				framework.NewAttribute("tenant_id", aws.ToString(v.TenantId))))
+		}
 	}
 
-	return nil
+	return sweepResources, nil
 }

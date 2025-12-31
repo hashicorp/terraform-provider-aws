@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector
@@ -16,7 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_inspector_rules_packages", name="Rules Packages")
-func DataSourceRulesPackages() *schema.Resource {
+func dataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
@@ -39,21 +39,20 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
-	arns := output
-	slices.Sort(arns)
+
+	slices.Sort(output)
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
-	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrARNs, output)
 
 	return diags
 }
 
 func findRulesPackageARNs(ctx context.Context, conn *inspector.Client) ([]string, error) {
-	input := &inspector.ListRulesPackagesInput{}
+	var input inspector.ListRulesPackagesInput
 	var output []string
 
-	pages := inspector.NewListRulesPackagesPaginator(conn, input)
-
+	pages := inspector.NewListRulesPackagesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

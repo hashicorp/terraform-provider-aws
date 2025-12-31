@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -711,15 +711,48 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 	})
 }
 
+func TestAccLambdaPermission_FunctionURLs_invokedViaFunctionURL(t *testing.T) {
+	ctx := acctest.Context(t)
+	var statement tflambda.PolicyStatement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_functionURLsNone_invokeFunction(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &statement),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowInvokeFromWithoutAuth"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "invoked_via_function_url", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPermissionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPermissionExists(ctx context.Context, n string, v *tflambda.PolicyStatement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lambda Permission ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -747,7 +780,7 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflambda.FindPolicyStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.ID, rs.Primary.Attributes["qualifier"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1076,6 +1109,18 @@ resource "aws_lambda_permission" "test" {
   function_name          = aws_lambda_function.test.function_name
   principal              = aws_iam_role.test.arn
   function_url_auth_type = "NONE"
+}
+`)
+}
+
+func testAccPermissionConfig_functionURLsNone_invokeFunction(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionConfig_base(rName), `
+resource "aws_lambda_permission" "test" {
+  statement_id             = "AllowInvokeFromWithoutAuth"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.test.function_name
+  principal                = aws_iam_role.test.arn
+  invoked_via_function_url = true
 }
 `)
 }

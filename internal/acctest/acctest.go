@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -63,6 +63,7 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -1164,7 +1165,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -1200,7 +1201,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 
 	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 
@@ -1340,7 +1341,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
@@ -2195,9 +2196,16 @@ func SkipIfExeNotOnPath(t *testing.T, file string) string {
 	return v
 }
 
+// SkipIfNotRunningAcceptanceTests skips the current test if it's not an acceptance test (TF_ACC is set in the environment).
+func SkipIfNotRunningAcceptanceTests(t *testing.T) {
+	t.Helper()
+	SkipIfEnvVarNotSet(t, resource.EnvTfAcc)
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
+	SkipIfNotRunningAcceptanceTests(t)
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {

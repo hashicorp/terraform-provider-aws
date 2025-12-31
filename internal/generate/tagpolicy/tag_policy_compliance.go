@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -6,11 +6,11 @@
 package main
 
 import (
-	"cmp"
 	_ "embed"
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 )
 
@@ -20,45 +20,37 @@ var header string
 //go:embed tag_policy_compliance_lookup.gtpl
 var tmpl string
 
+type TagType struct {
+	Name           string   `hcl:"name,label"`
+	TerraformTypes []string `hcl:"terraform_types"`
+}
+
+type Config struct {
+	TagTypes []TagType `hcl:"tagtype,block"`
+}
+
 func main() {
 	const (
-		source   = `../../../internal/tags/tagpolicy/tagris-cfn-terraform-mapping.csv`
+		source   = `../../../internal/tags/tagpolicy/tagris-terraform-mapping.hcl`
 		filename = `../../../website/docs/guides/tag-policy-compliance.html.markdown`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	rows, err := common.ReadAllCSVData(source)
+	var config Config
+	err := hclsimple.DecodeFile(source, nil, &config)
 	if err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
-	type m struct {
-		Tagris string
-		Tf     string
-	}
-	var mapping []m
-	for _, r := range rows[1:] {
-		if len(r) != 3 {
-			continue
-		}
-
-		if r[2] != "" {
-			mapping = append(mapping, m{Tagris: r[1], Tf: r[2]})
-			continue
-		}
-
-		// g.Infof("No lookup match found for: %s", r[1])
-	}
-
-	// Sort by tag type name
-	slices.SortFunc(mapping, func(a, b m) int {
-		return cmp.Compare(a.Tagris, b.Tagris)
+	// Sort by tag resource name
+	slices.SortFunc(config.TagTypes, func(a, b TagType) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 
 	data := map[string]any{
-		"Mapping": mapping,
+		"TagTypes": config.TagTypes,
 	}
 
 	d := g.NewUnformattedFileDestination(filename)

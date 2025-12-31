@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package tags
@@ -780,9 +780,9 @@ func GetAnyAttr(value cty.Value, attr string, shouldReturnSetElement func(string
 
 	// Split the attr string into the first part and the rest
 	var part, rest string
-	if dotIndex := strings.Index(attr, "."); dotIndex != -1 {
-		part = attr[:dotIndex]
-		rest = attr[dotIndex+1:]
+	if before, after, ok := strings.Cut(attr, "."); ok {
+		part = before
+		rest = after
 	} else {
 		part = attr
 		rest = ""

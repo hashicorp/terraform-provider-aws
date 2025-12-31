@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -135,26 +135,21 @@ func TestAccElastiCacheReservedCacheNode_ID(t *testing.T) {
 	})
 }
 
-func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, reservation *awstypes.ReservedCacheNode) resource.TestCheckFunc {
+func testAccReservedInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReservedCacheNode) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache Reserved Cache Node reservation id is set")
-		}
-
-		resp, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
+		output, err := tfelasticache.FindReservedCacheNodeByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*reservation = resp
+		*v = *output
 
 		return nil
 	}

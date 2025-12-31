@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -135,7 +136,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	asn := int32(d.Get("bgp_asn").(int))
 	bgpPeer, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect BGP Peer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,7 +203,7 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	}
 
 	if state := output.BgpPeerState; state == awstypes.BGPPeerStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: string(state),
 		}
 	}
@@ -210,11 +211,11 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	return output, nil
 }
 
-func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) retry.StateRefreshFunc {
+func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -227,7 +228,7 @@ func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string
 }
 
 func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStatePending),
 		Target:     enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateVerifying),
 		Refresh:    statusBGPPeer(ctx, conn, vifID, addrFamily, asn),
@@ -246,7 +247,7 @@ func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID s
 }
 
 func waitBGPPeerDeleted(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateDeleting, awstypes.BGPPeerStatePending, awstypes.BGPPeerStateVerifying),
 		Target:     []string{},
 		Refresh:    statusBGPPeer(ctx, conn, vifID, addrFamily, asn),

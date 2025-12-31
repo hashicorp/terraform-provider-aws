@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/smithy"
@@ -1548,7 +1549,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	cluster := d.Get("cluster").(string)
 	service, err := findServiceByTwoPartKeyWaitForActive(ctx, conn, d.Id(), cluster)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1926,7 +1927,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 	cluster := d.Get("cluster").(string)
 	service, err := findServiceNoTagsByTwoPartKey(ctx, conn, d.Id(), cluster)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -2069,7 +2070,7 @@ func findServices(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServ
 	output, err := conn.DescribeServices(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2086,7 +2087,7 @@ func findServices(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServ
 	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
 	for _, v := range output.Failures {
 		if aws.ToString(v.Reason) == failureReasonMissing {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   failureError(&v),
 				LastRequest: input,
 			}
@@ -2156,7 +2157,7 @@ func findServiceByTwoPartKeyWaitForActive(ctx context.Context, conn *ecs.Client,
 
 		service, err = findServiceByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 
@@ -2172,7 +2173,7 @@ func findServiceByTwoPartKeyWaitForActive(ctx context.Context, conn *ecs.Client,
 	})
 
 	if errs.IsA[*expectServiceActiveError](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -2197,11 +2198,11 @@ var deploymentTerminalStates = enum.Slice(
 	awstypes.ServiceDeploymentStatusRollbackSuccessful,
 )
 
-func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
+func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2213,7 +2214,7 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) retry.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, sigintConfig *rollbackState, operationTime time.Time) sdkretry.StateRefreshFunc {
 	var primaryTaskSet *awstypes.Deployment
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
@@ -2358,7 +2359,7 @@ func findServiceDeployments(ctx context.Context, conn *ecs.Client, input *ecs.De
 	output, err := conn.DescribeServiceDeployments(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2389,7 +2390,7 @@ func findServiceDeploymentBriefs(ctx context.Context, conn *ecs.Client, input *e
 	})
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2455,7 +2456,7 @@ func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeployment
 }
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ServiceDeploymentStatusPending,
 			awstypes.ServiceDeploymentStatusInProgress,
@@ -2484,7 +2485,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 		waitGroup:              sync.WaitGroup{},
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
 		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, sigintConfig, operationTime),
@@ -2507,7 +2508,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 // Does not return tags.
 func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
 		Refresh: statusService(ctx, conn, serviceName, clusterNameOrARN),
@@ -2525,7 +2526,7 @@ func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 // Does not return tags.
 func waitServiceInactive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
 		Refresh:    statusService(ctx, conn, serviceName, clusterNameOrARN),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -169,7 +170,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		output, err = findEnabledControlByARN(ctx, conn, aws.ToString(out.Arn))
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -350,7 +351,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -378,7 +379,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 	output, err := conn.GetEnabledControl(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -402,7 +403,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	output, err := conn.GetControlOperation(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -419,11 +420,11 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -436,7 +437,7 @@ func statusControlOperation(ctx context.Context, conn *controltower.Client, id s
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ControlOperationStatusInProgress),
 		Target:  enum.Slice(types.ControlOperationStatusSucceeded),
 		Refresh: statusControlOperation(ctx, conn, id),

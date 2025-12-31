@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -114,11 +114,10 @@ func resourceSite() *schema.Resource {
 
 func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	input := &networkmanager.CreateSiteInput{
+	input := networkmanager.CreateSiteInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
 	}
@@ -131,8 +130,7 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.Location = expandLocation(v.([]any)[0].(map[string]any))
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Site: %#v", input)
-	output, err := conn.CreateSite(ctx, input)
+	output, err := conn.CreateSite(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Site: %s", err)
@@ -149,13 +147,12 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	site, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Site %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -183,12 +180,11 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
-		input := &networkmanager.UpdateSiteInput{
+		input := networkmanager.UpdateSiteInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			SiteId:          aws.String(d.Id()),
@@ -198,8 +194,7 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			input.Location = expandLocation(v.([]any)[0].(map[string]any))
 		}
 
-		log.Printf("[DEBUG] Updating Network Manager Site: %#v", input)
-		_, err := conn.UpdateSite(ctx, input)
+		_, err := conn.UpdateSite(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager Site (%s): %s", d.Id(), err)
@@ -215,18 +210,17 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
-
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
+	globalNetworkID := d.Get("global_network_id").(string)
+	input := networkmanager.DeleteSiteInput{
+		GlobalNetworkId: aws.String(globalNetworkID),
+		SiteId:          aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhen(ctx, siteValidationExceptionTimeout,
 		func(ctx context.Context) (any, error) {
-			return conn.DeleteSite(ctx, &networkmanager.DeleteSiteInput{
-				GlobalNetworkId: aws.String(globalNetworkID),
-				SiteId:          aws.String(d.Id()),
-			})
+			return conn.DeleteSite(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be deleted due to existing association") {
@@ -259,15 +253,7 @@ func findSite(ctx context.Context, conn *networkmanager.Client, input *networkma
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findSites(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetSitesInput) ([]awstypes.Site, error) {
@@ -279,8 +265,7 @@ func findSites(ctx context.Context, conn *networkmanager.Client, input *networkm
 
 		if globalNetworkIDNotFoundError(err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -295,12 +280,11 @@ func findSites(ctx context.Context, conn *networkmanager.Client, input *networkm
 }
 
 func findSiteByTwoPartKey(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string) (*awstypes.Site, error) {
-	input := &networkmanager.GetSitesInput{
+	input := networkmanager.GetSitesInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteIds:         []string{siteID},
 	}
-
-	output, err := findSite(ctx, conn, input)
+	output, err := findSite(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -308,19 +292,17 @@ func findSiteByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.SiteId) != siteID {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusSiteState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSite(conn *networkmanager.Client, globalNetworkID, siteID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -337,28 +319,10 @@ func waitSiteCreated(ctx context.Context, conn *networkmanager.Client, globalNet
 		Pending: enum.Slice(awstypes.SiteStatePending),
 		Target:  enum.Slice(awstypes.SiteStateAvailable),
 		Timeout: timeout,
-		Refresh: statusSiteState(ctx, conn, globalNetworkID, siteID),
+		Refresh: statusSite(conn, globalNetworkID, siteID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Site); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSiteDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string, timeout time.Duration) (*awstypes.Site, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SiteStateDeleting),
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusSiteState(ctx, conn, globalNetworkID, siteID),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Site); ok {
 		return output, err
 	}
@@ -371,11 +335,26 @@ func waitSiteUpdated(ctx context.Context, conn *networkmanager.Client, globalNet
 		Pending: enum.Slice(awstypes.SiteStateUpdating),
 		Target:  enum.Slice(awstypes.SiteStateAvailable),
 		Timeout: timeout,
-		Refresh: statusSiteState(ctx, conn, globalNetworkID, siteID),
+		Refresh: statusSite(conn, globalNetworkID, siteID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Site); ok {
+		return output, err
+	}
 
+	return nil, err
+}
+
+func waitSiteDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, siteID string, timeout time.Duration) (*awstypes.Site, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SiteStateDeleting),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusSite(conn, globalNetworkID, siteID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.Site); ok {
 		return output, err
 	}

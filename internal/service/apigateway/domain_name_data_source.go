@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -57,6 +57,10 @@ func dataSourceDomainName() *schema.Resource {
 			"domain_name_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"endpoint_access_mode": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"endpoint_configuration": {
@@ -131,6 +135,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
+	d.Set("endpoint_access_mode", output.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}

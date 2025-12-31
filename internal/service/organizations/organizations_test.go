@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -43,13 +43,14 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Identity":                          testAccOrganizationsOrganization_IdentitySerial,
 		},
 		"Account": {
-			acctest.CtBasic:   testAccAccount_basic,
-			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
-			"ParentId":        testAccAccount_ParentID,
-			"tags":            testAccAccount_Tags,
-			"GovCloud":        testAccAccount_govCloud,
-			"AccountUpdate":   testAccAccount_AccountUpdate,
-			"Identity":        testAccOrganizationsAccount_IdentitySerial,
+			acctest.CtBasic:    testAccAccount_basic,
+			"DataSource_basic": testAccAccountDataSource_basic,
+			"CloseOnDeletion":  testAccAccount_CloseOnDeletion,
+			"ParentId":         testAccAccount_ParentID,
+			"tags":             testAccAccount_Tags,
+			"GovCloud":         testAccAccount_govCloud,
+			"AccountUpdate":    testAccAccount_AccountUpdate,
+			"Identity":         testAccOrganizationsAccount_IdentitySerial,
 		},
 		"OrganizationalUnit": {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,

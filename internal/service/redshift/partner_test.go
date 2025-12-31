@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,9 +103,9 @@ func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_redshift_partner" {
 				continue
 			}
-			_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindPartnerByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes["partner_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -120,20 +120,16 @@ func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckPartnerExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Partner ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
+		_, err := tfredshift.FindPartnerByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes["partner_name"])
 
 		return err
 	}

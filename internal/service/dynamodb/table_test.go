@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -30,9 +30,9 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1176,6 +1176,7 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "0"),
 				),
 			},
 			{
@@ -1190,6 +1191,10 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "TestTableGSI",
+					}),
 				),
 			},
 		},
@@ -1275,6 +1280,7 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "att1-index",
 						"on_demand_throughput.0.max_read_request_units":  "5",
 						"on_demand_throughput.0.max_write_request_units": "5",
 					}),
@@ -1292,6 +1298,7 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName: "att1-index",
 						"on_demand_throughput.0.max_read_request_units":  "10",
 						"on_demand_throughput.0.max_write_request_units": "10",
 					}),
@@ -5918,7 +5925,7 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdynamodb.FindTableByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -21,10 +21,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"parameters":         testAccDataLakeSettings_parameters,
 		},
 		"DataCellsFilter": {
-			acctest.CtBasic:      testAccDataCellsFilter_basic,
-			"columnWildcard":     testAccDataCellsFilter_columnWildcard,
-			acctest.CtDisappears: testAccDataCellsFilter_disappears,
-			"rowFilter":          testAccDataCellsFilter_rowFilter,
+			acctest.CtBasic:          testAccDataCellsFilter_basic,
+			"columnWildcard":         testAccDataCellsFilter_columnWildcard,
+			"columnWildcardMultiple": testAccDataCellsFilter_columnWildcardMultiple,
+			acctest.CtDisappears:     testAccDataCellsFilter_disappears,
+			"rowFilter":              testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			acctest.CtBasic:  testAccDataLakeSettingsDataSource_basic,

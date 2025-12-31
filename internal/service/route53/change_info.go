@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,7 +25,7 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	output, err := conn.GetChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchChange](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -41,11 +42,11 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	return output.ChangeInfo, nil
 }
 
-func statusChange(ctx context.Context, conn *route53.Client, id string) retry.StateRefreshFunc {
+func statusChange(ctx context.Context, conn *route53.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findChangeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -64,7 +65,7 @@ func waitChangeInsync(ctx context.Context, conn *route53.Client, id string, time
 		minTimeout   = 5 * time.Second
 		pollInterval = 15 * time.Second
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ChangeStatusPending),
 		Target:       enum.Slice(awstypes.ChangeStatusInsync),
 		Refresh:      statusChange(ctx, conn, id),

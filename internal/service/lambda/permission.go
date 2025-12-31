@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,6 +69,11 @@ func resourcePermission() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
+			},
+			"invoked_via_function_url": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 			names.AttrPrincipal: {
 				Type:     schema.TypeString,
@@ -145,6 +151,10 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.FunctionUrlAuthType = awstypes.FunctionUrlAuthType(v.(string))
 	}
 
+	if v, ok := d.GetOk("invoked_via_function_url"); ok {
+		input.InvokedViaFunctionUrl = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("principal_org_id"); ok {
 		input.PrincipalOrgID = aws.String(v.(string))
 	}
@@ -185,7 +195,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Permission (%s/%s) not found, removing from state", functionName, d.Id())
 		d.SetId("")
 		return diags
@@ -229,6 +239,10 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("function_url_auth_type", v["lambda:FunctionUrlAuthType"])
 		d.Set("principal_org_id", v["aws:PrincipalOrgID"])
 		d.Set("source_account", v["AWS:SourceAccount"])
+	}
+
+	if v, ok := statement.Condition["Bool"]; ok {
+		d.Set("invoked_via_function_url", strings.EqualFold(v["lambda:InvokedViaFunctionUrl"], "true"))
 	}
 
 	if v, ok := statement.Condition["ArnLike"]; ok {
@@ -287,7 +301,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	output, err := conn.GetPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -331,7 +345,7 @@ func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, f
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastRequest:  statementID,
 		LastResponse: policy,
 	}

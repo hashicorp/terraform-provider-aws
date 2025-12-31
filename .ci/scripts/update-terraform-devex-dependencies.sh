@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright IBM Corp. 2014, 2025
+# SPDX-License-Identifier: MPL-2.0
 
 # Update Terraform DevEx dependencies.
 go get github.com/hashicorp/terraform-plugin-framework && go mod tidy

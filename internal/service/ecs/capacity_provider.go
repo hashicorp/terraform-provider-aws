@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,6 +180,13 @@ func resourceCapacityProvider() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"capacity_option_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+									},
 									"ec2_instance_profile_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -589,7 +597,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findCapacityProviderByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -731,7 +739,7 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	}
 
 	if status := output.Status; status == awstypes.CapacityProviderStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -740,11 +748,11 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	return output, nil
 }
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -756,11 +764,11 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) r
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -773,7 +781,7 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn str
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
 		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
@@ -792,7 +800,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 }
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive, awstypes.CapacityProviderStatusDeprovisioning),
 		Target:  []string{},
 		Refresh: statusCapacityProvider(ctx, conn, arn),
@@ -1004,6 +1012,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplate{}
+
+	if v, ok := tfMap["capacity_option_type"].(string); ok && v != "" {
+		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
+	}
 
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
@@ -1410,6 +1422,7 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	}
 
 	tfMap := map[string]any{
+		"capacity_option_type":     template.CapacityOptionType,
 		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
 		"monitoring":               template.Monitoring,
 	}

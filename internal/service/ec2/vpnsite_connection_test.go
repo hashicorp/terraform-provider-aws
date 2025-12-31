@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,11 +15,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -528,10 +529,28 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionConfig_tunnel1InsideCIDR(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+				),
+			},
+			{
+				Config: testAccVPNConnectionConfig_tunnel1InsideCIDR(rName, rBgpAsn, "169.254.10.0/30", "169.254.11.0/30"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.10.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.11.0/30"),
 				),
 			},
 			// NOTE: Import does not currently have access to the Terraform configuration,
@@ -566,10 +585,28 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 			},
 			{
 				Config: testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d208/126", "fdff:2001:db8:2:2d1:81ff:fe41:d20c/126"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d208/126"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d20c/126"),
 				),
 			},
 			// NOTE: Import does not currently have access to the Terraform configuration,
@@ -1926,7 +1963,7 @@ func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

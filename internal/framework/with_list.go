@@ -1,32 +1,33 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
 
 import (
 	"context"
-	"fmt"
 	"slices"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Lister is an interface for resources that support List operations
 type Lister interface {
 	AppendResultInterceptor(listresource.ListResultInterceptor)
 }
 
 var _ Lister = &WithList{}
 
+// WithList provides common functionality for ListResources
 type WithList struct {
+	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor
 }
+
+type flattenFunc func()
 
 func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor) {
 	w.interceptors = append(w.interceptors, interceptor)
@@ -36,8 +37,14 @@ func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
 	return w.interceptors
 }
 
-func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.When, params listresource.InterceptorParams) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
+	params := listresource.InterceptorParams{
+		C:      awsClient,
+		Result: result,
+		Data:   data,
+	}
+
 	switch when {
 	case listresource.Before:
 		params.When = listresource.Before
@@ -56,35 +63,26 @@ func (w *WithList) RunResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *WithList) ListResourceTagsInit(ctx context.Context, result list.ListResult) basetypes.MapValue {
-	typ, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTags))
-	tagsType := typ.(attr.TypeWithElementType)
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
+	var diags diag.Diagnostics
 
-	return basetypes.NewMapNull(tagsType.ElementType())
-}
-
-func (w *WithList) ListResourceTimeoutInit(ctx context.Context, result list.ListResult) (basetypes.ObjectValue, diag.Diagnostics) {
-	timeoutsType, _ := result.Resource.Schema.TypeAtPath(ctx, path.Root(names.AttrTimeouts))
-
-	return newNullObject(timeoutsType)
-}
-
-func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
-	i, ok := typ.(attr.TypeWithAttributeTypes)
-	if !ok {
-		diags.AddError(
-			"Internal Error",
-			"An unexpected error occurred. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
-		)
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, data, result)...)
+	if diags.HasError() {
 		return
 	}
 
-	attrTypes := i.AttributeTypes()
+	f()
+	if result.Diagnostics.HasError() {
+		return
+	}
 
-	obj = basetypes.NewObjectNull(attrTypes)
+	diags.Append(result.Resource.Set(ctx, data)...)
+	if diags.HasError() {
+		return
+	}
 
-	return obj, diags
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, data, result)...)
+	if diags.HasError() {
+		return
+	}
 }

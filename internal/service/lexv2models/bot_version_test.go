@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,7 +91,7 @@ func testAccCheckBotVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflexv2models.FindBotVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["bot_id"], rs.Primary.Attributes["bot_version"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

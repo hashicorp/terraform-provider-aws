@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1181,7 +1182,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
@@ -1214,7 +1214,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.type", string(awstypes.KafkaSchemaRegistryAuthTypeBasicAuth)),
@@ -1246,7 +1245,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
@@ -1283,12 +1281,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null", "group-name-123"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "123"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioned_poller_config.0.minimum_pollers"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.poller_group_name", "group-name-123"),
 				),
 			},
 			{
@@ -1298,12 +1297,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15", "group-name-456"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "150"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "15"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.poller_group_name", "group-name-456"),
 				),
 			},
 			{
@@ -1745,7 +1745,7 @@ func testAccCheckEventSourceMappingDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tflambda.FindEventSourceMappingByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2969,7 +2969,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
   }
 
   self_managed_event_source {
@@ -3014,7 +3014,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       access_config {
         type = "BASIC_AUTH"
@@ -3056,7 +3056,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByGlue(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEventSourceMappingConfig_kafkaBase(rName),
-		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), `
+		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 100
   enabled           = false
@@ -3070,7 +3070,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       event_record_format = "JSON"
       schema_registry_uri = aws_glue_registry.test.arn
@@ -3102,10 +3102,10 @@ resource "aws_lambda_event_source_mapping" "test" {
     uri  = aws_security_group.test.id
   }
 }
-`)
+`, rName))
 }
 
-func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers string) string {
+func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName string) string {
 	if batchSize == "" {
 		batchSize = "null"
 	}
@@ -3144,11 +3144,12 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   provisioned_poller_config {
-    maximum_pollers = %[4]s
-    minimum_pollers = %[5]s
+    maximum_pollers   = %[4]s
+    minimum_pollers   = %[5]s
+    poller_group_name = %[6]q
   }
 }
-`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers))
+`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName))
 }
 
 func testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, batchSize string) string {

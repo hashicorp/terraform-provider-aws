@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -28,7 +28,8 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateDataSourceConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
-					resource.TestCheckResourceAttr(dataSource, "applied_for.#", "1"),
+					resource.TestCheckResourceAttr(dataSource, "applied_for.#", "2"),
+					resource.TestCheckTypeSetElemAttr(dataSource, "applied_for.*", string(types.RCTAppliedForCreateOnPush)),
 					resource.TestCheckTypeSetElemAttr(dataSource, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckResourceAttr(dataSource, "custom_role_arn", ""),
 					resource.TestCheckResourceAttr(dataSource, names.AttrDescription, ""),
@@ -97,6 +98,7 @@ resource "aws_ecr_repository_creation_template" "test" {
   prefix = %[1]q
 
   applied_for = [
+    "CREATE_ON_PUSH",
     "PULL_THROUGH_CACHE",
   ]
 
