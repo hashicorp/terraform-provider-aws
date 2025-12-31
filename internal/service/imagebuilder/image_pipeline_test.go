@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -717,6 +718,114 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImagePipeline_imageRecipeWildcardVersion_partial(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_imageRecipeWildcardPartial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "image_recipe_arn", regexache.MustCompile(fmt.Sprintf("image-recipe/%s-wildcard/1\\.x\\.x$", rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_imageRecipeWildcardVersion_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_imageRecipeWildcardFull(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "image_recipe_arn", regexache.MustCompile(fmt.Sprintf("image-recipe/%s-wildcard/x\\.x\\.x$", rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_containerRecipeWildcardVersion_partial(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_containerRecipeWildcardPartial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "container_recipe_arn", regexache.MustCompile(fmt.Sprintf("container-recipe/%s-wildcard/1\\.x\\.x$", rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_containerRecipeWildcardVersion_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_containerRecipeWildcardFull(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "container_recipe_arn", regexache.MustCompile(fmt.Sprintf("container-recipe/%s-wildcard/x\\.x\\.x$", rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -1264,6 +1373,110 @@ resource "aws_imagebuilder_image_pipeline" "test" {
       value = "true"
     }
   }
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_imageRecipeWildcardPartial(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test_wildcard" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = "%[1]s-wildcard"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.x.0"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:image-recipe/${aws_imagebuilder_image_recipe.test_wildcard.name}/1.x.x"
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_imageRecipeWildcardFull(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test_wildcard" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = "%[1]s-wildcard"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.x"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:image-recipe/${aws_imagebuilder_image_recipe.test_wildcard.name}/x.x.x"
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_containerRecipeWildcardPartial(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test_wildcard" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  name           = "%[1]s-wildcard"
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.x.0"
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  container_recipe_arn             = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:container-recipe/${aws_imagebuilder_container_recipe.test_wildcard.name}/1.x.x"
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_containerRecipeWildcardFull(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test_wildcard" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  name           = "%[1]s-wildcard"
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.x"
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  container_recipe_arn             = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:container-recipe/${aws_imagebuilder_container_recipe.test_wildcard.name}/x.x.x"
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
 }
 `, rName))
 }
