@@ -245,14 +245,11 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
 	datafyVolume, err := dc.GetVolume(volumeID)
-	if err != nil {
-		if datafy.NotFound(err) {
-			return sdkdiag.AppendErrorf(diags, "volume (%s) not found", volumeID)
-		}
+	if err != nil && !datafy.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, d.Id(), err)
 	}
 
-	if datafyVolume.IsManaged {
+	if datafyVolume != nil && datafyVolume.IsManaged {
 		dvo, err := conn.DescribeVolumes(ctx, datafy.DescribeDatafiedVolumesInput(volumeID))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s) Attachement (%s): %s", volumeID, d.Id(), err)
@@ -284,7 +281,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	if datafyVolume.ReplacedBy != "" {
+	if datafyVolume != nil && datafyVolume.ReplacedBy != "" {
 		d.SetId(volumeAttachmentID(deviceName, datafyVolume.ReplacedBy, instanceID))
 		d.Set("volume_id", datafyVolume.ReplacedBy)
 		return append(
@@ -299,6 +296,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	// fallback if not managed / not discovered
 	input := &ec2.DetachVolumeInput{
 		Device:     aws.String(deviceName),
 		Force:      aws.Bool(d.Get("force_detach").(bool)),
