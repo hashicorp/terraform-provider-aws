@@ -1511,31 +1511,40 @@ func findSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, co
 		SubnetId: aws.String(subnetID),
 	}
 
-	output, err := conn.GetSubnetCidrReservations(ctx, &input)
+	var err error
+	for {
+		output, err := conn.GetSubnetCidrReservations(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-		return nil, &sdkretry.NotFoundError{
-			LastError: err,
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+			return nil, &sdkretry.NotFoundError{
+				LastError: err,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, r := range output.SubnetIpv4CidrReservations {
-		if aws.ToString(r.SubnetCidrReservationId) == reservationID {
-			return &r, nil
+		if err != nil {
+			return nil, err
 		}
-	}
-	for _, r := range output.SubnetIpv6CidrReservations {
-		if aws.ToString(r.SubnetCidrReservationId) == reservationID {
-			return &r, nil
+
+		if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
+			return nil, tfresource.NewEmptyResultError(input)
 		}
+
+		for _, r := range output.SubnetIpv4CidrReservations {
+			if aws.ToString(r.SubnetCidrReservationId) == reservationID {
+				return &r, nil
+			}
+		}
+		for _, r := range output.SubnetIpv6CidrReservations {
+			if aws.ToString(r.SubnetCidrReservationId) == reservationID {
+				return &r, nil
+			}
+		}
+
+		if output.NextToken == nil {
+			break
+		}
+
+		input.NextToken = output.NextToken
 	}
 
 	return nil, &sdkretry.NotFoundError{
