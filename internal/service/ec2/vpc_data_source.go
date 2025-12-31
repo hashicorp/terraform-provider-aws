@@ -172,19 +172,19 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
