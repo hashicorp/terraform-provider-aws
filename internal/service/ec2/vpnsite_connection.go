@@ -224,7 +224,6 @@ func resourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
 			},
 			"tunnel1_inside_ipv6_cidr": {
@@ -453,7 +452,6 @@ func resourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
 			},
 			"tunnel2_inside_ipv6_cidr": {
@@ -1279,6 +1277,14 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range defaultVPNTunnelOptionsIKEVersions {
 				apiObject.IKEVersions = append(apiObject.IKEVersions, awstypes.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "inside_cidr"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			apiObject.TunnelInsideCidr = aws.String(v.(string))
 		}
 
 		hasChange = true
