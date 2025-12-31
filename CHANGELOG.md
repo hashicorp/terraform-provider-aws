@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 * data-source/aws_apigateway_domain_name : Add `endpoint_access_mode` attribute ([#45741](https://github.com/hashicorp/terraform-provider-aws/issues/45741))
 * data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
+* data-source/aws_dx_gateway: Add `tags` attribute ([#45766](https://github.com/hashicorp/terraform-provider-aws/issues/45766))
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` arguments, and new valid values for `rule.action.type` and `rule.selection.count_type` arguments ([#45752](https://github.com/hashicorp/terraform-provider-aws/issues/45752))
 * data-source/aws_ecr_repository_creation_template: `CREATE_ON_PUSH` now supported in `applied_for` argument. ([#45720](https://github.com/hashicorp/terraform-provider-aws/issues/45720))
 * data-source/aws_iam_saml_provider: Add `saml_provider_uuid` attribute ([#45707](https://github.com/hashicorp/terraform-provider-aws/issues/45707))
@@ -33,6 +34,7 @@ ENHANCEMENTS:
 * resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
 * resource/aws_docdb_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_docdb_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
+* resource/aws_dx_gateway: Add `tags` argument and `tags_all` attribute. This functionality requires the `directconnect:TagResource` and `directconnect:UntagResource` IAM permissions ([#45766](https://github.com/hashicorp/terraform-provider-aws/issues/45766))
 * resource/aws_ecr_repository_creation_template: `CREATE_ON_PUSH` now supported in `applied_for` argument. ([#45720](https://github.com/hashicorp/terraform-provider-aws/issues/45720))
 * resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.capacity_option_type` argument ([#45667](https://github.com/hashicorp/terraform-provider-aws/issues/45667))
 * resource/aws_fsx_lustre_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
