@@ -234,6 +234,7 @@ variable "service_labels" {
     "migrationhubrefactorspaces",
     "migrationhubstrategy",
     "mobile",
+    "mpa",
     "mq",
     "mturk",
     "mwaa",
