@@ -39,6 +39,7 @@ func resourceClusterCapacityProviders() *schema.Resource {
 			"capacity_providers": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
