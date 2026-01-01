@@ -7,6 +7,7 @@ package ecr
 var (
 	ResourceLifecyclePolicy               = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule          = resourcePullThroughCacheRule
+	ResourcePullTimeUpdateExclusion       = newPullTimeUpdateExclusionResource
 	ResourceRegistryPolicy                = resourceRegistryPolicy
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
@@ -17,6 +18,7 @@ var (
 	FindAccountSettingByName                         = findAccountSettingByName
 	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix       = findPullThroughCacheRuleByRepositoryPrefix
+	FindPullTimeUpdateExclusionByPrincipalARN        = findPullTimeUpdateExclusionByPrincipalARN
 	FindRegistryPolicy                               = findRegistryPolicy
 	FindRegistryScanningConfiguration                = findRegistryScanningConfiguration
 	FindReplicationConfiguration                     = findReplicationConfiguration
