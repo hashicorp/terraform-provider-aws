@@ -16,6 +16,7 @@ var (
 	ResourceEventSubscription            = resourceEventSubscription
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
+	ResourceIdcApplication               = newResourceIDCApplication
 	ResourceIntegration                  = newIntegrationResource
 	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup
@@ -39,6 +40,7 @@ var (
 	FindEventSubscriptionByName                   = findEventSubscriptionByName
 	FindHSMClientCertificateByID                  = findHSMClientCertificateByID
 	FindHSMConfigurationByID                      = findHSMConfigurationByID
+	FindIDCApplicationByARN                       = findIDCApplicationByID
 	FindIntegrationByARN                          = findIntegrationByARN
 	FindLoggingStatusByID                         = findLoggingStatusByID
 	FindParameterGroupByName                      = findParameterGroupByName
