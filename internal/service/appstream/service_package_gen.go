@@ -42,9 +42,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  resourceApplicationEntitlementAssociation,
+			TypeName: "aws_appstream_application_entitlement_association",
+			Name:     "Application Entitlement Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceDirectoryConfig,
 			TypeName: "aws_appstream_directory_config",
 			Name:     "Directory Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  resourceEntitlement,
+			TypeName: "aws_appstream_entitlement",
+			Name:     "Entitlement",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
