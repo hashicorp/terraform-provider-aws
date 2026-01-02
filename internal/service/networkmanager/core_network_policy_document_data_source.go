@@ -912,7 +912,7 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []any) ([]*c
 
 		case names.AttrRegion, "resource-id", "account":
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account\"", i)
+				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account\"\n%[2]t, %[3]t, %[4]t", i, k[names.AttrKey], k["operator"], k[names.AttrValue])
 			}
 
 		case "attachment-type":

@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -281,6 +282,33 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/45786.
+func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network.test"
+	edgeAsn := "4200000000"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_basePolicyDocumentWithAccount(edgeAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -399,4 +427,49 @@ resource "aws_networkmanager_core_network" "test" {
   base_policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 `, acctest.AlternateRegion(), edgeAsn1, acctest.Region(), edgeAsn2)
+}
+
+func testAccCoreNetworkConfig_basePolicyDocumentWithAccount(edgeAsn string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    asn_ranges = ["4200000000-4294967294"]
+
+    edge_locations {
+      location = %[1]q
+      asn      = %[2]q
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    description                   = "Segment for shared services"
+    require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type     = "account"
+      operator = "equals"
+      value    = "123456789012"
+    }
+
+    action {
+      association_method = "constant"
+      segment            = "prod"
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id    = aws_networkmanager_global_network.test.id
+  create_base_policy   = true
+  base_policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region(), edgeAsn)
 }
