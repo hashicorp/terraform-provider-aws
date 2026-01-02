@@ -4,12 +4,12 @@
 package budgets
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -278,14 +278,12 @@ const (
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.BudgetsClient(ctx)
 
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
-	accountID := d.Get(names.AttrAccountID).(string)
-	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID(ctx)
-	}
+	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
 	d.Set(names.AttrAccountID, accountID)
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
@@ -294,17 +292,8 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "budgets",
-		AccountID: accountID,
-		Resource:  "budget/" + budgetName,
-	}
-	d.Set(names.AttrARN, arn.String())
-
+	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("billing_view_arn", budget.BillingViewArn)
-
 	d.Set("budget_type", budget.BudgetType)
 
 	if err := d.Set("budget_limit", flattenSpend(budget.BudgetLimit)); err != nil {
