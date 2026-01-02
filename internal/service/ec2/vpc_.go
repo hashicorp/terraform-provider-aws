@@ -391,6 +391,12 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		return diags
 	}
 
+	// RAM-shared VPC.
+	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
+	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC (%s): %s", d.Id(), err)
 	}
