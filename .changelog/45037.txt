@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_resource_lf_tags: Allow resource `catalog_id` to be S3 Tables catalog.
+```
+
+```release-note:enhancement
+resource/aws_lakeformation_permissions: Allow resource `catalog_id` to be S3 Tables catalog.
+```
