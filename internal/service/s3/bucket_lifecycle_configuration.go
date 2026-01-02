@@ -650,6 +650,17 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 }
 
 func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
+	// Normalize empty Filter structs to nil for S3 compatible services that omit the filter attribute of the rule.
+	normalizeEmptyFilters := func(rules []awstypes.LifecycleRule) {
+		for i := range rules {
+			if rules[i].Filter != nil && reflect.ValueOf(*(rules[i].Filter)).IsZero() {
+				rules[i].Filter = nil
+			}
+		}
+	}
+	normalizeEmptyFilters(rules1)
+	normalizeEmptyFilters(rules2)
+
 	if transitionMinSize1 != transitionMinSize2 {
 		return false
 	}
