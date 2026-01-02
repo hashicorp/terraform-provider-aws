@@ -223,9 +223,14 @@ An `action` block supports the following arguments:
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
+* `commands` - (Optional) A list of shell commands to run with the compute action.
 * `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
-* `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline.
+* `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline. If the action is `Compute`, this argument is ignored.
+* `output_artifacts_for_compute_action` - (Optional) A block of output artifacts for the compute action. If the action is not `Compute`, this argument is ignored.
+    * `name` - (Required) The name of the output artifact.
+    * `files` - (Optional) A list of the files to associate with the output artifact that will be exported from the compute action.
+* `output_variables` - (Optional) A list of variables that are to be exported from the compute action.
 * `role_arn` - (Optional) The ARN of the IAM service role that will perform the declared action. This is assumed through the roleArn for the pipeline.
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
