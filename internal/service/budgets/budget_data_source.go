@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -277,14 +278,13 @@ const (
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.BudgetsClient(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
-		accountID = c.AccountID(ctx)
+		accountID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	d.Set(names.AttrAccountID, accountID)
 
@@ -295,7 +295,13 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
 
-	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   "budgets",
+		AccountID: accountID,
+		Resource:  "budget/" + budgetName,
+	}
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("billing_view_arn", budget.BillingViewArn)
 

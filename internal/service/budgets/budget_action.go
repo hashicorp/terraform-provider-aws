@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -269,8 +270,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.BudgetsClient(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -299,7 +299,13 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("action_type", output.ActionType)
 	d.Set("approval_model", output.ApprovalModel)
-	d.Set(names.AttrARN, budgetActionARN(ctx, c, accountID, budgetName, actionID))
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   "budgets",
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
+	}
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_name", budgetName)
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
@@ -686,8 +692,4 @@ func flattenBudgetActionDefinition(lt *awstypes.Definition) []map[string]any {
 	}
 
 	return []map[string]any{attrs}
-}
-
-func budgetActionARN(ctx context.Context, c *conns.AWSClient, accountID, budgetName, actionID string) string {
-	return c.GlobalARNWithAccount(ctx, accountID, "budgets", fmt.Sprintf("budget/%s/action/%s", budgetName, actionID))
 }
