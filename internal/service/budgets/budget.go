@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
@@ -357,7 +358,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	budget, err := FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
-		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+		return findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	})
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -404,7 +405,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
+	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if retry.NotFound(err) {
 		return diags
@@ -431,7 +432,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			tfMap["threshold_type"] = string(notification.ThresholdType)
 		}
 
-		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
+		subscribers, err := findSubscribersByThreePartKey(ctx, conn, accountID, budgetName, notification)
 
 		if retry.NotFound(err) {
 			tfList = append(tfList, tfMap)
@@ -549,106 +550,6 @@ func BudgetParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
 }
 
-func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) (*awstypes.Budget, error) {
-	input := &budgets.DescribeBudgetInput{
-		AccountId:  aws.String(accountID),
-		BudgetName: aws.String(budgetName),
-	}
-
-	output, err := conn.DescribeBudget(ctx, input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Budget == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Budget, nil
-}
-
-func findNotifications(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
-	input := &budgets.DescribeNotificationsForBudgetInput{
-		AccountId:  aws.String(accountID),
-		BudgetName: aws.String(budgetName),
-	}
-	var output []awstypes.Notification
-
-	pages := budgets.NewDescribeNotificationsForBudgetPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, np := range page.Notifications {
-			if np == (awstypes.Notification{}) {
-				continue
-			}
-
-			output = append(output, np)
-		}
-	}
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
-}
-
-func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budgetName string, notification awstypes.Notification) ([]awstypes.Subscriber, error) {
-	input := &budgets.DescribeSubscribersForNotificationInput{
-		AccountId:    aws.String(accountID),
-		BudgetName:   aws.String(budgetName),
-		Notification: &notification,
-	}
-	var output []awstypes.Subscriber
-
-	pages := budgets.NewDescribeSubscribersForNotificationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, subscriber := range page.Subscribers {
-			if subscriber == (awstypes.Subscriber{}) {
-				continue
-			}
-
-			output = append(output, subscriber)
-		}
-	}
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
-}
-
 func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifications []*awstypes.Notification, subscribers [][]awstypes.Subscriber, budgetName string, accountID string) error {
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
@@ -710,6 +611,130 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *sch
 	}
 
 	return nil
+}
+
+func findBudget(ctx context.Context, conn *budgets.Client, input *budgets.DescribeBudgetInput) (*awstypes.Budget, error) {
+	output, err := conn.DescribeBudget(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Budget == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Budget, nil
+}
+
+func findBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) (*awstypes.Budget, error) {
+	input := budgets.DescribeBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	return findBudget(ctx, conn, &input)
+}
+
+func findNotifications(ctx context.Context, conn *budgets.Client, input *budgets.DescribeNotificationsForBudgetInput) ([]awstypes.Notification, error) {
+	var output []awstypes.Notification
+
+	pages := budgets.NewDescribeNotificationsForBudgetPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Notifications {
+			if inttypes.IsZero(v) {
+				continue
+			}
+
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findNotificationsByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
+	input := budgets.DescribeNotificationsForBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+	output, err := findNotifications(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findSubscribers(ctx context.Context, conn *budgets.Client, input *budgets.DescribeSubscribersForNotificationInput) ([]awstypes.Subscriber, error) {
+	var output []awstypes.Subscriber
+
+	pages := budgets.NewDescribeSubscribersForNotificationPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Subscribers {
+			if inttypes.IsZero(v) {
+				continue
+			}
+
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findSubscribersByThreePartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string, notification awstypes.Notification) ([]awstypes.Subscriber, error) {
+	input := budgets.DescribeSubscribersForNotificationInput{
+		AccountId:    aws.String(accountID),
+		BudgetName:   aws.String(budgetName),
+		Notification: &notification,
+	}
+	output, err := findSubscribers(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func flattenAutoAdjustData(autoAdjustData *awstypes.AutoAdjustData) []map[string]any {

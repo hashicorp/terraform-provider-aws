@@ -6,4 +6,7 @@ package budgets
 var (
 	ResourceBudget       = resourceBudget
 	ResourceBudgetAction = resourceBudgetAction
+
+	FindBudgetActionByThreePartKey = findBudgetActionByThreePartKey
+	FindBudgetByTwoPartKey         = findBudgetByTwoPartKey
 )

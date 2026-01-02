@@ -277,8 +277,8 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-		return FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+	output, err := FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Action, error) {
+		return findBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 	})
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -417,13 +417,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func FindActionByThreePartKey(ctx context.Context, conn *budgets.Client, accountID, actionID, budgetName string) (*awstypes.Action, error) {
-	input := &budgets.DescribeBudgetActionInput{
-		AccountId:  aws.String(accountID),
-		ActionId:   aws.String(actionID),
-		BudgetName: aws.String(budgetName),
-	}
-
+func findBudgetAction(ctx context.Context, conn *budgets.Client, input *budgets.DescribeBudgetActionInput) (*awstypes.Action, error) {
 	output, err := conn.DescribeBudgetAction(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -441,6 +435,16 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Client, account
 	}
 
 	return output.Action, nil
+}
+
+func findBudgetActionByThreePartKey(ctx context.Context, conn *budgets.Client, accountID, actionID, budgetName string) (*awstypes.Action, error) {
+	input := budgets.DescribeBudgetActionInput{
+		AccountId:  aws.String(accountID),
+		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	return findBudgetAction(ctx, conn, &input)
 }
 
 func expandBudgetActionActionThreshold(l []any) *awstypes.ActionThreshold {

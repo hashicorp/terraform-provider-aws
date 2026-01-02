@@ -243,8 +243,8 @@ func testAccBudgetActionExists(ctx context.Context, resourceName string, config 
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-			return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindBudgetWithDelay(ctx, func(ctx context.Context) (*awstypes.Action, error) {
+			return tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 		})
 
 		if err != nil {
@@ -272,8 +272,8 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-				return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+			_, err = tfbudgets.FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Action, error) {
+				return tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 			})
 
 			if retry.NotFound(err) {

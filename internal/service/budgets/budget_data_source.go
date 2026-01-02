@@ -286,7 +286,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
 	d.Set(names.AttrAccountID, accountID)
 
-	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+	budget, err := findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
 		return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
 	}
