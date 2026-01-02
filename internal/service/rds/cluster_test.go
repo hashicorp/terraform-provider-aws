@@ -4063,10 +4063,10 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 }
 
 func testAccCheckClusterExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

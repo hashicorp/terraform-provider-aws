@@ -29,7 +29,7 @@ func TestAccRAMResourceAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,7 +59,7 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,7 +84,7 @@ func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

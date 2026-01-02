@@ -69,6 +69,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -129,7 +130,7 @@ var (
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
 )
 
-// Provider is the "main" provider instance
+// Provider is the "default" provider instance.
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
@@ -140,6 +141,12 @@ var (
 )
 
 type ProviderFunc func() *schema.Provider
+
+var (
+	DefaultProviderFunc ProviderFunc = func() *schema.Provider {
+		return Provider
+	}
+)
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -1179,7 +1186,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
-	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
@@ -1215,7 +1222,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1237,7 +1244,7 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1256,6 +1263,27 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
+	t.Helper()
+
+	var organizations []*organizationstypes.Organization
+
+	for _, providerF := range providerFs {
+		organizations = append(organizations, PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF))
+	}
+
+	slices.SortFunc(organizations, func(a, b *organizationstypes.Organization) int {
+		return strings.Compare(aws.ToString(a.Id), aws.ToString(b.Id))
+	})
+	organizations = slices.CompactFunc(organizations, func(a, b *organizationstypes.Organization) bool {
+		return aws.ToString(a.Id) == aws.ToString(b.Id)
+	})
+
+	if len(organizations) != 1 {
+		t.Skip("all AWS accounts must be members of the same AWS Organization")
+	}
+}
+
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
@@ -1265,6 +1293,30 @@ func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckRAMSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx, t, DefaultProviderFunc)
+}
+
+func PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	err := tfram.FindSharingWithOrganization(ctx, providerF().Meta().(*conns.AWSClient))
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if retry.NotFound(err) {
+		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
 	}
 
 	if err != nil {
@@ -1357,7 +1409,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
 
-	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, DefaultProviderFunc, pathPrefix)
 }
 
 func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {

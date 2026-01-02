@@ -144,6 +144,7 @@ const (
 	errCodeTransitGatewayMulticastGroupMemberNotFound              = "TransitGatewayMulticastGroupMember.NotFound"
 	errCodeTransitGatewayMulticastGroupSourceNotFound              = "TransitGatewayMulticastGroupSource.NotFound"
 	errCodeTransitGatewayRouteTablePropagationNotFound             = "TransitGatewayRouteTablePropagation.NotFound"
+	errCodeUnauthorizedOperation                                   = "UnauthorizedOperation"
 	errCodeUnsupportedOperation                                    = "UnsupportedOperation"
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"
