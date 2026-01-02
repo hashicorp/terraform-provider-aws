@@ -271,48 +271,34 @@ func dataSourceBudget() *schema.Resource {
 	}
 }
 
-const (
-	DSNameBudget = "Budget Data Source"
-)
-
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
 	conn := c.BudgetsClient(ctx)
 
+	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
-	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
-	d.Set(names.AttrAccountID, accountID)
-
 	budget, err := findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(BudgetCreateResourceID(accountID, budgetName))
+	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("billing_view_arn", budget.BillingViewArn)
-	d.Set("budget_type", budget.BudgetType)
-
-	if err := d.Set("budget_limit", flattenSpend(budget.BudgetLimit)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting budget_spend: %s", err)
-	}
-
-	if err := d.Set("calculated_spend", flattenCalculatedSpend(budget.CalculatedSpend)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting calculated_spend: %s", err)
-	}
-
 	d.Set("budget_exceeded", false)
 	if budget.CalculatedSpend != nil && budget.CalculatedSpend.ActualSpend != nil {
 		if aws.ToString(budget.BudgetLimit.Unit) == aws.ToString(budget.CalculatedSpend.ActualSpend.Unit) {
 			bLimit, err := strconv.ParseFloat(aws.ToString(budget.BudgetLimit.Amount), 64)
 			if err != nil {
-				return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 			bSpend, err := strconv.ParseFloat(aws.ToString(budget.CalculatedSpend.ActualSpend.Amount), 64)
 			if err != nil {
-				return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
 			if bLimit < bSpend {
@@ -321,6 +307,13 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 				d.Set("budget_exceeded", false)
 			}
 		}
+	}
+	if err := d.Set("budget_limit", flattenSpend(budget.BudgetLimit)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting budget_spend: %s", err)
+	}
+	d.Set("budget_type", budget.BudgetType)
+	if err := d.Set("calculated_spend", flattenCalculatedSpend(budget.CalculatedSpend)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting calculated_spend: %s", err)
 	}
 
 	d.Set(names.AttrName, budget.BudgetName)
