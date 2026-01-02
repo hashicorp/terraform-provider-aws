@@ -78,6 +78,11 @@ func RegisterSweepers() {
 			"aws_backup_vault_policy",
 		},
 	})
+
+	resource.AddTestSweepers("aws_backup_tiering_configuration", &resource.Sweeper{
+		Name: "aws_backup_tiering_configuration",
+		F:    sweepTieringConfigurations,
+	})
 }
 
 func sweepFrameworks(region string) error {
@@ -515,6 +520,42 @@ func sweepVaults(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTieringConfigurations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.BackupClient(ctx)
+	input := &backup.ListTieringConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := backup.NewListTieringConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Tiering Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Tiering Configurations (%s): %w", region, err)
+		}
+
+		for _, v := range page.TieringConfigurations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTieringConfigurationResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.TieringConfigurationName))))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Backup Tiering Configurations (%s): %w", region, err)
 	}
 
 	return nil

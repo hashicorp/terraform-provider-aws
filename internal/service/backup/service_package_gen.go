@@ -50,6 +50,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Restore Testing Plan Selection",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newTieringConfigurationResource,
+			TypeName: "aws_backup_tiering_configuration",
+			Name:     "Tiering Configuration",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "tiering_configuration_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
