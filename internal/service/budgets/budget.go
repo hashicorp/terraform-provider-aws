@@ -36,7 +36,7 @@ import (
 // @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
-func ResourceBudget() *schema.Resource {
+func resourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
 		ReadWithoutTimeout:   resourceBudgetRead,

@@ -33,7 +33,7 @@ import (
 // @SDKResource("aws_budgets_budget_action", name="Budget Action")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceBudgetAction() *schema.Resource {
+func resourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
 		ReadWithoutTimeout:   resourceBudgetActionRead,

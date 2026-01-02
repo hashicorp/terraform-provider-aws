@@ -22,7 +22,7 @@ import (
 
 // @SDKDataSource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
-func DataSourceBudget() *schema.Resource {
+func dataSourceBudget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBudgetRead,
 

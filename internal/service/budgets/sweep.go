@@ -57,7 +57,7 @@ func sweepBudgetActions(region string) error {
 		}
 
 		for _, v := range page.Actions {
-			r := ResourceBudgetAction()
+			r := resourceBudgetAction()
 			d := r.Data(nil)
 			d.SetId(BudgetActionCreateResourceID(accountID, aws.ToString(v.ActionId), aws.ToString(v.BudgetName)))
 
@@ -108,7 +108,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 				continue
 			}
 
-			r := ResourceBudget()
+			r := resourceBudget()
 			d := r.Data(nil)
 			d.SetId(BudgetCreateResourceID(accountID, budgetName))
 
