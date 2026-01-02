@@ -573,7 +573,7 @@ func testAccCheckBudgetExists(ctx context.Context, resourceName string, v *awsty
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
+		output, err := tfbudgets.FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
 			return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 		})
 
@@ -602,7 +602,7 @@ func testAccCheckBudgetDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
+			_, err = tfbudgets.FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
 				return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 			})
 

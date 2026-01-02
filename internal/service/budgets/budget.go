@@ -356,7 +356,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	//budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 
-	budget, err := FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
+	budget, err := FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
 		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	})
 
