@@ -332,6 +332,14 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(BudgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
 
+	_, err = findWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
+		return findBudgetByTwoPartKey(ctx, conn, accountID, name)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
+	}
+
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
 
@@ -350,16 +358,11 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := c.BudgetsClient(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	//budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-
-	budget, err := FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
-		return findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-	})
+	budget, err := findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -473,7 +476,6 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -508,7 +510,6 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

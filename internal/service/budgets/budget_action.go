@@ -236,7 +236,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := c.BudgetsClient(ctx)
 
 	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
-	input := &budgets.CreateBudgetActionInput{
+	input := budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
 		ActionThreshold:  expandBudgetActionActionThreshold(d.Get("action_threshold").([]any)),
 		ActionType:       awstypes.ActionType(d.Get("action_type").(string)),
@@ -249,19 +249,26 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		ResourceTags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateBudgetAction(ctx, input)
+	output, err := tfresource.RetryWhenIsA[*budgets.CreateBudgetActionOutput, *awstypes.AccessDeniedException](ctx, iamPropagationTimeout, func(ctx context.Context) (*budgets.CreateBudgetActionOutput, error) {
+		return conn.CreateBudgetAction(ctx, &input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Budget Action: %s", err)
 	}
 
-	output := outputRaw.(*budgets.CreateBudgetActionOutput)
 	actionID := aws.ToString(output.ActionId)
 	budgetName := aws.ToString(output.BudgetName)
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
+
+	_, err = findWithDelay(ctx, func(context.Context) (*awstypes.Action, error) {
+		return findBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Budget Action (%s): %s", d.Id(), err)
+	}
 
 	return append(diags, resourceBudgetActionRead(ctx, d, meta)...)
 }
@@ -272,14 +279,11 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := c.BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindBudgetWithDelay(ctx, func(context.Context) (*awstypes.Action, error) {
-		return findBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-	})
+	output, err := findBudgetActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
@@ -318,13 +322,12 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &budgets.UpdateBudgetActionInput{
+		input := budgets.UpdateBudgetActionInput{
 			AccountId:  aws.String(accountID),
 			ActionId:   aws.String(actionID),
 			BudgetName: aws.String(budgetName),
@@ -354,7 +357,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
 		}
 
-		_, err = conn.UpdateBudgetAction(ctx, input)
+		_, err = conn.UpdateBudgetAction(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
@@ -369,18 +372,18 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
+	input := budgets.DeleteBudgetActionInput{
+		AccountId:  aws.String(accountID),
+		ActionId:   aws.String(actionID),
+		BudgetName: aws.String(budgetName),
+	}
 	_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceLockedException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteBudgetAction(ctx, &budgets.DeleteBudgetActionInput{
-			AccountId:  aws.String(accountID),
-			ActionId:   aws.String(actionID),
-			BudgetName: aws.String(budgetName),
-		})
+		return conn.DeleteBudgetAction(ctx, &input)
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -412,10 +415,6 @@ func BudgetActionParseResourceID(id string) (string, string, string, error) {
 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
 }
-
-const (
-	propagationTimeout = 2 * time.Minute
-)
 
 func findBudgetAction(ctx context.Context, conn *budgets.Client, input *budgets.DescribeBudgetActionInput) (*awstypes.Action, error) {
 	output, err := conn.DescribeBudgetAction(ctx, input)

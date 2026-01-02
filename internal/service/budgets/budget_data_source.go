@@ -6,7 +6,6 @@ package budgets
 import (
 	"cmp"
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -291,7 +290,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return create.AppendDiagError(diags, names.Budgets, create.ErrActionReading, DSNameBudget, d.Id(), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountID, budgetName))
+	d.SetId(BudgetCreateResourceID(accountID, budgetName))
 	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("billing_view_arn", budget.BillingViewArn)
 	d.Set("budget_type", budget.BudgetType)
