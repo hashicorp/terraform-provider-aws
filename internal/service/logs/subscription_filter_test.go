@@ -37,6 +37,7 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
+					resource.TestCheckNoResourceAttr(resourceName, "emit_system_fields"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -213,6 +214,60 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filter types.SubscriptionFilter
+	resourceName := "aws_cloudwatch_log_subscription_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.region\"]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.region"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\"]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.account"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.1", "@aws.region"),
+				),
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
 			},
 		},
 	})
@@ -682,6 +737,18 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   name            = "%[1]s-${count.index}"
 }
 `, rName, n))
+}
+
+func testAccSubscriptionFilterConfig_emitSystemFields(rName, emitSystemFieldsStr string) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_subscription_filter" "test" {
+  destination_arn    = aws_lambda_function.test.arn
+  filter_pattern     = "logtype test"
+  log_group_name     = aws_cloudwatch_log_group.test.name
+  name               = %[1]q
+  emit_system_fields = %[2]s
+}
+`, rName, emitSystemFieldsStr))
 }
 
 func testAccSubscriptionFilterConfig_roleARN1(rName string) string {
