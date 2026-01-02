@@ -44,7 +44,7 @@ func sweepBudgets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 			r := resourceBudget()
 			d := r.Data(nil)
-			d.SetId(BudgetCreateResourceID(accountID, budgetName))
+			d.SetId(budgetCreateResourceID(accountID, budgetName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

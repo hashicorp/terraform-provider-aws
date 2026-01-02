@@ -285,7 +285,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, budgetName))
+	d.SetId(budgetCreateResourceID(accountID, budgetName))
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("billing_view_arn", budget.BillingViewArn)

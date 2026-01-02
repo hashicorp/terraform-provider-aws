@@ -310,9 +310,8 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := c.BudgetsClient(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -330,7 +329,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
+	d.SetId(budgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
 
 	_, err = findWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
 		return findBudgetByTwoPartKey(ctx, conn, accountID, name)
@@ -357,7 +356,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	c := meta.(*conns.AWSClient)
 	conn := c.BudgetsClient(ctx)
 
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -475,15 +474,14 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID, _, err := BudgetParseResourceID(d.Id())
+	accountID, _, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	budget, err := expandBudgetUnmarshal(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := budgets.UpdateBudgetInput{
@@ -509,7 +507,7 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -534,14 +532,14 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 const budgetResourceIDSeparator = ":"
 
-func BudgetCreateResourceID(accountID, budgetName string) string {
+func budgetCreateResourceID(accountID, budgetName string) string {
 	parts := []string{accountID, budgetName}
 	id := strings.Join(parts, budgetResourceIDSeparator)
 
 	return id
 }
 
-func BudgetParseResourceID(id string) (string, string, error) {
+func budgetParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, budgetResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
@@ -576,7 +574,7 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifi
 }
 
 func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *schema.ResourceData) error {
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
