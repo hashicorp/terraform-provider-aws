@@ -9,7 +9,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -216,7 +215,8 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	up, err := findUsagePlanByID(ctx, conn, d.Id())
 
@@ -235,13 +235,7 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "setting api_stages: %s", err)
 		}
 	}
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("/usageplans/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, usagePlanARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, up.Description)
 	d.Set(names.AttrName, up.Name)
 	d.Set("product_code", up.ProductCode)
@@ -700,4 +694,8 @@ func flattenThrottleSettingsMap(apiObjects map[string]types.ThrottleSettings) []
 	}
 
 	return tfList
+}
+
+func usagePlanARN(ctx context.Context, c *conns.AWSClient, usagePlanID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/usageplans/%s", usagePlanID))
 }

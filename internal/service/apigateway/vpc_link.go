@@ -98,7 +98,8 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	vpcLink, err := findVPCLinkByID(ctx, conn, d.Id())
 
@@ -112,7 +113,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, vpcLink.Description)
 	d.Set(names.AttrName, vpcLink.Name)
 	d.Set("target_arns", vpcLink.TargetArns)

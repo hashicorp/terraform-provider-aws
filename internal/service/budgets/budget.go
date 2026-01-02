@@ -4,6 +4,7 @@
 package budgets
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
@@ -36,7 +37,7 @@ import (
 // @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
-func ResourceBudget() *schema.Resource {
+func resourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
 		ReadWithoutTimeout:   resourceBudgetRead,
@@ -305,23 +306,18 @@ func ResourceBudget() *schema.Resource {
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.BudgetsClient(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
-	accountID := d.Get(names.AttrAccountID).(string)
-	if accountID == "" {
-		accountID = meta.(*conns.AWSClient).AccountID(ctx)
-	}
-
+	accountID := cmp.Or(d.Get(names.AttrAccountID).(string), c.AccountID(ctx))
 	input := budgets.CreateBudgetInput{
 		AccountId:    aws.String(accountID),
 		Budget:       budget,
@@ -333,7 +329,15 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
+	d.SetId(budgetCreateResourceID(accountID, aws.ToString(budget.BudgetName)))
+
+	_, err = findWithDelay(ctx, func(context.Context) (*awstypes.Budget, error) {
+		return findBudgetByTwoPartKey(ctx, conn, accountID, name)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
+	}
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
@@ -349,20 +353,15 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.BudgetsClient(ctx)
 
-	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
-
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
-
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	//budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-
-	budget, err := FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
-		return FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-	})
+	budget, err := findBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -375,13 +374,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrAccountID, accountID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "budgets",
-		AccountID: accountID,
-		Resource:  "budget/" + budgetName,
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("budget_type", budget.BudgetType)
 	d.Set("billing_view_arn", budget.BillingViewArn)
 
@@ -414,7 +407,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
+	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if retry.NotFound(err) {
 		return diags
@@ -441,7 +434,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			tfMap["threshold_type"] = string(notification.ThresholdType)
 		}
 
-		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
+		subscribers, err := findSubscribersByThreePartKey(ctx, conn, accountID, budgetName, notification)
 
 		if retry.NotFound(err) {
 			tfList = append(tfList, tfMap)
@@ -479,19 +472,16 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID, _, err := BudgetParseResourceID(d.Id())
-
+	accountID, _, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	budget, err := expandBudgetUnmarshal(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := budgets.UpdateBudgetInput{
@@ -515,11 +505,9 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
-
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -544,14 +532,14 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 const budgetResourceIDSeparator = ":"
 
-func BudgetCreateResourceID(accountID, budgetName string) string {
+func budgetCreateResourceID(accountID, budgetName string) string {
 	parts := []string{accountID, budgetName}
 	id := strings.Join(parts, budgetResourceIDSeparator)
 
 	return id
 }
 
-func BudgetParseResourceID(id string) (string, string, error) {
+func budgetParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, budgetResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
@@ -559,106 +547,6 @@ func BudgetParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
-}
-
-func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) (*awstypes.Budget, error) {
-	input := &budgets.DescribeBudgetInput{
-		AccountId:  aws.String(accountID),
-		BudgetName: aws.String(budgetName),
-	}
-
-	output, err := conn.DescribeBudget(ctx, input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Budget == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Budget, nil
-}
-
-func findNotifications(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
-	input := &budgets.DescribeNotificationsForBudgetInput{
-		AccountId:  aws.String(accountID),
-		BudgetName: aws.String(budgetName),
-	}
-	var output []awstypes.Notification
-
-	pages := budgets.NewDescribeNotificationsForBudgetPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, np := range page.Notifications {
-			if np == (awstypes.Notification{}) {
-				continue
-			}
-
-			output = append(output, np)
-		}
-	}
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
-}
-
-func findSubscribers(ctx context.Context, conn *budgets.Client, accountID, budgetName string, notification awstypes.Notification) ([]awstypes.Subscriber, error) {
-	input := &budgets.DescribeSubscribersForNotificationInput{
-		AccountId:    aws.String(accountID),
-		BudgetName:   aws.String(budgetName),
-		Notification: &notification,
-	}
-	var output []awstypes.Subscriber
-
-	pages := budgets.NewDescribeSubscribersForNotificationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, subscriber := range page.Subscribers {
-			if subscriber == (awstypes.Subscriber{}) {
-				continue
-			}
-
-			output = append(output, subscriber)
-		}
-	}
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
 }
 
 func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifications []*awstypes.Notification, subscribers [][]awstypes.Subscriber, budgetName string, accountID string) error {
@@ -686,7 +574,7 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifi
 }
 
 func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *schema.ResourceData) error {
-	accountID, budgetName, err := BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := budgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -722,6 +610,130 @@ func updateBudgetNotifications(ctx context.Context, conn *budgets.Client, d *sch
 	}
 
 	return nil
+}
+
+func findBudget(ctx context.Context, conn *budgets.Client, input *budgets.DescribeBudgetInput) (*awstypes.Budget, error) {
+	output, err := conn.DescribeBudget(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Budget == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Budget, nil
+}
+
+func findBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) (*awstypes.Budget, error) {
+	input := budgets.DescribeBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	return findBudget(ctx, conn, &input)
+}
+
+func findNotifications(ctx context.Context, conn *budgets.Client, input *budgets.DescribeNotificationsForBudgetInput) ([]awstypes.Notification, error) {
+	var output []awstypes.Notification
+
+	pages := budgets.NewDescribeNotificationsForBudgetPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Notifications {
+			if inttypes.IsZero(v) {
+				continue
+			}
+
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findNotificationsByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
+	input := budgets.DescribeNotificationsForBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+	output, err := findNotifications(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findSubscribers(ctx context.Context, conn *budgets.Client, input *budgets.DescribeSubscribersForNotificationInput) ([]awstypes.Subscriber, error) {
+	var output []awstypes.Subscriber
+
+	pages := budgets.NewDescribeSubscribersForNotificationPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Subscribers {
+			if inttypes.IsZero(v) {
+				continue
+			}
+
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findSubscribersByThreePartKey(ctx context.Context, conn *budgets.Client, accountID, budgetName string, notification awstypes.Notification) ([]awstypes.Subscriber, error) {
+	input := budgets.DescribeSubscribersForNotificationInput{
+		AccountId:    aws.String(accountID),
+		BudgetName:   aws.String(budgetName),
+		Notification: &notification,
+	}
+	output, err := findSubscribers(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func flattenAutoAdjustData(autoAdjustData *awstypes.AutoAdjustData) []map[string]any {
@@ -1106,4 +1118,8 @@ func validTimePeriodTimestamp(v any, k string) (ws []string, errors []error) {
 	}
 
 	return
+}
+
+func budgetARN(ctx context.Context, c *conns.AWSClient, accountID, budgetName string) string {
+	return c.GlobalARNWithAccount(ctx, "budgets", accountID, "budget/"+budgetName)
 }

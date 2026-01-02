@@ -9,7 +9,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -90,7 +89,8 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	cert, err := findClientCertificateByID(ctx, conn, d.Id())
 
@@ -104,13 +104,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Client Certificate (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientCertificateARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, cert.CreatedDate.String())
 	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
@@ -191,4 +185,8 @@ func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id 
 	}
 
 	return output, nil
+}
+
+func clientCertificateARN(ctx context.Context, c *conns.AWSClient, certificateID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/clientcertificates/%s", certificateID))
 }
