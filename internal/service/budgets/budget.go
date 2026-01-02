@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -349,8 +348,8 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.BudgetsClient(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -375,13 +374,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrAccountID, accountID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "budgets",
-		AccountID: accountID,
-		Resource:  "budget/" + budgetName,
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, budgetARN(ctx, c, accountID, budgetName))
 	d.Set("budget_type", budget.BudgetType)
 	d.Set("billing_view_arn", budget.BillingViewArn)
 
@@ -1106,4 +1099,8 @@ func validTimePeriodTimestamp(v any, k string) (ws []string, errors []error) {
 	}
 
 	return
+}
+
+func budgetARN(ctx context.Context, c *conns.AWSClient, accountID, budgetName string) string {
+	return c.GlobalARNWithAccount(ctx, accountID, "budgets", "budget/"+budgetName)
 }
