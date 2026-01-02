@@ -72,7 +72,7 @@ func sweepBudgetActions(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 		for _, v := range page.Actions {
 			r := resourceBudgetAction()
 			d := r.Data(nil)
-			d.SetId(BudgetActionCreateResourceID(accountID, aws.ToString(v.ActionId), aws.ToString(v.BudgetName)))
+			d.SetId(budgetActionCreateResourceID(accountID, aws.ToString(v.ActionId), aws.ToString(v.BudgetName)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
