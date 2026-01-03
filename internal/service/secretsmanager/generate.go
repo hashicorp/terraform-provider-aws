@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/tags/main.go -ListTagsInIDElem=SecretId -ServiceTagsSlice -TagInIDElem=SecretId -UpdateTags
+//go:generate go run ../../generate/tagresource/main.go -IDAttribName=secret_id -GetTagFunc=findSecretTag
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/tagstests/main.go
 //go:generate go run ../../generate/identitytests/main.go

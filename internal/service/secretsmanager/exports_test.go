@@ -14,4 +14,5 @@ var (
 	FindSecretPolicyByID               = findSecretPolicyByID
 	FindSecretVersionByTwoPartKey      = findSecretVersionByTwoPartKey
 	FindSecretVersionEntryByTwoPartKey = findSecretVersionEntryByTwoPartKey
+	FindSecretTag                      = findSecretTag
 )
