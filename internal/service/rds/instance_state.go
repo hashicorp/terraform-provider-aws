@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,10 +84,9 @@ func (r *instanceStateResource) Create(ctx context.Context, req resource.CreateR
 
 	instanceID := plan.Identifier.ValueString()
 
-	instance, err := waitDBInstanceAvailable(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
+	instance, err := waitDBInstanceReadyForStateChange(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
-
 		return
 	}
 
@@ -133,15 +134,17 @@ func (r *instanceStateResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	if _, err := waitDBInstanceAvailable(ctx, conn, state.Identifier.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+	instance, err := waitDBInstanceReadyForStateChange(ctx, conn, state.Identifier.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 
 		return
 	}
 
 	if !plan.State.Equal(state.State) {
-		if err := updateInstanceState(ctx, conn, state.Identifier.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
+		if err := updateInstanceState(ctx, conn, state.Identifier.ValueString(), aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("updating RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
+			return
 		}
 	}
 
@@ -150,6 +153,48 @@ func (r *instanceStateResource) Update(ctx context.Context, req resource.UpdateR
 
 func (r *instanceStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
+}
+
+func waitDBInstanceReadyForStateChange(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*rdstypes.DBInstance, error) {
+	options := tfresource.Options{
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
+			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
+			instanceStatusUpgrading,
+		},
+		Target:  []string{instanceStatusStopped, instanceStatusAvailable, instanceStatusStorageOptimization},
+		Refresh: statusDBInstance(conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rdstypes.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func updateInstanceState(ctx context.Context, conn *rds.Client, id string, currentState string, configuredState string, timeout time.Duration) error {
