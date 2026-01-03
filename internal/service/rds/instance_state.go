@@ -87,6 +87,7 @@ func (r *instanceStateResource) Create(ctx context.Context, req resource.CreateR
 	instance, err := waitDBInstanceReadyForStateChange(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
+
 		return
 	}
 
@@ -134,17 +135,15 @@ func (r *instanceStateResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	instance, err := waitDBInstanceReadyForStateChange(ctx, conn, state.Identifier.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
+	if _, err := waitDBInstanceReadyForStateChange(ctx, conn, state.Identifier.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 
 		return
 	}
 
 	if !plan.State.Equal(state.State) {
-		if err := updateInstanceState(ctx, conn, state.Identifier.ValueString(), aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
-			return
+		if err := updateInstanceState(ctx, conn, state.Identifier.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 		}
 	}
 
