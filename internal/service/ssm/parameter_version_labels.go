@@ -11,11 +11,14 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -97,8 +100,9 @@ func resourceParameterVersionLabelsCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 	input := &ssm.LabelParameterVersionInput{
-		Name:   aws.String(name),
-		Labels: tfslices.ApplyToAll(labels, func(l any) string { return l.(string) }),
+		Name:             aws.String(name),
+		Labels:           tfslices.ApplyToAll(labels, func(l any) string { return l.(string) }),
+		ParameterVersion: aws.Int64(int64(version)),
 	}
 	output, err := conn.LabelParameterVersion(ctx, input)
 	if err != nil {
@@ -146,9 +150,40 @@ func resourceParameterVersionLabelsUpdate(ctx context.Context, d *schema.Resourc
 			return sdkdiag.AppendErrorf(diags, "reading SSM Parameter (%s) latest version: parameter not found", name)
 		}
 	}
+	// get existing labels for given parameter version
+	existingLabels, err := findParameterVersionLabels(ctx, conn, name, version)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	// determine which labels to remove
+	var labelsToRemove []string
+	for _, el := range existingLabels {
+		found := false
+		for _, l := range labels {
+			if el == l.(string) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			labelsToRemove = append(labelsToRemove, el)
+		}
+	}
+	if len(labelsToRemove) > 0 {
+		input := &ssm.UnlabelParameterVersionInput{
+			Name:             aws.String(name),
+			ParameterVersion: aws.Int64(int64(version)),
+			Labels:           labelsToRemove,
+		}
+		_, err := conn.UnlabelParameterVersion(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "unlabeling SSM Parameter (%s) version (%d) labels (%v): %s", name, version, labelsToRemove, err)
+		}
+	}
 	input := &ssm.LabelParameterVersionInput{
-		Name:   aws.String(name),
-		Labels: tfslices.ApplyToAll(labels, func(l any) string { return l.(string) }),
+		Name:             aws.String(name),
+		Labels:           tfslices.ApplyToAll(labels, func(l any) string { return l.(string) }),
+		ParameterVersion: aws.Int64(int64(version)),
 	}
 	output, err := conn.LabelParameterVersion(ctx, input)
 	if err != nil {
@@ -188,7 +223,7 @@ func resourceParameterVersionLabelsDelete(ctx context.Context, d *schema.Resourc
 	}
 	_, err := conn.UnlabelParameterVersion(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "labeling SSM Parameter (%s) version (%d) labels (%v): %s", name, version, labels, err)
+		return sdkdiag.AppendErrorf(diags, "unlabeling SSM Parameter (%s) version (%d) labels (%v): %s", name, version, labels, err)
 	}
 	return diags
 }
@@ -218,6 +253,12 @@ func findParameterVersionLabels(ctx context.Context, conn *ssm.Client, name stri
 	var labels []string
 	for pages.HasMorePages() && !found {
 		output, err := pages.NextPage(ctx)
+		if errs.IsA[*awstypes.ParameterNotFound](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("reading SSM Parameter (%s) labels: %w", name, err)
 		}
