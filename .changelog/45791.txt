@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_instance_state: Fix aws_rds_instance_state can not start a stopped RDS instance
+```
