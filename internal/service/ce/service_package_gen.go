@@ -21,7 +21,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newCostAllocationTagsDataSource,
+			TypeName: "aws_ce_cost_allocation_tags",
+			Name:     "Cost Allocation Tags",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
