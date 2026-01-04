@@ -311,6 +311,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	const (
 		timeout = 10 * time.Minute
 	)
+	if _, err := waitClusterAttachmentsStable(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) attachments to stabilize before delete: %s", d.Id(), err)
+	}
+
 	_, err := tfresource.RetryWhenIsOneOf4[any, *awstypes.ClusterContainsContainerInstancesException, *awstypes.ClusterContainsServicesException, *awstypes.ClusterContainsTasksException, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteCluster(ctx, &ecs.DeleteClusterInput{
 			Cluster: aws.String(d.Id()),
@@ -437,6 +441,49 @@ func statusCluster(ctx context.Context, conn *ecs.Client, arn string) sdkretry.S
 
 		return cluster, aws.ToString(cluster.Status), err
 	}
+}
+
+const (
+	clusterAttachmentsStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+	clusterAttachmentsStatusUpdateComplete   = "UPDATE_COMPLETE"
+	clusterAttachmentsStatusUpdateFailed     = "UPDATE_FAILED"
+)
+
+func statusClusterAttachments(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			// If the cluster is already gone, treat as "done" for this waiter.
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Only need to block while UPDATE_IN_PROGRESS; anything else is fine.
+		return cluster, aws.ToString(cluster.AttachmentsStatus), nil
+	}
+}
+
+func waitClusterAttachmentsStable(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.Cluster, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{clusterAttachmentsStatusUpdateInProgress},
+		// Treat nil/empty, complete, or failed as "stable enough" to proceed.
+		Target:  []string{"", clusterAttachmentsStatusUpdateComplete, clusterAttachmentsStatusUpdateFailed},
+		Refresh: statusClusterAttachments(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*awstypes.Cluster); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.Cluster, error) { //nolint:unparam
