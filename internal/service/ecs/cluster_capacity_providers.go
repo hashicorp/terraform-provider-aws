@@ -80,6 +80,18 @@ func resourceClusterCapacityProviders() *schema.Resource {
 	}
 }
 
+func waitCapacityProvidersActive(ctx context.Context, conn *ecs.Client, capacityProviders []string, timeout time.Duration) error {
+
+	for _, cp := range capacityProviders {
+
+		if _, err := waitCapacityProviderActive(ctx, conn, cp, timeout); err != nil {
+			return fmt.Errorf("waiting for ECS Capacity Provider (%s) to become ACTIVE: %w", cp, err)
+		}
+	}
+
+	return nil
+}
+
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -92,6 +104,10 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 		DefaultCapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 	}
 
+	if err := waitCapacityProvidersActive(ctx, conn, input.CapacityProviders, 10*time.Minute); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Providers to become ACTIVE before cluster update (%s): %s", clusterName, err)
+	}
+
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
 	if err != nil {
@@ -102,8 +118,12 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 		d.SetId(clusterName)
 	}
 
+	if _, err := waitAttachmentStatus(ctx, conn, clusterName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) update: %s", d.Id(), err)
+	}
+
 	if _, err := waitClusterAvailable(ctx, conn, clusterName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster Capacity Providers (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterCapacityProvidersRead(ctx, d, meta)...)
