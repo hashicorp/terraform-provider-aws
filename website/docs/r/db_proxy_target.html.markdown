@@ -10,6 +10,8 @@ description: |-
 
 Provides an RDS DB proxy target resource.
 
+~> **NOTE:** When the associated `aws_db_proxy` resource is replaced, Terraform will lose track of this resource, causing unexpected differences on the next apply. To ensure proper dependency management, add a `lifecycle` block with `replace_triggered_by` referencing the `aws_db_proxy` resource's `id` attribute.
+
 ## Example Usage
 
 ```terraform
@@ -46,12 +48,20 @@ resource "aws_db_proxy_default_target_group" "example" {
     max_idle_connections_percent = 50
     session_pinning_filters      = ["EXCLUDE_VARIABLE_SETS"]
   }
+
+  lifecycle {
+    replace_triggered_by = [aws_db_proxy.example.id]
+  }
 }
 
 resource "aws_db_proxy_target" "example" {
   db_instance_identifier = aws_db_instance.example.identifier
   db_proxy_name          = aws_db_proxy.example.name
   target_group_name      = aws_db_proxy_default_target_group.example.name
+
+  lifecycle {
+    replace_triggered_by = [aws_db_proxy.example.id]
+  }
 }
 ```
 
