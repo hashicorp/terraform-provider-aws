@@ -226,7 +226,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  parameterResourceAsListResource,
+			Factory:  newParameterResourceAsListResource,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
