@@ -247,12 +247,15 @@ func (r *connectionFunctionResource) Update(ctx context.Context, req resource.Up
 	}
 
 	if diff.HasChanges() {
-		id := fwflex.StringValueFromFramework(ctx, new.ID)
+		id, etag := fwflex.StringValueFromFramework(ctx, new.ID), fwflex.StringValueFromFramework(ctx, old.Etag)
 		var input cloudfront.UpdateConnectionFunctionInput
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Additional fields.
+		input.IfMatch = aws.String(etag)
 
 		outputUCF, err := conn.UpdateConnectionFunction(ctx, &input)
 		if err != nil {
@@ -261,7 +264,7 @@ func (r *connectionFunctionResource) Update(ctx context.Context, req resource.Up
 		}
 
 		connectionFunctionSummary := outputUCF.ConnectionFunctionSummary
-		etag := aws.ToString(outputUCF.ETag)
+		etag = aws.ToString(outputUCF.ETag)
 
 		if new.Publish.ValueBool() {
 			if err := publishConnectionFunction(ctx, conn, id, etag); err != nil {
