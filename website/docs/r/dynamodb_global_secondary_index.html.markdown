@@ -181,7 +181,11 @@ For more details on importing `aws_dynamodb_global_secondary_index` resources, s
 The following arguments are required:
 
 * `index_name` - (Required) Name of the index.
-* `key_schema` - (Required) Set of nested attribute definitions. At least 1 element defining a `HASH` is required, See below.
+* `key_schema` - (Required) Set of nested attribute definitions.
+  At least 1 element defining a `HASH` is required.
+  All elements with the `key_type` of `HASH` must precede elements with `key_type` of `RANGE`.
+  Changing any values in `key_schema` will re-create the resource.
+  See [`key_schema` below](#key_schema).
 * `projection` - (Required) Describes which attributes from the table are represented in the index.
   See [`projection` below](#projection).
 * `table_name` - (Required) Name of the table this index belongs to
@@ -202,8 +206,9 @@ The following arguments are optional:
 
 * `attribute_name` - (Required) Name of the attribute
 * `attribute_type` - (Required) Type of the attribute in the index.
-  Valid values are `S` (string), `N` (number), `B` (binary).
-* `key_type` - (Required) Key type. Valid values are `HASH`, `RANGE`.
+  Valid values are `S` (string), `N` (number), or `B` (binary).
+* `key_type` - (Required) Key type.
+  Valid values are `HASH` or `RANGE`.
 
 ### `on_demand_throughput`
 
