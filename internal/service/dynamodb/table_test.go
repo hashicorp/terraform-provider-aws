@@ -888,6 +888,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey(t *testing.T) {
 					}),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -914,11 +919,6 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_transition(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckInitialTableConf(resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeys_transition(rName),
@@ -963,6 +963,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_transition(t *testing.T) {
 						"projection_type": "ALL",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1031,6 +1036,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 					}),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1057,11 +1067,6 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckInitialTableConf(resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName),
@@ -1109,6 +1114,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
 						"projection_type": "ALL",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
