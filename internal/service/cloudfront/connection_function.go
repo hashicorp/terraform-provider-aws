@@ -100,6 +100,9 @@ func (r *connectionFunctionResource) Schema(ctx context.Context, req resource.Sc
 					Blocks: map[string]schema.Block{
 						"key_value_store_association": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValueStoreAssociationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"key_value_store_arn": schema.StringAttribute{

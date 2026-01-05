@@ -479,10 +479,6 @@ EOT
     runtime = "cloudfront-js-2.0"
 
     key_value_store_association {
-      key_value_store_arn = aws_cloudfront_key_value_store.test1.arn
-    }
-
-    key_value_store_association {
       key_value_store_arn = aws_cloudfront_key_value_store.test2.arn
     }
   }
