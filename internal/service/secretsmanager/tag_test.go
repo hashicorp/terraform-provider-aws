@@ -192,8 +192,8 @@ data "aws_secretsmanager_secret" "rds" {
 
 resource "aws_secretsmanager_tag" "rds" {
   secret_id = data.aws_secretsmanager_secret.rds.id
-  key       = %[2]q
-  value     = %[3]q
+  key       = %[1]q
+  value     = %[2]q
 }
 `, key, value)
 }
