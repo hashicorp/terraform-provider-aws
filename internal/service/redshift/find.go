@@ -941,7 +941,7 @@ func findClusterParameters(ctx context.Context, conn *redshift.Client, input *re
 	return output, nil
 }
 
-func findIDCApplications(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) ([]awstypes.RedshiftIdcApplication, error) {
+func findRedshiftIDCApplications(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) ([]awstypes.RedshiftIdcApplication, error) {
 	var output []awstypes.RedshiftIdcApplication
 
 	pages := redshift.NewDescribeRedshiftIdcApplicationsPaginator(conn, input)
@@ -965,8 +965,8 @@ func findIDCApplications(ctx context.Context, conn *redshift.Client, input *reds
 	return output, nil
 }
 
-func findIDCApplication(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) (*awstypes.RedshiftIdcApplication, error) {
-	output, err := findIDCApplications(ctx, conn, input)
+func findRedshiftIDCApplication(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) (*awstypes.RedshiftIdcApplication, error) {
+	output, err := findRedshiftIDCApplications(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -975,10 +975,10 @@ func findIDCApplication(ctx context.Context, conn *redshift.Client, input *redsh
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.RedshiftIdcApplication, error) {
+func findRedshiftIDCApplicationByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.RedshiftIdcApplication, error) {
 	input := redshift.DescribeRedshiftIdcApplicationsInput{
-		RedshiftIdcApplicationArn: aws.String(id),
+		RedshiftIdcApplicationArn: aws.String(arn),
 	}
 
-	return findIDCApplication(ctx, conn, &input)
+	return findRedshiftIDCApplication(ctx, conn, &input)
 }

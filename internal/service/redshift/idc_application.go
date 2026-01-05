@@ -256,7 +256,7 @@ func (r *idcApplicationResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := findIDCApplicationByID(ctx, conn, state.RedshiftIDCApplicationARN.ValueString())
+	out, err := findRedshiftIDCApplicationByARN(ctx, conn, state.RedshiftIDCApplicationARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
