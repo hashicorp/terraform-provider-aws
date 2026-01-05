@@ -1,5 +1,5 @@
 ---
-subcategory: "secretsmanager"
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_tag"
 description: |-
