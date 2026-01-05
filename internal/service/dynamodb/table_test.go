@@ -825,7 +825,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -892,7 +892,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiHashKey_transition(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_transition(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -968,7 +968,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKey_transition(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1035,7 +1035,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKeyMutliRangeKey_maxSet(t *testin
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiRangeKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1114,7 +1114,7 @@ func TestAccDynamoDBTable_extended_gsiMultiRangeKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiRangeKey_singleAndMultiSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1136,7 +1136,7 @@ func TestAccDynamoDBTable_extended_gsiMultiRangeKey_singleAndMultiSet(t *testing
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiHashKey_singleAndMultiSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_singleAndMultiSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1158,7 +1158,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKey_singleAndMultiSet(t *testing.
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiHashKey_tooMany(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1180,7 +1180,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKey_tooMany(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended_gsiMultiRangeKey_tooMany(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiRangeKey_tooMany(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
