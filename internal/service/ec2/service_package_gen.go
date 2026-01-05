@@ -1881,7 +1881,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  vpcResourceAsListResource,
+			Factory:  newVPCResourceAsListResource,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
