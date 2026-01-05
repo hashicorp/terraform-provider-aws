@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  jobQueueResourceAsListResource,
+			Factory:  newJobQueueResourceAsListResource,
 			TypeName: "aws_batch_job_queue",
 			Name:     "Job Queue",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
