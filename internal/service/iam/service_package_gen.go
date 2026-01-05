@@ -447,7 +447,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  policyResourceAsListResource,
+			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
