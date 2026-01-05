@@ -44,7 +44,7 @@ var (
 	FindLoggingStatusByID                         = findLoggingStatusByID
 	FindParameterGroupByName                      = findParameterGroupByName
 	FindPartnerByFourPartKey                      = findPartnerByFourPartKey
-	FindRedshiftIDCApplicationByARN               = findRedshiftIDCApplicationByARN
+	FindRedshiftIDCApplicationByARN               = findRedshiftIDCApplicationByARN // nosemgrep:ci.redshift-in-var-name
 	FindResourcePolicyByARN                       = findResourcePolicyByARN
 	FindScheduledActionByName                     = findScheduledActionByName
 	FindSnapshotCopyByID                          = findSnapshotCopyByID
