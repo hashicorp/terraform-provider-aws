@@ -104,6 +104,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			tags := keyValueTags(ctx, instance.Tags)
+			setTagsOut(ctx, instance.Tags)
 
 			if !includeAutoScaled {
 				// Exclude Auto Scaled Instances

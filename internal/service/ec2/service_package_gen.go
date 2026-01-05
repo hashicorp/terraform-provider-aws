@@ -1871,7 +1871,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  subnetResourceAsListResource,
+			Factory:  newSubnetResourceAsListResource,
 			TypeName: "aws_subnet",
 			Name:     "Subnet",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
