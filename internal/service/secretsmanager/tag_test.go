@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2025
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
@@ -109,9 +112,9 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_tag" "test" {
-  secret_id    = aws_secretsmanager_secret.test.id
-  key          = %[2]q
-  value        = %[3]q
+  secret_id = aws_secretsmanager_secret.test.id
+  key       = %[2]q
+  value     = %[3]q
 }
 `, rName, key, value)
 }
