@@ -6,6 +6,7 @@ package cloudfront
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -328,6 +329,17 @@ func publishConnectionFunction(ctx context.Context, conn *cloudfront.Client, id,
 	}
 	_, err := conn.PublishConnectionFunction(ctx, &input)
 
+	if err != nil {
+		return err
+	}
+
+	const (
+		timeout = 5 * time.Minute
+	)
+	if _, err := waitConnectionFunctionPublished(ctx, conn, id, awstypes.FunctionStageDevelopment, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudFront Connection Function (%s) publish: %w", id, err)
+	}
+
 	return err
 }
 
@@ -357,6 +369,39 @@ func findConnectionFunction(ctx context.Context, conn *cloudfront.Client, input 
 	}
 
 	return output, nil
+}
+
+func statusConnectionFunction(conn *cloudfront.Client, id string, stage awstypes.FunctionStage) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findConnectionFunctionByTwoPartKey(ctx, conn, id, stage)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.ConnectionFunctionSummary.Status), nil
+	}
+}
+
+func waitConnectionFunctionPublished(ctx context.Context, conn *cloudfront.Client, id string, stage awstypes.FunctionStage, timeout time.Duration) (*cloudfront.DescribeConnectionFunctionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{connectionFunctionStatusPublishing},
+		Target:  []string{connectionFunctionStatusUnassociated},
+		Refresh: statusConnectionFunction(conn, id, stage),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.DescribeConnectionFunctionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type connectionFunctionResourceModel struct {
