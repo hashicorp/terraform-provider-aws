@@ -74,6 +74,20 @@ func resourceDistribution() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
+			"connection_function_association": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrID: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
+						},
+					},
+				},
+			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -983,6 +997,11 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
+	if distributionConfig.ConnectionFunctionAssociation != nil {
+		if err := d.Set("connection_function_association", []any{flattenConnectionFunctionAssociation(distributionConfig.ConnectionFunctionAssociation)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting connection_function_association: %s", err)
+		}
+	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
@@ -1384,6 +1403,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("caller_reference"); ok {
 		apiObject.CallerReference = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("connection_function_association"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ConnectionFunctionAssociation = expandConnectionFunctionAssociation(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2891,4 +2914,23 @@ func flattenSigners(apiObjects []awstypes.Signer) []any {
 	}
 
 	return tfList
+}
+func expandConnectionFunctionAssociation(tfMap map[string]any) *awstypes.ConnectionFunctionAssociation {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.ConnectionFunctionAssociation{
+		Id: aws.String(tfMap[names.AttrID].(string)),
+	}
+}
+
+func flattenConnectionFunctionAssociation(apiObject *awstypes.ConnectionFunctionAssociation) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]any{
+		names.AttrID: aws.ToString(apiObject.Id),
+	}
 }
