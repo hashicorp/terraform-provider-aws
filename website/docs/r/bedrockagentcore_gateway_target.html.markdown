@@ -288,7 +288,29 @@ resource "aws_bedrockagentcore_gateway_target" "complex_schema" {
 }
 ```
 
-## Argument Reference
+### MCP Server Target with Header Propagation
+
+```terraform
+resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
+  name               = "mcp-target-with-headers"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+  description        = "MCP server target with header propagation"
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id"]
+    allowed_response_headers = ["x-rate-limit-remaining"]
+    allowed_query_parameters = ["version"]
+  }
+}
+```## Argument Reference
 
 The following arguments are required:
 
@@ -300,6 +322,7 @@ The following arguments are optional:
 
 * `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
+* `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
 ### `credential_provider_configuration`
@@ -326,6 +349,16 @@ The `oauth` block supports the following:
 * `provider_arn` - (Required) ARN of the OIDC provider for OAuth authentication.
 * `scopes` - (Optional) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
+
+### `metadata_configuration`
+
+The `metadata_configuration` block supports the following:
+
+* `allowed_query_parameters` - (Optional) A set of URL query parameters that are allowed to be propagated from incoming gateway URL to the target. Maximum of 10 parameters.
+* `allowed_request_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from incoming client requests to the target. Maximum of 10 headers.
+* `allowed_response_headers` - (Optional) A set of HTTP headers that are allowed to be propagated from the target response back to the client. Maximum of 10 headers.
+
+~> **Note:** Header names must contain only alphanumeric characters, hyphens, and underscores. Certain headers are restricted and cannot be configured for propagation, including `Authorization`, `Content-Type`, `Host`, `Cookie`, and various security-related headers. Headers starting with `X-Amzn-` are prohibited except for `X-Amzn-Bedrock-AgentCore-Runtime-Custom-*` headers.
 
 ### `target_configuration`
 
