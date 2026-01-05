@@ -993,16 +993,11 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	if v, ok := inner.(framework.Identityer); ok {
 		v.SetIdentitySpec(spec.Identity)
 	}
+	// Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
 
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
 		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
-		}
-	} else { // Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
-		if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
-			if !tfunique.IsHandleNil(spec.Tags) {
-				v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
-			}
+			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
 
