@@ -102,14 +102,9 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
 			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+			_, err := tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["schedule_identifier"])
 
 			if retry.NotFound(err) {
 				continue
@@ -133,18 +128,9 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Snapshot Schedule Association ID is set")
-		}
-
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+		_, err := tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["schedule_identifier"])
 
 		return err
 	}

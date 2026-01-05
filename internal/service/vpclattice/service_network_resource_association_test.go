@@ -42,6 +42,48 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_basic(t *testing.T) {
 				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_identifier", resourceConfigurationName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_identifier", resourceServiceNetworkName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.hosted_zone_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`servicenetworkresourceassociation/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeServiceNetworkResourceAssociation_privateDNS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var servicenetworkresourceassociation vpclattice.GetServiceNetworkResourceAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_service_network_resource_association.test"
+	resourceServiceNetworkName := "aws_vpclattice_service_network.test"
+	resourceConfigurationName := "aws_vpclattice_resource_configuration.test"
+	domainName := fmt.Sprintf("%s.example.com", rName)
+	customDomainName := fmt.Sprintf("test.%s.example.com", rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceNetworkResourceAssociationConfig_privateDNS(rName, domainName, customDomainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_identifier", resourceConfigurationName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "service_network_identifier", resourceServiceNetworkName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_entry.0.domain_name"),
@@ -137,6 +179,29 @@ func testAccServiceNetworkResourceAssociationConfig_basic(rName string) string {
 resource "aws_vpclattice_service_network_resource_association" "test" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
   service_network_identifier        = aws_vpclattice_service_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccServiceNetworkResourceAssociationConfig_privateDNS(rName, domainName, customDomainName string) string {
+	return acctest.ConfigCompose(testAccResourceConfigurationConfig_domainVerification(rName, domainName, customDomainName), fmt.Sprintf(`
+resource "aws_vpclattice_service_network_resource_association" "test" {
+  resource_configuration_identifier = aws_vpclattice_resource_configuration.test.id
+  service_network_identifier        = aws_vpclattice_service_network.test.id
+
+  private_dns_enabled = true
 
   tags = {
     Name = %[1]q

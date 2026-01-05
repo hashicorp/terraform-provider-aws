@@ -5,6 +5,8 @@ package unique
 
 import (
 	"unique"
+
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // IsHandleNil checks whether a Handle has had a value assigned.
@@ -13,6 +15,5 @@ func IsHandleNil[T comparable](h unique.Handle[T]) bool {
 }
 
 func isZero[T comparable](v T) bool {
-	var zero T
-	return v == zero
+	return v == inttypes.Zero[T]()
 }

@@ -6,6 +6,7 @@ package cloudfront
 // Exports for use in tests only.
 var (
 	ResourceCachePolicy                 = resourceCachePolicy
+	ResourceConnectionFunction          = newResourceConnectionFunction
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
@@ -13,6 +14,7 @@ var (
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
+	ResourceMultiTenantDistribution     = newMultiTenantDistributionResource
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy
@@ -23,6 +25,7 @@ var (
 	ResourceVPCOrigin                   = newVPCOriginResource
 
 	FindCachePolicyByID                        = findCachePolicyByID
+	FindConnectionFunctionByTwoPartKey         = findConnectionFunctionByTwoPartKey
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID

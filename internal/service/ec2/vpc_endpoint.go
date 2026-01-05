@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -98,6 +99,24 @@ func resourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"private_dns_preference": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, false),
+						},
+						"private_dns_specified_domains": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							MinItems: 1,
+							MaxItems: 10,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -125,6 +144,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
@@ -622,6 +642,14 @@ func expandDNSOptionsSpecification(tfMap map[string]any) *awstypes.DnsOptionsSpe
 		apiObject.DnsRecordIpType = awstypes.DnsRecordIpType(v)
 	}
 
+	if v, ok := tfMap["private_dns_preference"].(string); ok && v != "" {
+		apiObject.PrivateDnsPreference = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_specified_domains"].(*schema.Set); ok {
+		apiObject.PrivateDnsSpecifiedDomains = flex.ExpandStringValueSet(v)
+	}
+
 	return apiObject
 }
 
@@ -734,6 +762,14 @@ func flattenDNSOptions(apiObject *awstypes.DnsOptions) map[string]any {
 
 	if v := apiObject.PrivateDnsOnlyForInboundResolverEndpoint; v != nil {
 		tfMap["private_dns_only_for_inbound_resolver_endpoint"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.PrivateDnsPreference; v != nil {
+		tfMap["private_dns_preference"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PrivateDnsSpecifiedDomains; v != nil {
+		tfMap["private_dns_specified_domains"] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap

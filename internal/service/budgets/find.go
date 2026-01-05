@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBudgetWithDelay[T any](ctx context.Context, f func() (T, error)) (T, error) {
+func findWithDelay[T any](ctx context.Context, f func(context.Context) (T, error)) (T, error) {
 	var resp T
-	err := tfresource.Retry(ctx, 30*time.Second, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, budgetsPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
-		resp, err = f()
+		resp, err = f(ctx)
 
 		if err != nil {
 			return tfresource.NonRetryableError(err)

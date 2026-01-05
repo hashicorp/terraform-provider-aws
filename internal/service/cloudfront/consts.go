@@ -16,6 +16,12 @@ func (streamType) Values() []streamType {
 }
 
 const (
+	connectionFunctionStatusPublishing   = "PUBLISHING"
+	connectionFunctionStatusUnassociated = "UNASSOCIATED"
+	connectionFunctionStatusUnpublished  = "UNPUBLISHED"
+)
+
+const (
 	distributionStatusDeployed   = "Deployed"
 	distributionStatusInProgress = "InProgress"
 )

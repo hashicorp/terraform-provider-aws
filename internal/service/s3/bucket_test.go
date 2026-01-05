@@ -2854,10 +2854,10 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 }
 
 func testAccCheckBucketExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return testAccCheckBucketExistsWithProvider(ctx, n, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckBucketExistsWithProvider(ctx, n, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

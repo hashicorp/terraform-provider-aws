@@ -35,7 +35,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_customerprofiles_domain",
 			Name:     "Domain",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -44,7 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceProfile,
+			Factory:  resourceProfile,
 			TypeName: "aws_customerprofiles_profile",
 			Name:     "Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

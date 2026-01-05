@@ -129,7 +129,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Policy = aws.String(v.(string))
 	}
 
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.ReplicateKeyOutput, error) {
 		// Replication is initiated in the primary key's Region.
 		return conn.ReplicateKey(ctx, &input, func(o *kms.Options) {
 			o.Region = primaryKeyARN.Region

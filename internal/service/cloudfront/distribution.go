@@ -740,6 +740,10 @@ func resourceDistribution() *schema.Resource {
 										Default:      30,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
+									names.AttrOwnerAccountID: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"vpc_origin_id": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -1209,7 +1213,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionDeleted(ctx, conn, id); err != nil {
+	if err := waitDistributionDeleted(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution (%s) delete: %w", id, err)
 	}
 
@@ -1296,8 +1300,8 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[any, string] {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1317,10 +1321,10 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 }
 
 func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      30 * time.Second,
@@ -1335,23 +1339,19 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	return nil, err
 }
 
-func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusDistribution(ctx, conn, id),
+		Refresh:    statusDistribution(conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
@@ -2531,11 +2531,17 @@ func expandVPCOriginConfig(tfMap map[string]any) *awstypes.VpcOriginConfig {
 		return nil
 	}
 
-	return &awstypes.VpcOriginConfig{
+	apiObject := &awstypes.VpcOriginConfig{
 		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
 		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
 		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
 	}
+
+	if v, ok := tfMap[names.AttrOwnerAccountID].(string); ok && v != "" {
+		apiObject.OwnerAccountId = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]any {
@@ -2564,11 +2570,17 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 		return nil
 	}
 
-	return map[string]any{
+	tfMap := map[string]any{
 		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
+
+	if v := aws.ToString(apiObject.OwnerAccountId); v != "" {
+		tfMap[names.AttrOwnerAccountID] = v
+	}
+
+	return tfMap
 }
 
 func expandCustomErrorResponses(tfList []any) *awstypes.CustomErrorResponses {
