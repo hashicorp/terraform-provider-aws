@@ -3785,17 +3785,17 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(tableName, indexName string, numHashes, numRanges int) string {
-	hashes := ""
-	ranges := ""
+	var hashes strings.Builder
+	var ranges strings.Builder
 
 	for c := range numHashes {
 		name := fmt.Sprintf("key%d", c)
-		hashes += fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"HASH\"\n  }\n", name)
+		hashes.WriteString(fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"HASH\"\n  }\n", name))
 	}
 
 	for c := range numRanges {
 		name := fmt.Sprintf("key%d", c+numHashes)
-		ranges += fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"RANGE\"\n  }\n", name)
+		ranges.WriteString(fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"RANGE\"\n  }\n", name))
 	}
 
 	return fmt.Sprintf(`
@@ -3828,7 +3828,7 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 }
-`, tableName, indexName, hashes, ranges)
+`, tableName, indexName, hashes.String(), ranges.String())
 }
 
 func testAccGlobalSecondaryIndexConfig_nonKeyAttributes(tableName, indexName string, nonKeyAttributes []string) string {
