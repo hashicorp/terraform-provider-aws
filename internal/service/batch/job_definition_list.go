@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKListResource("aws_batch_job_definition")
-func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
+func newJobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
 	l := jobDefinitionListResource{}
 	l.SetResourceSchema(resourceJobDefinition())
 	return &l

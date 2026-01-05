@@ -135,7 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  jobDefinitionResourceAsListResource,
+			Factory:  newJobDefinitionResourceAsListResource,
 			TypeName: "aws_batch_job_definition",
 			Name:     "Job Definition",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
