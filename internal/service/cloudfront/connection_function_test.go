@@ -166,7 +166,7 @@ func TestAccCloudFrontConnectionFunction_publishOnUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionFunctionConfig_publish(rName, true),
+				Config: testAccConnectionFunctionConfig_publish(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
 				),
