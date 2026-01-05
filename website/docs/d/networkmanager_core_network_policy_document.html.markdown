@@ -201,7 +201,7 @@ The conditions block has 4 arguments `type`, `operator`, `key`, `value`. Setting
 
 The following arguments are available:
 
-* `type` (Required) - Valid values include: `account`, `any`, `tag-value`, `tag-name`, `tag-exists`, `resource-id`, `region`, `attachment-type`. Note: `account-id` is deprecated in favor of `account` in policy version `2025.11` and later.
+* `type` (Required) - Valid values include: `account-id`, `any`, `tag-value`, `tag-name`, `tag-exists`, `resource-id`, `region`, `attachment-type`.
 * `operator` (Optional) - Valid values include: `equals`, `not-equals`, `contains`, `begins-with`.
 * `key` (Optional) - string value
 * `value` (Optional) - string value

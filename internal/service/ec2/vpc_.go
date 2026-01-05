@@ -213,7 +213,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVpcInput{
+	input := ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             awstypes.Tenancy(d.Get("instance_tenancy").(string)),
 		TagSpecifications:           getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpc),
@@ -248,15 +248,13 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateVpc(ctx, input)
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func(ctx context.Context) (*ec2.CreateVpcOutput, error) {
+		return conn.CreateVpc(ctx, &input)
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
-
-	output := outputRaw.(*ec2.CreateVpcOutput)
 
 	d.SetId(aws.ToString(output.Vpc.VpcId))
 
@@ -381,16 +379,21 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DeleteVpcInput{
+	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
+	input := ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
 	}
-
-	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteVpc(ctx, input)
+		return conn.DeleteVpc(ctx, &input)
 	}, errCodeDependencyViolation)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+		return diags
+	}
+
+	// RAM-shared VPC.
+	// "UnauthorizedOperation: You are not authorized to perform DeleteVpc operation. A subnet in this vpc is shared but the provided object is not owned by you".
+	if tfawserr.ErrMessageContains(err, errCodeUnauthorizedOperation, "is not owned by you") {
 		return diags
 	}
 
@@ -670,7 +673,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
@@ -678,7 +681,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
@@ -686,7 +689,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
@@ -694,20 +697,26 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) default NACL: %w", d.Id(), err)
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
 	} else {
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
 	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) main Route Table: %w", d.Id(), err)
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
 	} else {
 		d.Set("default_route_table_id", v.RouteTableId)
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
 	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("reading EC2 VPC (%s) default Security Group: %w", d.Id(), err)
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
 	} else {
 		d.Set("default_security_group_id", v.GroupId)
 	}

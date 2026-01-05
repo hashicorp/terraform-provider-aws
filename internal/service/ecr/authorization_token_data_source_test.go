@@ -16,6 +16,7 @@ import (
 
 func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	rID := "111111111111"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ecr_authorization_token.repo"
 
@@ -47,6 +48,17 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
 				),
 			},
+			{
+				Config: testAccAuthorizationTokenDataSourceConfig_registry(rID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrUserName),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrUserName, regexache.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
+					resource.TestMatchResourceAttr(dataSourceName, "proxy_endpoint", regexache.MustCompile(`.*`+rID+`.*`)),
+				),
+			},
 		},
 	})
 }
@@ -65,4 +77,12 @@ data "aws_ecr_authorization_token" "repo" {
   registry_id = aws_ecr_repository.repo.registry_id
 }
 `, rName)
+}
+
+func testAccAuthorizationTokenDataSourceConfig_registry(rID string) string {
+	return fmt.Sprintf(`
+data "aws_ecr_authorization_token" "repo" {
+  registry_id = %q
+}
+`, rID)
 }
