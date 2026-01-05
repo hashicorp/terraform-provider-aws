@@ -168,6 +168,7 @@ func (r *connectionFunctionResource) Create(ctx context.Context, req resource.Cr
 	// Set values for unknowns.
 	data.ConnectionFunctionARN = fwflex.StringToFramework(ctx, connectionFunctionSummary.ConnectionFunctionArn)
 	data.Etag = fwflex.StringValueToFramework(ctx, etag)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 	data.Status = fwflex.StringToFramework(ctx, connectionFunctionSummary.Status)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
