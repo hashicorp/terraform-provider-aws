@@ -73,7 +73,7 @@ func TestAccECRPullTimeUpdateExclusion_disappears(t *testing.T) {
 				Config: testAccPullTimeUpdateExclusionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPullTimeUpdateExclusionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecr.ResourcePullTimeUpdateExclusion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecr.ResourcePullTimeUpdateExclusion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
