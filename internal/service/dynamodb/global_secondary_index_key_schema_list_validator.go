@@ -54,14 +54,24 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	}
 
 	var hashCount, rangeCount int
-	for _, v := range keySchemas {
+	var lastKeyType awstypes.KeyType
+	for i, v := range keySchemas {
 		switch v.KeyType.ValueEnum() {
 		case awstypes.KeyTypeHash:
+			if lastKeyType == awstypes.KeyTypeRange {
+				elementPath := request.Path.AtListIndex(i)
+				response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+					elementPath,
+					"Invalid Attribute Value",
+					fmt.Sprintf(`All elements of %s with "key_type" of "`+string(awstypes.KeyTypeHash)+`" must be before elements with "key_type" of "`+string(awstypes.KeyTypeRange)+`"`, request.Path),
+				))
+			}
 			hashCount++
 
 		case awstypes.KeyTypeRange:
 			rangeCount++
 		}
+		lastKeyType = v.KeyType.ValueEnum()
 	}
 
 	if hashCount < minNumberOfHashes || hashCount > maxNumberOfHashes {
