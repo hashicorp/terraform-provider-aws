@@ -458,7 +458,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalARNIdentity(),
 		},
 		{
-			Factory:  roleResourceAsListResource,
+			Factory:  newRoleResourceAsListResource,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
