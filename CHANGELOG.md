@@ -31,7 +31,6 @@ ENHANCEMENTS:
 * resource/aws_athena_workgroup: Add `enable_minimum_encryption_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_athena_workgroup: Add `monitoring_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_cleanrooms_collaboration: Add resource identity support ([#45548](https://github.com/hashicorp/terraform-provider-aws/issues/45548))
-* resource/aws_connect_contact_flow_module: Add `settings` argument ([#45805](https://github.com/hashicorp/terraform-provider-aws/issues/45805))
 * resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments ([#45634](https://github.com/hashicorp/terraform-provider-aws/issues/45634))
 * resource/aws_docdb_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_docdb_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
