@@ -1861,7 +1861,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  instanceResourceAsListResource,
+			Factory:  newInstanceResourceAsListResource,
 			TypeName: "aws_instance",
 			Name:     "Instance",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
