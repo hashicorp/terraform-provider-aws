@@ -292,8 +292,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 	for _, ks := range ksms {
-		typ, exists := knownAttributes[ks.AttributeName.ValueString()]
-		if exists && typ == ks.AttributeType.ValueEnum() {
+		if _, exists := knownAttributes[ks.AttributeName.ValueString()]; exists {
 			continue
 		}
 
