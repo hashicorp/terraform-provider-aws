@@ -554,28 +554,16 @@ func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
 	})
 }
 
-func testAccCheckBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
+func testAccCheckBudgetExists(ctx context.Context, n string, v *awstypes.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Budget ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
-		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
-			return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-		})
+		output, err := tfbudgets.FindBudgetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -596,15 +584,7 @@ func testAccCheckBudgetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
-				return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-			})
+			_, err := tfbudgets.FindBudgetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
 			if retry.NotFound(err) {
 				continue

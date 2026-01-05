@@ -111,7 +111,8 @@ func dataSourceDomainName() *schema.Resource {
 
 func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	var domainNameID string
 	domainName := d.Get(names.AttrDomainName).(string)
@@ -125,14 +126,14 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
-	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainNameARN(ctx, c, d.Id()))
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {
 		d.Set("certificate_upload_date", output.CertificateUploadDate.Format(time.RFC3339))
 	}
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
-	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set("cloudfront_zone_id", c.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
 	d.Set("endpoint_access_mode", output.EndpointAccessMode)
