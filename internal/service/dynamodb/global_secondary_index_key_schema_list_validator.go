@@ -9,6 +9,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -38,10 +39,22 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	}
 
 	typ := fwtypes.NewListNestedObjectTypeOf[keySchemaModel](ctx)
-	keySchema := fwdiag.Must(typ.ValueFromList(ctx, request.ConfigValue)).(fwtypes.ListNestedObjectValueOf[keySchemaModel])
+	keySchemaAttr := fwdiag.Must(typ.ValueFromList(ctx, request.ConfigValue)).(fwtypes.ListNestedObjectValueOf[keySchemaModel])
+
+	keySchemas := fwdiag.Must(keySchemaAttr.ToSlice(ctx))
+
+	if keySchemas[0].KeyType.ValueEnum() != awstypes.KeyTypeHash {
+		elementPath := request.Path.AtListIndex(0)
+		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+			elementPath,
+			"Invalid Attribute Value",
+			fmt.Sprintf(`The first element of %s must have a "key_type" of "`+string(awstypes.KeyTypeHash)+`", got %q`, request.Path, keySchemas[0].KeyType.ValueEnum()),
+		))
+		return
+	}
 
 	var hashCount, rangeCount int
-	for _, v := range fwdiag.Must(keySchema.ToSlice(ctx)) {
+	for _, v := range keySchemas {
 		switch v.KeyType.ValueEnum() {
 		case awstypes.KeyTypeHash:
 			hashCount++
