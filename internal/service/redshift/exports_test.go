@@ -16,7 +16,7 @@ var (
 	ResourceEventSubscription            = resourceEventSubscription
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
-	ResourceIdcApplication               = newResourceIDCApplication
+	ResourceIdcApplication               = newIDCApplicationResource
 	ResourceIntegration                  = newIntegrationResource
 	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup

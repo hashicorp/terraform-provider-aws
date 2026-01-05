@@ -34,21 +34,17 @@ import (
 // @FrameworkResource("aws_redshift_idc_application", name="IDC Application")
 // @Tags(identifierAttribute="redshift_idc_application_arn")
 // @Testing(tagsTest=false)
-func newResourceIDCApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIDCApplication{}
+func newIDCApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &idcApplicationResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameIDCApplication = "IDC Application"
-)
-
-type resourceIDCApplication struct {
-	framework.ResourceWithModel[resourceIDCApplicationModel]
+type idcApplicationResource struct {
+	framework.ResourceWithModel[idcApplicationResourceModel]
 }
 
-func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *idcApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_type": schema.StringAttribute{
@@ -217,10 +213,10 @@ func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceIDCApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *idcApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceIDCApplicationModel
+	var plan idcApplicationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -251,10 +247,10 @@ func (r *resourceIDCApplication) Create(ctx context.Context, req resource.Create
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceIDCApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *idcApplicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceIDCApplicationModel
+	var state idcApplicationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -281,10 +277,10 @@ func (r *resourceIDCApplication) Read(ctx context.Context, req resource.ReadRequ
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceIDCApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *idcApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan, state resourceIDCApplicationModel
+	var plan, state idcApplicationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -323,10 +319,10 @@ func (r *resourceIDCApplication) Update(ctx context.Context, req resource.Update
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *idcApplicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceIDCApplicationModel
+	var state idcApplicationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -347,11 +343,11 @@ func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceIDCApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *idcApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("redshift_idc_application_arn"), req, resp)
 }
 
-type resourceIDCApplicationModel struct {
+type idcApplicationResourceModel struct {
 	framework.WithRegionModel
 	ApplicationType            fwtypes.StringEnum[awstypes.ApplicationType]                    `tfsdk:"application_type"`
 	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerListModel] `tfsdk:"authorized_token_issuer_list"`

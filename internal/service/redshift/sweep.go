@@ -498,7 +498,7 @@ func sweepIDCApplications(ctx context.Context, client *conns.AWSClient) ([]sweep
 		}
 
 		for _, v := range page.RedshiftIdcApplications {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIDCApplication, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIDCApplicationResource, client,
 				framework.NewAttribute("redshift_idc_application_arn", aws.ToString(v.RedshiftIdcApplicationArn))),
 			)
 		}

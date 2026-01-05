@@ -52,7 +52,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceIDCApplication,
+			Factory:  newIDCApplicationResource,
 			TypeName: "aws_redshift_idc_application",
 			Name:     "IDC Application",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
