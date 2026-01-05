@@ -26,7 +26,7 @@ func TestAccSecretsManagerTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -54,7 +54,7 @@ func TestAccSecretsManagerTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceTag(), resourceName),
@@ -77,7 +77,7 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -90,7 +90,7 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecretsManagerTagConfig(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
@@ -101,7 +101,34 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 	})
 }
 
-func testAccSecretsManagerTagConfig(rName string, key string, value string) string {
+func TestAccSecretsManagerTag_managedSecrets(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_secretsmanager_tag.rds"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretsManagerTagConfig_managedSecrets(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTagExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSecretsManagerTagConfig_basic(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -117,4 +144,56 @@ resource "aws_secretsmanager_tag" "test" {
   value     = %[3]q
 }
 `, rName, key, value)
+}
+
+func testAccSecretsManagerTagConfig_managedSecrets(key string, value string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "example" {
+  identifier = "exampledb-rds-instance"
+
+  engine         = "mysql"
+  engine_version = "8.0.43"
+
+  instance_class = "db.t3.micro"
+
+  allocated_storage     = 20
+  max_allocated_storage = 0
+  storage_type          = "gp2"
+  storage_encrypted     = false
+
+  db_name                     = "exampledb"
+  username                    = "dbadmin"
+  manage_master_user_password = true
+  port                        = 3306
+
+  publicly_accessible = false
+
+  multi_az = false
+
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  deletion_protection     = false
+
+  monitoring_interval          = 0
+  performance_insights_enabled = false
+
+  apply_immediately          = true
+  auto_minor_version_upgrade = true
+  maintenance_window         = "mon:00:00-mon:03:00"
+
+  tags = {
+    Name        = "exampledb-rds"
+  }
+}
+
+data "aws_secretsmanager_secret" "rds" {
+  arn = aws_db_instance.example.master_user_secret[0].secret_arn
+}
+
+resource "aws_secretsmanager_tag" "rds" {
+  secret_id = data.aws_secretsmanager_secret.rds.id
+  key       = %[2]q
+  value     = %[3]q
+}
+`, key, value)
 }
