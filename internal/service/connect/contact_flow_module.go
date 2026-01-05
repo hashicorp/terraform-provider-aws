@@ -87,6 +87,16 @@ func resourceContactFlowModule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
 			},
+			"settings": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v any) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -125,6 +135,10 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		input.Content = aws.String(string(contents))
 	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		input.Content = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("settings"); ok {
+		input.Settings = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateContactFlowModule(ctx, input)
@@ -166,6 +180,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, contactFlowModule.Description)
 	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, contactFlowModule.Name)
+	d.Set("settings", contactFlowModule.Settings)
 
 	setTagsOut(ctx, contactFlowModule.Tags)
 
@@ -196,7 +211,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChanges(names.AttrContent, "content_hash", "filename") {
+	if d.HasChanges(names.AttrContent, "content_hash", "filename", "settings") {
 		input := &connect.UpdateContactFlowModuleContentInput{
 			ContactFlowModuleId: aws.String(contactFlowModuleID),
 			InstanceId:          aws.String(instanceID),
@@ -218,6 +233,10 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			input.Content = aws.String(string(contents))
 		} else if v, ok := d.GetOk(names.AttrContent); ok {
 			input.Content = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("settings"); ok {
+			input.Settings = aws.String(v.(string))
 		}
 
 		_, updateContentInputErr := conn.UpdateContactFlowModuleContent(ctx, input)
