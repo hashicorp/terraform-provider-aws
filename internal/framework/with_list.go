@@ -41,31 +41,22 @@ func (w withList[T]) ResultInterceptors() []listresource.ListResultInterceptor[T
 
 func (w *withList[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var params any
+	params := any(listresource.InterceptorParams{
+		C:      awsClient,
+		Result: result,
+		Data:   data,
+		When:   when,
+	}).(T)
 
 	switch when {
 	case listresource.Before:
-		params = listresource.InterceptorParams{
-			C:      awsClient,
-			Result: result,
-			Data:   data,
-			When:   when,
-		}
 		for interceptor := range slices.Values(w.interceptors) {
-			diags.Append(interceptor.Read(ctx, params.(T))...)
+			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	case listresource.After:
-		params = listresource.InterceptorParams{
-			C:      awsClient,
-			Result: result,
-			Data:   data,
-			When:   when,
-		}
 		for interceptor := range tfslices.BackwardValues(w.interceptors) {
-			diags.Append(interceptor.Read(ctx, params.(T))...)
+			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	}
 
 	return diags

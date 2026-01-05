@@ -87,28 +87,22 @@ func (l *listResourceWithSDKv2Resource[T]) SetIdentitySpec(identitySpec inttypes
 }
 
 func (l *listResourceWithSDKv2Resource[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
-	var params any
+	params := any(listresource.InterceptorParamsSDK{
+		C:            awsClient,
+		ResourceData: d,
+		When:         when,
+	}).(T)
 
 	switch when {
 	case listresource.Before:
-		params = listresource.InterceptorParamsSDK{
-			C:            awsClient,
-			ResourceData: d,
-			When:         when,
-		}
 		for interceptor := range slices.Values(l.interceptors) {
-			if err := interceptor.Read(ctx, params.(T)); err.HasError() {
+			if err := interceptor.Read(ctx, params); err.HasError() {
 				return err
 			}
 		}
 	case listresource.After:
-		params = listresource.InterceptorParamsSDK{
-			C:            awsClient,
-			ResourceData: d,
-			When:         when,
-		}
 		for interceptor := range tfslices.BackwardValues(l.interceptors) {
-			if err := interceptor.Read(ctx, params.(T)); err != nil {
+			if err := interceptor.Read(ctx, params); err.HasError() {
 				return err
 			}
 		}
