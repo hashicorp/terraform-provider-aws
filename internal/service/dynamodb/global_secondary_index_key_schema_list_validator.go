@@ -6,6 +6,7 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
@@ -78,7 +79,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			fmt.Sprintf(`must contain at least %d and at most %d elements with a "key_type" of %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
-			fmt.Sprintf("%d", hashCount),
+			strconv.Itoa(hashCount),
 		))
 	}
 
@@ -86,7 +87,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			fmt.Sprintf(`must contain at most %d elements with a "key_type" of %q`, maxNumberOfRanges, awstypes.KeyTypeRange),
-			fmt.Sprintf("%d", rangeCount),
+			strconv.Itoa(rangeCount),
 		))
 	}
 }
