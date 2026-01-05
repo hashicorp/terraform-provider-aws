@@ -8,8 +8,6 @@ import (
 	"errors"
 
 	"github.com/YakDriver/regexache"
-	"github.com/YakDriver/smarterr"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -30,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -352,29 +349,6 @@ func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.Delete
 
 func (r *resourceIDCApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("redshift_idc_application_arn"), req, resp)
-}
-
-func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.RedshiftIdcApplication, error) {
-	input := redshift.DescribeRedshiftIdcApplicationsInput{
-		RedshiftIdcApplicationArn: aws.String(id),
-	}
-
-	out, err := conn.DescribeRedshiftIdcApplications(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
-		return nil, smarterr.NewError(err)
-	}
-
-	if out == nil || out.RedshiftIdcApplications == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
-	}
-
-	return &out.RedshiftIdcApplications[0], nil
 }
 
 type resourceIDCApplicationModel struct {

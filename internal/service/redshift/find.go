@@ -6,12 +6,14 @@ package redshift
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -939,4 +941,27 @@ func findClusterParameters(ctx context.Context, conn *redshift.Client, input *re
 	}
 
 	return output, nil
+}
+
+func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.RedshiftIdcApplication, error) {
+	input := redshift.DescribeRedshiftIdcApplicationsInput{
+		RedshiftIdcApplicationArn: aws.String(id),
+	}
+
+	out, err := conn.DescribeRedshiftIdcApplications(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
+
+		return nil, smarterr.NewError(err)
+	}
+
+	if out == nil || out.RedshiftIdcApplications == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+	}
+
+	return &out.RedshiftIdcApplications[0], nil
 }
