@@ -182,7 +182,7 @@ resource "aws_db_instance" "example" {
   maintenance_window         = "mon:00:00-mon:03:00"
 
   tags = {
-    Name        = "exampledb-rds"
+    Name = "exampledb-rds"
   }
 }
 
