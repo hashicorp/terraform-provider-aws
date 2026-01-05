@@ -331,10 +331,6 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 	return obj, diags
 }
 
-//type ListResultInterceptorSDK interface {
-//	Read(ctx context.Context, params InterceptorParamsSDK) error
-//}
-
 type InterceptorParamsSDK struct {
 	C            *conns.AWSClient
 	ResourceData *schema.ResourceData
