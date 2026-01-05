@@ -36,8 +36,7 @@ type roleListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type roleListResourceModel struct {
-}
+type roleListResourceModel struct{}
 
 func (l *roleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
