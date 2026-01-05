@@ -3790,12 +3790,12 @@ func testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(tabl
 
 	for c := range numHashes {
 		name := fmt.Sprintf("key%d", c)
-		hashes.WriteString(fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"HASH\"\n  }\n", name))
+		fmt.Fprintf(&hashes, "  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"HASH\"\n  }\n", name)
 	}
 
 	for c := range numRanges {
 		name := fmt.Sprintf("key%d", c+numHashes)
-		ranges.WriteString(fmt.Sprintf("  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"RANGE\"\n  }\n", name))
+		fmt.Fprintf(&ranges, "  key_schema {\n    attribute_name = %[1]q\n    attribute_type = \"S\"\n    key_type = \"RANGE\"\n  }\n", name)
 	}
 
 	return fmt.Sprintf(`
