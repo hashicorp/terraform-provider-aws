@@ -2424,6 +2424,45 @@ func TestAccECSService_ServiceConnect_outOfBandRemoval(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_accessLogConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, "TEXT", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.format", "TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.include_query_parameters", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, "JSON", "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.include_query_parameters", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -8464,4 +8503,117 @@ resource "aws_ecs_service" "test" {
   availability_zone_rebalancing = %[2]s
 }
   `, rName, val)
+}
+
+func testAccServiceConfig_serviceConnectAccessLogConfiguration(rName, format, includeQueryParams string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/ecs/%[1]s"
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name  = "test"
+      image = "public.ecr.aws/docker/library/nginx:latest"
+      cpu   = 256
+      memory = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+          name          = "http"
+          appProtocol   = "http"
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.test.name
+        "awslogs-region"        = data.aws_region.current.name
+        "awslogs-stream-prefix" = "sc"
+      }
+    }
+
+    access_log_configuration {
+      format                   = %[2]q
+      include_query_parameters = %[3]q
+    }
+
+    service {
+      port_name      = "http"
+      discovery_name = "test"
+
+      client_alias {
+        dns_name = "test"
+        port     = 8080
+      }
+    }
+  }
+}
+
+data "aws_region" "current" {}
+`, rName, format, includeQueryParams))
 }

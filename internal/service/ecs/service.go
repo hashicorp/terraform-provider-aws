@@ -323,6 +323,26 @@ func resourceService() *schema.Resource {
 								},
 							},
 						},
+						"access_log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFormat: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectAccessLoggingFormat](),
+									},
+									"include_query_parameters": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectIncludeQueryParameters](),
+									},
+								},
+							},
+						},
 						names.AttrNamespace: {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -989,6 +1009,26 @@ func resourceService() *schema.Resource {
 												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"access_log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFormat: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectAccessLoggingFormat](),
+									},
+									"include_query_parameters": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectIncludeQueryParameters](),
 									},
 								},
 							},
@@ -3074,6 +3114,9 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	if v, ok := tfMap["log_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LogConfiguration = expandLogConfiguration(v)
 	}
+	if v, ok := tfMap["access_log_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AccessLogConfiguration = expandServiceConnectAccessLogConfiguration(v)
+	}
 	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
@@ -3096,6 +3139,9 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	if v := apiObject.LogConfiguration; v != nil {
 		tfMap["log_configuration"] = []any{flattenLogConfiguration(*v)}
 	}
+	if v := apiObject.AccessLogConfiguration; v != nil {
+		tfMap["access_log_configuration"] = flattenServiceConnectAccessLogConfiguration(v)
+	}
 	if v := apiObject.Namespace; v != nil {
 		tfMap[names.AttrNamespace] = aws.ToString(v)
 	}
@@ -3104,6 +3150,38 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	}
 
 	return []any{tfMap}
+}
+
+func expandServiceConnectAccessLogConfiguration(tfList []interface{}) *awstypes.ServiceConnectAccessLogConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	config := &awstypes.ServiceConnectAccessLogConfiguration{}
+
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
+		config.Format = awstypes.ServiceConnectAccessLoggingFormat(v)
+	}
+
+	if v, ok := tfMap["include_query_parameters"].(string); ok && v != "" {
+		config.IncludeQueryParameters = awstypes.ServiceConnectIncludeQueryParameters(v)
+	}
+
+	return config
+}
+
+func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnectAccessLogConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrFormat:           string(config.Format),
+		"include_query_parameters": string(config.IncludeQueryParameters),
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandLogConfiguration(tfList []any) *awstypes.LogConfiguration {
