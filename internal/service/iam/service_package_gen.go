@@ -469,7 +469,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
 		},
 		{
-			Factory:  rolePolicyAttachmentResourceAsListResource,
+			Factory:  newRolePolicyAttachmentResourceAsListResource,
 			TypeName: "aws_iam_role_policy_attachment",
 			Name:     "Role Policy Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
