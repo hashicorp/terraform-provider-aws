@@ -177,7 +177,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 		},
 		{
-			Factory:  keyResourceAsListResource,
+			Factory:  newKeyResourceAsListResource,
 			TypeName: "aws_kms_key",
 			Name:     "Key",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
