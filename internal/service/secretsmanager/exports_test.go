@@ -9,6 +9,7 @@ var (
 	ResourceSecretPolicy   = resourceSecretPolicy
 	ResourceSecretRotation = resourceSecretRotation
 	ResourceSecretVersion  = resourceSecretVersion
+	ResourceTag            = resourceTag
 
 	FindSecretByID                     = findSecretByID
 	FindSecretPolicyByID               = findSecretPolicyByID
