@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -83,7 +84,7 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDomainExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudsearch.ResourceDomain(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudsearch.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,7 +135,7 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 				Config: testAccDomainConfig_indexFieldsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "literal_test",
 						names.AttrType:         "literal",
@@ -160,6 +161,12 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 						"return":       acctest.CtTrue,
 						"search":       acctest.CtFalse,
 						"sort":         acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						names.AttrName: "text_default",
+						names.AttrType: "text",
+						"return":       acctest.CtTrue,
+						"highlight":    acctest.CtTrue,
 					}),
 				),
 			},
@@ -445,7 +452,13 @@ resource "aws_cloudsearch_domain" "test" {
     type            = "text"
     analysis_scheme = "_en_default_"
     highlight       = true
-    search          = true
+  }
+
+  index_field {
+    name      = "text_default"
+    type      = "text"
+    return    = true
+    highlight = true
   }
 
   index_field {
@@ -567,9 +580,40 @@ resource "aws_cloudsearch_domain" "test" {
     name            = "text_array_test"
     type            = "text-array"
     return          = true
-    search          = true
     analysis_scheme = "_fr_default_"
   }
 }
 `, rName)
+}
+
+func TestAccCloudSearchDomain_indexFieldValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDomainConfig_invalidTextArrayFacet(),
+				ExpectError: regexache.MustCompile(`cannot be set for 'text-array' field types`),
+			},
+		},
+	})
+}
+
+func testAccDomainConfig_invalidTextArrayFacet() string {
+	return `
+resource "aws_cloudsearch_domain" "test" {
+  name = "tf-test-validation"
+
+  index_field {
+    name   = "test_invalid"
+    type   = "text-array"
+    facet  = true
+    return = true
+  }
+}
+`
 }

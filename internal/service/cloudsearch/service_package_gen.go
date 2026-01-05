@@ -25,7 +25,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newDomainResource,
+			TypeName: "aws_cloudsearch_domain",
+			Name:     "Domain",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -34,12 +41,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
-		{
-			Factory:  resourceDomain,
-			TypeName: "aws_cloudsearch_domain",
-			Name:     "Domain",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
 		{
 			Factory:  resourceDomainServiceAccessPolicy,
 			TypeName: "aws_cloudsearch_domain_service_access_policy",
