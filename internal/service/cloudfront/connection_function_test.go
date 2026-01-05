@@ -416,7 +416,7 @@ resource "aws_cloudfront_connection_function" "test" {
 func testAccConnectionFunctionConfig_updateInitial(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test1" {
-  name    = %[1]q
+  name    = "%[1]s-1"
   comment = "Test key value store for update test 1"
 }
 
@@ -444,12 +444,12 @@ EOT
 func testAccConnectionFunctionConfig_updateComplete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test1" {
-  name    = %[1]q
+  name    = "%[1]s-1"
   comment = "Test key value store for update test 1"
 }
 
 resource "aws_cloudfront_key_value_store" "test2" {
-  name    = %[1]q
+  name    = "%[1]s-2"
   comment = "Test key value store for update test 2"
 }
 
