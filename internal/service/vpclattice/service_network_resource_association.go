@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -57,6 +58,14 @@ func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, 
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"dns_entry":   framework.ResourceComputedListOfObjectsAttribute[dnsEntryModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrID:  framework.IDAttribute(),
+			"private_dns_enabled": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"resource_configuration_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -279,6 +288,7 @@ type serviceNetworkResourceAssociationResourceModel struct {
 	ARN                     types.String                                   `tfsdk:"arn"`
 	ID                      types.String                                   `tfsdk:"id"`
 	DNSEntry                fwtypes.ListNestedObjectValueOf[dnsEntryModel] `tfsdk:"dns_entry"`
+	PrivateDNSEnabled       types.Bool                                     `tfsdk:"private_dns_enabled"`
 	ResourceConfigurationID types.String                                   `tfsdk:"resource_configuration_identifier"`
 	ServiceNetworkID        types.String                                   `tfsdk:"service_network_identifier"`
 	Tags                    tftags.Map                                     `tfsdk:"tags"`

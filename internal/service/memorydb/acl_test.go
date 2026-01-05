@@ -337,14 +337,6 @@ func testAccCheckACLExists(ctx context.Context, n string) resource.TestCheckFunc
 }
 
 func testAccACLConfigUsers(names ...string) string {
-	var userNames string
-	for i, name := range names {
-		if i > 0 {
-			userNames += ", "
-		}
-		userNames += fmt.Sprintf("%q", name)
-	}
-
 	return fmt.Sprintf(`
 locals {
   user_names = [%[1]s]
@@ -360,18 +352,10 @@ resource "aws_memorydb_user" "test" {
     passwords = ["aaaaaaaaaaaaaaaa"]
   }
 }
-`, userNames)
+`, acctest.ListOfStrings(names...))
 }
 
 func testAccACLConfig_basic(rName string, userNames []string, usersInACL []string) string {
-	var userNamesInACL string
-	for i, userName := range usersInACL {
-		if i > 0 {
-			userNamesInACL += ", "
-		}
-		userNamesInACL += fmt.Sprintf("%q", userName)
-	}
-
 	return acctest.ConfigCompose(
 		testAccACLConfigUsers(userNames...),
 		fmt.Sprintf(`
@@ -385,7 +369,7 @@ resource "aws_memorydb_acl" "test" {
     Test = "test"
   }
 }
-`, rName, userNamesInACL),
+`, rName, acctest.ListOfStrings(usersInACL...)),
 	)
 }
 

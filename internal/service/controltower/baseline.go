@@ -421,7 +421,7 @@ func (p *parameter) Flatten(ctx context.Context, v any) diag.Diagnostics {
 func (p parameter) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch targetType {
-	case reflect.TypeOf(awstypes.EnabledBaselineParameter{}):
+	case reflect.TypeFor[awstypes.EnabledBaselineParameter]():
 		var r awstypes.EnabledBaselineParameter
 		if !p.Key.IsNull() {
 			r.Key = fwflex.StringFromFramework(ctx, p.Key)

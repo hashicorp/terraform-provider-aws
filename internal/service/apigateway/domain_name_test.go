@@ -224,6 +224,98 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayDomainName_securityPolicyEnhanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_securityPolicyWithEndpointAccessMode(rName, key, certificate, string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509), string(types.EndpointAccessModeBasic)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeBasic)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayDomainName_securityPolicyEnhancedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_securityPolicy(rName, key, certificate, string(types.SecurityPolicyTls12)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", ""),
+				),
+			},
+			{
+				Config: testAccDomainNameConfig_securityPolicyWithEndpointAccessMode(rName, key, certificate, string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509), string(types.EndpointAccessModeBasic)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeBasic)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainNameConfig_securityPolicyWithEndpointAccessMode(rName, key, certificate, string(types.SecurityPolicySecurityPolicyTls1313202509), string(types.EndpointAccessModeStrict)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1313202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeStrict)),
+				),
+			},
+			{
+				Config: testAccDomainNameConfig_securityPolicy(rName, key, certificate, string(types.SecurityPolicyTls12)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", ""),
 				),
 			},
 			{
@@ -736,6 +828,26 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), securityPolicy)
+}
+
+func testAccDomainNameConfig_securityPolicyWithEndpointAccessMode(domainName, key, certificate, securityPolicy, endpointAccessMode string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name              = %[1]q
+  regional_certificate_arn = aws_acm_certificate.test.arn
+  security_policy          = %[4]q
+  endpoint_access_mode     = %[5]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), securityPolicy, endpointAccessMode)
 }
 
 func testAccDomainNameConfig_private(domainName, key, certificate string) string {

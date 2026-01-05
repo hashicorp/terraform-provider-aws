@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +33,7 @@ import (
 // @IdentityAttribute("id")
 // @V60SDKv2Fix
 // @Testing(identityTest=false)
+// @Tags(identifierAttribute="arn")
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
@@ -58,6 +60,8 @@ func resourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -74,6 +78,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any
 	name := d.Get(names.AttrName).(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
 		DirectConnectGatewayName: aws.String(name),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("amazon_side_asn").(string); ok && v != "" {
@@ -115,6 +120,8 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrARN, gatewayARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.DirectConnectGatewayName)
 	d.Set(names.AttrOwnerAccountID, output.OwnerAccount)
+
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

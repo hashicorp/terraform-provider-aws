@@ -872,7 +872,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			sampleVal := reflect.New(tSliceElem).Elem()
 			if sampleVal.CanInterface() {
 				// Check if it has an underlying string type
-				if tSliceElem.ConvertibleTo(reflect.TypeOf("")) {
+				if tSliceElem.ConvertibleTo(reflect.TypeFor[string]()) {
 					var elementType attr.Type = types.StringType
 					attrValueFromReflectValue := newStringValueFromReflectValue
 					if tTo, ok := tTo.(attr.TypeWithElementType); ok {
@@ -1020,7 +1020,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
 							logAttrKeySourceSize: len(v),
 							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
-							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
 						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
@@ -1061,7 +1061,7 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
 							logAttrKeySourceSize: len(v),
 							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
-							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
 						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
@@ -1885,8 +1885,8 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 					}
 				default:
 					// Check if the dereferenced type is convertible to string (like custom enums)
-					if derefItem.Type().ConvertibleTo(reflect.TypeOf("")) {
-						stringVal := derefItem.Convert(reflect.TypeOf("")).String()
+					if derefItem.Type().ConvertibleTo(reflect.TypeFor[string]()) {
+						stringVal := derefItem.Convert(reflect.TypeFor[string]()).String()
 						if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
 							diags.Append(d...)
 							return diags
@@ -1922,9 +1922,9 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 				}
 			default:
 				// Check for custom string types (like enums)
-				if item.Type().ConvertibleTo(reflect.TypeOf("")) {
+				if item.Type().ConvertibleTo(reflect.TypeFor[string]()) {
 					// Convert custom string type (like testEnum/Method) to string
-					stringVal := item.Convert(reflect.TypeOf("")).String()
+					stringVal := item.Convert(reflect.TypeFor[string]()).String()
 
 					// Try to create a value that matches the target element type
 					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
@@ -2045,8 +2045,8 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 					}
 				default:
 					// Check if the dereferenced type is convertible to string (like custom enums)
-					if derefItem.Type().ConvertibleTo(reflect.TypeOf("")) {
-						stringVal := derefItem.Convert(reflect.TypeOf("")).String()
+					if derefItem.Type().ConvertibleTo(reflect.TypeFor[string]()) {
+						stringVal := derefItem.Convert(reflect.TypeFor[string]()).String()
 						if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
 							diags.Append(d...)
 							return diags
@@ -2085,9 +2085,9 @@ func (flattener *autoFlattener) xmlWrapperFlattenRule1(ctx context.Context, vFro
 				}
 			default:
 				// Check for custom string types (like enums)
-				if item.Type().ConvertibleTo(reflect.TypeOf("")) {
+				if item.Type().ConvertibleTo(reflect.TypeFor[string]()) {
 					// Convert custom string type (like testEnum/Method) to string
-					stringVal := item.Convert(reflect.TypeOf("")).String()
+					stringVal := item.Convert(reflect.TypeFor[string]()).String()
 
 					// Try to create a value that matches the target element type
 					if val, d := flattener.createTargetValue(ctx, types.StringValue(stringVal), elementType); d.HasError() {
@@ -2963,7 +2963,7 @@ func (flattener autoFlattener) isXMLWrapperSplitSource(structType reflect.Type) 
 			}
 		case xmlWrapperFieldQuantity:
 			// Quantity must be *int32 to be a valid XML wrapper
-			if fieldType == reflect.TypeOf((*int32)(nil)) {
+			if fieldType == reflect.TypeFor[*int32]() {
 				hasValidQuantity = true
 			}
 		default:
@@ -2996,7 +2996,7 @@ func (flattener autoFlattener) handleXMLWrapperSplit(ctx context.Context, source
 
 		// Find matching target field
 		if sourceFieldName != "" {
-			if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeOf(""), PkgPath: ""}}), typeTo, flattener); ok {
+			if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}}), typeTo, flattener); ok {
 				toFieldVal := valTo.FieldByIndex(targetField.Index)
 				if toFieldVal.CanSet() {
 					if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
@@ -3109,7 +3109,7 @@ func (flattener autoFlattener) findMainTargetFieldForSplit(ctx context.Context, 
 		sourceFieldName := sourcePathStr[lastDot+1:]
 
 		// Use fuzzy field finder for proper singular/plural and case matching
-		dummySourceType := reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeOf(""), PkgPath: ""}})
+		dummySourceType := reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}})
 		if targetField, ok := (&fuzzyFieldFinder{}).findField(ctx, sourceFieldName, dummySourceType, typeTo, flattener); ok {
 			return targetField.Name
 		}

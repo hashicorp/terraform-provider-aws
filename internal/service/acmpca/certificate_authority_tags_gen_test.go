@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,6 +28,9 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -222,6 +226,9 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -293,6 +300,9 @@ func TestAccACMPCACertificateAuthority_tags_EmptyMap(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -360,6 +370,9 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -445,6 +458,9 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -541,6 +557,9 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -685,6 +704,9 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -778,6 +800,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -972,6 +997,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1142,6 +1170,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1328,6 +1359,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1422,6 +1456,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1515,6 +1552,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1584,6 +1624,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyProviderOnlyTag(t *
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1645,6 +1688,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1711,6 +1757,9 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1777,6 +1826,9 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnCreate(t *testing.T) {
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1836,6 +1888,9 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Add(t *testing.
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1937,6 +1992,9 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Replace(t *test
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -2028,6 +2086,9 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -2191,6 +2252,9 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_ResourceTag(t *te
 	rName := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),

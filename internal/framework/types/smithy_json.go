@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -112,9 +113,8 @@ func (v SmithyJSON[T]) ToSmithyObjectDocument(ctx context.Context) (any, diag.Di
 func (v SmithyJSON[T]) ToSmithyDocument(context.Context) (T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	var zero T
 	if v.IsNull() || v.IsUnknown() || v.f == nil {
-		return zero, diags
+		return inttypes.Zero[T](), diags
 	}
 
 	t, err := tfsmithy.DocumentFromJSONString(v.ValueString(), v.f)
@@ -125,7 +125,7 @@ func (v SmithyJSON[T]) ToSmithyDocument(context.Context) (T, diag.Diagnostics) {
 				"Please report this to the provider developers.\n\n"+
 				"Error: "+err.Error(),
 		)
-		return zero, diags
+		return inttypes.Zero[T](), diags
 	}
 
 	return t, diags

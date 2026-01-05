@@ -683,6 +683,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
+* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.

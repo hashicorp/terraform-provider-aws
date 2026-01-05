@@ -224,34 +224,22 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccBudgetActionExists(ctx context.Context, resourceName string, config *awstypes.Action) resource.TestCheckFunc {
+func testAccBudgetActionExists(ctx context.Context, n string, v *awstypes.Action) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Budget Action ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
-		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
+		output, err := tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["action_id"], rs.Primary.Attributes["budget_name"])
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-			return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-		})
-
-		if err != nil {
-			return err
-		}
-
-		*config = *output
+		*v = *output
 
 		return nil
 	}
@@ -266,15 +254,7 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-				return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-			})
+			_, err := tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["action_id"], rs.Primary.Attributes["budget_name"])
 
 			if retry.NotFound(err) {
 				continue

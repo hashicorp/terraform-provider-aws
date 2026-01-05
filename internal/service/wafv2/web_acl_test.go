@@ -7604,11 +7604,6 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 func testAccWebACLConfig_dataProtectionConfig(rName, action, fieldType string, excludeRateBasedDetails, excludeRuleMatchDetails bool, keys []string) string {
-	keysString := ""
-	for _, key := range keys {
-		keysString += fmt.Sprintf("%q, ", key)
-	}
-
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -7636,7 +7631,7 @@ resource "aws_wafv2_web_acl" "test" {
     }
   }
 }
-`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, keysString)
+`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, acctest.ListOfStrings(keys...))
 }
 
 func testAccWebACLConfig_dataProtectionConfigMultiple(rName string) string {

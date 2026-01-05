@@ -38,6 +38,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_provider_uuid"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -48,6 +49,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 					testAccCheckSAMLProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_provider_uuid"),
 				),
 			},
 			{

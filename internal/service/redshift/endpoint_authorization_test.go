@@ -167,7 +167,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindEndpointAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["account"], rs.Primary.Attributes[names.AttrClusterIdentifier])
 
 			if retry.NotFound(err) {
 				continue
@@ -191,13 +191,9 @@ func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Endpoint Authorization ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		output, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfredshift.FindEndpointAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["account"], rs.Primary.Attributes[names.AttrClusterIdentifier])
 
 		if err != nil {
 			return err

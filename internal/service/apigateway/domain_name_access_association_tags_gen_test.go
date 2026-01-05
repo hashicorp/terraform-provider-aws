@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,6 +30,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -230,6 +234,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_null(t *testing.T) {
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -299,6 +306,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyMap(t *testing.T) {
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -356,6 +366,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -445,6 +458,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *test
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -546,6 +562,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -698,6 +717,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -797,6 +819,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -997,6 +1022,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1172,6 +1200,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1363,6 +1394,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProvi
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1462,6 +1496,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResou
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1560,6 +1597,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyResource
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1633,6 +1673,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyProvider
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1698,6 +1741,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullOverlappi
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1774,6 +1820,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullNonOverla
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1852,6 +1901,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnCreate(t *t
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -1914,6 +1966,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -2020,6 +2075,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Repl
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -2116,6 +2174,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
@@ -2287,6 +2348,9 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Resour
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),

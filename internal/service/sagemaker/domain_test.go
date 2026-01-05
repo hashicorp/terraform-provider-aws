@@ -3120,13 +3120,6 @@ resource "aws_sagemaker_domain" "test" {
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString += ", "
-		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
-	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -3146,17 +3139,10 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName string, hiddenInstanceTypes []string) string {
-	var hiddenInstanceTypesString string
-	for i, instanceType := range hiddenInstanceTypes {
-		if i > 0 {
-			hiddenInstanceTypesString += ", "
-		}
-		hiddenInstanceTypesString += fmt.Sprintf("%q", instanceType)
-	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -3176,17 +3162,10 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenInstanceTypesString))
+`, rName, acctest.ListOfStrings(hiddenInstanceTypes...)))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString += ", "
-		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
-	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -3206,7 +3185,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }
 
 func testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName string, defaultUserSettingsinstanceType string, defaultSpaceSettingsinstanceType string) string {

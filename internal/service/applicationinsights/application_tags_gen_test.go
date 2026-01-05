@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,6 +28,9 @@ func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -210,6 +214,9 @@ func TestAccApplicationInsightsApplication_tags_null(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -278,6 +285,9 @@ func TestAccApplicationInsightsApplication_tags_EmptyMap(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -342,6 +352,9 @@ func TestAccApplicationInsightsApplication_tags_AddOnUpdate(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -424,6 +437,9 @@ func TestAccApplicationInsightsApplication_tags_EmptyTag_OnCreate(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -514,6 +530,9 @@ func TestAccApplicationInsightsApplication_tags_EmptyTag_OnUpdate_Add(t *testing
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -652,6 +671,9 @@ func TestAccApplicationInsightsApplication_tags_EmptyTag_OnUpdate_Replace(t *tes
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -742,6 +764,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_providerOnly(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -924,6 +949,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_nonOverlapping(t *te
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1085,6 +1113,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_overlapping(t *testi
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1262,6 +1293,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_updateToProviderOnly
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1353,6 +1387,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_updateToResourceOnly
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1443,6 +1480,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_emptyResourceTag(t *
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1509,6 +1549,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_emptyProviderOnlyTag
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1567,6 +1610,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_nullOverlappingResou
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1630,6 +1676,9 @@ func TestAccApplicationInsightsApplication_tags_DefaultTags_nullNonOverlappingRe
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1693,6 +1742,9 @@ func TestAccApplicationInsightsApplication_tags_ComputedTag_OnCreate(t *testing.
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1749,6 +1801,9 @@ func TestAccApplicationInsightsApplication_tags_ComputedTag_OnUpdate_Add(t *test
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1847,6 +1902,9 @@ func TestAccApplicationInsightsApplication_tags_ComputedTag_OnUpdate_Replace(t *
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -1935,6 +1993,9 @@ func TestAccApplicationInsightsApplication_tags_IgnoreTags_Overlap_DefaultTag(t 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),
@@ -2098,6 +2159,9 @@ func TestAccApplicationInsightsApplication_tags_IgnoreTags_Overlap_ResourceTag(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		CheckDestroy: testAccCheckApplicationDestroy(ctx),

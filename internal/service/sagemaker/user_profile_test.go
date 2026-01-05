@@ -778,13 +778,6 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString += ", "
-		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -798,17 +791,10 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString += ", "
-		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -822,5 +808,5 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }

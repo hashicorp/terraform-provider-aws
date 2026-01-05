@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,6 +27,9 @@ func TestAccWorkSpacesWebTrustStore_tags(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -220,6 +224,9 @@ func TestAccWorkSpacesWebTrustStore_tags_null(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -283,6 +290,9 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -334,6 +344,9 @@ func TestAccWorkSpacesWebTrustStore_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -416,6 +429,9 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnCreate(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -512,6 +528,9 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -656,6 +675,9 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -748,6 +770,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_providerOnly(t *testing.T) 
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -941,6 +966,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nonOverlapping(t *testing.T
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1110,6 +1138,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_overlapping(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1295,6 +1326,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_updateToProviderOnly(t *tes
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1387,6 +1421,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_updateToResourceOnly(t *tes
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1478,6 +1515,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_emptyResourceTag(t *testing
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1547,6 +1587,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1608,6 +1651,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nullOverlappingResourceTag(
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1678,6 +1724,9 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nullNonOverlappingResourceT
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1750,6 +1799,9 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnCreate(t *testing.T) {
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1808,6 +1860,9 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1907,6 +1962,9 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnUpdate_Replace(t *testing
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1996,6 +2054,9 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -2155,6 +2216,9 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_1_0),
+		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),

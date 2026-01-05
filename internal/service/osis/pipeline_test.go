@@ -51,6 +51,7 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "pipeline_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 				),
@@ -283,6 +284,67 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline types.Pipeline
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	resourceName := "aws_osis_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipelineConfig_pipelineRole(rName, "test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "pipeline_role_arn", "aws_iam_role.test1", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipelineConfig_pipelineRole(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "pipeline_role_arn", "aws_iam_role.test2", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 				),
 			},
 		},
@@ -780,4 +842,69 @@ resource "aws_osis_pipeline" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPipelineConfig_pipelineRole(rName, roleIdentifier string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test1" {
+  name = "%[1]s-1"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "osis-pipelines.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "osis-pipelines.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_osis_pipeline" "test" {
+  pipeline_name               = %[1]q
+  pipeline_configuration_body = <<EOS
+            version: "2"
+            test-pipeline:
+              source:
+                http:
+                  path: "/test"
+              sink:
+                - s3:
+                    aws:
+                      region: "${data.aws_region.current.region}"
+                    bucket: "test"
+                    threshold:
+                      event_collect_timeout: "60s"
+                    codec:
+                      ndjson:
+EOS
+  max_units                   = 1
+  min_units                   = 1
+  pipeline_role_arn           = aws_iam_role.%[2]s.arn
+}
+`, rName, roleIdentifier)
 }

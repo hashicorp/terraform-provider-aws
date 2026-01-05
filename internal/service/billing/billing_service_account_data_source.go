@@ -6,7 +6,6 @@ package billing
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -49,14 +48,8 @@ func (d *billingServiceAccountDataSource) Read(ctx context.Context, request data
 
 	// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
 	const serviceAccountID = "386209384616"
-
-	arn := arn.ARN{
-		Partition: d.Meta().Partition(ctx),
-		Service:   "iam",
-		AccountID: serviceAccountID,
-		Resource:  "root",
-	}
-	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, arn.String())
+	data.ARN = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().GlobalARNWithAccount(ctx, "iam", serviceAccountID, "root"))
+	d.Meta().GlobalARNWithAccount(ctx, "iam", serviceAccountID, "root")
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

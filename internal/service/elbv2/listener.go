@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -427,12 +428,10 @@ func resourceListener() *schema.Resource {
 				ValidateFunc: validation.IsPortNumber,
 			},
 			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
 			"routing_http_request_x_amzn_mtls_clientcert_header_name": {

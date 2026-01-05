@@ -32,18 +32,20 @@ func GetRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]tfta
 // convert translates the ListRequiredTags API response into a map of required
 // tags per Terraform resource type
 func convert(ctx context.Context, reqTags []types.RequiredTag) map[string]tftags.KeyValueTags {
-	m := make(map[string]tftags.KeyValueTags, len(reqTags))
+	m := make(map[string]tftags.KeyValueTags)
 	for _, t := range reqTags {
-		tfType, ok := Lookup[aws.ToString(t.ResourceType)]
+		tfTypes, ok := Lookup[aws.ToString(t.ResourceType)]
 		if !ok {
 			continue
 		}
 
 		newTags := tftags.New(ctx, t.ReportingTagKeys)
-		if v, ok := m[tfType]; ok {
-			m[tfType] = v.Merge(newTags)
-		} else {
-			m[tfType] = newTags
+		for _, tfType := range tfTypes {
+			if v, ok := m[tfType]; ok {
+				m[tfType] = v.Merge(newTags)
+			} else {
+				m[tfType] = newTags
+			}
 		}
 	}
 	return m

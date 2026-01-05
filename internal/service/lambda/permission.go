@@ -70,6 +70,11 @@ func resourcePermission() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
 			},
+			"invoked_via_function_url": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -144,6 +149,10 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("function_url_auth_type"); ok {
 		input.FunctionUrlAuthType = awstypes.FunctionUrlAuthType(v.(string))
+	}
+
+	if v, ok := d.GetOk("invoked_via_function_url"); ok {
+		input.InvokedViaFunctionUrl = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("principal_org_id"); ok {
@@ -230,6 +239,10 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("function_url_auth_type", v["lambda:FunctionUrlAuthType"])
 		d.Set("principal_org_id", v["aws:PrincipalOrgID"])
 		d.Set("source_account", v["AWS:SourceAccount"])
+	}
+
+	if v, ok := statement.Condition["Bool"]; ok {
+		d.Set("invoked_via_function_url", strings.EqualFold(v["lambda:InvokedViaFunctionUrl"], "true"))
 	}
 
 	if v, ok := statement.Condition["ArnLike"]; ok {
