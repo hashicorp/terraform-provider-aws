@@ -673,7 +673,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
@@ -681,7 +681,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 	} else {
@@ -689,7 +689,7 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
-		return findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+		return findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
