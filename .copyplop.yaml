@@ -1,18 +1,16 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 # Terraform AWS Provider Copyplop Configuration
 copyright:
   holder: "IBM Corp."
   start_year: 2014
-  current_year: 2025
+  current_year: 2026
   format: "Copyright {{.Holder}} {{.StartYear}}, {{.CurrentYear}}"
 
 license:
   enabled: true
   identifier: "MPL-2.0"
-  format: "SPDX-License-Identifier: {{.Identifier}}"
-
 # see breakdown of file types below
 files:
   exclude_paths:
@@ -65,6 +63,7 @@ detection:
   replace_patterns:
     - "Copyright.*HashiCorp"
     - "Copyright \\(c\\).*HashiCorp"
+    - "Copyright IBM Corp. 2014, 2025"
   max_scan_lines: 20
 
 third_party:
