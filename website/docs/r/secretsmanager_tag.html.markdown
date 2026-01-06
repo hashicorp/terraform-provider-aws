@@ -39,6 +39,7 @@ This resource supports the following arguments:
 * `secret_id` - (Required) ID of the AWS Secrets Manager secret to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
