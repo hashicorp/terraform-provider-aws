@@ -656,6 +656,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"cloudfront_default_certificate": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 						},
 						"minimum_protocol_version": schema.StringAttribute{
 							Optional:   true,
@@ -747,11 +748,12 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findDistributionByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findDistributionByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		response.Diagnostics.AddWarning(
 			"CloudFront Multi-tenant Distribution not found",
-			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", data.ID.ValueString()),
+			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", id),
 		)
 		response.State.RemoveResource(ctx)
 		return
@@ -886,7 +888,7 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
-	id := data.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
 	// 1. Start by waiting for deployment (returns immediate if already deployed)
 	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil && !retry.NotFound(err) && !errs.IsA[*awstypes.NoSuchDistribution](err) {
@@ -904,13 +906,16 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 	// 4. If not disabled error, disable, wait for deploy, delete
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
-		err := disableMultiTenantDistribution(ctx, conn, id)
-		if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
+		disableErr := disableMultiTenantDistribution(ctx, conn, id)
+		if retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
 			return
 		}
 
-		response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", err.Error())
-		return
+		if disableErr != nil {
+			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
+		}
+
+		err = deleteMultiTenantDistribution(ctx, conn, id)
 	}
 
 	// 5. If precondition/invalidifmatchversion, retry delete
