@@ -43,6 +43,11 @@ func resourceSubscriptionFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"apply_on_transformed_logs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -100,6 +105,10 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		FilterName:     aws.String(name),
 		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
 		LogGroupName:   aws.String(logGroupName),
+	}
+
+	if v, ok := d.GetOk("apply_on_transformed_logs"); ok {
+		input.ApplyOnTransformedLogs = v.(bool)
 	}
 
 	if v, ok := d.GetOk("distribution"); ok {
@@ -164,6 +173,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
+	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
 	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
