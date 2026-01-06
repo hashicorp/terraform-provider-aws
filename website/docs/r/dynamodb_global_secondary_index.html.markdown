@@ -240,6 +240,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_global_secondary_index.example
+  identity = {
+    "table_name" = "example-table"
+    "index_name" = "example-index"
+  }
+}
+
+resource "aws_dynamodb_global_secondary_index" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `index_name` (String) Name of the index.
+* `table_name` (String) Name of the table this index belongs to.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB tables using the `table_name` and `index_name`, separated by a comma. For example:
 
 ```terraform
