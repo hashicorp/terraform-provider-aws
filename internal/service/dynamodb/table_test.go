@@ -827,9 +827,6 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
@@ -1123,9 +1120,6 @@ func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
@@ -1288,9 +1282,6 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiHashKey_singleAndMultiSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1310,9 +1301,6 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_singleAndMultiSet(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1332,9 +1320,6 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiRangeKey_tooMany(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
