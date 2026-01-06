@@ -21,7 +21,7 @@ For information about CloudFront distribution tenants, see the [Amazon CloudFron
 ```terraform
 resource "aws_cloudfront_distribution_tenant" "example" {
   name            = "example-tenant"
-  distribution_id = aws_cloudfront_distribution.multi_tenant.id
+  distribution_id = aws_cloudfront_multitenant_distribution.example.id
   enabled         = true
 
   domain {
@@ -39,7 +39,7 @@ resource "aws_cloudfront_distribution_tenant" "example" {
 ```terraform
 resource "aws_cloudfront_distribution_tenant" "example" {
   name            = "example-tenant"
-  distribution_id = aws_cloudfront_distribution.multi_tenant.id
+  distribution_id = aws_cloudfront_multitenant_distribution.example.id
   enabled         = false
 
   domain {
@@ -65,98 +65,6 @@ resource "aws_cloudfront_distribution_tenant" "example" {
   tags = {
     Environment = "production"
     Tenant      = "example"
-  }
-}
-```
-
-### Distribution Tenant with Managed Certificate
-
-```terraform
-resource "aws_cloudfront_distribution_tenant" "main" {
-  distribution_id     = aws_cloudfront_distribution.main.id
-  name                = "main-tenant"
-  enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.main_group.id
-
-  domain {
-    domain = "tenant.example.com"
-  }
-
-  managed_certificate_request {
-    primary_domain_name                         = "app.example.com"
-    validation_token_host                       = "cloudfront"
-    certificate_transparency_logging_preference = "disabled"
-  }
-}
-
-data "aws_route53_zone" "main" {
-  name         = "example.com"
-  private_zone = false
-}
-
-resource "aws_cloudfront_connection_group" "main_group" {
-  name = "main-group"
-}
-
-resource "aws_route53_record" "domain_record" {
-  zone_id = data.aws_route53_zone.main.id
-  type    = "CNAME"
-  ttl     = 300
-  name    = "app.example.com"
-  records = [aws_cloudfront_connection_group.main_group.routing_endpoint]
-}
-
-resource "aws_cloudfront_cache_policy" "main_policy" {
-  name        = "main-policy"
-  comment     = "tenant cache policy"
-  default_ttl = 50
-  max_ttl     = 100
-  min_ttl     = 1
-  parameters_in_cache_key_and_forwarded_to_origin {
-    cookies_config {
-      cookie_behavior = "none"
-    }
-    headers_config {
-      header_behavior = "none"
-    }
-    query_strings_config {
-      query_string_behavior = "none"
-    }
-  }
-}
-
-resource "aws_cloudfront_distribution" "main" {
-  connection_mode = "tenant-only"
-  enabled         = true
-
-  origin {
-    domain_name = "www.example.com"
-    origin_id   = "main"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "main"
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id        = aws_cloudfront_cache_policy.main_policy.id
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
   }
 }
 ```
