@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -305,6 +306,53 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsSubscriptionFilter_applyOnTransformedLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filter types.SubscriptionFilter
+	resourceName := "aws_cloudwatch_log_subscription_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtFalse),
 				),
 			},
 		},
@@ -815,4 +863,25 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   role_arn        = aws_iam_role.test2.arn
 }
 `, rName))
+}
+
+func testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName string, applyOnTransformedLogs bool) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_transformer" "test" {
+  log_group_arn = aws_cloudwatch_log_group.test.arn
+
+  transformer_config {
+    parse_json {}
+  }
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "test" {
+  destination_arn = aws_lambda_function.test.arn
+  filter_pattern  = "logtype test"
+  log_group_name  = aws_cloudwatch_log_group.test.name
+  name            = %[1]q
+
+  apply_on_transformed_logs = %[2]t
+}
+`, rName, applyOnTransformedLogs))
 }
