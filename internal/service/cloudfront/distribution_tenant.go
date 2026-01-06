@@ -218,13 +218,13 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domain"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
-	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter" autoflex:",xmlwrapper=Items"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
@@ -313,16 +313,13 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// Manually flatten domains and parameters
-	var d diag.Diagnostics
-	data.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
-	resp.Diagnostics.Append(d...)
-	data.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
-	resp.Diagnostics.Append(d...)
-	data.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
-	resp.Diagnostics.Append(d...)
+	// Use AutoFlex to flatten the response
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// Set fields that fwflex.Flatten might not handle correctly
+	// Set fields that AutoFlex might not handle correctly
 	data.ID = fwflex.StringToFramework(ctx, output.DistributionTenant.Id)
 	data.ARN = fwflex.StringToFramework(ctx, output.DistributionTenant.Arn)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
@@ -368,13 +365,11 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			// Manually flatten domains and parameters
-			data.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
-			resp.Diagnostics.Append(d...)
-			data.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
-			resp.Diagnostics.Append(d...)
-			data.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
-			resp.Diagnostics.Append(d...)
+			// Use AutoFlex to flatten the refreshed response
+			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 		}
@@ -413,14 +408,11 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	// Manually flatten domains and parameters
-	var d diag.Diagnostics
-	data.Domains, d = flattenDomains(ctx, tenant.Domains)
-	resp.Diagnostics.Append(d...)
-	data.Parameters, d = flattenParameters(ctx, tenant.Parameters)
-	resp.Diagnostics.Append(d...)
-	data.Customizations, d = flattenCustomizations(ctx, tenant.Customizations)
-	resp.Diagnostics.Append(d...)
+	// Use AutoFlex to flatten the response
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
@@ -527,13 +519,11 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 				}
 
 				// Manually flatten domains and parameters
-				var d diag.Diagnostics
-				new.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
-				resp.Diagnostics.Append(d...)
-				new.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
-				resp.Diagnostics.Append(d...)
-				new.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
-				resp.Diagnostics.Append(d...)
+				// Use AutoFlex to flatten the refreshed response
+				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
 
 				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 			}
@@ -547,14 +537,11 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		// Manually flatten domains and parameters
-		var d diag.Diagnostics
-		new.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
-		resp.Diagnostics.Append(d...)
-		new.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
-		resp.Diagnostics.Append(d...)
-		new.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
-		resp.Diagnostics.Append(d...)
+		// Use AutoFlex to flatten the response
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	} else {
@@ -577,14 +564,11 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		// Manually flatten domains and parameters
-		var d diag.Diagnostics
-		new.Domains, d = flattenDomains(ctx, getOutput.DistributionTenant.Domains)
-		resp.Diagnostics.Append(d...)
-		new.Parameters, d = flattenParameters(ctx, getOutput.DistributionTenant.Parameters)
-		resp.Diagnostics.Append(d...)
-		new.Customizations, d = flattenCustomizations(ctx, getOutput.DistributionTenant.Customizations)
-		resp.Diagnostics.Append(d...)
+		// Use AutoFlex to flatten the response
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.DistributionTenant, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
 	}
@@ -1116,42 +1100,6 @@ func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) dia
 	}
 
 	return diags
-}
-
-// flattenDomains converts AWS SDK DomainResult slice to framework ListNestedObjectValueOf
-func flattenDomains(ctx context.Context, domains []awstypes.DomainResult) (fwtypes.SetNestedObjectValueOf[domainItemModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	domainModels := make([]*domainItemModel, 0, len(domains))
-	for _, domainResult := range domains {
-		domainModels = append(domainModels, &domainItemModel{
-			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
-			Status: fwflex.StringValueToFramework(ctx, domainResult.Status),
-		})
-	}
-
-	domainsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, domainModels, nil)
-	diags.Append(d...)
-
-	return domainsSet, diags
-}
-
-// flattenParameters converts AWS SDK Parameter slice to framework ListNestedObjectValueOf
-func flattenParameters(ctx context.Context, parameters []awstypes.Parameter) (fwtypes.SetNestedObjectValueOf[parameterModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	parameterModels := make([]*parameterModel, 0, len(parameters))
-	for _, param := range parameters {
-		parameterModels = append(parameterModels, &parameterModel{
-			Name:  fwflex.StringToFramework(ctx, param.Name),
-			Value: fwflex.StringToFramework(ctx, param.Value),
-		})
-	}
-
-	parametersSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, parameterModels, nil)
-	diags.Append(d...)
-
-	return parametersSet, diags
 }
 
 // flattenCustomizations converts AWS SDK Customizations to framework ListNestedObjectValueOf
