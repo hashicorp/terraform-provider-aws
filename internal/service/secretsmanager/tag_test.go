@@ -30,7 +30,7 @@ func TestAccSecretsManagerTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 				),
@@ -65,7 +65,7 @@ func TestAccSecretsManagerTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceTag(), resourceName),
@@ -96,7 +96,7 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 				),
@@ -116,7 +116,7 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 				),
@@ -145,7 +145,7 @@ func TestAccSecretsManagerTag_managedSecrets(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsManagerTagConfig_managedSecrets(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_managedSecrets(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 				),
@@ -168,7 +168,7 @@ func TestAccSecretsManagerTag_managedSecrets(t *testing.T) {
 	})
 }
 
-func testAccSecretsManagerTagConfig_basic(rName string, key string, value string) string {
+func testAccTagConfig_basic(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -186,7 +186,7 @@ resource "aws_secretsmanager_tag" "test" {
 `, rName, key, value)
 }
 
-func testAccSecretsManagerTagConfig_managedSecrets(key string, value string) string {
+func testAccTagConfig_managedSecrets(key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "example" {
   identifier = "exampledb-rds-instance"
