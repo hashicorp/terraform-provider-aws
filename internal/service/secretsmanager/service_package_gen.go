@@ -145,6 +145,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ImportID:      secretVersionImportID{},
 			},
 		},
+		{
+			Factory:  resourceTag,
+			TypeName: "aws_secretsmanager_tag",
+			Name:     "SecretsManager Resource Tag",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
