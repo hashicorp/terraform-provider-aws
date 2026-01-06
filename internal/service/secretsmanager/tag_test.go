@@ -27,12 +27,12 @@ func TestAccSecretsManagerTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -62,12 +62,12 @@ func TestAccSecretsManagerTag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,12 +93,12 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -118,7 +118,7 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -142,12 +142,12 @@ func TestAccSecretsManagerTag_managedSecrets(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_managedSecrets(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
