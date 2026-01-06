@@ -40,7 +40,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution-tenant/dt_[0-9A-Za-z]+$`)),
@@ -178,11 +178,11 @@ func TestAccCloudFrontDistributionTenant_parameters(t *testing.T) {
 				Config: testAccDistributionTenantConfig_parameters(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.name", "place"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.value", "na"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.1.name", "tenantid"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.1.value", "tenant-123"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.name", "place"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.value", "na"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.name", "tenantid"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.value", "tenant-123"),
 				),
 			},
 			{
@@ -367,7 +367,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[2]q
   }
   name    = %[1]q
@@ -442,7 +442,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[2]q
   }
   name    = %[1]q
@@ -552,7 +552,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[2]q
   }
   name    = %[1]q
@@ -644,18 +644,18 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[2]q
   }
   name    = %[1]q
   enabled = false
 
-  parameters {
+  parameter {
     name  = "tenantid"
     value = "tenant-123"
   }
 
-  parameters {
+  parameter {
     name  = "place"
     value = "na"
   }
@@ -730,7 +730,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[4]q
   }
   name    = %[1]q
@@ -810,7 +810,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains {
+  domain {
     domain = %[6]q
   }
   name    = %[1]q

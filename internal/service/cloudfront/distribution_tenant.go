@@ -183,17 +183,20 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			"domains": schema.SetNestedBlock{
+			"domain": schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"domain": schema.StringAttribute{
 							Required: true,
 						},
+						names.AttrStatus: schema.StringAttribute{
+							Computed: true,
+						},
 					},
 				},
 			},
-			names.AttrParameters: schema.SetNestedBlock{
+			names.AttrParameter: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -215,13 +218,13 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domains"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domain"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
-	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameters"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
@@ -246,6 +249,7 @@ var (
 
 type domainItemModel struct {
 	Domain types.String `tfsdk:"domain"`
+	Status types.String `tfsdk:"status"`
 }
 
 type geoRestrictionCustomizationModel struct {
@@ -1152,6 +1156,7 @@ func flattenDomains(ctx context.Context, domains []awstypes.DomainResult) (fwtyp
 	for _, domainResult := range domains {
 		domainModels = append(domainModels, &domainItemModel{
 			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
+			Status: fwflex.StringValueToFramework(ctx, domainResult.Status),
 		})
 	}
 

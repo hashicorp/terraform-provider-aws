@@ -22,8 +22,11 @@ For information about CloudFront distribution tenants, see the [Amazon CloudFron
 resource "aws_cloudfront_distribution_tenant" "example" {
   name            = "example-tenant"
   distribution_id = aws_cloudfront_distribution.multi_tenant.id
-  domains         = ["tenant.example.com"]
   enabled         = true
+
+  domain {
+    domain = "tenant.example.com"
+  }
 
   tags = {
     Environment = "production"
@@ -37,8 +40,11 @@ resource "aws_cloudfront_distribution_tenant" "example" {
 resource "aws_cloudfront_distribution_tenant" "example" {
   name            = "example-tenant"
   distribution_id = aws_cloudfront_distribution.multi_tenant.id
-  domains         = ["tenant.example.com"]
   enabled         = false
+
+  domain {
+    domain = "tenant.example.com"
+  }
 
   customizations {
     geo_restriction {
@@ -68,10 +74,13 @@ resource "aws_cloudfront_distribution_tenant" "example" {
 ```terraform
 resource "aws_cloudfront_distribution_tenant" "main" {
   distribution_id     = aws_cloudfront_distribution.main.id
-  domains             = ["app.example.com"]
   name                = "main-tenant"
   enabled             = false
   connection_group_id = aws_cloudfront_connection_group.main_group.id
+
+  domain {
+    domain = "tenant.example.com"
+  }
 
   managed_certificate_request {
     primary_domain_name                         = "app.example.com"
@@ -158,12 +167,12 @@ This resource supports the following arguments:
 
 * `name` (Required) - Name of the distribution tenant.
 * `distribution_id` (Required) - ID of the multi-tenant distribution.
-* `domains` (Required) - Set of domains associated with the distribution tenant.
+* `domain` (Required) - Set of domains associated with the distribution tenant.
 * `enabled` (Optional) - Whether the distribution tenant is enabled to serve traffic. Defaults to `true`.
 * `connection_group_id` (Optional) - ID of the connection group for the distribution tenant. If not specified, CloudFront uses the default connection group.
 * `customizations` (Optional) - [Customizations](#customizations-arguments) for the distribution tenant (maximum one).
 * `managed_certificate_request` (Optional) - [Managed certificate request](#managed-certificate-request-arguments) for CloudFront managed ACM certificate (maximum one).
-* `parameters` (Optional) - Set of [parameter](#parameter-arguments) values for the distribution tenant.
+* `parameter` (Optional) - Set of [parameter](#parameter-arguments) values for the distribution tenant.
 * `wait_for_deployment` (Optional) - If enabled, the resource will wait for the distribution tenant status to change from `InProgress` to `Deployed`. Setting this to `false` will skip the process. Default: `true`.
 * `tags` (Optional) - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
