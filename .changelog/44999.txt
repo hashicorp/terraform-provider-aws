@@ -2,3 +2,6 @@
 aws_dynamodb_global_secondary_index
 ```
 
+```release-note:note
+resource/aws_dynamodb_global_secondary_index: This resource type is experimental.  The schema or behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider.
+```
