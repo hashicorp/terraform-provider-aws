@@ -140,6 +140,7 @@ func resourceHealthCheck() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
 				},
 				Optional: true,
+				Computed: true,
 			},
 			"request_interval": {
 				Type:         schema.TypeInt,
