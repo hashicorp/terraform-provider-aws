@@ -913,6 +913,7 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 		if disableErr != nil {
 			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
+			return
 		}
 
 		err = deleteMultiTenantDistribution(ctx, conn, id)
