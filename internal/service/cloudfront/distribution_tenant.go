@@ -1102,22 +1102,4 @@ func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) dia
 	return diags
 }
 
-// flattenCustomizations converts AWS SDK Customizations to framework ListNestedObjectValueOf
-func flattenCustomizations(ctx context.Context, customizations *awstypes.Customizations) (fwtypes.ListNestedObjectValueOf[customizationsModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
 
-	if customizations == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
-	}
-
-	var customModel customizationsModel
-	diags.Append(customModel.Flatten(ctx, customizations)...)
-	if diags.HasError() {
-		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
-	}
-
-	customList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &customModel)
-	diags.Append(d...)
-
-	return customList, diags
-}
