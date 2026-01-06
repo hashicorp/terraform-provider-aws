@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // listTags lists savingsplans service tags.
@@ -91,7 +92,7 @@ func updateTags(ctx context.Context, conn *savingsplans.Client, identifier strin
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
-	removedTags = removedTags.IgnoreSystem("savingsplans")
+	removedTags = removedTags.IgnoreSystem(names.SavingsPlans)
 	if len(removedTags) > 0 {
 		input := savingsplans.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
@@ -106,7 +107,7 @@ func updateTags(ctx context.Context, conn *savingsplans.Client, identifier strin
 	}
 
 	updatedTags := oldTags.Updated(newTags)
-	updatedTags = updatedTags.IgnoreSystem("savingsplans")
+	updatedTags = updatedTags.IgnoreSystem(names.SavingsPlans)
 	if len(updatedTags) > 0 {
 		input := savingsplans.TagResourceInput{
 			ResourceArn: aws.String(identifier),

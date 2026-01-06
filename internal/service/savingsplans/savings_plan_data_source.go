@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +43,7 @@ func (d *dataSourceSavingsPlan) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "The current state of the Savings Plan.",
 			},
-			names.AttrStart: schema.StringAttribute{
+			"start": schema.StringAttribute{
 				Computed:    true,
 				Description: "The start time of the Savings Plan.",
 			},
@@ -111,10 +111,7 @@ func (d *dataSourceSavingsPlan) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSavingsPlanDataSource(ctx, out, &data))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	flattenSavingsPlanDataSource(ctx, out, &data)
 
 	// Set tags
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
@@ -124,7 +121,7 @@ func (d *dataSourceSavingsPlan) Read(ctx context.Context, req datasource.ReadReq
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-func flattenSavingsPlanDataSource(ctx context.Context, sp *awstypes.SavingsPlan, model *dataSourceSavingsPlanModel) error {
+func flattenSavingsPlanDataSource(ctx context.Context, sp *awstypes.SavingsPlan, model *dataSourceSavingsPlanModel) {
 	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
 	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)
 	model.State = types.StringValue(string(sp.State))
@@ -134,19 +131,17 @@ func flattenSavingsPlanDataSource(ctx context.Context, sp *awstypes.SavingsPlan,
 	model.Commitment = flex.StringToFramework(ctx, sp.Commitment)
 	model.UpfrontPaymentAmount = flex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
 	model.RecurringPaymentAmount = flex.StringToFramework(ctx, sp.RecurringPaymentAmount)
-	model.TermDurationInSeconds = types.Int64PointerValue(sp.TermDurationInSeconds)
+	model.TermDurationInSeconds = types.Int64Value(sp.TermDurationInSeconds)
 	model.EC2InstanceFamily = flex.StringToFramework(ctx, sp.Ec2InstanceFamily)
 	model.Region = flex.StringToFramework(ctx, sp.Region)
 	model.OfferingID = flex.StringToFramework(ctx, sp.OfferingId)
 
 	if sp.Start != nil {
-		model.Start = types.StringValue(sp.Start.Format("2006-01-02T15:04:05Z"))
+		model.Start = types.StringValue(*sp.Start)
 	}
 	if sp.End != nil {
-		model.End = types.StringValue(sp.End.Format("2006-01-02T15:04:05Z"))
+		model.End = types.StringValue(*sp.End)
 	}
-
-	return nil
 }
 
 type dataSourceSavingsPlanModel struct {

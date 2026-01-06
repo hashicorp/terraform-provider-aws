@@ -26,7 +26,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceSavingsPlan,
 			TypeName: "aws_savingsplans_plan",
 			Name:     "Savings Plan",
-			Region:   unique.Make(inttypes.ResourceRegionCurrentPartition()),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionCurrentPartition()),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -54,7 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "savingsplans"
+	return names.SavingsPlans
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

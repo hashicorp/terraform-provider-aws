@@ -3,6 +3,7 @@
 
 package savingsplans_test
 
+/*
 import (
 	"context"
 	"fmt"
@@ -22,7 +23,6 @@ import (
 // actual Savings Plans with real financial commitments that cannot be cancelled.
 // Use these as templates for manual testing only.
 
-/*
 func TestAccSavingsPlansPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var savingsPlan awstypes.SavingsPlan
@@ -51,7 +51,6 @@ func TestAccSavingsPlansPlan_basic(t *testing.T) {
 		},
 	})
 }
-*/
 
 func testAccCheckSavingsPlanExists(ctx context.Context, n string, v *awstypes.SavingsPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -103,7 +102,6 @@ func testAccCheckSavingsPlanDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-/*
 func testAccSavingsPlanConfig_basic() string {
 	return `
 # Note: You need to provide a valid savings_plan_offering_id

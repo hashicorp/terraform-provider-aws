@@ -18,14 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -55,7 +54,7 @@ func (r *resourceSavingsPlan) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID:  framework.IDAttribute(),
 			"savings_plan_offering_id": schema.StringAttribute{
 				Required:    true,
 				Description: "The unique ID of a Savings Plan offering.",
@@ -88,7 +87,7 @@ func (r *resourceSavingsPlan) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:    true,
 				Description: "The current state of the Savings Plan.",
 			},
-			names.AttrStart: schema.StringAttribute{
+			"start": schema.StringAttribute{
 				Computed:    true,
 				Description: "The start time of the Savings Plan.",
 			},
@@ -193,12 +192,11 @@ func (r *resourceSavingsPlan) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Flatten the response into the plan
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSavingsPlan(ctx, savingsPlan, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Flatten the response into the plan
+	flattenSavingsPlan(ctx, savingsPlan, &plan)
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	diags := resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *resourceSavingsPlan) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -221,12 +219,12 @@ func (r *resourceSavingsPlan) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenSavingsPlan(ctx, out, &state))
+	flattenSavingsPlan(ctx, out, &state)
+	diags := resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceSavingsPlan) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -238,7 +236,12 @@ func (r *resourceSavingsPlan) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	// The framework handles tags, so we only need to set the state
+	diags := resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *resourceSavingsPlan) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -326,8 +329,8 @@ func waitSavingsPlanDeleted(ctx context.Context, conn *savingsplans.Client, id s
 	return nil, err
 }
 
-func statusSavingsPlan(ctx context.Context, conn *savingsplans.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSavingsPlan(_ context.Context, conn *savingsplans.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (interface{}, string, error) {
 		out, err := findSavingsPlanByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -350,8 +353,7 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -365,7 +367,7 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 	return &out.SavingsPlans[0], nil
 }
 
-func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *resourceSavingsPlanModel) error {
+func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *resourceSavingsPlanModel) {
 	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
 	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)
 	model.State = types.StringValue(string(sp.State))
@@ -374,42 +376,40 @@ func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *re
 	model.Currency = types.StringValue(string(sp.Currency))
 	model.UpfrontPaymentAmount = flex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
 	model.RecurringPaymentAmount = flex.StringToFramework(ctx, sp.RecurringPaymentAmount)
-	model.TermDurationInSeconds = types.Int64PointerValue(sp.TermDurationInSeconds)
+	model.TermDurationInSeconds = types.Int64Value(sp.TermDurationInSeconds)
 	model.EC2InstanceFamily = flex.StringToFramework(ctx, sp.Ec2InstanceFamily)
 	model.Region = flex.StringToFramework(ctx, sp.Region)
 	model.OfferingID = flex.StringToFramework(ctx, sp.OfferingId)
 	model.Commitment = flex.StringToFramework(ctx, sp.Commitment)
 
 	if sp.Start != nil {
-		model.Start = types.StringValue(sp.Start.Format(time.RFC3339))
+		model.Start = types.StringValue(*sp.Start)
 	}
 	if sp.End != nil {
-		model.End = types.StringValue(sp.End.Format(time.RFC3339))
+		model.End = types.StringValue(*sp.End)
 	}
-
-	return nil
 }
 
 type resourceSavingsPlanModel struct {
-	ARN                     types.String   `tfsdk:"arn"`
-	ClientToken             types.String   `tfsdk:"client_token"`
-	Commitment              types.String   `tfsdk:"commitment"`
-	Currency                types.String   `tfsdk:"currency"`
-	EC2InstanceFamily       types.String   `tfsdk:"ec2_instance_family"`
-	End                     types.String   `tfsdk:"end"`
-	ID                      types.String   `tfsdk:"id"`
-	OfferingID              types.String   `tfsdk:"offering_id"`
-	PaymentOption           types.String   `tfsdk:"payment_option"`
-	PurchaseTime            types.String   `tfsdk:"purchase_time"`
-	RecurringPaymentAmount  types.String   `tfsdk:"recurring_payment_amount"`
-	Region                  types.String   `tfsdk:"region"`
-	SavingsPlanOfferingID   types.String   `tfsdk:"savings_plan_offering_id"`
-	SavingsPlanType         types.String   `tfsdk:"savings_plan_type"`
-	Start                   types.String   `tfsdk:"start"`
-	State                   types.String   `tfsdk:"state"`
-	Tags                    tftags.Map     `tfsdk:"tags"`
-	TagsAll                 tftags.Map     `tfsdk:"tags_all"`
-	TermDurationInSeconds   types.Int64    `tfsdk:"term_duration_in_seconds"`
-	Timeouts                timeouts.Value `tfsdk:"timeouts"`
-	UpfrontPaymentAmount    types.String   `tfsdk:"upfront_payment_amount"`
+	ARN                    types.String   `tfsdk:"arn"`
+	ClientToken            types.String   `tfsdk:"client_token"`
+	Commitment             types.String   `tfsdk:"commitment"`
+	Currency               types.String   `tfsdk:"currency"`
+	EC2InstanceFamily      types.String   `tfsdk:"ec2_instance_family"`
+	End                    types.String   `tfsdk:"end"`
+	ID                     types.String   `tfsdk:"id"`
+	OfferingID             types.String   `tfsdk:"offering_id"`
+	PaymentOption          types.String   `tfsdk:"payment_option"`
+	PurchaseTime           types.String   `tfsdk:"purchase_time"`
+	RecurringPaymentAmount types.String   `tfsdk:"recurring_payment_amount"`
+	Region                 types.String   `tfsdk:"region"`
+	SavingsPlanOfferingID  types.String   `tfsdk:"savings_plan_offering_id"`
+	SavingsPlanType        types.String   `tfsdk:"savings_plan_type"`
+	Start                  types.String   `tfsdk:"start"`
+	State                  types.String   `tfsdk:"state"`
+	Tags                   tftags.Map     `tfsdk:"tags"`
+	TagsAll                tftags.Map     `tfsdk:"tags_all"`
+	TermDurationInSeconds  types.Int64    `tfsdk:"term_duration_in_seconds"`
+	Timeouts               timeouts.Value `tfsdk:"timeouts"`
+	UpfrontPaymentAmount   types.String   `tfsdk:"upfront_payment_amount"`
 }
