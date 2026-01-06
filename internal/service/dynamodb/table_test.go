@@ -842,51 +842,43 @@ func TestAccDynamoDBTable_GSI_MultiHashKey(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeys(rName),
+				Config: testAccTableConfig_GSI_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
-					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableHashKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableRangeKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestLSIRangeKey",
-						names.AttrType: "N",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "ReplacementGSIRangeKey",
-						names.AttrType: "N",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						names.AttrName:         "ReplacementTestTableGSI",
-						"hash_keys.#":          "2",
-						"range_key":            "ReplacementGSIRangeKey",
-						"write_capacity":       "5",
-						"read_capacity":        "5",
-						"projection_type":      "INCLUDE",
-						"non_key_attributes.#": "1",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-						names.AttrName:    "TestTableLSI",
-						"range_key":       "TestLSIRangeKey",
-						"projection_type": "ALL",
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey2"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("ReplacementGSIRangeKey"),
+							"type": knownvalue.StringExact("N"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"hash_keys": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+								knownvalue.StringExact("TestTableHashKey2"),
+							}),
+							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"range_key":       knownvalue.StringExact("ReplacementGSIRangeKey"),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -6826,7 +6818,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleHashKeys(rName string) string {
+func testAccTableConfig_GSI_multipleHashKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -6851,29 +6843,17 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
     name = "ReplacementGSIRangeKey"
     type = "N"
   }
 
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_keys          = ["TestTableHashKey", "TestTableHashKey2"]
-    range_key          = "ReplacementGSIRangeKey"
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    name            = "ReplacementTestTableGSI"
+    hash_keys       = ["TestTableHashKey", "TestTableHashKey2"]
+    range_key       = "ReplacementGSIRangeKey"
+    projection_type = "ALL"
+    read_capacity   = 1
+    write_capacity  = 1
   }
 }
 `, rName)
