@@ -3152,12 +3152,12 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	return []any{tfMap}
 }
 
-func expandServiceConnectAccessLogConfiguration(tfList []interface{}) *awstypes.ServiceConnectAccessLogConfiguration {
+func expandServiceConnectAccessLogConfiguration(tfList []any) *awstypes.ServiceConnectAccessLogConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	config := &awstypes.ServiceConnectAccessLogConfiguration{}
 
 	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
@@ -3171,17 +3171,17 @@ func expandServiceConnectAccessLogConfiguration(tfList []interface{}) *awstypes.
 	return config
 }
 
-func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnectAccessLogConfiguration) []interface{} {
+func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnectAccessLogConfiguration) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrFormat:           string(config.Format),
 		"include_query_parameters": string(config.IncludeQueryParameters),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func expandLogConfiguration(tfList []any) *awstypes.LogConfiguration {
