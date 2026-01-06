@@ -119,7 +119,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

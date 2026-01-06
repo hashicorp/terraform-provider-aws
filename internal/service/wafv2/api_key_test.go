@@ -138,7 +138,7 @@ func TestAccWAFV2APIKey_disappears(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceAPIKey, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceAPIKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

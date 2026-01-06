@@ -78,7 +78,7 @@ func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T)
 				Config: testAccIdentityNotificationTopicConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

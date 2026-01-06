@@ -135,7 +135,7 @@ func TestAccElastiCacheCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_engineRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &ec),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

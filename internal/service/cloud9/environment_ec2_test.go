@@ -167,8 +167,8 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloud9.ResourceEnvironmentEC2(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloud9.ResourceEnvironmentEC2(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -74,7 +74,7 @@ func testAccSSHKey_disappears(t *testing.T) {
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceSSHKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceSSHKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

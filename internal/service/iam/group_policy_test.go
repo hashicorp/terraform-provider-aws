@@ -64,7 +64,7 @@ func TestAccIAMGroupPolicy_disappears(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroupPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

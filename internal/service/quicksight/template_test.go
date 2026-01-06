@@ -73,7 +73,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

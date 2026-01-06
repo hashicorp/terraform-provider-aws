@@ -69,7 +69,7 @@ func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 				Config: testAccWavelengthCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCarrierGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceCarrierGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -80,7 +80,7 @@ func TestAccFinSpaceKxScalingGroup_disappears(t *testing.T) {
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxScalingGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxScalingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

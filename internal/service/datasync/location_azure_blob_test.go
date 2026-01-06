@@ -75,7 +75,7 @@ func TestAccDataSyncLocationAzureBlob_disappears(t *testing.T) {
 				Config: testAccLocationAzureBlobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationAzureBlob(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationAzureBlob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

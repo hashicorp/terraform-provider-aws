@@ -94,7 +94,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceTLSInspectionConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceTLSInspectionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

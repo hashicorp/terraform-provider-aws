@@ -198,7 +198,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOpenIDConnectProvider(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -107,7 +107,7 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketLifecycleConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketLifecycleConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

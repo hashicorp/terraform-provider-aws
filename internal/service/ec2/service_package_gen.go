@@ -1861,7 +1861,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  instanceResourceAsListResource,
+			Factory:  newInstanceResourceAsListResource,
 			TypeName: "aws_instance",
 			Name:     "Instance",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -1871,7 +1871,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  subnetResourceAsListResource,
+			Factory:  newSubnetResourceAsListResource,
 			TypeName: "aws_subnet",
 			Name:     "Subnet",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -1881,7 +1881,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
-			Factory:  vpcResourceAsListResource,
+			Factory:  newVPCResourceAsListResource,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

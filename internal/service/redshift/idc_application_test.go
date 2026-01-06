@@ -70,7 +70,7 @@ func TestAccRedshiftIDCApplication_disappears(t *testing.T) {
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfredshift.ResourceIdcApplication, resourceName, IDCApplicationDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfredshift.ResourceIdcApplication, resourceName, IDCApplicationDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

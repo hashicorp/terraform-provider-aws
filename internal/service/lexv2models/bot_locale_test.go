@@ -76,7 +76,7 @@ func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.70),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotLocale, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceBotLocale, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

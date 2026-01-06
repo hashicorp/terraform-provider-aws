@@ -104,7 +104,7 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProactiveEngagement, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceProactiveEngagement, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

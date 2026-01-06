@@ -84,7 +84,7 @@ func TestAccKafkaSingleSCRAMSecretAssociation_disappears(t *testing.T) {
 				Config: testAccSingleSCRAMSecretAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceSingleSCRAMSecretAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkafka.ResourceSingleSCRAMSecretAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

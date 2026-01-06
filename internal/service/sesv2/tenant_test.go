@@ -77,7 +77,7 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 				Config: testAccTenantConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceTenant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceTenant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

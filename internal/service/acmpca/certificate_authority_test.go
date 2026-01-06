@@ -87,7 +87,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourceCertificateAuthority(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourceCertificateAuthority(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

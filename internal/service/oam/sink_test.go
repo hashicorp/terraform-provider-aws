@@ -86,7 +86,7 @@ func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfoam.ResourceSink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfoam.ResourceSink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

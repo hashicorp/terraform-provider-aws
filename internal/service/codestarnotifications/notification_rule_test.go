@@ -70,7 +70,7 @@ func TestAccCodeStarNotificationsNotificationRule_disappears(t *testing.T) {
 				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

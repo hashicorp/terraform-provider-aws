@@ -72,7 +72,7 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector.ResourceAssessmentTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector.ResourceAssessmentTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
