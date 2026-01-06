@@ -335,10 +335,10 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrIPAddress, healthCheckConfig.IPAddress)
 	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
 	d.Set(names.AttrPort, healthCheckConfig.Port)
-	if healthCheckConfig.Regions != nil {
-		d.Set("regions", healthCheckConfig.Regions)
-	} else {
+	if healthCheckConfig.Regions == nil {
 		d.Set("regions", awstypes.HealthCheckRegion("").Values())
+	} else {
+		d.Set("regions", healthCheckConfig.Regions)
 	}
 	d.Set("request_interval", healthCheckConfig.RequestInterval)
 	d.Set("resource_path", healthCheckConfig.ResourcePath)
