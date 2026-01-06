@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -88,13 +88,7 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
 				},
 			},
-			"redshift_idc_application_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"redshift_idc_application_arn": framework.ARNAttributeComputedOnly(),
 			"redshift_idc_application_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -109,8 +103,8 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"authorized_token_issuer_list": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizedTokenIssuerListModel](ctx),
+			"authorized_token_issuer": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizedTokenIssuerModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -225,7 +219,7 @@ func (r *idcApplicationResource) Create(ctx context.Context, req resource.Create
 	var input redshift.CreateRedshiftIdcApplicationInput
 	input.Tags = getTagsIn(ctx)
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -240,7 +234,7 @@ func (r *idcApplicationResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -269,7 +263,7 @@ func (r *idcApplicationResource) Read(ctx context.Context, req resource.ReadRequ
 
 	setTagsOut(ctx, out.Tags)
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -287,7 +281,7 @@ func (r *idcApplicationResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -295,7 +289,7 @@ func (r *idcApplicationResource) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		var input redshift.ModifyRedshiftIdcApplicationInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -310,7 +304,7 @@ func (r *idcApplicationResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.RedshiftIdcApplication, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -349,21 +343,21 @@ func (r *idcApplicationResource) ImportState(ctx context.Context, req resource.I
 
 type idcApplicationResourceModel struct {
 	framework.WithRegionModel
-	ApplicationType            fwtypes.StringEnum[awstypes.ApplicationType]                    `tfsdk:"application_type"`
-	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerListModel] `tfsdk:"authorized_token_issuer_list"`
-	IAMRoleARN                 fwtypes.ARN                                                     `tfsdk:"iam_role_arn"`
-	IDCDisplayName             types.String                                                    `tfsdk:"idc_display_name"`
-	IDCInstanceARN             fwtypes.ARN                                                     `tfsdk:"idc_instance_arn"`
-	IDCManagedApplicationARN   fwtypes.ARN                                                     `tfsdk:"idc_managed_application_arn"`
-	IdentityNamespace          types.String                                                    `tfsdk:"identity_namespace"`
-	RedshiftIDCApplicationARN  fwtypes.ARN                                                     `tfsdk:"redshift_idc_application_arn"`
-	RedshiftIDCApplicationName types.String                                                    `tfsdk:"redshift_idc_application_name"`
-	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]       `tfsdk:"service_integrations"`
-	Tags                       tftags.Map                                                      `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                      `tfsdk:"tags_all"`
+	ApplicationType            fwtypes.StringEnum[awstypes.ApplicationType]                `tfsdk:"application_type"`
+	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerModel] `tfsdk:"authorized_token_issuer"`
+	IAMRoleARN                 fwtypes.ARN                                                 `tfsdk:"iam_role_arn"`
+	IDCDisplayName             types.String                                                `tfsdk:"idc_display_name"`
+	IDCInstanceARN             fwtypes.ARN                                                 `tfsdk:"idc_instance_arn"`
+	IDCManagedApplicationARN   fwtypes.ARN                                                 `tfsdk:"idc_managed_application_arn"`
+	IdentityNamespace          types.String                                                `tfsdk:"identity_namespace"`
+	RedshiftIDCApplicationARN  types.String                                                `tfsdk:"redshift_idc_application_arn"`
+	RedshiftIDCApplicationName types.String                                                `tfsdk:"redshift_idc_application_name"`
+	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]   `tfsdk:"service_integrations"`
+	Tags                       tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                  `tfsdk:"tags_all"`
 }
 
-type authorizedTokenIssuerListModel struct {
+type authorizedTokenIssuerModel struct {
 	AuthorizedAudiencesList fwtypes.ListOfString `tfsdk:"authorized_audiences_list"`
 	TrustedTokenIssuerARN   fwtypes.ARN          `tfsdk:"trusted_token_issuer_arn"`
 }
@@ -375,8 +369,8 @@ type serviceIntegrationsModel struct {
 }
 
 var (
-	_ flex.Expander  = serviceIntegrationsModel{}
-	_ flex.Flattener = &serviceIntegrationsModel{}
+	_ fwflex.Expander  = serviceIntegrationsModel{}
+	_ fwflex.Flattener = &serviceIntegrationsModel{}
 )
 
 func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
@@ -397,7 +391,7 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 		var r awstypes.ServiceIntegrationsUnionMemberLakeFormation
 		if lfQuery != nil {
 			var query awstypes.LakeFormationScopeUnionMemberLakeFormationQuery
-			diags.Append(flex.Expand(ctx, lfQuery, &query.Value)...)
+			diags.Append(fwflex.Expand(ctx, lfQuery, &query.Value)...)
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -422,7 +416,7 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 		var r awstypes.ServiceIntegrationsUnionMemberRedshift
 		if connect != nil {
 			var connectScope awstypes.RedshiftScopeUnionMemberConnect
-			diags.Append(flex.Expand(ctx, connect, &connectScope.Value)...)
+			diags.Append(fwflex.Expand(ctx, connect, &connectScope.Value)...)
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -447,7 +441,7 @@ func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags
 		var r awstypes.ServiceIntegrationsUnionMemberS3AccessGrants
 		if readWriteAccess != nil {
 			var rwaGrantsScope awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess
-			diags.Append(flex.Expand(ctx, readWriteAccess, &rwaGrantsScope.Value)...)
+			diags.Append(fwflex.Expand(ctx, readWriteAccess, &rwaGrantsScope.Value)...)
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -473,7 +467,7 @@ func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diag
 			switch scopeUnion := t.Value[0].(type) {
 			case *awstypes.LakeFormationScopeUnionMemberLakeFormationQuery:
 				// Flatten the LakeFormationQuery value into the model
-				diags.Append(flex.Flatten(ctx, scopeUnion.Value, &lfQueryData)...)
+				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &lfQueryData)...)
 				if diags.HasError() {
 					return diags
 				}
@@ -495,7 +489,7 @@ func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diag
 			switch scopeUnion := t.Value[0].(type) {
 			case *awstypes.RedshiftScopeUnionMemberConnect:
 				// Flatten the Connect value into the model
-				diags.Append(flex.Flatten(ctx, scopeUnion.Value, &connectData)...)
+				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &connectData)...)
 				if diags.HasError() {
 					return diags
 				}
@@ -517,7 +511,7 @@ func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diag
 			switch scopeUnion := t.Value[0].(type) {
 			case *awstypes.S3AccessGrantsScopeUnionMemberReadWriteAccess:
 				// Flatten the ReadWriteAccess value into the model
-				diags.Append(flex.Flatten(ctx, scopeUnion.Value, &readWriteAccessData)...)
+				diags.Append(fwflex.Flatten(ctx, scopeUnion.Value, &readWriteAccessData)...)
 				if diags.HasError() {
 					return diags
 				}

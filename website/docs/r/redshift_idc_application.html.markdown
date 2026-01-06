@@ -27,7 +27,7 @@ resource "aws_redshift_idc_application" "example" {
 This resource supports the following arguments:
 
 * `application_type` - (Optional) Type of application being created. Valid values are `None` or `Lakehouse`.
-* `authorized_token_issuer_list` - (Optional) Token issuer list for the Amazon Redshift IAM Identity Center application instance. Refer to the [authorized_token_issuer_list](#authorized_token_issuer_list) documentation for more details.
+* `authorized_token_issuer` - (Optional) Token issuer list for the Amazon Redshift IAM Identity Center application instance. Refer to the [authorized_token_issuer](#authorized_token_issuer) documentation for more details.
 * `iam_role_arn` - (Required) IAM role ARN for the Amazon Redshift IAM Identity Center application instance.
 * `idc_display_name` - (Required) Display name for the Amazon Redshift IAM Identity Center application instance.
 * `idc_instance_arn` - (Required) ARN of the IAM Identity Center instance where Amazon Redshift creates a new managed application.
@@ -36,9 +36,9 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_integrations` - (Optional) Collection of service integrations for the Redshift IAM Identity Center application. Refer to the [service_integrations](#service_integrations) documentation for more details.
 
-### AuthorizedTokenIssuerList
+### AuthorizedTokenIssuer
 
-An `authorized_token_issuer_list` block supports the following:
+An `authorized_token_issuer` block supports the following:
 
 * `authorized_audiences_list` - List of audiences for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.
 * `trusted_token_issuer_arn` - ARN for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.

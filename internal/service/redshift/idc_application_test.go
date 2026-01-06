@@ -94,10 +94,10 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer_list.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.0", names.AttrClientID),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.0.authorized_audiences_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.0.authorized_audiences_list.0", names.AttrClientID),
 				),
 			},
 			{
@@ -383,7 +383,7 @@ resource "aws_ssoadmin_trusted_token_issuer" "test" {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_redshift_idc_application" "test" {
-  authorized_token_issuer_list {
+  authorized_token_issuer {
     authorized_audiences_list = ["client_id"]
     trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
   }
