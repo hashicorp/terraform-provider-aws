@@ -448,7 +448,6 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		!new.Enabled.Equal(old.Enabled) ||
 		!new.ManagedCertificateRequest.Equal(old.ManagedCertificateRequest) ||
 		!new.Parameters.Equal(old.Parameters) {
-
 		input := &cloudfront.UpdateDistributionTenantInput{}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if resp.Diagnostics.HasError() {
@@ -957,35 +956,6 @@ func needToUpdateCertificateARN(dt *awstypes.DistributionTenant, certArn string)
 		return true
 	}
 	return certArn != aws.ToString(dt.Customizations.Certificate.Arn)
-}
-
-func verifyDNSConfiguration(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput) error {
-	for _, domain := range dtOutput.DistributionTenant.Domains {
-		verifyInput := &cloudfront.VerifyDnsConfigurationInput{
-			Domain:     domain.Domain,
-			Identifier: dtOutput.DistributionTenant.Id,
-		}
-
-		verifyOutput, err := conn.VerifyDnsConfiguration(ctx, verifyInput)
-		if err != nil {
-			return fmt.Errorf("verifying CloudFront Distribution Tenant (%s) DNS configuration for domain %s: %w", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), err)
-		}
-
-		for _, dnsConfig := range verifyOutput.DnsConfigurationList {
-			switch dnsConfig.Status {
-			case awstypes.DnsConfigurationStatusValid:
-				// DNS is properly configured, continue
-				continue
-			case awstypes.DnsConfigurationStatusInvalid, awstypes.DnsConfigurationStatusUnknown:
-				// DNS not ready yet, return error to continue waiting
-				return fmt.Errorf("CloudFront Distribution Tenant (%s) DNS configuration not ready for domain %s: %s", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), dnsConfig.Status)
-			default:
-				return fmt.Errorf("CloudFront Distribution Tenant (%s) unknown DNS configuration status for domain %s: %s", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), dnsConfig.Status)
-			}
-		}
-	}
-
-	return nil
 }
 
 func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []awstypes.DomainItem {
