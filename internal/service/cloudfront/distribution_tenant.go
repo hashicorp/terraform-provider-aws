@@ -23,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	ret "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -393,7 +393,7 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	output, err := findDistributionTenantByIdentifier(ctx, conn, data.ID.ValueString())
-	if ret.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -604,7 +604,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 	id := data.ID.ValueString()
 
 	if err := disableDistributionTenant(ctx, conn, id); err != nil {
-		if ret.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -616,14 +616,14 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 
 	err := deleteDistributionTenant(ctx, conn, id)
 
-	if err == nil || ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 		return
 	}
 
 	// Disable distribution tenant if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableDistributionTenant(ctx, conn, id); err != nil {
-			if ret.NotFound(err) {
+			if retry.NotFound(err) {
 				return
 			}
 			resp.Diagnostics.AddError(
@@ -646,7 +646,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableDistributionTenant(ctx, conn, id); err != nil {
-			if ret.NotFound(err) {
+			if retry.NotFound(err) {
 				return
 			}
 			resp.Diagnostics.AddError(
@@ -807,7 +807,7 @@ func statusDistributionTenant(ctx context.Context, conn *cloudfront.Client, id s
 	return func() (any, string, error) {
 		output, err := findDistributionTenantByIdentifier(ctx, conn, id)
 
-		if ret.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -867,7 +867,7 @@ func waitForDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Cli
 			return dtOutput, nil
 		}
 
-		time.Sleep(30 * time.Second)
+		time.Sleep(distributionTenantPollInterval)
 	}
 }
 
