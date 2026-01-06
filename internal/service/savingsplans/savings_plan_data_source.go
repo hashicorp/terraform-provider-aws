@@ -25,7 +25,7 @@ func newDataSourceSavingsPlan(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type dataSourceSavingsPlan struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSourceSavingsPlanModel]
 }
 
 func (d *dataSourceSavingsPlan) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -83,10 +83,10 @@ func (d *dataSourceSavingsPlan) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "The EC2 instance family for the Savings Plan.",
 			},
-			names.AttrRegion: schema.StringAttribute{
-				Computed:    true,
-				Description: "The AWS Region.",
-			},
+			// names.AttrRegion: schema.StringAttribute{
+			// 	Computed:    true,
+			// 	Description: "The AWS Region.",
+			// },
 			"offering_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the offering.",

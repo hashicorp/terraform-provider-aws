@@ -230,6 +230,7 @@ SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
 SageMaker AI
+Savings Plans
 Secrets Manager
 Security Hub
 Security Lake

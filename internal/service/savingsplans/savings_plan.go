@@ -123,10 +123,10 @@ func (r *resourceSavingsPlan) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:    true,
 				Description: "The EC2 instance family for the Savings Plan.",
 			},
-			names.AttrRegion: schema.StringAttribute{
-				Computed:    true,
-				Description: "The AWS Region.",
-			},
+			// names.AttrRegion: schema.StringAttribute{
+			// 	Computed:    true,
+			// 	Description: "The AWS Region.",
+			// },
 			"offering_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the offering.",
@@ -330,7 +330,7 @@ func waitSavingsPlanDeleted(ctx context.Context, conn *savingsplans.Client, id s
 }
 
 func statusSavingsPlan(_ context.Context, conn *savingsplans.Client, id string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (interface{}, string, error) {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findSavingsPlanByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

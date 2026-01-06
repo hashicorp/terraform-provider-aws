@@ -83,10 +83,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Savings Plans can be imported using the `id`, e.g.,
+Using `terraform import`, import Savings Plans using the `id`. For example:
 
+```terraform
+import {
+  to = aws_savingsplans_plan.example
+  id = "sp-12345678901234567"
+}
 ```
-$ terraform import aws_savingsplans_plan.example sp-12345678901234567
+
+Using `terraform state mv`, import Savings Plans using the `id`. For example:
+
+```console
+% terraform import aws_savingsplans_plan.example sp-12345678901234567
 ```
 
 ~> **Note:** Importing an active Savings Plan will add it to your Terraform state, but destroying it will only remove it from state - the actual Savings Plan will continue until its term ends.

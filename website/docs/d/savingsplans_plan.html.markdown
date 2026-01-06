@@ -24,6 +24,8 @@ output "savings_plan_state" {
 
 ## Argument Reference
 
+The following arguments are required:
+
 * `id` - (Required) The ID of the Savings Plan.
 
 ## Attribute Reference
