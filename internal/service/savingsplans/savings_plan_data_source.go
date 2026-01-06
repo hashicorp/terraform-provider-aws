@@ -121,6 +121,7 @@ func (d *dataSourceSavingsPlan) Read(ctx context.Context, req datasource.ReadReq
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
+// nosemgrep: ci.semgrep.framework.manual-flattener-functions
 func flattenSavingsPlanDataSource(ctx context.Context, sp *awstypes.SavingsPlan, model *dataSourceSavingsPlanModel) {
 	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
 	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)

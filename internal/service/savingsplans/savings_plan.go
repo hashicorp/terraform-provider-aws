@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/savingsplans"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/savingsplans/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -47,6 +47,7 @@ const (
 
 type resourceSavingsPlan struct {
 	framework.ResourceWithModel[resourceSavingsPlanModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -290,15 +291,16 @@ func (r *resourceSavingsPlan) Delete(ctx context.Context, req resource.DeleteReq
 	// For active plans, we simply remove from state but cannot actually delete them
 }
 
-func (r *resourceSavingsPlan) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+// nosemgrep: ci.semgrep.framework.with-import-by-id
+// func (r *resourceSavingsPlan) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+// }
 
 // Waiters
 func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.SavingsPlanStatePaymentPending), string(awstypes.SavingsPlanStateQueued)},
-		Target:                    []string{string(awstypes.SavingsPlanStateActive), string(awstypes.SavingsPlanStateQueued)},
+		Pending:                   enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
+		Target:                    enum.Slice(awstypes.SavingsPlanStateActive, awstypes.SavingsPlanStateQueued),
 		Refresh:                   statusSavingsPlan(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -315,7 +317,7 @@ func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id s
 
 func waitSavingsPlanDeleted(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.SavingsPlanStateQueued), string(awstypes.SavingsPlanStateQueuedDeleted)},
+		Pending: enum.Slice(awstypes.SavingsPlanStateQueued, awstypes.SavingsPlanStateQueuedDeleted),
 		Target:  []string{},
 		Refresh: statusSavingsPlan(ctx, conn, id),
 		Timeout: timeout,
@@ -367,6 +369,7 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 	return &out.SavingsPlans[0], nil
 }
 
+// nosemgrep: ci.semgrep.framework.manual-flattener-functions
 func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *resourceSavingsPlanModel) {
 	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
 	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)
