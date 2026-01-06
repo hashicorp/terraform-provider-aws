@@ -73,7 +73,7 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUserStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_user(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUser(), "aws_appstream_user.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUser(), "aws_appstream_user.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_stack(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceStack(), "aws_appstream_stack.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceStack(), "aws_appstream_stack.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

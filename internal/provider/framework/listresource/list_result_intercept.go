@@ -45,8 +45,8 @@ type InterceptorParams struct {
 	When   when
 }
 
-type ListResultInterceptor interface {
-	Read(ctx context.Context, params InterceptorParams) diag.Diagnostics
+type ListResultInterceptor[T InterceptorParams | InterceptorParamsSDK] interface {
+	Read(ctx context.Context, params T) diag.Diagnostics
 }
 
 // TODO: this could be unique as well
@@ -331,10 +331,6 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 	return obj, diags
 }
 
-type ListResultInterceptorSDK interface {
-	Read(ctx context.Context, params InterceptorParamsSDK) error
-}
-
 type InterceptorParamsSDK struct {
 	C            *conns.AWSClient
 	ResourceData *schema.ResourceData
@@ -351,7 +347,8 @@ func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags])
 	}
 }
 
-func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) error {
+func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) diag.Diagnostics {
+	var diags diag.Diagnostics
 	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
 		return nil
@@ -365,7 +362,11 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
 			if identifier := r.GetIdentifierSDKv2(ctx, params.ResourceData); identifier != "" {
 				if err := r.ListTags(ctx, sp, params.C, identifier); err != nil {
-					return err
+					diags.Append(diag.NewErrorDiagnostic(
+						"Error Listing Tags",
+						fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+					))
+					return diags
 				}
 			}
 		}
@@ -375,12 +376,20 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 
 		// The resource's configured tags can now include duplicate tags that have been configured on the provider.
 		if err := params.ResourceData.Set(names.AttrTags, tags.ResolveDuplicates(ctx, params.C.DefaultTagsConfig(ctx), params.C.IgnoreTagsConfig(ctx), params.ResourceData, names.AttrTags, nil).Map()); err != nil {
-			return err
+			diags.Append(diag.NewErrorDiagnostic(
+				"Error Setting Tags",
+				fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+			))
+			return diags
 		}
 
 		// Computed tags_all do.
 		if err := params.ResourceData.Set(names.AttrTagsAll, tags.Map()); err != nil {
-			return err
+			diags.Append(diag.NewErrorDiagnostic(
+				"Error Listing TagsAll",
+				fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+			))
+			return diags
 		}
 
 		// reset tags in context for next resource

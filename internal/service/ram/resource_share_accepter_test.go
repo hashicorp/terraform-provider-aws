@@ -88,7 +88,7 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

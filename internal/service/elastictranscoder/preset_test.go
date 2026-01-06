@@ -119,7 +119,7 @@ func TestAccElasticTranscoderPreset_disappears(t *testing.T) {
 				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, t, resourceName, &preset),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfet.ResourcePreset(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfet.ResourcePreset(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

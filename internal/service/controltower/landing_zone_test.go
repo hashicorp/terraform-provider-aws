@@ -71,7 +71,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceLandingZone(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceLandingZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

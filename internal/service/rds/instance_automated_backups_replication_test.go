@@ -81,7 +81,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_disappears(t *testing.T) {
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceAutomatedBackupsReplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstanceAutomatedBackupsReplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

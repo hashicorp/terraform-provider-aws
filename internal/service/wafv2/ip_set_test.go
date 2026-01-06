@@ -145,7 +145,7 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceIPSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

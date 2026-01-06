@@ -110,7 +110,7 @@ func TestAccCodeCatalystDevEnvironment_disappears(t *testing.T) {
 				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceDevEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecatalyst.ResourceDevEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

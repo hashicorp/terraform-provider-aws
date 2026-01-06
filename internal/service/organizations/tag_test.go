@@ -57,7 +57,7 @@ func TestAccOrganizationsTag_disappears(t *testing.T) {
 				Config: testAccTagConfig(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

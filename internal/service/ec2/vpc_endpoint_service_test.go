@@ -81,7 +81,7 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

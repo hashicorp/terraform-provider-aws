@@ -157,7 +157,7 @@ func TestAccVPCDHCPOptions_disappears(t *testing.T) {
 				Config: testAccVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptions(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCDHCPOptions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

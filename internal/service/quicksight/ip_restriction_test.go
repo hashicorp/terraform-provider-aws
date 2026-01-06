@@ -85,7 +85,7 @@ func testAccIPRestriction_disappears(t *testing.T) {
 				Config: testAccIPRestrictionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPRestrictionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceIPRestriction, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceIPRestriction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

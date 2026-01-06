@@ -121,7 +121,7 @@ func testAccView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresourceexplorer2.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

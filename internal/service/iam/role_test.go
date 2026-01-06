@@ -318,7 +318,7 @@ func TestAccIAMRole_disappears(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -110,7 +110,7 @@ func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) { // nosem
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMResourceDiscoveryAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMResourceDiscoveryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

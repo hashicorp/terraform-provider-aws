@@ -79,7 +79,7 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semapho
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

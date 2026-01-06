@@ -73,7 +73,7 @@ func TestAccKafkaClusterPolicy_disappears(t *testing.T) {
 				Config: testAccClusterPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceClusterPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceClusterPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -63,7 +63,7 @@ func TestAccAutoScalingNotification_disappears(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceNotification(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceNotification(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -89,7 +89,7 @@ func testAccEC2AllowedImagesSettings_disappears(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAllowedImagesSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceAllowedImagesSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

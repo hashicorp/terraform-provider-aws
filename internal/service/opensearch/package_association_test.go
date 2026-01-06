@@ -59,7 +59,7 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackageAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackageAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

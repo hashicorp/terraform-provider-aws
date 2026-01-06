@@ -114,7 +114,8 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiKey, err := findAPIKeyByID(ctx, conn, d.Id())
 
@@ -130,7 +131,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	setTagsOut(ctx, apiKey.Tags)
 
-	d.Set(names.AttrARN, apiKeyARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiKeyARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)

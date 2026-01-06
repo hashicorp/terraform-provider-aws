@@ -110,7 +110,7 @@ func testAccFileCache_disappears(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceFileCache(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceFileCache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

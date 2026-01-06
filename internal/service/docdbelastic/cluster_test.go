@@ -96,7 +96,7 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdocdbelastic.ResourceCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdocdbelastic.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

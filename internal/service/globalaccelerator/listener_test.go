@@ -70,7 +70,7 @@ func TestAccGlobalAcceleratorListener_disappears(t *testing.T) {
 				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

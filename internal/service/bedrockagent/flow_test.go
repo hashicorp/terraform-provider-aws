@@ -109,7 +109,7 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flow),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceFlow, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceFlow, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

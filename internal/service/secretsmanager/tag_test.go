@@ -57,7 +57,7 @@ func TestAccSecretsManagerTag_disappears(t *testing.T) {
 				Config: testAccSecretsManagerTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

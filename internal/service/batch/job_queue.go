@@ -593,6 +593,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 			params := listresource.InterceptorParams{
 				C:      awsClient,
 				Result: &result,
+				Data:   &data,
 			}
 
 			params.When = listresource.Before

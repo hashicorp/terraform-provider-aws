@@ -65,7 +65,7 @@ func TestAccKafkaConnectWorkerConfiguration_disappears(t *testing.T) {
 				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceWorkerConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafkaconnect.ResourceWorkerConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

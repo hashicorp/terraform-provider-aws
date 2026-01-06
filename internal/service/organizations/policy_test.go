@@ -192,7 +192,7 @@ func testAccPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -85,7 +85,7 @@ func TestAccKendraThesaurus_disappears(t *testing.T) {
 				Config: testAccThesaurusConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceThesaurus(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceThesaurus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
