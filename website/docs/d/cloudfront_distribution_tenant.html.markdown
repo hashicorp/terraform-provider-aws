@@ -20,10 +20,10 @@ data "aws_cloudfront_distribution_tenant" "test" {
 
 ## Argument Reference
 
-Exactly one of the following arguments must be specified for the data source:
+This data source supports the following arguments:
 
-* `id` (optional) - Identifier for the distribution tenant. For example: `EDFDVBD632BHDS5`.
-* `domain` (optional) - An associated domain of the distribution tenant.
+* `id` (Optional) - Identifier for the distribution tenant. For example: `EDFDVBD632BHDS5`. Exactly one of `id` or `domain` must be specified.
+* `domain` (Optional) - An associated domain of the distribution tenant. Exactly one of `id` or `domain` must be specified.
 
 ## Attribute Reference
 
