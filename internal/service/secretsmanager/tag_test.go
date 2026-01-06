@@ -40,9 +40,8 @@ func TestAccSecretsManagerTag_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(acctest.CtKey1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrValue), knownvalue.StringExact(acctest.CtValue1)),
 				},
 			},
 			{
@@ -107,9 +106,8 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(acctest.CtKey1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrValue), knownvalue.StringExact(acctest.CtValue1)),
 				},
 			},
 			{
@@ -128,9 +126,8 @@ func TestAccSecretsManagerTag_Value(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(acctest.CtKey1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrValue), knownvalue.StringExact(acctest.CtValue1Updated)),
 				},
 			},
 		},
@@ -158,9 +155,8 @@ func TestAccSecretsManagerTag_managedSecrets(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(acctest.CtKey1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrValue), knownvalue.StringExact(acctest.CtValue1)),
 				},
 			},
 			{
