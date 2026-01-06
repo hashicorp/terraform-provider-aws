@@ -6,7 +6,6 @@ package savingsplans
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/savingsplans"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/savingsplans/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"

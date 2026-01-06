@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return names.SavingsPlans
+	return "savingsplans"
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
