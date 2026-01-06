@@ -726,12 +726,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	// Read the distribution to get consistent state
 	data.ETag = fwflex.StringToFramework(ctx, distro.ETag)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
