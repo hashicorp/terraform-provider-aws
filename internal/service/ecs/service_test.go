@@ -8553,10 +8553,10 @@ resource "aws_ecs_task_definition" "test" {
 
   container_definitions = jsonencode([
     {
-      name  = "test"
-      image = "public.ecr.aws/docker/library/nginx:latest"
-      cpu   = 256
-      memory = 512
+      name      = "test"
+      image     = "public.ecr.aws/docker/library/nginx:latest"
+      cpu       = 256
+      memory    = 512
       essential = true
       portMappings = [
         {
