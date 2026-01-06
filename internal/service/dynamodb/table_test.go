@@ -825,7 +825,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1111,6 +1111,70 @@ func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 						"projection_type": "ALL",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_multipleRangeKeys_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("ReplacementGSIRangeKey"),
+							"type": knownvalue.StringExact("N"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("ReplacementGSIRangeKey2"),
+							"type": knownvalue.StringExact("N"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":        knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys":       knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("ReplacementGSIRangeKey"),
+								knownvalue.StringExact("ReplacementGSIRangeKey2"),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -7064,6 +7128,47 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
+func testAccTableConfig_GSI_multipleRangeKeys_singleHashKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
+    projection_type    = "ALL"
+    write_capacity     = 1
+    read_capacity      = 1
+  }
+}
+`, rName)
+}
+
 func testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -7081,11 +7186,6 @@ resource "aws_dynamodb_table" "test" {
   attribute {
     name = "TestTableRangeKey"
     type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
   }
 
   attribute {
