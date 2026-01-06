@@ -153,7 +153,7 @@ func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 				Config: testAccGlobalReplicationGroupConfig_Redis_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

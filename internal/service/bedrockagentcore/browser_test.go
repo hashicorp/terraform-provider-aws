@@ -132,7 +132,7 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 				Config: testAccBrowserConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserExists(ctx, resourceName, &browser),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceBrowser, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceBrowser, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

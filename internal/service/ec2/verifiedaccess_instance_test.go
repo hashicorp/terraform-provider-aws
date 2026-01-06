@@ -159,7 +159,7 @@ func testAccVerifiedAccessInstance_disappears(t *testing.T, semaphore tfsync.Sem
 				Config: testAccVerifiedAccessInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -123,8 +123,8 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func testAccAccountVDMAttributes_disappears(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceAccountVDMAttributes(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceAccountVDMAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

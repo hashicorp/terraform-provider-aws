@@ -97,6 +97,17 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 					stringvalidator.LengthBetween(3, 28),
 				},
 			},
+			"pipeline_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(20, 2048),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -253,6 +264,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	// Set values for unknowns.
 	data.IngestEndpointURLs.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
+	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -491,6 +503,7 @@ type pipelineResourceModel struct {
 	PipelineARN               types.String                                                  `tfsdk:"pipeline_arn"`
 	PipelineConfigurationBody types.String                                                  `tfsdk:"pipeline_configuration_body"`
 	PipelineName              types.String                                                  `tfsdk:"pipeline_name"`
+	PipelineRoleARN           fwtypes.ARN                                                   `tfsdk:"pipeline_role_arn"`
 	Tags                      tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`

@@ -101,7 +101,7 @@ func TestAccTimestreamInfluxDBDBCluster_disappears(t *testing.T) {
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -95,7 +95,7 @@ func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

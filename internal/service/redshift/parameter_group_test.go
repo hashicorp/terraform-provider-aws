@@ -80,7 +80,7 @@ func TestAccRedshiftParameterGroup_disappears(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

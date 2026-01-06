@@ -158,7 +158,7 @@ func TestAccSageMakerPipeline_disappears(t *testing.T) {
 				Config: testAccPipelinePipelineConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourcePipeline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

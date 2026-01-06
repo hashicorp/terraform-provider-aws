@@ -65,7 +65,7 @@ func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceCIDRCollection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53.ResourceCIDRCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

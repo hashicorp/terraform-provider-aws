@@ -96,7 +96,7 @@ func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceMetadataDefaults, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceMetadataDefaults, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

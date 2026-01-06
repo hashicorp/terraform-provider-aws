@@ -289,7 +289,7 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

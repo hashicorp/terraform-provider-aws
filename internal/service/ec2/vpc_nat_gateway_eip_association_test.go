@@ -82,7 +82,7 @@ func TestAccVPCNATGatewayEIPAssociation_disappears(t *testing.T) {
 				Config: testAccVPCNATGatewayEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNATGatewayEIPAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceNATGatewayEIPAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -195,7 +195,7 @@ func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Sem
 				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

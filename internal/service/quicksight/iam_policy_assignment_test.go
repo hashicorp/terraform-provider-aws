@@ -65,7 +65,7 @@ func TestAccQuickSightIAMPolicyAssignment_disappears(t *testing.T) {
 				Config: testAccIAMPolicyAssignmentConfig_basic(rName, string(awstypes.AssignmentStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceIAMPolicyAssignment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceIAMPolicyAssignment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

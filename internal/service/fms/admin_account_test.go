@@ -64,7 +64,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourceAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

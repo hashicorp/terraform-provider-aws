@@ -679,7 +679,7 @@ func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

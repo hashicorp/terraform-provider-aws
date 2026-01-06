@@ -192,7 +192,7 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcustomerprofiles.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcustomerprofiles.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

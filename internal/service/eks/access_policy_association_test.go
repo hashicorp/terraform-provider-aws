@@ -81,7 +81,7 @@ func TestAccEKSAccessPolicyAssociation_disappears(t *testing.T) {
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAccessPolicyAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,7 +113,7 @@ func TestAccEKSAccessPolicyAssociation_Disappears_cluster(t *testing.T) {
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

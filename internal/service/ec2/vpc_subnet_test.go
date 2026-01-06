@@ -305,7 +305,7 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

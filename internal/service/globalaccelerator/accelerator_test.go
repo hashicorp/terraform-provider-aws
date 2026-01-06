@@ -171,7 +171,7 @@ func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 				Config: testAccAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceAccelerator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

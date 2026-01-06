@@ -195,7 +195,7 @@ func testAccCertificate_disappears(t *testing.T) {
 				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

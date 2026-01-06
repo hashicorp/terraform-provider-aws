@@ -71,7 +71,7 @@ func TestAccQuickSightDashboard_disappears(t *testing.T) {
 				Config: testAccDashboardConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDashboard(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDashboard(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

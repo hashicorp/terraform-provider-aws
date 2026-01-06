@@ -150,7 +150,7 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -182,7 +182,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), imageResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), imageResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

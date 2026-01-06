@@ -64,7 +64,7 @@ func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

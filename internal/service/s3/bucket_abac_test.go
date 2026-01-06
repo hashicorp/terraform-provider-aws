@@ -90,7 +90,7 @@ func TestAccS3BucketABAC_disappears_Bucket(t *testing.T) {
 				Config: testAccBucketABACConfig_basic(rName, string(awstypes.BucketAbacStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketABACExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -103,7 +103,7 @@ func testAccConfigurationPolicy_disappears(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceConfigurationPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

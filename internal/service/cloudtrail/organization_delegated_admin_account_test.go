@@ -70,7 +70,7 @@ func testAccOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

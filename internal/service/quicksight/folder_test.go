@@ -76,7 +76,7 @@ func TestAccQuickSightFolder_disappears(t *testing.T) {
 				Config: testAccFolderConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceFolder(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceFolder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -184,7 +184,7 @@ func testAccFilter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

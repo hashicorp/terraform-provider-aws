@@ -98,7 +98,7 @@ func TestAccFSxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

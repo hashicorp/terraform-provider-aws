@@ -77,7 +77,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceDeployment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

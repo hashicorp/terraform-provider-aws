@@ -152,7 +152,7 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceConnector(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

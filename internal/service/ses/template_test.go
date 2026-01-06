@@ -118,7 +118,7 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_resourceBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -187,7 +187,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

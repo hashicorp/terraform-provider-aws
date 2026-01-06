@@ -67,7 +67,7 @@ func TestAccELBBackendServerPolicy_disappears(t *testing.T) {
 				Config: testAccBackendServerPolicyConfig_basic(rName, privateKey1, certificate, publicKey1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendServerPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceBackendServerPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceBackendServerPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

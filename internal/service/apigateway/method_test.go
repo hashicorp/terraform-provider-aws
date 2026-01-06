@@ -202,7 +202,7 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 				Config: testAccMethodConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethod(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceMethod(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

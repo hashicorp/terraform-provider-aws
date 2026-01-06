@@ -79,7 +79,7 @@ func TestAccCloudFrontVPCOrigin_disappears(t *testing.T) {
 				Config: testAccVPCOriginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceVPCOrigin, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceVPCOrigin, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

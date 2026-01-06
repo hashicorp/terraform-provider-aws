@@ -73,7 +73,7 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

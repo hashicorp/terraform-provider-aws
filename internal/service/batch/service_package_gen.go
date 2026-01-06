@@ -55,7 +55,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
-			Factory:  jobQueueResourceAsListResource,
+			Factory:  newJobQueueResourceAsListResource,
 			TypeName: "aws_batch_job_queue",
 			Name:     "Job Queue",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -135,7 +135,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  jobDefinitionResourceAsListResource,
+			Factory:  newJobDefinitionResourceAsListResource,
 			TypeName: "aws_batch_job_definition",
 			Name:     "Job Definition",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

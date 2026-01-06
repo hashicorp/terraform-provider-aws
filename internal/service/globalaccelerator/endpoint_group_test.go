@@ -77,7 +77,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

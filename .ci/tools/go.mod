@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	github.com/YakDriver/copyplop v0.10.0
-	github.com/YakDriver/tfproviderdocs v0.23.3
+	github.com/YakDriver/tfproviderdocs v0.24.1
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.7.2
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
@@ -354,7 +354,7 @@ require (
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.3.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
-	github.com/yuin/goldmark v1.7.13 // indirect
+	github.com/yuin/goldmark v1.7.15 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	github.com/zclconf/go-cty-yaml v1.1.0 // indirect

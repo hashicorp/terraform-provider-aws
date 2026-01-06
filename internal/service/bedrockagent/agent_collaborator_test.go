@@ -137,7 +137,7 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -80,7 +80,7 @@ func TestAccVPCLatticeAccessLogSubscription_disappears(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceAccessLogSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceAccessLogSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

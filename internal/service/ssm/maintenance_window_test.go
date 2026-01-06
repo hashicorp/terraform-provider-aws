@@ -116,7 +116,7 @@ func TestAccSSMMaintenanceWindow_disappears(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindow(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

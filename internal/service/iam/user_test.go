@@ -86,7 +86,7 @@ func TestAccIAMUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

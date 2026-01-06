@@ -70,7 +70,7 @@ func TestAccLocationTracker_disappears(t *testing.T) {
 				Config: testAccTrackerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceTracker(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceTracker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

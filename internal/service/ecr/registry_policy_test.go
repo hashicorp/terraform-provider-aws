@@ -82,7 +82,7 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

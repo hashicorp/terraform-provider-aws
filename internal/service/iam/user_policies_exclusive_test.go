@@ -88,8 +88,8 @@ func TestAccIAMUserPoliciesExclusive_disappears_User(t *testing.T) {
 					testAccCheckUserPolicyExists(ctx, userPolicyResourceName, &userPolicy),
 					testAccCheckUserPoliciesExclusiveExists(ctx, resourceName),
 					// Inline policy must be deleted before the user can be
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicy(), userPolicyResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUser(), userResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicy(), userPolicyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), userResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

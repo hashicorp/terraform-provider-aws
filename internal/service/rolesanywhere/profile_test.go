@@ -150,7 +150,7 @@ func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrolesanywhere.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrolesanywhere.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

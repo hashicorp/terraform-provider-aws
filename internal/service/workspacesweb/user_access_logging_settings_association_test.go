@@ -90,7 +90,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_disappears(t *test
 				Config: testAccUserAccessLoggingSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserAccessLoggingSettingsAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserAccessLoggingSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

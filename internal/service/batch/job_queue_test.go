@@ -73,7 +73,7 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueue, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbatch.ResourceJobQueue, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

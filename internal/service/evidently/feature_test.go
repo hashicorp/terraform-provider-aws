@@ -610,7 +610,7 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 				Config: testAccFeatureConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceFeature(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchevidently.ResourceFeature(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -268,8 +268,7 @@ func testAccReplicationSet_disappears(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceReplicationSet(),
-						resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmincidents.ResourceReplicationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

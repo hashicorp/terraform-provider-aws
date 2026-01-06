@@ -154,7 +154,7 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -493,7 +493,3 @@ type SDKv2Import struct {
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
 }
-
-type SDKv2Tagger interface {
-	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
-}

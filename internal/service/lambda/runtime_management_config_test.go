@@ -85,7 +85,7 @@ func TestAccLambdaRuntimeManagementConfig_disappears_Function(t *testing.T) {
 				Config: testAccRuntimeManagementConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), functionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), functionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

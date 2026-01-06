@@ -69,7 +69,7 @@ func testAccVerifiedAccessInstanceTrustProviderAttachment_disappears(t *testing.
 				Config: testAccVerifiedAccessInstanceTrustProviderAttachmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceTrustProviderAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceTrustProviderAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

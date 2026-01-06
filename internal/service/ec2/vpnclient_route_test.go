@@ -77,7 +77,7 @@ func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

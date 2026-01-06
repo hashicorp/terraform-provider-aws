@@ -199,7 +199,7 @@ func testAccRotation_disappears(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceRotation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmcontacts.ResourceRotation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

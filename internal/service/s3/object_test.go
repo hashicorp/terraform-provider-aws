@@ -197,7 +197,7 @@ func TestAccS3Object_disappears(t *testing.T) {
 				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -221,7 +221,7 @@ func TestAccS3Object_Disappears_bucket(t *testing.T) {
 				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1845,7 +1845,7 @@ func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.
 				Config: testAccObjectConfig_directoryBucket(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -82,7 +82,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 				Config: testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

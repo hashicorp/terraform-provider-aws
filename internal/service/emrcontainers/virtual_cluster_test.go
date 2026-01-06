@@ -101,7 +101,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 				Config: testAccVirtualClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

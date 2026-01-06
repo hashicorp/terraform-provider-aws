@@ -68,7 +68,7 @@ func TestAccLakeFormationResource_disappears(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceResource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

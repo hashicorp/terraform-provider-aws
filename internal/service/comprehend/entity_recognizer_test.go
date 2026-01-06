@@ -103,7 +103,7 @@ func TestAccComprehendEntityRecognizer_disappears(t *testing.T) {
 				Config: testAccEntityRecognizerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcomprehend.ResourceEntityRecognizer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcomprehend.ResourceEntityRecognizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

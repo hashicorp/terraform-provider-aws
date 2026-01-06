@@ -160,7 +160,7 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 				Config: testAccBackupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceBackup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -184,7 +184,7 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 				Config: testAccBackupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

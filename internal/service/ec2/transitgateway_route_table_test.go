@@ -80,7 +80,7 @@ func testAccTransitGatewayRouteTable_disappears(t *testing.T, semaphore tfsync.S
 				Config: testAccTransitGatewayRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +111,7 @@ func testAccTransitGatewayRouteTable_disappears_TransitGateway(t *testing.T, sem
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayRouteTableExists(ctx, resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

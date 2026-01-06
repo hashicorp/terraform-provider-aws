@@ -249,7 +249,7 @@ func testAccTransitGateway_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccTransitGatewayConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

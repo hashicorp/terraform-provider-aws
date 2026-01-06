@@ -70,7 +70,7 @@ func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 				Config: testAccLoadBalancerAttachmentConfig_basic(lbName, liName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerAttachmentExists(ctx, resourceName, &liName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceLoadBalancerAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

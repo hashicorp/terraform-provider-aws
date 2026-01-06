@@ -620,8 +620,8 @@ func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -676,8 +676,8 @@ func TestAccGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

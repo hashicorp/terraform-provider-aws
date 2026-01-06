@@ -80,7 +80,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

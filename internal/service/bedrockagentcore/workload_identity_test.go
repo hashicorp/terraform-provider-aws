@@ -87,7 +87,7 @@ func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 				Config: testAccWorkloadIdentityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceWorkloadIdentity, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceWorkloadIdentity, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

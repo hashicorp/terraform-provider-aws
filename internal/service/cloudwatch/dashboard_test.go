@@ -70,7 +70,7 @@ func TestAccCloudWatchDashboard_disappears(t *testing.T) {
 				Config: testAccDashboardConfig_basic(rName, basicWidget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceDashboard(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatch.ResourceDashboard(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

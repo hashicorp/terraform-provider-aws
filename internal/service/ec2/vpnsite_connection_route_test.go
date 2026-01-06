@@ -56,7 +56,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnectionRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnectionRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

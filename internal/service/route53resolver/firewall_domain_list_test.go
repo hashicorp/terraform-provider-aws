@@ -116,7 +116,7 @@ func TestAccRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 				Config: testAccFirewallDomainListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceFirewallDomainList(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceFirewallDomainList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

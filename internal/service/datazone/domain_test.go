@@ -90,7 +90,7 @@ func TestAccDataZoneDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceDomain, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

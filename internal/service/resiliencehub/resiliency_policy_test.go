@@ -625,7 +625,7 @@ func TestAccResilienceHubResiliencyPolicy_disappears(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresiliencehub.ResourceResiliencyPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresiliencehub.ResourceResiliencyPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

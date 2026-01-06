@@ -153,7 +153,7 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

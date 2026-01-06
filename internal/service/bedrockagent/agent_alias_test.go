@@ -69,7 +69,7 @@ func TestAccBedrockAgentAgentAlias_disappears(t *testing.T) {
 				Config: testAccAgentAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceAgentAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

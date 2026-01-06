@@ -209,7 +209,7 @@ func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcustomerprofiles.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcustomerprofiles.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -157,7 +157,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -201,7 +201,7 @@ func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_ipv4(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceManagedPrefixListEntry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceManagedPrefixListEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

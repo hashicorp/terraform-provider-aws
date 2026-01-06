@@ -80,7 +80,7 @@ func TestAccCognitoIDPManagedLoginBranding_disappears(t *testing.T) {
 				Config: testAccManagedLoginBrandingConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedLoginBrandingExists(ctx, resourceName, &client),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceManagedLoginBranding, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcognitoidp.ResourceManagedLoginBranding, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

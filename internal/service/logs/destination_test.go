@@ -67,7 +67,7 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

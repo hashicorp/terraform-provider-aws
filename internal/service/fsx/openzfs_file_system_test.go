@@ -167,7 +167,7 @@ func TestAccFSxOpenZFSFileSystem_disappears(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenZFSFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -97,7 +97,7 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceInferenceProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

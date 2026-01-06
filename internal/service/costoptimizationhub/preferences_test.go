@@ -70,7 +70,7 @@ func testAccPreferences_disappears(t *testing.T) {
 				Config: testAccPreferencesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusIsActive(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcostoptimizationhub.ResourcePreferences, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcostoptimizationhub.ResourcePreferences, resourceName),
 				),
 			},
 			{

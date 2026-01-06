@@ -71,7 +71,7 @@ func TestAccS3BucketCORSConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketCorsConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketCorsConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -92,7 +92,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

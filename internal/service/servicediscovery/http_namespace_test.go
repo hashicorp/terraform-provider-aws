@@ -72,7 +72,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicediscovery.ResourceHTTPNamespace(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicediscovery.ResourceHTTPNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

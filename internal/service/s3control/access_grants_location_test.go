@@ -64,7 +64,7 @@ func testAccAccessGrantsLocation_disappears(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsLocation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsLocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

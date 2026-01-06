@@ -93,7 +93,7 @@ func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceNotificationConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceNotificationConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

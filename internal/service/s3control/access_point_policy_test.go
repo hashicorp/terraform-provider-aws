@@ -63,7 +63,7 @@ func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPointPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceAccessPointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPoint(), accessPointResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceAccessPoint(), accessPointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

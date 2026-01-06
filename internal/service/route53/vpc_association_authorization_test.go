@@ -68,7 +68,7 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 				Config: testAccVPCAssociationAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

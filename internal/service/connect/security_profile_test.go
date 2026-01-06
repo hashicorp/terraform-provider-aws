@@ -187,7 +187,7 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceSecurityProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceSecurityProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

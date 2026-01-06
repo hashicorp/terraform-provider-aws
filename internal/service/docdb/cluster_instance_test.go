@@ -101,7 +101,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -70,7 +70,7 @@ func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCPeeringConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCPeeringConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

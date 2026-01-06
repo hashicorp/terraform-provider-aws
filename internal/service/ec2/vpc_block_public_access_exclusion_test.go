@@ -113,7 +113,7 @@ func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCBlockPublicAccessExclusion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCBlockPublicAccessExclusion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

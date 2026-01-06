@@ -68,7 +68,7 @@ func TestAccElasticBeanstalkApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticbeanstalk.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

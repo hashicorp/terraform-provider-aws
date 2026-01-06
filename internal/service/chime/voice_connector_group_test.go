@@ -73,7 +73,7 @@ func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

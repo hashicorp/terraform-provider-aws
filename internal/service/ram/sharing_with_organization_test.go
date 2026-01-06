@@ -64,7 +64,7 @@ func testAccSharingWithOrganization_disappears(t *testing.T) {
 			{
 				Config: testAccSharingWithOrganizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceSharingWithOrganization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceSharingWithOrganization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -347,7 +347,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceWorkteam(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -78,7 +78,7 @@ func TestAccFSxOpenZFSVolume_disappears(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenZFSVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

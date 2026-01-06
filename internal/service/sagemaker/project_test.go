@@ -161,7 +161,7 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

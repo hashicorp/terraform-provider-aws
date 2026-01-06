@@ -69,7 +69,7 @@ func testAccTemplateAssociation_disappears(t *testing.T) {
 				Config: testAccTemplateAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicequotas.ResourceTemplateAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplateAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

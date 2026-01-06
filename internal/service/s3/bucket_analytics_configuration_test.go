@@ -67,7 +67,7 @@ func TestAccS3BucketAnalyticsConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketAnalyticsConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketAnalyticsConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

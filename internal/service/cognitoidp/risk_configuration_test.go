@@ -188,7 +188,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceRiskConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceRiskConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,7 +211,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

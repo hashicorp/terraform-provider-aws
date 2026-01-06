@@ -60,7 +60,7 @@ func TestAccECRLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceLifecyclePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceLifecyclePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

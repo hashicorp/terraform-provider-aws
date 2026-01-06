@@ -68,7 +68,7 @@ func TestAccKMSKeyPolicy_disappears(t *testing.T) {
 				Config: testAccKeyPolicyConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, attachmentResourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceKey(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceKey(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

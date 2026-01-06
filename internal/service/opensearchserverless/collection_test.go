@@ -196,7 +196,7 @@ func TestAccOpenSearchServerlessCollection_disappears(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceCollection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

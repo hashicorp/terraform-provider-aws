@@ -179,7 +179,7 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

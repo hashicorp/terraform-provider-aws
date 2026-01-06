@@ -121,7 +121,7 @@ func testAccDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfworkspaces.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

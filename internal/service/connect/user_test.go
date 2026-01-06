@@ -408,7 +408,7 @@ func testAccUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

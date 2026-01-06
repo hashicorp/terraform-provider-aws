@@ -66,7 +66,7 @@ func TestAccNetworkManagerCoreNetwork_disappears(t *testing.T) {
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCoreNetwork(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceCoreNetwork(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

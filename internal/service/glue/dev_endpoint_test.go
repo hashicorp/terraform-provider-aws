@@ -572,7 +572,7 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 				Config: testAccDevEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceDevEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceDevEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

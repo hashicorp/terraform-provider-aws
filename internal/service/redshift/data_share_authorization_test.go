@@ -70,7 +70,7 @@ func TestAccRedshiftDataShareAuthorization_disappears(t *testing.T) {
 				Config: testAccDataShareAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareAuthorizationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceDataShareAuthorization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceDataShareAuthorization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

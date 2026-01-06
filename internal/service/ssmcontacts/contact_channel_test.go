@@ -93,7 +93,7 @@ func testAccContactChannel_disappears(t *testing.T) {
 				Config: testAccContactChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceContactChannel(), channelResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContactChannel(), channelResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

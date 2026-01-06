@@ -80,7 +80,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_disappears(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCustomRoutingAccelerator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCustomRoutingAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

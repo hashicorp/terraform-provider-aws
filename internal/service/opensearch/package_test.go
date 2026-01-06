@@ -112,7 +112,7 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 				Config: testAccPackageConfig_basic(pkgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

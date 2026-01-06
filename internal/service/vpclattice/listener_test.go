@@ -414,7 +414,7 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

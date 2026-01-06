@@ -335,7 +335,7 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, t, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

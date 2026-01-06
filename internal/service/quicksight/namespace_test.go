@@ -65,7 +65,7 @@ func TestAccQuickSightNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceNamespace, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceNamespace, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -96,7 +96,7 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

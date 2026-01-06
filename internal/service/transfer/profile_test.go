@@ -111,7 +111,7 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

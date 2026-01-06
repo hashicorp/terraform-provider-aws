@@ -93,7 +93,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 				Config: testAccLagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

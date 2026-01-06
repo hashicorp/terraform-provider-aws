@@ -864,7 +864,7 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(framework.Lister); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParams]); ok {
 		if isRegionOverrideEnabled {
 			v.AppendResultInterceptor(listresource.SetRegionInterceptor())
 		}
@@ -994,15 +994,9 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
 		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
-		}
-	} else { // Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
-		if v, ok := inner.(framework.ListerSDK); ok {
-			if !tfunique.IsHandleNil(spec.Tags) {
-				v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
-			}
+			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
 

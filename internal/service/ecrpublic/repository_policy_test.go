@@ -69,7 +69,7 @@ func TestAccECRPublicRepositoryPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepositoryPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecrpublic.ResourceRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccECRPublicRepositoryPolicy_Disappears_repository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepository(), repositoryResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecrpublic.ResourceRepository(), repositoryResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

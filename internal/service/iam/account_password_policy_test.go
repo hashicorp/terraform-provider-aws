@@ -78,7 +78,7 @@ func testAccAccountPasswordPolicy_disappears(t *testing.T) {
 				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccountPasswordPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccountPasswordPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

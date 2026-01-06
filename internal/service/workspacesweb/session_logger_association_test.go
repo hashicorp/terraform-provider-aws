@@ -90,7 +90,7 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_disappears(t *testing.T) {
 				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceSessionLoggerAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceSessionLoggerAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

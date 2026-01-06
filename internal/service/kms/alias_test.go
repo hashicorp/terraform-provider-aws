@@ -73,7 +73,7 @@ func TestAccKMSAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

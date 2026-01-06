@@ -72,7 +72,7 @@ func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceSourceRepository(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecatalyst.ResourceSourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

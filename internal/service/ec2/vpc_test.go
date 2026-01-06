@@ -108,7 +108,7 @@ func TestAccVPC_disappears(t *testing.T) {
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

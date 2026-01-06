@@ -123,9 +123,12 @@ func resourceEventSourceMapping() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrDestinationARN: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: verify.ValidARN,
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.Any(
+												verify.ValidARN,
+												validation.StringMatch(regexache.MustCompile(`$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1})?:(\d{12})?:(.*)`), "must be a valid ARN or kafka://broker/topic format"),
+											),
 										},
 									},
 								},

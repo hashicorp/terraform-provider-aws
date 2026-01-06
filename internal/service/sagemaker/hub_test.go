@@ -207,7 +207,7 @@ func TestAccSageMakerHub_disappears(t *testing.T) {
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHub(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHub(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

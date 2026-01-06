@@ -80,7 +80,7 @@ func testAccLakeFormationIdentityCenterConfiguration_disappears(t *testing.T) {
 				Config: testAccIdentityCenterConfigurationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &identitycenterconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceIdentityCenterConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceIdentityCenterConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -80,7 +80,7 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 				Config: testAccKxDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDatabase(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

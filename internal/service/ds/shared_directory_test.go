@@ -73,7 +73,7 @@ func TestAccDSSharedDirectory_disappears(t *testing.T) {
 				Config: testAccSharedDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSharedDirectoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceSharedDirectory(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceSharedDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

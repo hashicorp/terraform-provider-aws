@@ -1988,7 +1988,7 @@ func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

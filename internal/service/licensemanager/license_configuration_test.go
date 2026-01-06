@@ -82,7 +82,7 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

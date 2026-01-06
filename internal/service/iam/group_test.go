@@ -67,7 +67,7 @@ func TestAccIAMGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

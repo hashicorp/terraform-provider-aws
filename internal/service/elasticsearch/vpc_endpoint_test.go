@@ -151,7 +151,7 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

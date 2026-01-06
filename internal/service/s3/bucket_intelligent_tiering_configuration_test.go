@@ -71,7 +71,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketIntelligentTieringConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketIntelligentTieringConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

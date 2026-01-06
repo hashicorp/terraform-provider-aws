@@ -83,9 +83,9 @@ func TestAccCloudFormationType_disappears(t *testing.T) {
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceType(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

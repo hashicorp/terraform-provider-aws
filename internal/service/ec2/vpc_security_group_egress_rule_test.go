@@ -74,7 +74,7 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupEgressRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupEgressRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupEgressRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupEgressRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

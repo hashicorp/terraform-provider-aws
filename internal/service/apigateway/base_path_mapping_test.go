@@ -176,7 +176,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

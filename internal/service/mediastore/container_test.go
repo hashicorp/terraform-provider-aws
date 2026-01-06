@@ -112,7 +112,7 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediastore.ResourceContainer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

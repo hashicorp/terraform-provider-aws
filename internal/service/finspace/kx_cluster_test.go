@@ -93,7 +93,7 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

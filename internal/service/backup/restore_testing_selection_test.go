@@ -75,7 +75,7 @@ func TestAccBackupRestoreTestingSelection_disappears(t *testing.T) {
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingselection),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceRestoreTestingSelection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingSelection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

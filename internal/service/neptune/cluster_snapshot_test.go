@@ -76,7 +76,7 @@ func TestAccNeptuneClusterSnapshot_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceClusterSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

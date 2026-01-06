@@ -110,7 +110,7 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationS3(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

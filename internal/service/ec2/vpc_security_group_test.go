@@ -929,7 +929,7 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -100,7 +100,7 @@ func TestAccBedrockGuardrail_disappears(t *testing.T) {
 				Config: testAccGuardrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrail, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrail, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

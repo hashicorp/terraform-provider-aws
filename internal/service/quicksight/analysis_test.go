@@ -71,7 +71,7 @@ func TestAccQuickSightAnalysis_disappears(t *testing.T) {
 				Config: testAccAnalysisConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAnalysis(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceAnalysis(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

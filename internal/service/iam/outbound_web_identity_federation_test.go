@@ -82,7 +82,7 @@ func testAccOutboundWebIdentityFederation_disappears(t *testing.T) {
 				Config: testAccOutboundWebIdentityFederationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOutboundWebIdentityFederationExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOutboundWebIdentityFederation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfiam.ResourceOutboundWebIdentityFederation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

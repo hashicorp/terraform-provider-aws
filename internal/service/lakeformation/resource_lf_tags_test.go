@@ -71,7 +71,7 @@ func testAccResourceLFTags_disappears(t *testing.T) {
 				Config: testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTags(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -80,7 +80,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 				Config: testAccResourceSetConfig_basic(rName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceResourceSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceResourceSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

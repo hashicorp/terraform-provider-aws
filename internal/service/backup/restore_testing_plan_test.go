@@ -80,7 +80,7 @@ func TestAccBackupRestoreTestingPlan_disappears(t *testing.T) {
 				Config: testAccRestoreTestingPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceRestoreTestingPlan, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingPlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

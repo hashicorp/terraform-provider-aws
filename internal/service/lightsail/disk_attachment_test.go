@@ -79,7 +79,7 @@ func TestAccLightsailDiskAttachment_disappears(t *testing.T) {
 				Config: testAccDiskAttachmentConfig_basic(dName, liName, diskPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDiskAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDiskAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

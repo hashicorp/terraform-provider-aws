@@ -80,7 +80,7 @@ func TestAccAPIGatewayV2DomainName_disappears(t *testing.T) {
 				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceDomainName(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -72,7 +72,7 @@ func TestAccCloudFrontDistribution_disappears(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceDistribution(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceDistribution(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1577,6 +1577,50 @@ func TestAccCloudFrontDistribution_vpcOriginConfig(t *testing.T) {
 						"vpc_origin_config.0.origin_read_timeout":      "30",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_vpcOriginConfigOwnerAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_vpcOriginConfigOwnerAccountID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":        "0",
+						"custom_origin_config.#": "0",
+						names.AttrDomainName:     "www.example.com",
+						"origin_id":              "test",
+						"origin_shield.#":        "0",
+						"s3_origin_config.#":     "0",
+						"vpc_origin_config.#":    "1",
+						"vpc_origin_config.0.origin_keepalive_timeout": "5",
+						"vpc_origin_config.0.origin_read_timeout":      "30",
+					}),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -4867,6 +4911,52 @@ resource "aws_cloudfront_distribution" "test" {
 
     vpc_origin_config {
       vpc_origin_id = aws_cloudfront_vpc_origin.test.id
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`)
+}
+
+func testAccDistributionConfig_vpcOriginConfigOwnerAccountID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    vpc_origin_config {
+      vpc_origin_id    = aws_cloudfront_vpc_origin.test.id
+      owner_account_id = data.aws_caller_identity.current.account_id
     }
   }
 

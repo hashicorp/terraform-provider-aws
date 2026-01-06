@@ -78,7 +78,7 @@ func testAccOrganization_disappears(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceOrganization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceOrganization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -97,7 +97,7 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnetCIDRReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -174,7 +174,7 @@ func TestAccWAFRegionalRuleGroup_disappears(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceRuleGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

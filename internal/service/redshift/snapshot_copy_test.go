@@ -83,7 +83,7 @@ func TestAccRedshiftSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotCopy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +115,7 @@ func TestAccRedshiftSnapshotCopy_disappears_Cluster(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

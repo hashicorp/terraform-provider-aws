@@ -121,7 +121,7 @@ func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 				Config: testAccJobTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrcontainers.ResourceJobTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrcontainers.ResourceJobTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

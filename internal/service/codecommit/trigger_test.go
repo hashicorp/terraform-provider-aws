@@ -59,7 +59,7 @@ func TestAccCodeCommitTrigger_disappears(t *testing.T) {
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceTrigger(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

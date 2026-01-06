@@ -70,7 +70,7 @@ func TestAccNeptuneClusterParameterGroup_disappears(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceClusterParameterGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceClusterParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

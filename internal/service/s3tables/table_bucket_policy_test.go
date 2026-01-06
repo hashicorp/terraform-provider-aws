@@ -75,7 +75,7 @@ func TestAccS3TablesTableBucketPolicy_disappears(t *testing.T) {
 				Config: testAccTableBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketPolicyExists(ctx, resourceName, &tablebucketpolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTableBucketPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTableBucketPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

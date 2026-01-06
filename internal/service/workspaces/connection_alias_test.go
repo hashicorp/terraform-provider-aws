@@ -76,7 +76,7 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 				Config: testAccConnectionAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceConnectionAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspaces.ResourceConnectionAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

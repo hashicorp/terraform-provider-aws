@@ -76,7 +76,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceApplicationLayerAutomaticResponse, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceApplicationLayerAutomaticResponse, resourceName),
 				),
 			},
 		},
