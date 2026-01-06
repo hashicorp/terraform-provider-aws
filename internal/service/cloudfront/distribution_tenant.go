@@ -679,8 +679,7 @@ func findDistributionTenantByIdentifier(ctx context.Context, conn *cloudfront.Cl
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -765,7 +764,7 @@ func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id s
 }
 
 func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress},
 		Target:     []string{distributionTenantStatusDeployed},
 		Refresh:    statusDistributionTenant(ctx, conn, id),
@@ -784,7 +783,7 @@ func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client
 }
 
 func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress, distributionTenantStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusDistributionTenant(ctx, conn, id),
@@ -802,7 +801,7 @@ func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client,
 	return nil, err
 }
 
-func statusDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func statusDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDistributionTenantByIdentifier(ctx, conn, id)
 
