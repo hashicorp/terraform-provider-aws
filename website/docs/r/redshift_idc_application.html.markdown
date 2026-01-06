@@ -36,14 +36,14 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_integration` - (Optional) Collection of service integrations for the Redshift IAM Identity Center application. Refer to the [service_integration](#service_integration) documentation for more details.
 
-### AuthorizedTokenIssuer
+### authorized_token_issuer
 
 An `authorized_token_issuer` block supports the following:
 
 * `authorized_audiences_list` - List of audiences for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.
 * `trusted_token_issuer_arn` - ARN for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.
 
-### ServiceIntegration
+### service_integration
 
 A `service_integration` block supports the following:
 
@@ -51,13 +51,13 @@ A `service_integration` block supports the following:
 * `redshift` - (Optional) List of scopes set up for Redshift integration. Refer to the [redshift](#redshift) documentation for more details.
 * `s3_access_grants` - (Optional) List of scopes set up for S3 Access Grants integration. Refer to the [s3_access_grants](#s3_access_grants) documentation for more details.
 
-#### LakeFormation
+#### lake_formation
 
 A `lake_formation` block supports the following:
 
 * `lake_formation_query` - (Optional) Lake formation scope.
 
-#### LakeFormationQuery
+#### lake_formation_query
 
 A `lake_formation_query` block supports the following:
 
@@ -75,13 +75,13 @@ A `connect` block supports the following:
 
 * `authorization` - (Required) Determines whether the connect integration is enabled or disabled.
 
-#### S3AccessGrants
+#### s3_access_grants
 
 A `s3_access_grants` block supports the following:
 
 * `read_write_access` - (Optional) S3 Access grants integration scope.
 
-#### ReadWriteAccess
+#### read_write_access
 
 A `read_write_access` block supports the following:
 
