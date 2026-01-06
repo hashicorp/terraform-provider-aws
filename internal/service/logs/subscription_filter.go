@@ -39,7 +39,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceSubscriptionFilterImport,
+			StateContext: resourceSubscriptionFilterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -206,7 +206,7 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceSubscriptionFilterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())
