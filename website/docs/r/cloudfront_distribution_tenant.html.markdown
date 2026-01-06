@@ -205,7 +205,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the distribution tenant.
 * `arn` - ARN of the distribution tenant.
 * `status` - Current status of the distribution tenant.
-* `last_modified_time` - Date and time when the distribution tenant was last modified.
 * `etag` - Current version of the distribution tenant.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

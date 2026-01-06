@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -82,23 +81,19 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"wait_for_deployment": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -224,7 +219,6 @@ type distributionTenantResourceModel struct {
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
-	LastModifiedTime          timetypes.RFC3339                                               `tfsdk:"last_modified_time"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
 	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameters"`
@@ -326,7 +320,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 
 	// Set fields that fwflex.Flatten might not handle correctly
 	data.ID = fwflex.StringToFramework(ctx, output.DistributionTenant.Id)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.DistributionTenant.LastModifiedTime)
 	data.ARN = fwflex.StringToFramework(ctx, output.DistributionTenant.Arn)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
@@ -380,7 +373,6 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 			resp.Diagnostics.Append(d...)
 
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
-			data.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
 		}
 	}
 
@@ -428,7 +420,6 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 
 	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, tenant.LastModifiedTime)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -464,7 +455,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		input.Id = fwflex.StringFromFramework(ctx, new.ID)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
-		output, err := conn.UpdateDistributionTenant(ctx, input)
+		_, err := conn.UpdateDistributionTenant(ctx, input)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
@@ -542,13 +533,8 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 				resp.Diagnostics.Append(d...)
 
 				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
-				new.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
 			}
 		}
-
-		new.LastModifiedTime = fwflex.TimeToFramework(ctx, output.DistributionTenant.LastModifiedTime)
-	} else {
-		new.LastModifiedTime = old.LastModifiedTime
 	}
 
 	// Flatten the distribution tenant data into the model
