@@ -41,7 +41,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceKnowledgeBase, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

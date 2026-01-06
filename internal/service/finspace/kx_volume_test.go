@@ -80,7 +80,7 @@ func TestAccFinSpaceKxVolume_disappears(t *testing.T) {
 				Config: testAccKxVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

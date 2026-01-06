@@ -136,7 +136,7 @@ func testAccIPAMResourceDiscovery_disappears(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryConfig_base,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMResourceDiscovery(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMResourceDiscovery(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

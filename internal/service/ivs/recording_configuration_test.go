@@ -132,7 +132,7 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourceRecordingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceRecordingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,7 +161,7 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

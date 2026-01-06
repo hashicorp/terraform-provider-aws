@@ -81,7 +81,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappautoscaling.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

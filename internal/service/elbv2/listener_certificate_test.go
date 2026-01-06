@@ -173,7 +173,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,7 +199,7 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListener(), listenerResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListener(), listenerResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

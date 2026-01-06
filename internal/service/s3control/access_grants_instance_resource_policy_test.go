@@ -59,7 +59,7 @@ func testAccAccessGrantsInstanceResourcePolicy_disappears(t *testing.T) {
 				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsInstanceResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsInstanceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

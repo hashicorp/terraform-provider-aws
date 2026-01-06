@@ -71,7 +71,7 @@ func TestAccLambdaLayerVersion_disappears(t *testing.T) {
 				Config: testAccLayerVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceLayerVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceLayerVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -100,7 +100,7 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -382,7 +382,7 @@ func TestAccFSxONTAPFileSystem_disappears(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceONTAPFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

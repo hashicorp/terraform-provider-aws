@@ -97,7 +97,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfobservabilityadmin.ResourceCentralizationRuleForOrganization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceCentralizationRuleForOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -1,0 +1,24 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: update-sdk-check-resource-disappears
+    languages: [go]
+    message: '"acctest.CheckResourceDisappears" has been renamed to "acctest.CheckSDKResourceDisappears" and now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckResourceDisappears(ctx, acctest.Provider, $RES, $NAME)
+    fix: acctest.CheckSDKResourceDisappears(ctx, t, $RES, $NAME)
+    severity: ERROR
+
+  - id: update-framework-check-resource-disappears
+    languages: [go]
+    message: '"acctest.CheckFrameworkResourceDisappears" now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, $RES, $NAME)
+    fix: acctest.CheckFrameworkResourceDisappears(ctx, t, $RES, $NAME)
+    severity: ERROR
+
+  - id: update-framework-check-resource-disappears-with-state-func
+    languages: [go]
+    message: '"acctest.CheckFrameworkResourceDisappearsWithStateFunc" now takes the parameter "t" instead of "provider"'
+    pattern: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, $RES, $NAME, $F)
+    fix: acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, $RES, $NAME, $F)
+    severity: ERROR

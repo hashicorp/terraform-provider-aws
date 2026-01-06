@@ -116,7 +116,7 @@ func testAccKeyRegistration_disappears(t *testing.T) {
 				Config: testAccKeyRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyRegistrationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceKeyRegistration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceKeyRegistration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

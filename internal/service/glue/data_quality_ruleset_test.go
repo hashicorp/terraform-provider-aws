@@ -267,7 +267,7 @@ func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceDataQualityRuleset(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceDataQualityRuleset(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

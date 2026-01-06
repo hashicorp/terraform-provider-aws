@@ -80,7 +80,7 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDataview(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDataview(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

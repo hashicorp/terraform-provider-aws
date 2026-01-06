@@ -68,7 +68,7 @@ func testAccHSM_disappears(t *testing.T) {
 				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_cloudhsm_v2_cluster.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudhsmv2.ResourceHSM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

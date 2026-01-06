@@ -69,7 +69,7 @@ func testAccRetentionConfiguration_disappears(t *testing.T) {
 				Config: testAccRetentionConfigurationConfig_basic(90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRetentionConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfconfig.ResourceRetentionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

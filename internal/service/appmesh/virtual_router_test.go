@@ -159,7 +159,7 @@ func testAccVirtualRouter_disappears(t *testing.T) {
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualRouter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualRouter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

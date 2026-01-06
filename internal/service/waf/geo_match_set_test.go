@@ -112,7 +112,7 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceGeoMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceGeoMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

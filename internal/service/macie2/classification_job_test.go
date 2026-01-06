@@ -134,7 +134,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 				Config: testAccClassificationJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceClassificationJob(), resourceName),
 				),
 			},
 		},

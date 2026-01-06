@@ -89,7 +89,7 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceSubscriptionFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceSubscriptionFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +114,7 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

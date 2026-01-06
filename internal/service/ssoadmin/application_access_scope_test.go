@@ -73,7 +73,7 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplicationAccessScope, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplicationAccessScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

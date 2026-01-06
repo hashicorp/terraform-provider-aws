@@ -82,7 +82,7 @@ func TestAccFinSpaceKxUser_disappears(t *testing.T) {
 				Config: testAccKxUserConfig_basic(rName, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

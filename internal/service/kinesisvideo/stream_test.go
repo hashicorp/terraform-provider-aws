@@ -158,7 +158,7 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, t, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisvideo.ResourceStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesisvideo.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

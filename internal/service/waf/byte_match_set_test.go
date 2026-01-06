@@ -218,7 +218,7 @@ func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 				Config: testAccByteMatchSetConfig_basic(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceByteMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceByteMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

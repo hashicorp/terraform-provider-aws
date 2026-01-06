@@ -113,7 +113,7 @@ func testAccGrant_disappears(t *testing.T) {
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceGrant(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -120,7 +120,7 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_disappears(t *testing.T)
 				Config: testAccServiceNetworkResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkResourceAssociationExists(ctx, resourceName, &servicenetworkresourceassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkResourceAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceServiceNetworkResourceAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -87,7 +87,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceActiveReceiptRuleSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceActiveReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

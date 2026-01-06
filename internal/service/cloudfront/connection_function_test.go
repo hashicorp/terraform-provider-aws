@@ -91,7 +91,7 @@ func TestAccCloudFrontConnectionFunction_disappears(t *testing.T) {
 				Config: testAccConnectionFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceConnectionFunction, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceConnectionFunction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

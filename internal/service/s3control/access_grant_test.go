@@ -68,7 +68,7 @@ func testAccAccessGrant_disappears(t *testing.T) {
 				Config: testAccAccessGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

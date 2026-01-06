@@ -125,7 +125,7 @@ func TestAccBillingView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbilling.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbilling.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

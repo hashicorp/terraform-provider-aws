@@ -72,7 +72,7 @@ func testAccSafetyRule_disappears(t *testing.T) {
 				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceSafetyRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoverycontrolconfig.ResourceSafetyRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

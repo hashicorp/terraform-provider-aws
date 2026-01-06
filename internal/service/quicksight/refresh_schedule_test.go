@@ -83,7 +83,7 @@ func TestAccQuickSightRefreshSchedule_disappears(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_basic(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRefreshSchedule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceRefreshSchedule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

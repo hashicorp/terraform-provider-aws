@@ -114,7 +114,7 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHumanTaskUI(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHumanTaskUI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

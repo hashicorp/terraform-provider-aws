@@ -68,7 +68,7 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

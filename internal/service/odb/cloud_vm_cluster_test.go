@@ -262,7 +262,7 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 				Config: vmcBasicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudVmCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudVmCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

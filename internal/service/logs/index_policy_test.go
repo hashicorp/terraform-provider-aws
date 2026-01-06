@@ -67,7 +67,7 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexPolicyExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceIndexPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceIndexPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
