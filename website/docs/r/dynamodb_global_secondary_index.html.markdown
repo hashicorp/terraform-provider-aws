@@ -188,7 +188,7 @@ The following arguments are required:
   See [`key_schema` below](#key_schema).
 * `projection` - (Required) Describes which attributes from the table are represented in the index.
   See [`projection` below](#projection).
-* `table_name` - (Required) Name of the table this index belongs to
+* `table_name` - (Required) Name of the table this index belongs to.
 
 The following arguments are optional:
 
@@ -204,7 +204,7 @@ The following arguments are optional:
 
 ### `key_schema`
 
-* `attribute_name` - (Required) Name of the attribute
+* `attribute_name` - (Required) Name of the attribute.
 * `attribute_type` - (Required) Type of the attribute in the index.
   Valid values are `S` (string), `N` (number), or `B` (binary).
 * `key_type` - (Required) Key type.
@@ -236,7 +236,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the GSI
+* `arn` - ARN of the GSI.
 
 ## Import
 
