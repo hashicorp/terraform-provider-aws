@@ -115,7 +115,6 @@ func resourceNotebookInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3|notebook-al2023-v1)$`), ""),
 			},
 			names.AttrRoleARN: {
@@ -302,6 +301,10 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			} else {
 				input.DisassociateLifecycleConfig = aws.Bool(true)
 			}
+		}
+
+		if d.HasChange("platform_identifier") {
+			input.PlatformIdentifier = aws.String(d.Get("platform_identifier").(string))
 		}
 
 		if d.HasChange(names.AttrRoleARN) {
