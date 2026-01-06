@@ -240,14 +240,11 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	// Manually flatten domains and parameters using helper functions from resource file
-	var diags diag.Diagnostics
-	data.Domains, diags = flattenDomainsDataSource(ctx, tenant.Domains)
-	response.Diagnostics.Append(diags...)
-	data.Parameters, diags = flattenParametersDataSource(ctx, tenant.Parameters)
-	response.Diagnostics.Append(diags...)
-	data.Customizations, diags = flattenCustomizationsDataSource(ctx, tenant.Customizations)
-	response.Diagnostics.Append(diags...)
+	// Use AutoFlex to flatten the response
+	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	// Set computed fields that need special handling
 	data.ID = fwflex.StringToFramework(ctx, tenant.Id)
@@ -265,14 +262,14 @@ type distributionTenantDataSourceModel struct {
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsDataSourceModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                              `tfsdk:"distribution_id"`
 	Domain                    types.String                                                              `tfsdk:"domain"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainItemDataSourceModel]                 `tfsdk:"domains"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemDataSourceModel]                 `tfsdk:"domains" autoflex:",xmlwrapper=Items"`
 	Enabled                   types.Bool                                                                `tfsdk:"enabled"`
 	ETag                      types.String                                                              `tfsdk:"etag"`
 	ID                        types.String                                                              `tfsdk:"id"`
 	LastModifiedTime          timetypes.RFC3339                                                         `tfsdk:"last_modified_time"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestDataSourceModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                              `tfsdk:"name"`
-	Parameters                fwtypes.SetNestedObjectValueOf[parameterDataSourceModel]                  `tfsdk:"parameters"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterDataSourceModel]                  `tfsdk:"parameters" autoflex:",xmlwrapper=Items"`
 	Status                    types.String                                                              `tfsdk:"status"`
 	Tags                      tftags.Map                                                                `tfsdk:"tags"`
 }
@@ -525,57 +522,4 @@ func (m *domainItemDataSourceModel) Flatten(ctx context.Context, v any) diag.Dia
 	return diags
 }
 
-// flattenDomainsDataSource converts AWS SDK DomainResult slice to framework ListNestedObjectValueOf for data source
-func flattenDomainsDataSource(ctx context.Context, domains []awstypes.DomainResult) (fwtypes.SetNestedObjectValueOf[domainItemDataSourceModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
 
-	domainModels := make([]*domainItemDataSourceModel, 0, len(domains))
-	for _, domainResult := range domains {
-		domainModels = append(domainModels, &domainItemDataSourceModel{
-			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
-		})
-	}
-
-	domainsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, domainModels, nil)
-	diags.Append(d...)
-
-	return domainsSet, diags
-}
-
-// flattenParametersDataSource converts AWS SDK Parameter slice to framework ListNestedObjectValueOf for data source
-func flattenParametersDataSource(ctx context.Context, parameters []awstypes.Parameter) (fwtypes.SetNestedObjectValueOf[parameterDataSourceModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	parameterModels := make([]*parameterDataSourceModel, 0, len(parameters))
-	for _, param := range parameters {
-		parameterModels = append(parameterModels, &parameterDataSourceModel{
-			Name:  fwflex.StringToFramework(ctx, param.Name),
-			Value: fwflex.StringToFramework(ctx, param.Value),
-		})
-	}
-
-	parametersSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, parameterModels, nil)
-	diags.Append(d...)
-
-	return parametersSet, diags
-}
-
-// flattenCustomizationsDataSource converts AWS SDK Customizations to framework ListNestedObjectValueOf for data source
-func flattenCustomizationsDataSource(ctx context.Context, customizations *awstypes.Customizations) (fwtypes.ListNestedObjectValueOf[customizationsDataSourceModel], diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if customizations == nil {
-		return fwtypes.NewListNestedObjectValueOfNull[customizationsDataSourceModel](ctx), diags
-	}
-
-	var customModel customizationsDataSourceModel
-	diags.Append(customModel.Flatten(ctx, customizations)...)
-	if diags.HasError() {
-		return fwtypes.NewListNestedObjectValueOfNull[customizationsDataSourceModel](ctx), diags
-	}
-
-	customList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &customModel)
-	diags.Append(d...)
-
-	return customList, diags
-}
