@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -183,11 +183,11 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			"domain": schema.SetNestedBlock{
+			names.AttrDomain: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{
+						names.AttrDomain: schema.StringAttribute{
 							Required: true,
 						},
 						names.AttrStatus: schema.StringAttribute{
@@ -561,9 +561,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	} else {
 		// If no update was performed (e.g., tag-only changes), we still need to refresh the distribution tenant data
 		// to ensure all computed fields are properly set
-		getOutput, err := conn.GetDistributionTenant(ctx, &cloudfront.GetDistributionTenantInput{
+		input := cloudfront.GetDistributionTenantInput{
 			Identifier: fwflex.StringFromFramework(ctx, new.ID),
-		})
+		}
+		getOutput, err := conn.GetDistributionTenant(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, new.ID.String(), err),

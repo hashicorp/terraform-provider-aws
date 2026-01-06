@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -152,7 +152,7 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemDataSourceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{
+						names.AttrDomain: schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -187,23 +187,23 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 	// Define lookup strategies using config values
 	lookupStrategies := []struct {
 		value types.String
-		fn    func(context.Context, *cloudfront.Client, string) (interface{}, error)
+		fn    func(context.Context, *cloudfront.Client, string) (any, error)
 	}{
-		{data.ID, func(ctx context.Context, conn *cloudfront.Client, id string) (interface{}, error) {
+		{data.ID, func(ctx context.Context, conn *cloudfront.Client, id string) (any, error) {
 			return findDistributionTenantByIdentifier(ctx, conn, id)
 		}},
-		{data.ARN, func(ctx context.Context, conn *cloudfront.Client, arn string) (interface{}, error) {
+		{data.ARN, func(ctx context.Context, conn *cloudfront.Client, arn string) (any, error) {
 			return findDistributionTenantByIdentifier(ctx, conn, arn)
 		}},
-		{data.Name, func(ctx context.Context, conn *cloudfront.Client, name string) (interface{}, error) {
+		{data.Name, func(ctx context.Context, conn *cloudfront.Client, name string) (any, error) {
 			return findDistributionTenantByIdentifier(ctx, conn, name)
 		}},
-		{data.Domain, func(ctx context.Context, conn *cloudfront.Client, domain string) (interface{}, error) {
+		{data.Domain, func(ctx context.Context, conn *cloudfront.Client, domain string) (any, error) {
 			return findDistributionTenantByDomain(ctx, conn, domain)
 		}},
 	}
 
-	var output interface{}
+	var output any
 	var err error
 
 	// Try each lookup strategy until we find a non-null, non-unknown value

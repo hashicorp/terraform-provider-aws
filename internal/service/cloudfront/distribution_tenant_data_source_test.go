@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -221,12 +221,12 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id     = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_distribution.test.id
   domains {
     domain = %[2]q
   }
-  name                = %[1]q
-  enabled             = false
+  name    = %[1]q
+  enabled = false
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
@@ -303,12 +303,12 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id     = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_distribution.test.id
   domains {
     domain = %[2]q
   }
-  name                = %[1]q
-  enabled             = false
+  name    = %[1]q
+  enabled = false
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
@@ -385,12 +385,12 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id     = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_distribution.test.id
   domains {
     domain = %[2]q
   }
-  name                = %[1]q
-  enabled             = false
+  name    = %[1]q
+  enabled = false
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
@@ -467,12 +467,12 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id     = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_distribution.test.id
   domains {
     domain = %[2]q
   }
-  name                = %[1]q
-  enabled             = false
+  name    = %[1]q
+  enabled = false
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {

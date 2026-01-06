@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -66,7 +66,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
-					"status",
+					names.AttrStatus,
 				},
 			},
 		},
@@ -145,7 +145,7 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
-					"status",
+					names.AttrStatus,
 				},
 			},
 		},
@@ -187,7 +187,7 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
-					"status",
+					names.AttrStatus,
 				},
 			},
 		},
@@ -234,7 +234,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
-					"status",
+					names.AttrStatus,
 				},
 			},
 			{
