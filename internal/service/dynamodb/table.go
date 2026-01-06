@@ -72,6 +72,9 @@ func resourceTable() *schema.Resource {
 				return validateTableAttributes(diff)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateGSISchema(diff)
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isTableOptionDisabled(o) && isTableOptionDisabled(n) {
@@ -3139,7 +3142,6 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 // validators
 
 func validateTableAttributes(d *schema.ResourceDiff) error {
-	var errs []error
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 	if v, ok := d.GetOk("hash_key"); ok {
@@ -3158,40 +3160,30 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 	}
 	if v, ok := d.GetOk("global_secondary_index"); ok {
 		indexes := v.(*schema.Set).List()
-
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
 
-			hk, hkok := index["hash_key"].(string)
-			hks, hksok := index["hash_keys"].(*schema.Set)
-
-			if (hkok && hksok) && (hk != "" && hks.Len() > 0) {
-				errs = append(errs, fmt.Errorf("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set: %q, %v", hk, hks.List()))
-			} else {
-				// Check if hash_key is not empty then hash_keys must be empty and vice versa.
-				// then for whichever one is not empty check the indexed attributes
-				if hkok && hk != "" {
-					indexedAttributes[hk] = true
-				} else if hksok && hks.Len() > 0 {
-					for _, hk := range hks.List() {
-						if hkStr, ok := hk.(string); ok && hkStr != "" {
-							indexedAttributes[hkStr] = true
+			if hashKey, ok := index["hash_key"]; ok && hashKey != "" {
+				indexedAttributes[hashKey.(string)] = true
+			}
+			if v, ok := index["hash_keys"]; ok {
+				if hashKeys, ok := v.(*schema.Set); ok {
+					for _, v := range hashKeys.List() {
+						if key, ok := v.(string); ok && key != "" {
+							indexedAttributes[key] = true
 						}
 					}
 				}
 			}
-			rk, rkok := index["range_key"].(string)
-			rks, rksok := index["range_keys"].(*schema.Set)
 
-			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
-				errs = append(errs, fmt.Errorf("At most one can be set for range_key (String type) or range_keys (Set type) but both are set: %q, %v", rk, rks.List()))
-			} else {
-				if rk, ok := index["range_key"].(string); ok && rk != "" {
-					indexedAttributes[rk] = true
-				} else if rks, ok := index["range_keys"].(*schema.Set); ok && rks.Len() > 0 {
-					for _, rk := range rks.List() {
-						if rkStr, ok := rk.(string); ok && rkStr != "" {
-							indexedAttributes[rkStr] = true
+			if rangeKey, ok := index["range_key"]; ok && rangeKey != "" {
+				indexedAttributes[rangeKey.(string)] = true
+			}
+			if v, ok := index["range_keys"]; ok {
+				if rangeKeys, ok := v.(*schema.Set); ok {
+					for _, v := range rangeKeys.List() {
+						if key, ok := v.(string); ok && key != "" {
+							indexedAttributes[key] = true
 						}
 					}
 				}
@@ -3213,6 +3205,8 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	var errs []error
+
 	if len(unindexedAttributes) > 0 {
 		slices.Sort(unindexedAttributes)
 
@@ -3224,6 +3218,32 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		slices.Sort(missingIndexes)
 
 		errs = append(errs, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
+	}
+
+	return errors.Join(errs...)
+}
+
+func validateGSISchema(d *schema.ResourceDiff) error {
+	var errs []error
+
+	if v, ok := d.GetOk("global_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+
+		for _, idx := range indexes {
+			index := idx.(map[string]any)
+
+			hk, hkok := index["hash_key"].(string)
+			hks, hksok := index["hash_keys"].(*schema.Set)
+			if (hkok && hksok) && (hk != "" && hks.Len() > 0) {
+				errs = append(errs, fmt.Errorf("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set: %q, %v", hk, hks.List()))
+			}
+
+			rk, rkok := index["range_key"].(string)
+			rks, rksok := index["range_keys"].(*schema.Set)
+			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
+				errs = append(errs, fmt.Errorf("At most one can be set for range_key (String type) or range_keys (Set type) but both are set: %q, %v", rk, rks.List()))
+			}
+		}
 	}
 
 	return errors.Join(errs...)
