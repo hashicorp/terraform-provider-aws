@@ -1011,6 +1011,12 @@ func TestAccCloudFrontDistribution_connectionFunctionAssociation(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "connection_function_association.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_function_association.0.id", "aws_cloudfront_connection_function.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "required"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtFalse),
 				),
 			},
 			{
@@ -1048,6 +1054,12 @@ func TestAccCloudFrontDistribution_connectionFunctionAssociationUpdate(t *testin
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "connection_function_association.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_function_association.0.id", "aws_cloudfront_connection_function.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "required"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtFalse),
 				),
 			},
 			{
@@ -1056,6 +1068,12 @@ func TestAccCloudFrontDistribution_connectionFunctionAssociationUpdate(t *testin
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "connection_function_association.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_function_association.0.id", "aws_cloudfront_connection_function.test2", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtTrue),
 				),
 			},
 			{
@@ -1093,6 +1111,12 @@ func TestAccCloudFrontDistribution_connectionFunctionAssociationRemove(t *testin
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "connection_function_association.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_function_association.0.id", "aws_cloudfront_connection_function.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "required"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtFalse),
 				),
 			},
 			{
@@ -1100,6 +1124,12 @@ func TestAccCloudFrontDistribution_connectionFunctionAssociationRemove(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "connection_function_association.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "required"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtFalse),
 				),
 			},
 			{
@@ -1854,6 +1884,55 @@ func TestAccCloudFrontDistribution_grpcConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.grpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.grpc_config.0.enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_viewerMtlsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_viewerMtlsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "required"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_viewerMtlsConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "viewer_mtls_config.0.trust_store_config.0.trust_store_id", "aws_cloudfront_trust_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.advertise_trust_store_ca_names", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.0.ignore_certificate_expiry", acctest.CtTrue),
 				),
 			},
 		},
@@ -5223,8 +5302,62 @@ resource "aws_cloudfront_distribution" "test" {
 }
 `
 }
-func testAccDistributionConfig_connectionFunctionAssociation(rName string) string {
+
+const testAccDistributionTrustStoreCertificateContent = `-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----`
+
+func testAccDistributionConfig_connectionFunctionAssociationBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "ca-bundle.pem"
+  content = <<-EOT
+%[2]s
+EOT
+}
+
+resource "aws_cloudfront_trust_store" "test" {
+  name = %[1]q
+
+  ca_certificates_bundle_source {
+    ca_certificates_bundle_s3_location {
+      bucket = aws_s3_bucket.test.id
+      key    = aws_s3_object.test.key
+      region = data.aws_region.current.name
+    }
+  }
+}
+
+`, rName, testAccDistributionTrustStoreCertificateContent)
+}
+
+func testAccDistributionConfig_connectionFunctionAssociation(rName string) string {
+	return acctest.ConfigCompose(testAccDistributionConfig_connectionFunctionAssociationBase(rName), fmt.Sprintf(`
 resource "aws_cloudfront_connection_function" "test" {
   name                     = %[1]q
   connection_function_code = "function handler(event) { return event.request; }"
@@ -5248,7 +5381,7 @@ resource "aws_cloudfront_distribution" "test" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "https-only"
 
     forwarded_values {
       query_string = false
@@ -5280,12 +5413,22 @@ resource "aws_cloudfront_distribution" "test" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  viewer_mtls_config {
+    mode = "required"
+    
+    trust_store_config {
+      trust_store_id                   = aws_cloudfront_trust_store.test.id
+      advertise_trust_store_ca_names   = true
+      ignore_certificate_expiry        = false
+    }
+  }
 }
-`, rName)
+`, rName))
 }
 
 func testAccDistributionConfig_connectionFunctionAssociationUpdated(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionConfig_connectionFunctionAssociationBase(rName), fmt.Sprintf(`
 resource "aws_cloudfront_connection_function" "test" {
   name                     = %[1]q
   connection_function_code = "function handler(event) { return event.request; }"
@@ -5320,7 +5463,7 @@ resource "aws_cloudfront_distribution" "test" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "https-only"
 
     forwarded_values {
       query_string = false
@@ -5352,12 +5495,22 @@ resource "aws_cloudfront_distribution" "test" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  viewer_mtls_config {
+    mode = "optional"
+    
+    trust_store_config {
+      trust_store_id                   = aws_cloudfront_trust_store.test.id
+      advertise_trust_store_ca_names   = false
+      ignore_certificate_expiry        = true
+    }
+  }
 }
-`, rName)
+`, rName))
 }
 
 func testAccDistributionConfig_connectionFunctionAssociationRemoved(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionConfig_connectionFunctionAssociationBase(rName), fmt.Sprintf(`
 resource "aws_cloudfront_connection_function" "test" {
   name                     = %[1]q
   connection_function_code = "function handler(event) { return event.request; }"
@@ -5377,7 +5530,7 @@ resource "aws_cloudfront_distribution" "test" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "https-only"
 
     forwarded_values {
       query_string = false
@@ -5409,6 +5562,128 @@ resource "aws_cloudfront_distribution" "test" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  viewer_mtls_config {
+    mode = "required"
+    
+    trust_store_config {
+      trust_store_id                   = aws_cloudfront_trust_store.test.id
+      advertise_trust_store_ca_names   = true
+      ignore_certificate_expiry        = false
+    }
+  }
 }
-`, rName)
+`, rName))
+}
+
+func testAccDistributionConfig_viewerMtlsConfig(rName string) string {
+	return acctest.ConfigCompose(testAccDistributionConfig_connectionFunctionAssociationBase(rName), fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "https-only"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  viewer_mtls_config {
+    mode = "required"
+    
+    trust_store_config {
+      trust_store_id                   = aws_cloudfront_trust_store.test.id
+      advertise_trust_store_ca_names   = true
+      ignore_certificate_expiry        = false
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDistributionConfig_viewerMtlsConfigUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccDistributionConfig_connectionFunctionAssociationBase(rName), fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "https-only"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  viewer_mtls_config {
+    mode = "optional"
+    
+    trust_store_config {
+      trust_store_id                   = aws_cloudfront_trust_store.test.id
+      advertise_trust_store_ca_names   = false
+      ignore_certificate_expiry        = true
+    }
+  }
+}
+`, rName))
 }
