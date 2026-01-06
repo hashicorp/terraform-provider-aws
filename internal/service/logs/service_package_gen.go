@@ -193,7 +193,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
-			Factory:  logGroupResourceAsListResource,
+			Factory:  newLogGroupResourceAsListResource,
 			TypeName: "aws_cloudwatch_log_group",
 			Name:     "Log Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

@@ -13,8 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -24,15 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -777,94 +772,4 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	)
 
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
-}
-
-// @SDKListResource("aws_kms_key")
-func keyResourceAsListResource() inttypes.ListResourceForSDK {
-	l := keyListResource{}
-	l.SetResourceSchema(resourceKey())
-	return &l
-}
-
-type keyListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type keyListResourceModel struct {
-	framework.WithRegionModel
-}
-
-func (l *keyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-		Blocks:     map[string]listschema.Block{},
-	}
-}
-
-func (l *keyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query keyListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	awsClient := l.Meta()
-	conn := awsClient.KMSClient(ctx)
-
-	tflog.Info(ctx, "Listing KMS keys")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		var input kms.ListKeysInput
-		pages := kms.NewListKeysPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			for _, key := range page.Keys {
-				id := aws.ToString(key.KeyId)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-				result := request.NewListResult(ctx)
-
-				rd := l.ResourceData()
-				rd.SetId(id)
-
-				diags := resourceKeyRead(ctx, rd, awsClient)
-				if diags.HasError() || rd.Id() == "" {
-					// Resource can't be read or is logically deleted.
-					// Log and continue.
-					tflog.Error(ctx, "Reading KMS key", map[string]any{
-						names.AttrID: id,
-						"diags":      sdkdiag.DiagnosticsString(diags),
-					})
-					continue
-				}
-
-				if err := l.SetTags(ctx, awsClient, rd); err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				result.DisplayName = id
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
-		}
-	}
 }
