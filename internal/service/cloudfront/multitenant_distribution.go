@@ -905,16 +905,13 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 	// 4. If not disabled error, disable, wait for deploy, delete
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
-		disableErr := disableMultiTenantDistribution(ctx, conn, id)
-		if disableErr == nil || retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
-			return
-		}
-		if disableErr != nil {
-			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
+		err := disableMultiTenantDistribution(ctx, conn, id)
+		if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
 			return
 		}
 
-		err = deleteMultiTenantDistribution(ctx, conn, id)
+		response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", err.Error())
+		return
 	}
 
 	// 5. If precondition/invalidifmatchversion, retry delete
