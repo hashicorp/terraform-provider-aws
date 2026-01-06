@@ -49,7 +49,7 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -144,10 +144,11 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -174,10 +175,11 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -207,7 +209,7 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_distribution(rName, "ByLogStream"),
@@ -245,7 +247,7 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\"]"),
@@ -268,7 +270,7 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -296,10 +298,11 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_roleARN2(rName),
