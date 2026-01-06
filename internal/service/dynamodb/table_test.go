@@ -1179,7 +1179,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1196,58 +1196,155 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_initialState(rName),
+				Config: testAccTableConfig_GSI_singleRangeKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":        knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys":       knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName),
+				Config: testAccTableConfig_GSI_multipleRangeKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
-					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableHashKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableRangeKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestLSIRangeKey",
-						names.AttrType: "N",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "ReplacementGSIRangeKey",
-						names.AttrType: "N",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						names.AttrName:         "ReplacementTestTableGSI",
-						"hash_key":             "TestTableHashKey",
-						"range_keys.#":         "2",
-						"write_capacity":       "5",
-						"read_capacity":        "5",
-						"projection_type":      "INCLUDE",
-						"non_key_attributes.#": "1",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-						names.AttrName:    "TestTableLSI",
-						"range_key":       "TestLSIRangeKey",
-						"projection_type": "ALL",
-					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey2"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":        knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys":       knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("TestGSIRangeKey"),
+								knownvalue.StringExact("TestGSIRangeKey2"),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_multipleRangeKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey2"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":        knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys":       knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("TestGSIRangeKey"),
+								knownvalue.StringExact("TestGSIRangeKey2"),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestGSIRangeKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key":        knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys":       knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1260,9 +1357,6 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey(t *testing.T) {
 
 func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1660,6 +1754,11 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -7154,14 +7253,13 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName string) string {
+func testAccTableConfig_GSI_singleRangeKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
-  read_capacity  = 2
-  write_capacity = 2
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "TestTableHashKey"
-  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -7169,34 +7267,52 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "TestTableRangeKey"
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "GSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    projection_type = "KEYS_ONLY"
+    write_capacity  = 1
+    read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_multipleRangeKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
     type = "S"
   }
 
   attribute {
-    name = "ReplacementGSIRangeKey"
-    type = "N"
+    name = "TestGSIRangeKey"
+    type = "S"
   }
 
   attribute {
-    name = "ReplacementGSIRangeKey2"
-    type = "N"
-  }
-
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
+    name = "TestGSIRangeKey2"
+    type = "S"
   }
 
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
+    name               = "GSI"
     hash_key           = "TestTableHashKey"
-    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    range_keys         = ["TestGSIRangeKey", "TestGSIRangeKey2"]
+    projection_type    = "KEYS_ONLY"
+    write_capacity     = 1
+    read_capacity      = 1
   }
 }
 `, rName)
