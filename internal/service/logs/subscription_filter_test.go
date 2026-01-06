@@ -333,7 +333,7 @@ func TestAccLogsSubscriptionFilter_applyOnTransformedLogs(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-				Config: testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName, true),
+				Config: testAccSubscriptionFilterConfig_applyOnTransformed(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtTrue),
@@ -352,7 +352,7 @@ func TestAccLogsSubscriptionFilter_applyOnTransformedLogs(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName, false),
+				Config: testAccSubscriptionFilterConfig_applyOnTransformed(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtFalse),
@@ -868,7 +868,7 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName))
 }
 
-func testAccSubscriptionFilterConfig_applyOnTransformedLogs(rName string, applyOnTransformedLogs bool) string {
+func testAccSubscriptionFilterConfig_applyOnTransformed(rName string, applyOnTransformedLogs bool) string {
 	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_arn = aws_cloudwatch_log_group.test.arn
