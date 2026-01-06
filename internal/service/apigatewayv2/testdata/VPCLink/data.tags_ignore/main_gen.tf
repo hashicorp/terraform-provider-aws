@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -33,6 +33,8 @@ resource "aws_security_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2

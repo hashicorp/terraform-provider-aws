@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding a New Tag Resource
 
 Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implementation procedure since the resource code and initial acceptance testing functions are automatically generated. The rest of the resource acceptance testing and resource documentation must still be manually created.
@@ -61,7 +64,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheck{Service}TagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, resourceAws{Service}Tag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, resourceAws{Service}Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -179,7 +179,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 				Config: testAccMultiplexProgramConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmedialive.ResourceMultiplexProgram, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,7 +200,7 @@ func testAccCheckMultiplexProgramDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, attributes["multiplex_id"], attributes["program_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

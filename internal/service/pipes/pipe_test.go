@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpipes "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,7 +98,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpipes.ResourcePipe(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpipes.ResourcePipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1703,7 +1703,7 @@ func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfpipes.FindPipeByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

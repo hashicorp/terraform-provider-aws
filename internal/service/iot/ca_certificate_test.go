@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func TestAccIoTCACertificate_disappears(t *testing.T) {
 				Config: testAccCACertificateConfig_basic(caCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceCACertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceCACertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -219,7 +219,7 @@ func testAccCheckCACertificateDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfiot.FindCACertificateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

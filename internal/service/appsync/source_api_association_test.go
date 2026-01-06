@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,7 +132,7 @@ func testAccAppSyncSourceAPIAssociation_disappears(t *testing.T) {
 				Config: testAccSourceAPIAssociationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceSourceAPIAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappsync.ResourceSourceAPIAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,7 +151,7 @@ func testAccCheckSourceAPIAssociationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfappsync.FindSourceAPIAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAssociationID], rs.Primary.Attributes["merged_api_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

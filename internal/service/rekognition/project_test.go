@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrekognition "github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -164,7 +164,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceProject, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -267,7 +267,7 @@ func testAccCheckProjectDestroy(ctx context.Context, feature string, name string
 			}
 
 			_, err := tfrekognition.FindProjectByName(ctx, conn, name, awstypes.CustomizationFeature(feature))
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

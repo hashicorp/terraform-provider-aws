@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +74,7 @@ func testAccSSHKey_disappears(t *testing.T) {
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceSSHKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceSSHKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +114,7 @@ func testAccCheckSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, _, err := tftransfer.FindUserSSHKeyByThreePartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["ssh_key_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +70,7 @@ func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
 				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceClientCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,7 +110,7 @@ func testAccCheckClientCertificateDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfapigateway.FindClientCertificateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

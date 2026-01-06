@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -97,7 +97,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 				Config: testAccPoolProviderPrincipalTagsConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolProviderPrincipalTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePoolProviderPrincipalTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

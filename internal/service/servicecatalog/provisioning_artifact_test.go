@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -84,7 +84,7 @@ func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 				Config: testAccProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisioningArtifactExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

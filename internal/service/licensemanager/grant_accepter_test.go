@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,7 +87,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 				Config: testAccGrantAccepterConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
-					acctest.CheckResourceDisappears(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappearsWithProvider(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,7 +121,7 @@ func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.T
 
 			_, err := tflicensemanager.FindReceivedGrantByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

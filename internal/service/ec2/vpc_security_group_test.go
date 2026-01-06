@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -929,7 +929,7 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2511,7 +2511,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 					match, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
-					if tfresource.NotFound(err) {
+					if retry.NotFound(err) {
 						t.Fatalf("PreConfig check failed: Security Group (%s) not found: %s", id, err)
 					}
 					if err != nil {
@@ -2809,7 +2809,7 @@ func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2882,7 +2882,7 @@ func testSecurityGroupRuleCount(ctx context.Context, id string, expectedIngressC
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	group, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return fmt.Errorf("Security Group (%s) not found: %w", id, err)
 	}
 	if err != nil {

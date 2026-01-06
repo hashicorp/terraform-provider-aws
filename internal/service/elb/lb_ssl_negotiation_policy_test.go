@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -112,7 +112,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceSSLNegotiationPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceSSLNegotiationPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +136,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 
 			_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

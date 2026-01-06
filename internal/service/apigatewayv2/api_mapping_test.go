@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -17,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -118,7 +118,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateARN *st
 				Config: testAccAPIMappingConfig_basic(rName, *certificateARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceAPIMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceAPIMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,7 +203,7 @@ func testAccCheckAPIMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

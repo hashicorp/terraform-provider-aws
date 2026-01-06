@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_rds_integration" "test" {
@@ -252,6 +252,8 @@ resource "aws_vpc" "test" {
 
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 3)
 
 resource "aws_subnet" "test" {
   region = var.region

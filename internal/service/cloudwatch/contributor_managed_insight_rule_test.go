@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,7 +80,7 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},
@@ -140,7 +140,7 @@ func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context) resou
 				rs.Primary.Attributes["template_name"],
 			)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 

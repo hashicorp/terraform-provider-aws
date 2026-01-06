@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomainSAMLOptions(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -101,7 +101,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), esDomainResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -189,7 +189,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

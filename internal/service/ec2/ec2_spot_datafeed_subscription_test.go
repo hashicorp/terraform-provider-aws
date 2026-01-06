@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,7 +80,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(ctx, resourceName, &subscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,7 +124,7 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 
 			_, err := tfec2.FindSpotDatafeedSubscription(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

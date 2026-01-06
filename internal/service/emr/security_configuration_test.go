@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +63,7 @@ func TestAccEMRSecurityConfiguration_disappears(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceSecurityConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceSecurityConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +136,7 @@ func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfemr.FindSecurityConfigurationByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

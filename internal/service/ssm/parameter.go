@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -272,7 +273,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
-			if d.IsNewResource() && tfresource.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
+			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
 				return true, err
 			}
 
@@ -280,7 +281,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 		},
 	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -330,7 +331,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -444,7 +445,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	output, err := conn.GetParameter(ctx, input)
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

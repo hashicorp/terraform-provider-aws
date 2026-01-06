@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emrserverless_test
@@ -369,8 +369,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

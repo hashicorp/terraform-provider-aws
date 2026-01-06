@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleetStackAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleetStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 
 			err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

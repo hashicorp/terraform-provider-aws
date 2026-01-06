@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2032,7 +2032,7 @@ func testAccRoute_disappears(t *testing.T) {
 				Config: testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2062,7 +2062,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappmesh.FindRouteByFourPartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["virtual_router_name"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

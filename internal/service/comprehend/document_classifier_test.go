@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package comprehend_test
@@ -118,7 +118,7 @@ func TestAccComprehendDocumentClassifier_disappears(t *testing.T) {
 				Config: testAccDocumentClassifierConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcomprehend.ResourceDocumentClassifier(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcomprehend.ResourceDocumentClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

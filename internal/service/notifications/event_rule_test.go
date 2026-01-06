@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications_test
@@ -6,6 +6,7 @@ package notifications_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -16,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -155,6 +156,49 @@ func TestAccNotificationsEventRule_recreate(t *testing.T) {
 	})
 }
 
+func TestAccNotificationsEventRule_withoutEventPattern(t *testing.T) {
+	ctx := acctest.Context(t)
+	var eventrule notifications.GetEventRuleOutput
+	rConfigName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rEventType := "CloudWatch Alarm State Change"
+	rRegions := []string{"us-east-1", "us-west-2"} //lintignore:AWSAT003
+	rSource := "aws.cloudwatch"
+	resourceName := "aws_notifications_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventRuleConfig_withoutEventPattern(rConfigName, rEventType, rSource, rRegions),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventRuleExists(ctx, resourceName, &eventrule),
+					resource.TestCheckResourceAttr(resourceName, "event_type", rEventType),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", rRegions[0]),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", rRegions[1]),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSource, rSource),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "notifications", regexache.MustCompile(`configuration/.+/rule/.+$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func TestAccNotificationsEventRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -183,7 +227,7 @@ func TestAccNotificationsEventRule_disappears(t *testing.T) {
 				Config: testAccEventRuleConfig_basic(rConfigName, rEventPattern, rEventType, rRegion1, rRegion2, rSource),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventRuleExists(ctx, resourceName, &eventrule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceEventRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceEventRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -207,7 +251,7 @@ func testAccCheckEventRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnotifications.FindEventRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -258,4 +302,20 @@ resource "aws_notifications_event_rule" "test" {
   source                         = %[6]q
 }
 `, rName, rEventPattern, rEventType, rRegion1, rRegion2, rSource)
+}
+
+func testAccEventRuleConfig_withoutEventPattern(rName, rEventType, rSource string, rRegions []string) string {
+	return fmt.Sprintf(`
+resource "aws_notifications_notification_configuration" "test" {
+  name        = %[1]q
+  description = "example"
+}
+
+resource "aws_notifications_event_rule" "test" {
+  event_type                     = %[2]q
+  notification_configuration_arn = aws_notifications_notification_configuration.test.arn
+  regions                        = ["%[3]s"]
+  source                         = %[4]q
+}
+`, rName, rEventType, strings.Join(rRegions, `", "`), rSource)
 }

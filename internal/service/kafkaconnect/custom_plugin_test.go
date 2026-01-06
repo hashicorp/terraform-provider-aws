@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -205,7 +205,7 @@ func testAccCheckCustomPluginDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfkafkaconnect.FindCustomPluginByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

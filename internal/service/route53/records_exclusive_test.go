@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -94,7 +94,7 @@ func TestAccRoute53RecordsExclusive_disappears_Zone(t *testing.T) {
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecordsExclusiveExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), zoneResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), zoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

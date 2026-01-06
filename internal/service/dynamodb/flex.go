@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -10,7 +10,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func expandTableItemAttributes(jsonStream string) (map[string]awstypes.AttributeValue, error) {
@@ -55,7 +55,7 @@ func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
 		case string:
 			switch k {
 			case dataTypeDescriptorBinary:
-				v, err := itypes.Base64Decode(v)
+				v, err := inttypes.Base64Decode(v)
 				if err != nil {
 					return nil, err
 				}
@@ -71,7 +71,7 @@ func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
 				v, err := tfslices.ApplyToAllWithError(v, func(v any) ([]byte, error) {
 					switch v := v.(type) {
 					case string:
-						return itypes.Base64Decode(v)
+						return inttypes.Base64Decode(v)
 					default:
 						return nil, unexpectedRawAttributeElementTypeError(v, k)
 					}
@@ -125,11 +125,11 @@ func rawFromAttribute(a awstypes.AttributeValue) (any, error) {
 
 	switch a := a.(type) {
 	case *awstypes.AttributeValueMemberB:
-		m[dataTypeDescriptorBinary] = itypes.Base64Encode(a.Value)
+		m[dataTypeDescriptorBinary] = inttypes.Base64Encode(a.Value)
 	case *awstypes.AttributeValueMemberBOOL:
 		m[dataTypeDescriptorBoolean] = a.Value
 	case *awstypes.AttributeValueMemberBS:
-		m[dataTypeDescriptorBinarySet] = tfslices.ApplyToAll(a.Value, itypes.Base64Encode)
+		m[dataTypeDescriptorBinarySet] = tfslices.ApplyToAll(a.Value, inttypes.Base64Encode)
 	case *awstypes.AttributeValueMemberL:
 		v, err := tfslices.ApplyToAllWithError(a.Value, rawFromAttribute)
 		if err != nil {

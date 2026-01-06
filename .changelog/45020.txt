@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_backup_logically_air_gapped_vault: Add `encryption_key_arn` argument
+```

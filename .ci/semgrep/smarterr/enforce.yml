@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: go-no-smerr-enrichappend-deprecated
     languages: [go]
@@ -8,7 +11,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-sdkdiag-appendfromerr
     languages: [go]
@@ -19,7 +24,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-sdkdiag-appenderrorf
     languages: [go]
@@ -31,7 +38,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-appenddiagerror
     languages: [go]
@@ -41,7 +50,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-diagnostics-adderror
     languages: [go]
@@ -55,7 +66,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-adderror
     languages: [go]
@@ -65,7 +78,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-adderror
     languages: [go]
@@ -77,7 +92,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appenderrorf
     languages: [go]
@@ -87,7 +104,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appendfromerr
     languages: [go]
@@ -97,7 +116,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-append
     languages: [go]
@@ -110,7 +131,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-return-err
     languages: [go]
@@ -121,10 +144,22 @@ rules:
           return nil, $ERR
       - pattern-not-inside: |
           return nil, smarterr.NewError(...)
+      - pattern-not-inside: |
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return nil, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return nil, $ERR
+          }
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-return-value-err
     languages: [go]
@@ -137,26 +172,22 @@ rules:
           return $VALUE, nil
       - pattern-not-inside: |
           return $VALUE, smarterr.NewError(...)
-    paths:
-      include:
-        - "/internal/service/appsync/"
-        - "/internal/service/cloudwatch/"
-      exclude:
-        - "*_test.go"
-
-  - id: go-no-tfresource-notfound
-    languages: [go]
-    message: Use intretry.NotFound instead of tfresource.NotFound (migrate to smarterr).
-    severity: ERROR
-    patterns:
-      - pattern: |
-          tfresource.NotFound($ERR)
       - pattern-not-inside: |
-          intretry.NotFound(...)
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return $VALUE, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return $VALUE, $ERR
+          }
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -171,7 +202,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-fmt-errorf-return
     languages: [go]
@@ -184,7 +217,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -202,7 +237,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -218,7 +255,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -234,7 +273,9 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -249,4 +290,6 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"

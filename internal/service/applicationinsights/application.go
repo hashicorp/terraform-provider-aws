@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package applicationinsights
@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,11 +122,12 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.ApplicationInsightsClient(ctx)
 
 	application, err := findApplicationByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ApplicationInsights Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -137,14 +138,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	rgName := aws.ToString(application.ResourceGroupName)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "applicationinsights",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "application/resource-group/" + rgName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, applicationARN(ctx, c, rgName))
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)
 	d.Set("cwe_monitor_enabled", application.CWEMonitorEnabled)
 	d.Set("ops_center_enabled", application.OpsCenterEnabled)
@@ -226,7 +220,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	output, err := conn.DescribeApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -243,11 +237,11 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	return output.ApplicationInfo, nil
 }
 
-func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) retry.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -263,7 +257,7 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Clien
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
 		Refresh: statusApplication(ctx, conn, name),
@@ -283,7 +277,7 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
@@ -297,4 +291,8 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	}
 
 	return nil, err
+}
+
+func applicationARN(ctx context.Context, c *conns.AWSClient, resourceGroupName string) string {
+	return c.RegionalARN(ctx, "applicationinsights", "application/resource-group/"+resourceGroupName)
 }

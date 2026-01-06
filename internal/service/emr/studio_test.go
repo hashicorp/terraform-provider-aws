@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -131,8 +131,8 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -255,7 +255,7 @@ func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

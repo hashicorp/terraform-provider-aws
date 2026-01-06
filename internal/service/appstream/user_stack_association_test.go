@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUserStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_user(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUser(), "aws_appstream_user.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUser(), "aws_appstream_user.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccAppStreamUserStackAssociation_Disappears_stack(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceStack(), "aws_appstream_stack.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceStack(), "aws_appstream_stack.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,7 +186,7 @@ func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfappstream.FindUserStackAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]), rs.Primary.Attributes["stack_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

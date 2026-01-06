@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -319,7 +319,7 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 					testAccCheckProxyExists(ctx, resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -338,7 +338,7 @@ func testAccCheckProxyTargetGroupDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfrds.FindDefaultDBProxyTargetGroupByDBProxyName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

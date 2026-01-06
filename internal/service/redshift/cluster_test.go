@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,13 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -139,7 +141,7 @@ func TestAccRedshiftCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -373,20 +375,33 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_updateNodeCount(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "1"),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_of_nodes"), knownvalue.Int64Exact(1)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_updateNodeCount(rName),
+				Config: testAccClusterConfig_updateNodeCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_of_nodes"), knownvalue.Int64Exact(2)),
+				},
 			},
 		},
 	})
@@ -408,67 +423,30 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 				Config: testAccClusterConfig_updateNodeType(rName, "ra3.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("node_type"), knownvalue.StringExact("ra3.large")),
+				},
 			},
 			{
 				Config: testAccClusterConfig_updateNodeType(rName, "ra3.xlplus"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.xlplus"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccRedshiftCluster_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrFinalSnapshotIdentifier,
-					"master_password",
-					"skip_final_snapshot",
-					names.AttrApplyImmediately,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
 				},
-			},
-			{
-				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("node_type"), knownvalue.StringExact("ra3.xlplus")),
+				},
 			},
 		},
 	})
@@ -642,7 +620,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 
 func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -653,23 +631,34 @@ func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_encrypted(rName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName, false),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 				},
 			},
 		},
@@ -678,7 +667,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToFalse(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption_unsetToTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -689,17 +678,24 @@ func TestAccRedshiftCluster_changeEncryption_unsetToTrue(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_encrypted(rName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName, true),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -713,7 +709,7 @@ func TestAccRedshiftCluster_changeEncryption_unsetToTrue(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -724,23 +720,34 @@ func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName, true),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName, false),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
 				},
 			},
 		},
@@ -749,7 +756,7 @@ func TestAccRedshiftCluster_changeEncryption_trueToFalse(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -760,23 +767,34 @@ func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName, false),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_encrypted(rName, true),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 				},
 			},
 		},
@@ -785,7 +803,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToTrue(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -796,23 +814,34 @@ func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName, false),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckSleep(t, 5*time.Minute),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+				},
 			},
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_encrypted(rName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 				},
 			},
 		},
@@ -821,7 +850,7 @@ func TestAccRedshiftCluster_changeEncryption_falseToUnset(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption_trueToUnset(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 awstypes.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -832,182 +861,24 @@ func TestAccRedshiftCluster_changeEncryption_trueToUnset(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encrypted(rName, true),
+				Config: testAccClusterConfig_encrypted(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-			},
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 					},
 				},
-			},
-		},
-	})
-}
-
-func TestAccRedshiftCluster_Migrate_encrypted_default(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.97.0",
-					},
-				},
-				Config: testAccClusterConfig_encrypted_default(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.Bool(false)),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.Bool(false)),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_encrypted_default(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccRedshiftCluster_Migrate_encrypted_true(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.97.0",
-					},
-				},
-				Config: testAccClusterConfig_encrypted(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_encrypted(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccRedshiftCluster_Migrate_encrypted_false(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.97.0",
-					},
-				},
-				Config: testAccClusterConfig_encrypted(rName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.Bool(false)),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.Bool(false)),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-			},
-			// Needs a second apply to actually set `encrypted` to `false`
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.97.0",
-					},
-				},
-				Config: testAccClusterConfig_encrypted(rName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.Bool(false)),
-					},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_encrypted(rName, false),
+				Config: testAccClusterConfig_encrypted(rName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1168,13 +1039,19 @@ func TestAccRedshiftCluster_restoreFromSnapshot_ChangeEncryption_trueToFalse(t *
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, true, false),
+				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, acctest.CtTrue, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(sourceResourceName, names.AttrEncrypted, acctest.CtTrue),
-
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(sourceResourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1206,13 +1083,19 @@ func TestAccRedshiftCluster_restoreFromSnapshot_ChangeEncryption_falseToTrue(t *
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, false, true),
+				Config: testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, acctest.CtFalse, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(sourceResourceName, names.AttrEncrypted, acctest.CtFalse),
-
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(sourceResourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtFalse)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncrypted), knownvalue.StringExact(acctest.CtTrue)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1348,7 +1231,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfredshift.FindClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1383,7 +1266,7 @@ func testAccCheckClusterTestSnapshotDestroy(ctx context.Context, rName string) r
 
 			_, err = tfredshift.FindClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -1428,7 +1311,21 @@ func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resour
 	}
 }
 
-func testAccClusterConfig_updateNodeCount(rName string) string {
+func testAccClusterConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_updateNodeCount(rName string, nodeCount int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier    = %[1]q
@@ -1438,10 +1335,10 @@ resource "aws_redshift_cluster" "test" {
   master_password       = "Mustbe8characters"
   node_type             = "ra3.large"
   allow_version_upgrade = false
-  number_of_nodes       = 2
+  number_of_nodes       = %[2]d
   skip_final_snapshot   = true
 }
-`, rName)
+`, rName, nodeCount)
 }
 
 func testAccClusterConfig_updateNodeType(rName, nodeType string) string {
@@ -1458,20 +1355,6 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot   = true
 }
 `, rName, nodeType)
-}
-
-func testAccClusterConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier    = %[1]q
-  database_name         = "mydb"
-  master_username       = "foo_test"
-  master_password       = "Mustbe8characters"
-  node_type             = "ra3.large"
-  allow_version_upgrade = false
-  skip_final_snapshot   = true
-}
-`, rName)
 }
 
 func testAccClusterConfig_aqua(rName, status string) string {
@@ -1492,7 +1375,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName, status)
 }
 
-func testAccClusterConfig_encrypted(rName string, encrypted bool) string {
+func testAccClusterConfig_encrypted(rName, encrypted string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier    = %[1]q
@@ -1504,27 +1387,12 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot   = true
   publicly_accessible   = false
 
-  encrypted = %[2]t
+  encrypted = %[2]s
 
   # required for v5.97.0
   availability_zone_relocation_enabled = true
 }
 `, rName, encrypted)
-}
-
-func testAccClusterConfig_encrypted_default(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier    = %[1]q
-  database_name         = "mydb"
-  master_username       = "foo_test"
-  master_password       = "Mustbe8characters"
-  node_type             = "ra3.large"
-  allow_version_upgrade = false
-  skip_final_snapshot   = true
-  publicly_accessible   = false
-}
-`, rName)
 }
 
 func testAccClusterConfig_finalSnapshot(rName string) string {
@@ -1613,47 +1481,6 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot   = true
 }
 `, rName)
-}
-
-func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "ra3.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "ra3.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
@@ -1990,7 +1817,7 @@ resource "aws_redshift_cluster" "restored" {
 `, rName))
 }
 
-func testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName string, sourceEncrypted, restoreEncrypted bool) string {
+func testAccClusterConfig_restoreFromSnapshot_ChangeEncryption(rName, sourceEncrypted, restoreEncrypted string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_encrypted(rName, sourceEncrypted),
 		fmt.Sprintf(`
@@ -2008,7 +1835,7 @@ resource "aws_redshift_cluster" "restored" {
   node_type           = "ra3.large"
   skip_final_snapshot = true
 
-  encrypted = %[2]t
+  encrypted = %[2]q
 }
 `, rName, restoreEncrypted))
 }

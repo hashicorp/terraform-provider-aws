@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package costoptimizationhub_test
@@ -71,7 +71,7 @@ func testAccEnrollmentStatus_disappears(t *testing.T) {
 				Config: testAccEnrollmentStatusConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentStatusIsActive(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcostoptimizationhub.ResourceEnrollmentStatus, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcostoptimizationhub.ResourceEnrollmentStatus, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -82,7 +82,7 @@ func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 				Config: testAccDistributionTenantConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceDistributionTenant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceDistributionTenant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

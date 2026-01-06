@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dlm_test
@@ -751,8 +751,8 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdlm.ResourceLifecyclePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdlm.ResourceLifecyclePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

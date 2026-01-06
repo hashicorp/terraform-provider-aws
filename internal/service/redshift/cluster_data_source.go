@@ -1,14 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_redshift_cluster", name="Cluster")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -209,7 +208,8 @@ func dataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	rsc, err := findClusterByID(ctx, conn, clusterID)
@@ -220,14 +220,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(clusterID)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clusterARN(ctx, c, d.Id()))
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)

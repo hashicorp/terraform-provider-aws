@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +62,7 @@ func testAccAccessGrantsInstance_disappears(t *testing.T) {
 				Config: testAccAccessGrantsInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrantsInstance, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsInstance, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -169,7 +169,7 @@ func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

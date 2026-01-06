@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -13,11 +13,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -166,7 +167,7 @@ func TestAccFSxOpenZFSFileSystem_disappears(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenZFSFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1052,6 +1053,211 @@ func TestAccFSxOpenZFSFileSystem_deleteConfig(t *testing.T) {
 	})
 }
 
+func TestAccFSxOpenZFSFileSystem_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_intelligentTiering(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "backup_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OpenZFSDeploymentTypeMultiAz1)),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.size", "64"),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.sizing_mode", string(awstypes.OpenZFSReadCacheSizingModeUserProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeIntelligentTiering)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+			{
+				Config: testAccOpenZFSFileSystemConfig_intelligentTieringUpdated(rName, string(awstypes.OpenZFSReadCacheSizingModeProportionalToThroughputCapacity)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "backup_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OpenZFSDeploymentTypeMultiAz1)),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.sizing_mode", string(awstypes.OpenZFSReadCacheSizingModeProportionalToThroughputCapacity)),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.size", "800"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeIntelligentTiering)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+			{
+				Config: testAccOpenZFSFileSystemConfig_intelligentTieringUpdated(rName, string(awstypes.OpenZFSReadCacheSizingModeNoCache)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "backup_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OpenZFSDeploymentTypeMultiAz1)),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.sizing_mode", string(awstypes.OpenZFSReadCacheSizingModeNoCache)),
+					resource.TestCheckResourceAttr(resourceName, "read_cache_configuration.0.size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeIntelligentTiering)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckOpenZFSFileSystemExists(ctx context.Context, n string, v *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1084,7 +1290,7 @@ func testAccCheckOpenZFSFileSystemDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tffsx.FindOpenZFSFileSystemByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1764,4 +1970,47 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
+}
+
+func testAccOpenZFSFileSystemConfig_intelligentTiering(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
+  subnet_ids          = aws_subnet.test[*].id
+  preferred_subnet_id = aws_subnet.test[0].id
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 160
+
+  storage_type = "INTELLIGENT_TIERING"
+  read_cache_configuration {
+    sizing_mode = "USER_PROVISIONED"
+    size        = 64
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccOpenZFSFileSystemConfig_intelligentTieringUpdated(rName, sizingMode string) string {
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
+  subnet_ids          = aws_subnet.test[*].id
+  preferred_subnet_id = aws_subnet.test[0].id
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 160
+
+  storage_type = "INTELLIGENT_TIERING"
+  read_cache_configuration {
+    sizing_mode = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, sizingMode))
 }

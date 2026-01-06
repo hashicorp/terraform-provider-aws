@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,8 +99,8 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), sgResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), sgResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,8 +127,8 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -147,7 +147,7 @@ func testAccCheckSecurityGroupVPCAssociationDestroy(ctx context.Context) resourc
 
 			_, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

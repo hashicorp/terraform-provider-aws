@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Beta Release Feedback
 description: Choose this option to provide feedback or report issues related to beta versions of the provider
 labels:

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -188,7 +188,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceRiskConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceRiskConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,7 +211,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -291,7 +291,7 @@ func testAccCheckRiskConfigurationDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfcognitoidp.FindRiskConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrClientID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

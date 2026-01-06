@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package notificationscontacts_test
@@ -90,7 +90,7 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEmailContactExists(ctx, t, resourceName, &emailcontact),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotificationscontacts.ResourceEmailContact, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotificationscontacts.ResourceEmailContact, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

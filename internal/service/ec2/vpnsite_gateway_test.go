@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,7 +51,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_basic(rName),
+				Config: testAccVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
@@ -64,7 +64,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_changeVPC(rName),
+				Config: testAccVPNGatewayConfig_changeVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v2),
 					testNotEqual,
@@ -88,7 +88,7 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_az(rName),
+				Config: testAccVPNGatewayConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, azDataSourceName, "names.0"),
@@ -117,7 +117,7 @@ func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_asn(rName),
+				Config: testAccVPNGatewayConfig_asn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -146,10 +146,10 @@ func TestAccSiteVPNGateway_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_basic(rName),
+				Config: testAccVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -206,10 +206,10 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_reattach(rName),
+				Config: testAccVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName1, &vpc1),
-					acctest.CheckVPCExists(ctx, vpcResourceName2, &vpc2),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName1, &vpc1),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName2, &vpc2),
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
@@ -227,7 +227,7 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_reattachChange(rName),
+				Config: testAccVPNGatewayConfig_reattachChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
@@ -236,7 +236,7 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_reattach(rName),
+				Config: testAccVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
@@ -261,7 +261,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPNGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -274,7 +274,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPNGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -283,7 +283,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPNGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -305,7 +305,7 @@ func testAccCheckVPNGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindVPNGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -341,7 +341,7 @@ func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *awstypes.Vpn
 	}
 }
 
-func testAccSiteVPNGatewayConfig_basic(rName string) string {
+func testAccVPNGatewayConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -357,7 +357,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName)
 }
 
-func testAccSiteVPNGatewayConfig_changeVPC(rName string) string {
+func testAccVPNGatewayConfig_changeVPC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -381,7 +381,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName)
 }
 
-func testAccSiteVPNGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPNGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -401,7 +401,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccSiteVPNGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPNGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -422,7 +422,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSiteVPNGatewayConfig_reattach(rName string) string {
+func testAccVPNGatewayConfig_reattach(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -458,7 +458,7 @@ resource "aws_vpn_gateway" "test2" {
 `, rName)
 }
 
-func testAccSiteVPNGatewayConfig_reattachChange(rName string) string {
+func testAccVPNGatewayConfig_reattachChange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -494,7 +494,7 @@ resource "aws_vpn_gateway" "test2" {
 `, rName)
 }
 
-func testAccSiteVPNGatewayConfig_az(rName string) string {
+func testAccVPNGatewayConfig_az(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -515,7 +515,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName))
 }
 
-func testAccSiteVPNGatewayConfig_asn(rName string) string {
+func testAccVPNGatewayConfig_asn(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

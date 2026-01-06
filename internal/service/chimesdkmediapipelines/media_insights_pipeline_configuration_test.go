@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkmediapipelines_test
@@ -86,7 +86,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 				Config: testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

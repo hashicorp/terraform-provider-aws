@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -123,7 +123,7 @@ func TestAccLogsAccountPolicy_disappears(t *testing.T) {
 				Config: testAccAccountPolicyConfig_basicDataProtection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAccountPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceAccountPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

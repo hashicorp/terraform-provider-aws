@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -286,6 +286,46 @@ func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceConfiguration_domainVerification(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := fmt.Sprintf("%s.example.com", rName)
+	customDomainName := fmt.Sprintf("test.%s.example.com", rName)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	domainVerificationResourceName := "aws_vpclattice_domain_verification.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_domainVerification(rName, domainName, customDomainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "custom_domain_name", customDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_verification_id", domainVerificationResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_verification_arn", domainVerificationResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "domain_verification_status", string(types.VerificationStatusPending)),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.dns_resource.0.domain_name", customDomainName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
@@ -306,7 +346,7 @@ func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 				Config: testAccResourceConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -325,7 +365,7 @@ func testAccCheckResourceConfigurationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfvpclattice.FindResourceConfigurationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -476,18 +516,22 @@ resource "aws_vpclattice_resource_configuration" "test" {
   }
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-postgresql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
-  master_username             = "test"
-  manage_master_user_password = true
-  enable_http_endpoint        = true
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
-  db_subnet_group_name        = aws_db_subnet_group.test.name
+  cluster_identifier     = %[1]q
+  master_password        = "avoid-plaintext-passwords"
+  master_username        = "tfacctest"
+  skip_final_snapshot    = true
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
+  enable_http_endpoint   = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
@@ -508,4 +552,31 @@ resource "aws_db_subnet_group" "test" {
   subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
 }
 `, rName))
+}
+
+func testAccResourceConfigurationConfig_domainVerification(rName, domainName, customDomainName string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_domain_verification" "test" {
+  domain_name = %[2]q
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+  custom_domain_name          = %[3]q
+  domain_verification_id      = aws_vpclattice_domain_verification.test.id
+
+  port_ranges = ["443"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = %[3]q
+      ip_address_type = "IPV4"
+    }
+  }
+}
+`, rName, domainName, customDomainName))
 }

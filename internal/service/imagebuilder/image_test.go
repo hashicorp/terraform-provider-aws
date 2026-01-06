@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +79,7 @@ func TestAccImageBuilderImage_disappears(t *testing.T) {
 				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -347,6 +347,34 @@ func TestAccImageBuilderImage_workflows(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImage_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_loggingConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image/%s", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -358,7 +386,7 @@ func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfimagebuilder.FindImageByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1068,4 +1096,23 @@ resource "aws_imagebuilder_image" "test" {
   depends_on = [aws_inspector2_enabler.test]
 }
 `)
+}
+
+func testAccImageConfig_loggingConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/imagebuilder/test-image/%[1]s"
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+
+  logging_configuration {
+    log_group_name = aws_cloudwatch_log_group.test.name
+  }
+}
+`, rName))
 }

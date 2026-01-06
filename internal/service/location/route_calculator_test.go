@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package location_test
@@ -69,7 +69,7 @@ func TestAccLocationRouteCalculator_disappears(t *testing.T) {
 				Config: testAccRouteCalculatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceRouteCalculator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceRouteCalculator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

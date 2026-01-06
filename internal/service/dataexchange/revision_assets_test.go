@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -22,8 +22,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -156,7 +156,7 @@ func TestAccDataExchangeRevisionAssets_disappears(t *testing.T) {
 				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevisionAssets, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceRevisionAssets, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -506,7 +506,7 @@ func testAccCheckRevisionAssetsDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			_, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -13,30 +13,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	fdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 // @SDKResource("aws_subnet", name="Subnet")
@@ -170,14 +159,6 @@ func resourceSubnet() *schema.Resource {
 	}
 }
 
-// @SDKListResource("aws_subnet")
-func subnetResourceAsListResource() itypes.ListResourceForSDK {
-	l := subnetListResource{}
-	l.SetResourceSchema(resourceSubnet())
-
-	return &l
-}
-
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -254,7 +235,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -704,161 +685,4 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	}
 
 	setTagsOut(ctx, subnet.Tags)
-}
-
-var _ list.ListResourceWithRawV5Schemas = &subnetListResource{}
-
-type subnetListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type subnetListResourceModel struct {
-	framework.WithRegionModel
-	SubnetIDs fwtypes.ListValueOf[types.String] `tfsdk:"subnet_ids"`
-	Filters   customListFilters                 `tfsdk:"filter"`
-}
-
-func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			names.AttrSubnetIDs: listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-		},
-		Blocks: map[string]listschema.Block{
-			names.AttrFilter: listschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
-				NestedObject: listschema.NestedBlockObject{
-					Attributes: map[string]listschema.Attribute{
-						names.AttrName: listschema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								notDefaultForAZValidator{},
-							},
-						},
-						names.AttrValues: listschema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-var _ validator.String = notDefaultForAZValidator{}
-
-type notDefaultForAZValidator struct{}
-
-func (v notDefaultForAZValidator) Description(ctx context.Context) string {
-	return v.MarkdownDescription(ctx)
-}
-
-func (v notDefaultForAZValidator) MarkdownDescription(_ context.Context) string {
-	return ""
-}
-
-func (v notDefaultForAZValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
-		return
-	}
-
-	value := request.ConfigValue
-
-	if value.ValueString() == "default-for-az" {
-		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
-			request.Path,
-			"Invalid Attribute Value",
-			`The filter "default-for-az" is not supported. To list default Subnets, use the resource type "aws_default_subnet".`,
-		))
-	}
-}
-
-func (l *subnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
-
-	attributes := []attribute.KeyValue{
-		otelaws.RegionAttr(awsClient.Region(ctx)),
-	}
-	for _, attribute := range attributes {
-		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
-	}
-
-	var query subnetListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input ec2.DescribeSubnetsInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	input.Filters = append(input.Filters, awstypes.Filter{
-		Name:   aws.String("default-for-az"),
-		Values: []string{"false"},
-	})
-
-	tflog.Info(ctx, "Listing resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			for _, subnet := range page.Subnets {
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(subnet.SubnetId))
-
-				result := request.NewListResult(ctx)
-
-				tags := keyValueTags(ctx, subnet.Tags)
-
-				rd := l.ResourceData()
-				rd.SetId(aws.ToString(subnet.SubnetId))
-
-				tflog.Info(ctx, "Reading resource")
-				resourceSubnetFlatten(ctx, &subnet, rd)
-
-				// set tags
-				err = l.SetTags(ctx, awsClient, rd)
-				if err != nil {
-					result = fwdiag.NewListResultErrorDiagnostic(err)
-					yield(result)
-					return
-				}
-
-				if v, ok := tags["Name"]; ok {
-					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(subnet.SubnetId))
-				} else {
-					result.DisplayName = aws.ToString(subnet.SubnetId)
-				}
-
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
-
-				if !yield(result) {
-					return
-				}
-			}
-		}
-	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func TestAccELBAttachment_disappears(t *testing.T) {
 				Config: testAccAttachmentConfig_1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +88,7 @@ func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			err := tfelb.FindLoadBalancerAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["elb"], rs.Primary.Attributes["instance"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

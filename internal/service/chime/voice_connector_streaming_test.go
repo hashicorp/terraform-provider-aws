@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chime_test
@@ -72,7 +72,7 @@ func testAccVoiceConnectorStreaming_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

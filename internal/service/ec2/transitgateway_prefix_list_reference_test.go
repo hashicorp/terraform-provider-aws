@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +77,7 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T, semaphore
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,7 +168,7 @@ func testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx context.Context) r
 
 			_, err := tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["prefix_list_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry_test
@@ -132,7 +132,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_disappears(t *testing.T) {
 				Config: testAccAttributeGroupConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceAttributeGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicecatalogappregistry.ResourceAttributeGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

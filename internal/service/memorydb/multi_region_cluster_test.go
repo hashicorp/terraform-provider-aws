@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccMemoryDBMultiRegionCluster_disappears(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceMultiRegionCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmemorydb.ResourceMultiRegionCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -431,7 +431,7 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 			name := rs.Primary.Attributes["multi_region_cluster_name"]
 
 			_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, name)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

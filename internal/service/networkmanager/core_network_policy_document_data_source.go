@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -22,9 +23,16 @@ import (
 
 // @SDKDataSource("aws_networkmanager_core_network_policy_document", name="Core Network Policy Document")
 func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
-	setOfString := &schema.Schema{
+	setOfStringOptional := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+	setOfStringRequired := &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -35,6 +43,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 		// Order attributes to match model structures and documentation:
 		// https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html.
+		// Consciously NOT sorted alphabetically.
 		Schema: map[string]*schema.Schema{
 			names.AttrVersion: {
 				Type:     schema.TypeString,
@@ -42,6 +51,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Default:  "2021.12",
 				ValidateFunc: validation.StringInSlice([]string{
 					"2021.12",
+					"2025.11",
 				}, false),
 			},
 			"core_network_configuration": {
@@ -49,20 +59,8 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"asn_ranges": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"inside_cidr_blocks": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
+						"asn_ranges":         setOfStringRequired,
+						"inside_cidr_blocks": setOfStringOptional,
 						"vpn_ecmp_support": {
 							Type:     schema.TypeBool,
 							Default:  true,
@@ -194,6 +192,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"create-route",
 								"send-via",
 								"send-to",
+								"associate-routing-policy",
 							}, false),
 						},
 						"segment": {
@@ -211,8 +210,8 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"dual-hop",
 							}, false),
 						},
-						"share_with":        setOfString,
-						"share_with_except": setOfString,
+						"share_with":        setOfStringOptional,
+						"share_with_except": setOfStringOptional,
 						"destination_cidr_blocks": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -248,7 +247,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"segments": setOfString,
+									"segments": setOfStringOptional,
 								},
 							},
 						},
@@ -258,7 +257,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"network_function_groups": setOfString,
+									"network_function_groups": setOfStringOptional,
 									"with_edge_override": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -286,6 +285,26 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											},
 										},
 									},
+								},
+							},
+						},
+						"edge_location_association": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"edge_location": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidRegionName,
+									},
+									"peer_edge_location": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidRegionName,
+									},
+									"routing_policy_names": setOfStringRequired,
 								},
 							},
 						},
@@ -327,6 +346,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"account-id",
 											"any",
 											"tag-value",
+											"tag-name",
 											"tag-exists",
 											"resource-id",
 											names.AttrRegion,
@@ -393,6 +413,179 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
+			"attachment_routing_policy_rules": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"rule_number": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 65535),
+						},
+						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"edge_locations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+						"conditions": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrType: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"routing-policy-label",
+										}, false),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						names.AttrAction: {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"associate_routing_policies": setOfStringRequired,
+								},
+							},
+						},
+					},
+				},
+			},
+			"routing_policies": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"routing_policy_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
+									"must contain only alphanumeric characters"),
+							),
+						},
+						"routing_policy_description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"routing_policy_direction": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"inbound",
+								"outbound",
+							}, false),
+						},
+						"routing_policy_number": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 9999),
+						},
+						"routing_policy_rules": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 9999),
+									},
+									"rule_definition": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"match_conditions": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrType: {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	"prefix-equals",
+																	"prefix-in-cidr",
+																	"prefix-in-prefix-list",
+																	"asn-in-as-path",
+																	"community-in-list",
+																	"med-equals",
+																}, false),
+															},
+															names.AttrValue: {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"condition_logic": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"and",
+														"or",
+													}, false),
+												},
+												names.AttrAction: {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrType: {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	"drop",
+																	"allow",
+																	"summarize",
+																	"prepend-asn-list",
+																	"remove-asn-list",
+																	"replace-asn-list",
+																	"add-community",
+																	"remove-community",
+																	"set-med",
+																	"set-local-preference",
+																}, false),
+															},
+															names.AttrValue: {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -422,6 +615,13 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 	mergedDoc.Segments = segments
 
+	// RoutingPolicies
+	routingPolicies, err := expandCoreNetworkPolicyRoutingPolicies(d.Get("routing_policies").([]any), mergedDoc.Version)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	mergedDoc.RoutingPolicies = routingPolicies
+
 	// NetworkFunctionGroups
 	networkFunctionGroups, err := expandCoreNetworkPolicyNetworkFunctionGroups(d.Get("network_function_groups").([]any))
 	if err != nil {
@@ -443,11 +643,21 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
+	// AttachmentRoutingPolicyRules
+	attachmentRoutingPolicyRules, err := expandCoreNetworkPolicyAttachmentRoutingPolicyRules(d.Get("attachment_routing_policy_rules").([]any), mergedDoc.Version)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	mergedDoc.AttachmentRoutingPolicyRules = attachmentRoutingPolicyRules
+
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
+
+	// Debug: Print the generated JSON policy document
+	log.Printf("[DEBUG] Generated Core Network Policy Document JSON:\n%s", jsonString)
 
 	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
@@ -513,6 +723,29 @@ func expandCoreNetworkPolicySegmentActions(tfList []any) ([]*coreNetworkPolicySe
 
 			if v, ok := tfMap[names.AttrDescription]; ok {
 				apiObject.Description = v.(string)
+			}
+
+		case "associate-routing-policy":
+			if v, ok := tfMap["segment"]; ok {
+				apiObject.Segment = v.(string)
+			}
+
+			if v, ok := tfMap["edge_location_association"].([]any); ok && len(v) > 0 && v[0] != nil {
+				apiObject.EdgeLocationAssociation = &coreNetworkPolicySegmentActionEdgeLocationAssociation{}
+
+				tfMap := v[0].(map[string]any)
+
+				if v, ok := tfMap["edge_location"].(string); ok && v != "" {
+					apiObject.EdgeLocationAssociation.EdgeLocation = v
+				}
+
+				if v, ok := tfMap["peer_edge_location"].(string); ok && v != "" {
+					apiObject.EdgeLocationAssociation.PeerEdgeLocation = v
+				}
+
+				if v := tfMap["routing_policy_names"].(*schema.Set).List(); len(v) > 0 {
+					apiObject.EdgeLocationAssociation.RoutingPolicyNames = coreNetworkPolicyExpandStringList(v)
+				}
 			}
 
 		case "send-via", "send-to":
@@ -663,28 +896,28 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []any) ([]*c
 		case "any":
 			for _, key := range k {
 				if key {
-					return nil, fmt.Errorf("Conditions %d: You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".", i)
+					return nil, fmt.Errorf("conditions %d: cannot set \"operator\", \"key\", or \"value\" if type = \"any\"", i)
 				}
 			}
 
-		case "tag-exists":
+		case "tag-exists", "tag-name":
 			if !k[names.AttrKey] || k["operator"] || k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"key\" and cannot set \"operator\" or \"value\" if type = \"tag-exists\" or \"tag-name\"", i)
 			}
 
 		case "tag-value":
 			if !k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"key\", \"operator\", and \"value\" if type = \"tag-value\"", i)
 			}
 
 		case names.AttrRegion, "resource-id", "account-id":
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", \"account\", or \"account-id\"\n%[2]t, %[3]t, %[4]t", i, k[names.AttrKey], k["operator"], k[names.AttrValue])
 			}
 
 		case "attachment-type":
 			if k[names.AttrKey] || !k[names.AttrValue] || tfMap["operator"].(string) != "equals" {
-				return nil, fmt.Errorf("Conditions %d: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\"", i)
 			}
 		}
 
@@ -725,6 +958,85 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []any) (*coreNet
 	}
 
 	return apiObject, nil
+}
+
+func expandCoreNetworkPolicyAttachmentRoutingPolicyRules(tfList []any, version string) ([]*coreNetworkPolicyAttachmentRoutingPolicyRule, error) {
+	if len(tfList) > 0 && version != "2025.11" {
+		return nil, fmt.Errorf("attachment_routing_policy_rules requires version 2025.11")
+	}
+
+	apiObjects := make([]*coreNetworkPolicyAttachmentRoutingPolicyRule, 0)
+	ruleMap := make(map[int]struct{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRule{}
+
+		if v, ok := tfMap["rule_number"].(int); ok {
+			if _, ok := ruleMap[v]; ok {
+				return nil, fmt.Errorf("duplicate Rule Number (%d). Remove the Rule Number or ensure the Rule Number is unique", v)
+			}
+			apiObject.RuleNumber = v
+			ruleMap[apiObject.RuleNumber] = struct{}{}
+		}
+
+		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+			apiObject.Description = v
+		}
+
+		if v := tfMap["edge_locations"].(*schema.Set).List(); len(v) > 0 {
+			apiObject.EdgeLocations = coreNetworkPolicyExpandStringList(v)
+		}
+
+		apiObject.Conditions = expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfMap["conditions"].([]any))
+
+		apiObject.Action = expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfMap[names.AttrAction].([]any))
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any) []*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition {
+	apiObjects := make([]*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRuleCondition{}
+
+		if v, ok := tfMap[names.AttrType].(string); ok {
+			apiObject.Type = v
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = v
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) *coreNetworkPolicyAttachmentRoutingPolicyRuleAction {
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRuleAction{}
+
+	if v := tfMap["associate_routing_policies"].(*schema.Set).List(); len(v) > 0 {
+		apiObject.AssociateRoutingPolicies = coreNetworkPolicyExpandStringList(v)
+	}
+
+	return apiObject
 }
 
 func expandCoreNetworkPolicySegments(tfList []any) ([]*coreNetworkPolicySegment, error) {
@@ -777,6 +1089,166 @@ func expandCoreNetworkPolicySegments(tfList []any) ([]*coreNetworkPolicySegment,
 	}
 
 	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyRoutingPolicies(tfList []any, version string) ([]*coreNetworkPolicyRoutingPolicy, error) {
+	if len(tfList) > 0 && version != "2025.11" {
+		return nil, fmt.Errorf("routing_policies requires version 2025.11")
+	}
+
+	apiObjects := make([]*coreNetworkPolicyRoutingPolicy, 0)
+	nameMap := make(map[string]struct{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyRoutingPolicy{}
+
+		if v, ok := tfMap["routing_policy_name"].(string); ok {
+			if _, ok := nameMap[v]; ok {
+				return nil, fmt.Errorf("duplicate routing_policy_name (%s). Remove the name or ensure it is unique", v)
+			}
+			apiObject.RoutingPolicyName = v
+			if len(apiObject.RoutingPolicyName) > 0 {
+				nameMap[apiObject.RoutingPolicyName] = struct{}{}
+			}
+		}
+
+		if v, ok := tfMap["routing_policy_description"].(string); ok && v != "" {
+			apiObject.RoutingPolicyDescription = v
+		}
+
+		if v, ok := tfMap["routing_policy_direction"].(string); ok {
+			apiObject.RoutingPolicyDirection = v
+		}
+
+		if v, ok := tfMap["routing_policy_number"].(int); ok {
+			apiObject.RoutingPolicyNumber = v
+		}
+
+		rules, err := expandCoreNetworkPolicyRoutingPolicyRules(tfMap["routing_policy_rules"].([]any))
+		if err != nil {
+			return nil, err
+		}
+		apiObject.RoutingPolicyRules = rules
+
+		// Validate that summarize action is only used with outbound policies
+		if apiObject.RoutingPolicyDirection == "inbound" {
+			for _, rule := range rules {
+				if rule.RuleDefinition != nil && rule.RuleDefinition.Action != nil && rule.RuleDefinition.Action.Type == "summarize" {
+					return nil, fmt.Errorf("summarize action cannot be used for inbound routing policies (routing_policy_name: %s, rule_number: %d)", apiObject.RoutingPolicyName, rule.RuleNumber)
+				}
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyRoutingPolicyRules(tfList []any) ([]*coreNetworkPolicyRoutingPolicyRule, error) {
+	apiObjects := make([]*coreNetworkPolicyRoutingPolicyRule, 0)
+	ruleMap := make(map[int]struct{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyRoutingPolicyRule{}
+
+		if v, ok := tfMap["rule_number"].(int); ok {
+			if _, ok := ruleMap[v]; ok {
+				return nil, fmt.Errorf("duplicate rule_number (%d) in routing policy rules. Remove the rule number or ensure it is unique", v)
+			}
+			apiObject.RuleNumber = v
+			ruleMap[apiObject.RuleNumber] = struct{}{}
+		}
+
+		if v, ok := tfMap["rule_definition"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.RuleDefinition = expandCoreNetworkPolicyRoutingPolicyRuleDefinition(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyRoutingPolicyRuleDefinition(tfList []any) *coreNetworkPolicyRoutingPolicyRuleDefinition {
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &coreNetworkPolicyRoutingPolicyRuleDefinition{}
+
+	// AWS requires condition-logic to always be present, default to "and"
+	if v, ok := tfMap["condition_logic"].(string); ok && v != "" {
+		apiObject.ConditionLogic = v
+	} else {
+		apiObject.ConditionLogic = "and"
+	}
+
+	if v, ok := tfMap["match_conditions"].([]any); ok && len(v) > 0 {
+		apiObject.MatchConditions = expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(v)
+	}
+
+	if v, ok := tfMap[names.AttrAction].([]any); ok && len(v) > 0 {
+		apiObject.Action = expandCoreNetworkPolicyRoutingPolicyRuleAction(v)
+	}
+
+	return apiObject
+}
+
+func expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(tfList []any) []*coreNetworkPolicyRoutingPolicyRuleMatchCondition {
+	apiObjects := make([]*coreNetworkPolicyRoutingPolicyRuleMatchCondition, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyRoutingPolicyRuleMatchCondition{}
+
+		if v, ok := tfMap[names.AttrType].(string); ok {
+			apiObject.Type = v
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = v
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandCoreNetworkPolicyRoutingPolicyRuleAction(tfList []any) *coreNetworkPolicyRoutingPolicyRuleAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &coreNetworkPolicyRoutingPolicyRuleAction{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = v
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		apiObject.Value = v
+	}
+
+	return apiObject
 }
 
 func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetworkPolicyCoreNetworkConfiguration, error) {

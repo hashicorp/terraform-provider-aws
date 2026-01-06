@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package location_test
@@ -71,7 +71,7 @@ func TestAccLocationGeofenceCollection_disappears(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceGeofenceCollection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceGeofenceCollection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

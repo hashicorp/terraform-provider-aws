@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -153,7 +153,7 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 				Config: testAccS3AccessPointAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffsx.ResourceS3AccessPointAttachment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffsx.ResourceS3AccessPointAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,7 +193,7 @@ func testAccCheckS3AccessPointAttachmentDestroy(ctx context.Context) resource.Te
 
 			_, err := tffsx.FindS3AccessPointAttachmentByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

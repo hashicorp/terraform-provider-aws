@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -135,7 +135,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceSubscriberNotification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -385,7 +385,7 @@ func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,7 +83,7 @@ func testAccVirtualGateway_disappears(t *testing.T) {
 				Config: testAccVirtualGatewayConfig_basic(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -884,7 +884,7 @@ func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

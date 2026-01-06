@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package evidently_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -609,7 +609,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceLaunch(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchevidently.ResourceLaunch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -633,7 +633,7 @@ func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfcloudwatchevidently.FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

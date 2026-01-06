@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -445,7 +445,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -467,7 +467,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -778,13 +778,6 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString += ", "
-		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -798,17 +791,10 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString += ", "
-		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -822,5 +808,5 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }

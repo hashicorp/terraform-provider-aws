@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,7 +64,7 @@ func TestAccSESV2EmailIdentityPolicy_disappears(t *testing.T) {
 				Config: testAccEmailIdentityPolicyConfig_basic(emailIdentity, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentityPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentityPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func testAccCheckEmailIdentityPolicyDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfsesv2.FindEmailIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["email_identity"], rs.Primary.Attributes["policy_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

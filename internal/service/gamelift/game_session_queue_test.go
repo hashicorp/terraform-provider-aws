@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -201,7 +201,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceGameSessionQueue(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceGameSessionQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -241,7 +241,7 @@ func testAccCheckGameSessionQueueDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfgamelift.FindGameSessionQueueByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

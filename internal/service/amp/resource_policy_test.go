@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -115,7 +115,7 @@ func TestAccAMPResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,7 +143,7 @@ func TestAccAMPResourcePolicy_disappears_Workspace(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), workspaceResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamp.ResourceWorkspace(), workspaceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

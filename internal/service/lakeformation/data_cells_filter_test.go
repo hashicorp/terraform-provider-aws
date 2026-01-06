@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,8 +85,44 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.0", "my_column_12"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.*", "my_column_12"),
 				),
+			},
+		},
+	})
+}
+
+func testAccDataCellsFilter_columnWildcardMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var datacellsfilter awstypes.DataCellsFilter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_data_cells_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+			testAccDataCellsFilterPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Test with columns in non-alphabetical order to verify no ordering issues
+				Config: testAccDataCellsFilterConfig_columnWildcardMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.*", "my_column_12"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.*", "my_column_22"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -113,7 +149,7 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataCellsFilter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceDataCellsFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -183,7 +219,7 @@ func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -342,6 +378,32 @@ resource "aws_lakeformation_data_cells_filter" "test" {
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, column))
+}
+
+func testAccDataCellsFilterConfig_columnWildcardMultiple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataCellsFilterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lakeformation_data_cells_filter" "test" {
+  table_data {
+    database_name    = aws_glue_catalog_database.test.name
+    name             = %[1]q
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.test.name
+
+    column_wildcard {
+      # Columns specified in non-alphabetical order to test ordering fix
+      excluded_column_names = ["my_column_22", "my_column_12"]
+    }
+
+    row_filter {
+      filter_expression = "my_column_23='testing'"
+    }
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName))
 }
 
 func testAccDataCellsFilterConfig_rowFilter(rName, rowFilter string) string {

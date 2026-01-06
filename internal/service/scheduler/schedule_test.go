@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package scheduler_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfscheduler "github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -262,7 +262,7 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfscheduler.ResourceSchedule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfscheduler.ResourceSchedule(), resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -1655,7 +1655,7 @@ func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.Tes
 
 			_, err = tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func testAccResourceCollection_disappears(t *testing.T) {
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -241,7 +241,7 @@ func testAccCheckResourceCollectionDestroy(ctx context.Context) resource.TestChe
 			}
 
 			_, err := tfdevopsguru.FindResourceCollectionByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*types.ResourceNotFoundException](err) || tfresource.NotFound(err) {
+			if errs.IsA[*types.ResourceNotFoundException](err) || retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

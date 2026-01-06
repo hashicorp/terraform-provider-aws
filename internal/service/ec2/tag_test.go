@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -59,7 +59,7 @@ func TestAccEC2Tag_disappears(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

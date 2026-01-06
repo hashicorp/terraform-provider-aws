@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +77,7 @@ func testAccOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -490,7 +490,7 @@ func testAccCheckOrganizationCustomRuleDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfconfigservice.FindOrganizationCustomRuleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
+			if retry.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 				continue
 			}
 

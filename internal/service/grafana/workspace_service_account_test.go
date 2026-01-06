@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,7 +71,7 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +111,7 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 
 			_, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.Attributes["workspace_id"], rs.Primary.Attributes["service_account_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

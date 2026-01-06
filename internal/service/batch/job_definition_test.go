@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -249,7 +249,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -905,6 +905,41 @@ func TestAccBatchJobDefinition_NodeProperties_withECS(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBatchJobDefinition_NodeProperties_withECS_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesECS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttrSet(resourceName, "node_properties"),
+					acctest.CheckResourceAttrJMES(resourceName, "node_properties", "nodeRangeProperties[0].ecsProperties.taskProperties[0].containers[0].resourceRequirements[?type=='VCPU'].value | [0]", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "node_properties", "nodeRangeProperties[0].ecsProperties.taskProperties[0].containers[0].resourceRequirements[?type=='MEMORY'].value | [0]", "2048"),
+				),
+			},
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesECS_update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttrSet(resourceName, "node_properties"),
+					acctest.CheckResourceAttrJMES(resourceName, "node_properties", "nodeRangeProperties[0].ecsProperties.taskProperties[0].containers[0].resourceRequirements[?type=='VCPU'].value | [0]", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "node_properties", "nodeRangeProperties[0].ecsProperties.taskProperties[0].containers[0].resourceRequirements[?type=='MEMORY'].value | [0]", "4096"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd awstypes.JobDefinition
@@ -1283,7 +1318,7 @@ func testAccCheckJobDefinitionPreviousDeregistered(ctx context.Context, n string
 
 		_, err := tfbatch.FindJobDefinitionByARN(ctx, conn, previousARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -1351,7 +1386,7 @@ func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfbatch.FindJobDefinitionByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1557,6 +1592,57 @@ resource "aws_batch_job_definition" "test" {
               },
               {
                 value = "2048"
+                type  = "MEMORY"
+            }]
+            },
+            {
+              image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+              command = ["sleep", "360"]
+              name    = "container_b"
+              resourceRequirements = [{
+                value = "1"
+                type  = "VCPU"
+                },
+                {
+                  value = "2048"
+                  type  = "MEMORY"
+              }]
+          }]
+        }]
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesECS_update(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  retry_strategy {
+    attempts = 1
+  }
+
+  node_properties = jsonencode({
+    mainNode = 0
+    numNodes = 1
+    nodeRangeProperties = [{
+      targetNodes = "0:"
+      ecsProperties = {
+        taskProperties = [{
+          containers = [{
+            image      = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command    = ["sleep", "60"]
+            name       = "container_a"
+            privileged = false
+            resourceRequirements = [{
+              value = "1"
+              type  = "VCPU"
+              },
+              {
+                value = "4096"
                 type  = "MEMORY"
             }]
             },

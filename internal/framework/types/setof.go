@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -55,8 +56,7 @@ func (t setTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t setTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("SetTypeOf[%T]", zero)
+	return fmt.Sprintf("SetTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (basetypes.SetValuable, diag.Diagnostics) {

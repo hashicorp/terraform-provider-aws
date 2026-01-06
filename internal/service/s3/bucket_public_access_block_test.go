@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketPublicAccessBlock(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketPublicAccessBlock(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -349,7 +349,7 @@ func testAccCheckBucketPublicAccessBlockDestroy(ctx context.Context) resource.Te
 
 			_, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

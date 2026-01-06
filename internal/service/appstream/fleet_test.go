@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +88,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -364,7 +364,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappstream.FindFleetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

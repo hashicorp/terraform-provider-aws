@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +78,7 @@ func TestAccFSxOpenZFSVolume_disappears(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenZFSVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -542,7 +542,7 @@ func testAccCheckOpenZFSVolumeDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tffsx.FindOpenZFSVolumeByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

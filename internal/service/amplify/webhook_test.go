@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,7 +68,7 @@ func testAccWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func testAccCheckWebhookDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfamplify.FindWebhookByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +63,7 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +105,7 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

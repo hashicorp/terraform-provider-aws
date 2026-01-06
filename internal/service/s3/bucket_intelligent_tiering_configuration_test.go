@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,7 +71,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketIntelligentTieringConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketIntelligentTieringConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -263,7 +263,7 @@ func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Contex
 
 			_, err = tfs3.FindIntelligentTieringConfiguration(ctx, conn, bucket, name)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

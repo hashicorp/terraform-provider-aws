@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoveryreadiness_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,7 +80,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceReadinessCheck(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceReadinessCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +187,7 @@ func testAccCheckReadinessCheckDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfroute53recoveryreadiness.FindReadinessCheckByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

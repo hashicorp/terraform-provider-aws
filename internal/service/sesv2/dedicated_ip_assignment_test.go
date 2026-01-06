@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,7 +83,7 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 				Config: testAccDedicatedIPAssignmentConfig_basic(ip, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPAssignmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceDedicatedIPAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,7 +102,7 @@ func testAccCheckDedicatedIPAssignmentDestroy(ctx context.Context) resource.Test
 
 			_, err := tfsesv2.FindDedicatedIPByTwoPartKey(ctx, conn, rs.Primary.Attributes["ip"], rs.Primary.Attributes["destination_pool_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

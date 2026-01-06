@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -22,8 +22,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 				Config: testAccRolePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyExists(ctx, resourceName, &rolePolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -313,7 +313,7 @@ func testAccCheckRolePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfiam.FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

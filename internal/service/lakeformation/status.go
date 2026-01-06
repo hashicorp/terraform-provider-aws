@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -6,16 +6,14 @@ package lakeformation
 import (
 	"context"
 	"fmt"
-	"reflect"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter, principalIdentifier string) retry.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, filter PermissionsFilter) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		var permissions []awstypes.PrincipalResourcePermissions
 
@@ -24,7 +22,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			page, err := pages.NextPage(ctx)
 
 			if errs.IsA[*awstypes.EntityNotFoundException](err) {
-				return nil, statusNotFound, err
+				return nil, "", nil
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
@@ -32,27 +30,18 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			}
 
 			if err != nil {
-				return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
+				return nil, "", fmt.Errorf("listing permissions: %w", err)
 			}
 
 			for _, permission := range page.PrincipalResourcePermissions {
-				if reflect.ValueOf(permission).IsZero() {
-					continue
+				if filter(permission) {
+					permissions = append(permissions, permission)
 				}
-
-				if principalIdentifier != aws.ToString(permission.Principal.DataLakePrincipalIdentifier) {
-					continue
-				}
-
-				permissions = append(permissions, permission)
 			}
 		}
 
-		// clean permissions = filter out permissions that do not pertain to this specific resource
-		cleanPermissions := filterPermissions(filter, permissions)
-
-		if len(cleanPermissions) == 0 {
-			return nil, statusNotFound, nil
+		if len(permissions) == 0 {
+			return nil, "", nil
 		}
 
 		return permissions, statusAvailable, nil

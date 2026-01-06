@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func TestAccRedshiftServerlessCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccCustomDomainAssociationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, resourceName, &customDomainAssociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceCustomDomainAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshiftserverless.ResourceCustomDomainAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 
 			_, err := tfredshiftserverless.FindCustomDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup_name"], rs.Primary.Attributes["custom_domain_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

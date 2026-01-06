@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -420,7 +420,7 @@ func TestAccGlueMlTransform_disappears(t *testing.T) {
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceMLTransform(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

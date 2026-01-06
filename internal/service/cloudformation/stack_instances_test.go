@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +88,7 @@ func TestAccCloudFormationStackInstances_disappears(t *testing.T) {
 				Config: testAccStackInstancesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackInstances(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackInstances(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,8 +115,8 @@ func TestAccCloudFormationStackInstances_Disappears_stackSet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, stackSetResourceName, &stackSet1),
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackInstances(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackInstances(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -654,7 +654,7 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 
 			output, err := tfcloudformation.FindStackInstancesByNameCallAs(ctx, acctest.Provider.Meta(), stackSetName, callAs, deployedByOU, accounts, regions)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if output.StackSetID == "" {
@@ -703,7 +703,7 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err = tfcloudformation.FindStackInstancesByNameCallAs(ctx, acctest.Provider.Meta(), stackSetName, callAs, deployedByOU, accounts, regions)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

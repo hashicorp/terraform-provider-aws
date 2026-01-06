@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccInspector2Filter_basic(t *testing.T) {
+func TestAccInspector2Filter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -71,7 +71,7 @@ func testAccInspector2Filter_basic(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_update(t *testing.T) {
+func TestAccInspector2Filter_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -147,7 +147,7 @@ func testAccInspector2Filter_update(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_stringFilters(t *testing.T) {
+func TestAccInspector2Filter_stringFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -243,7 +243,7 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_numberFilters(t *testing.T) {
+func TestAccInspector2Filter_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -329,7 +329,7 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_dateFilters(t *testing.T) {
+func TestAccInspector2Filter_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -415,7 +415,7 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_mapFilters(t *testing.T) {
+func TestAccInspector2Filter_mapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	comparison := string(awstypes.MapComparisonEquals)
 	action_1 := string(awstypes.FilterActionNone)
@@ -494,7 +494,7 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_portRangeFilters(t *testing.T) {
+func TestAccInspector2Filter_portRangeFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -566,7 +566,7 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_packageFilters(t *testing.T) {
+func TestAccInspector2Filter_packageFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	comparison := string(awstypes.MapComparisonEquals)
 	action_1 := string(awstypes.FilterActionNone)
@@ -728,7 +728,7 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_disappears(t *testing.T) {
+func TestAccInspector2Filter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -753,7 +753,7 @@ func testAccInspector2Filter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &filter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceFilter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfinspector2.ResourceFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -772,7 +772,7 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

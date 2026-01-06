@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -319,7 +319,7 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceSlotType(), rName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -416,7 +416,7 @@ func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVe
 
 		_, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, slotTypeName, slotTypeVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 

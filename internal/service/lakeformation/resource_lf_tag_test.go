@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -148,7 +148,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -21,8 +21,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,12 +61,13 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -143,7 +144,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -171,7 +172,7 @@ func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 				Config: testAccTableBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTableBucket, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTableBucket, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -214,7 +215,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -239,7 +240,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -264,7 +265,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -377,7 +378,7 @@ func testAccCheckTableBucketDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfs3tables.FindTableBucketByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -411,6 +412,10 @@ func testAccCheckTableBucketExists(ctx context.Context, n string, v *s3tables.Ge
 
 		return nil
 	}
+}
+
+func testAccTableBucketImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrImportStateIdFunc(resourceName, names.AttrARN)
 }
 
 func testAccTableBucketConfig_basic(rName string) string {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -560,7 +560,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3890,7 +3890,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -7604,11 +7604,6 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 func testAccWebACLConfig_dataProtectionConfig(rName, action, fieldType string, excludeRateBasedDetails, excludeRuleMatchDetails bool, keys []string) string {
-	keysString := ""
-	for _, key := range keys {
-		keysString += fmt.Sprintf("%q, ", key)
-	}
-
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -7636,7 +7631,7 @@ resource "aws_wafv2_web_acl" "test" {
     }
   }
 }
-`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, keysString)
+`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, acctest.ListOfStrings(keys...))
 }
 
 func testAccWebACLConfig_dataProtectionConfigMultiple(rName string) string {

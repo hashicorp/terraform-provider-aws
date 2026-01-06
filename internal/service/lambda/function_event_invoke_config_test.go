@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,7 +68,7 @@ func TestAccLambdaFunctionEventInvokeConfig_disappears(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunctionEventInvokeConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunctionEventInvokeConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +92,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunction(t *testing
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), lambdaFunctionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), lambdaFunctionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -513,7 +513,7 @@ func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.
 
 			_, err = tflambda.FindFunctionEventInvokeConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

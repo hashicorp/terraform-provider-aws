@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +63,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T)
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,16 +102,11 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
 			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+			_, err := tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["schedule_identifier"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -133,18 +128,9 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Snapshot Schedule Association ID is set")
-		}
-
-		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+		_, err := tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["schedule_identifier"])
 
 		return err
 	}

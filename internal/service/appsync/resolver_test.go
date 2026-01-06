@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -129,7 +129,7 @@ func testAccResolver_disappears(t *testing.T) {
 				Config: testAccResolverConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceResolver(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -370,7 +370,7 @@ func testAccCheckResolverDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappsync.FindResolverByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes[names.AttrField])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,24 +1,21 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -90,7 +87,7 @@ func TestAccRedshiftLogging_disappears(t *testing.T) {
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceLogging, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceLogging, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +119,7 @@ func TestAccRedshiftLogging_disappears_Cluster(t *testing.T) {
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -182,39 +179,39 @@ func testAccCheckLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfredshift.FindLoggingByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameLogging, rs.Primary.ID, err)
+			_, err := tfredshift.FindLoggingStatusByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameLogging, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Logging %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLoggingExists(ctx context.Context, name string, log *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
+func testAccCheckLoggingExists(ctx context.Context, n string, v *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		out, err := tfredshift.FindLoggingByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfredshift.FindLoggingStatusByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameLogging, rs.Primary.ID, err)
+			return err
 		}
 
-		*log = *out
+		*v = *output
 
 		return nil
 	}

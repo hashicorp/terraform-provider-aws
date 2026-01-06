@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -22,7 +21,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dlclark/regexp2"
+	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -399,10 +398,11 @@ type ResourceDatum struct {
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
 	IsDataSource                     bool
-	DataSourceResourceImplementation tests.Implementation
+	DataSourceResourceImplementation common.Implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	tests.CommonArgs
+	common.ResourceIdentity
 }
 
 func (d ResourceDatum) ProviderPackage() string {
@@ -516,7 +516,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 	tagged := false
 	skip := false
-	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
 	hasIdentifierAttribute := false
@@ -525,14 +524,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName := m[1]; annotationName {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
 				d.IsDataSource = true
 				fallthrough
 
 			case "FrameworkResource":
-				d.Implementation = tests.ImplementationFramework
-				args := common.ParseArgs(m[3])
+				d.Implementation = common.ImplementationFramework
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -549,8 +547,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				fallthrough
 
 			case "SDKResource":
-				d.Implementation = tests.ImplementationSDK
-				args := common.ParseArgs(m[3])
+				d.Implementation = common.ImplementationSDK
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -571,7 +568,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Tags":
 				tagged = true
-				args := common.ParseArgs(m[3])
 				if _, ok := args.Keyword["identifierAttribute"]; ok {
 					hasIdentifierAttribute = true
 				}
@@ -580,16 +576,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.NoImport = true
 
 			case "Testing":
-				args := common.ParseArgs(m[3])
-
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
-				}
-
-				// This needs better handling
-				if _, ok := args.Keyword["generator"]; ok {
-					generatorSeen = true
 				}
 
 				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
@@ -615,7 +604,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				// TODO: should probably be a parameter on @Tags
 				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
-					if b, err := tests.ParseBoolAttr("tagsUpdateForceNew", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tagsUpdateForceNew", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -623,7 +612,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tagsUpdateGetTagsIn"]; ok {
-					if b, err := tests.ParseBoolAttr("tagsUpdateGetTagsIn", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tagsUpdateGetTagsIn", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -631,7 +620,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
-					if b, err := tests.ParseBoolAttr("skipEmptyTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("skipEmptyTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -639,7 +628,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["skipNullTags"]; ok {
-					if b, err := tests.ParseBoolAttr("skipNullTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("skipNullTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -647,7 +636,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["noRemoveTags"]; ok {
-					if b, err := tests.ParseBoolAttr("noRemoveTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("noRemoveTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -655,7 +644,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -665,6 +654,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
 				}
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 			}
 		}
 	}
@@ -673,7 +668,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				tests.GoImport{
+				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -694,22 +689,25 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			if !generatorSeen {
-				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					tests.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
+			if d.HasInherentRegionIdentity() {
+				if d.Implementation == common.ImplementationFramework {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+						d.SetImportStateIDAttribute(d.IdentityAttributeName())
+					}
+				}
 			}
+			if d.IsSingletonIdentity() {
+				d.Serialize = true
+			}
+
 			v.taggedResources = append(v.taggedResources, d)
 		}
 	}

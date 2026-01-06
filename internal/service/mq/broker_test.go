@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package mq_test
@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -307,6 +307,34 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			autoMinorVersionUpgrade: true,
 			want:                    "5.18",
 		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19 without patch version",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4 without patch version",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -472,7 +500,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmq.ResourceBroker(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmq.ResourceBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1663,7 +1691,7 @@ func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

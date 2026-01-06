@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func testAccTransitGatewayDefaultRouteTablePropagation_disappears(t *testing.T, 
 				Config: testAccTransitgatewayDefaultRouteTablePropagationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTablePropagationExists(ctx, resourceName, &transitgateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayDefaultRouteTablePropagation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayDefaultRouteTablePropagation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccTransitGatewayDefaultRouteTablePropagation_Disappears_transitGateway
 				Config: testAccTransitgatewayDefaultRouteTablePropagationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTablePropagationExists(ctx, resourceName, &transitgateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), "aws_ec2_transit_gateway.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), "aws_ec2_transit_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func testAccCheckTransitGatewayDefaultRouteTablePropagationDestroy(ctx context.C
 
 			output, err := tfec2.FindTransitGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

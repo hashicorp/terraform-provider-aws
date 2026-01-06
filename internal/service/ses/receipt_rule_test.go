@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -380,7 +380,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -409,7 +409,7 @@ func TestAccSESReceiptRule_Disappears_receiptRuleSet(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -428,7 +428,7 @@ func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type dummyValueser string
@@ -54,9 +55,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 }
 
 func (stringEnumType[T]) String() string {
-	var zero T
-	// The format of this returned value is used inside AutoFlEx.
-	return fmt.Sprintf("StringEnumType[%T]", zero)
+	return fmt.Sprintf("StringEnumType[%T]", inttypes.Zero[T]())
 }
 
 func (t stringEnumType[T]) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {

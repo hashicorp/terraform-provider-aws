@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,7 +83,7 @@ func testAccMember_disappears(t *testing.T) {
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceMember(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -401,7 +401,7 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmacie2.FindMemberByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

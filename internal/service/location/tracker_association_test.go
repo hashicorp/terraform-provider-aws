@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package location_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -118,7 +118,7 @@ func TestAccLocationTrackerAssociation_disappears(t *testing.T) {
 				Config: testAccTrackerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceTrackerAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceTrackerAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func testAccCheckTrackerAssociationDestroy(ctx context.Context) resource.TestChe
 			err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 			if err != nil {
-				if tfresource.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				if retry.NotFound(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -57,7 +57,7 @@ func testAccTag_disappears(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

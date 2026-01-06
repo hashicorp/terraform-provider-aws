@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig_basic(rName, "bourbon"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 				Config: testAccAppCookieStickinessPolicyConfig_basic(rName, "bourbon"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceLoadBalancer(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +117,7 @@ func testAccCheckAppCookieStickinessPolicyDestroy(ctx context.Context) resource.
 
 			_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

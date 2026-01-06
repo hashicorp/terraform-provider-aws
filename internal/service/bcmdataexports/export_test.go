@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bcmdataexports_test
@@ -328,7 +328,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbcmdataexports.ResourceExport, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbcmdataexports.ResourceExport, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

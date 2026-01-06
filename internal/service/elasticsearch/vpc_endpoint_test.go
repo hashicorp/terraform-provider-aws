@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,7 +85,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfresource.NotFound(tfelasticsearch.VPCEndpointsError(testCase.apiObjects)), testCase.notFound; got != want {
+			if got, want := retry.NotFound(tfelasticsearch.VPCEndpointsError(testCase.apiObjects)), testCase.notFound; got != want {
 				t.Errorf("NotFound = %v, want %v", got, want)
 			}
 		})
@@ -151,7 +151,7 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -236,7 +236,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

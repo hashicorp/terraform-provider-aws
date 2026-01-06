@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -222,7 +222,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudtrail.ResourceEventDataStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -439,7 +439,7 @@ func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

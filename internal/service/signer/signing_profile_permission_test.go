@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package signer_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +74,7 @@ func TestAccSignerSigningProfilePermission_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsigner.ResourceSigningProfilePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfilePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -230,7 +230,7 @@ func testAccCheckSigningProfilePermissionDestroy(ctx context.Context) resource.T
 
 			_, err := tfsigner.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["profile_name"], rs.Primary.Attributes["statement_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

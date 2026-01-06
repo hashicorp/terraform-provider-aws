@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package mediapackage_test
@@ -163,7 +163,7 @@ func TestAccMediaPackageChannel_disappears(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediapackage.ResourceChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediapackage.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

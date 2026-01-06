@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +36,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 					testAccCheckAssociationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "calendar_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),
@@ -70,7 +71,7 @@ func TestAccSSMAssociation_disappears(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +94,7 @@ func TestAccSSMAssociation_disappears_document(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDocument(), "aws_ssm_document.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceDocument(), "aws_ssm_document.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -664,7 +665,7 @@ func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfssm.FindAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

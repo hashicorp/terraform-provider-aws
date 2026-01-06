@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -10,27 +10,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket_policy", name="Table Bucket Policy")
+// @ArnIdentity("table_bucket_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketPolicyOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preIdentityVersion="6.19.0")
+// @Testing(importIgnore="resource_policy")
 func newTableBucketPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketPolicyResource{}, nil
 }
 
 type tableBucketPolicyResource struct {
 	framework.ResourceWithModel[tableBucketPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *tableBucketPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -90,7 +96,7 @@ func (r *tableBucketPolicyResource) Read(ctx context.Context, request resource.R
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	output, err := findTableBucketPolicyByARN(ctx, conn, tableBucketARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -161,10 +167,6 @@ func (r *tableBucketPolicyResource) Delete(ctx context.Context, request resource
 	}
 }
 
-func (r *tableBucketPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("table_bucket_arn"), request, response)
-}
-
 func findTableBucketPolicyByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
 	input := s3tables.GetTableBucketPolicyInput{
 		TableBucketARN: aws.String(tableBucketARN),
@@ -177,7 +179,7 @@ func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, input *s3
 	output, err := conn.GetTableBucketPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}

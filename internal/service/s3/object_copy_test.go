@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -116,7 +116,7 @@ func TestAccS3ObjectCopy_disappears(t *testing.T) {
 				Config: testAccObjectCopyConfig_basic(rName1, names.AttrSource, rName2, names.AttrTarget),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObjectCopy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObjectCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -708,7 +708,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], "", optFns...)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

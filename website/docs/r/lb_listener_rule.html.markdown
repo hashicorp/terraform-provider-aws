@@ -203,6 +203,36 @@ resource "aws_lb_listener_rule" "oidc" {
   }
 }
 
+# JWT-validation Action
+
+resource "aws_lb_listener_rule" "oidc" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+}
+
 # With transform
 
 resource "aws_lb_listener_rule" "transform" {
@@ -257,13 +287,14 @@ This resource supports the following arguments:
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito`, `authenticate-oidc` and `jwt-validation`.
 * `authenticate_cognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
 * `authenticate_oidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
   Specify only if `type` is `forward`.
   Cannot be specified with `target_group_arn`.
+* `jwt_validation` - (Optional) Information for creating a JWT validation action. Required if `type` is `jwt-validation`.
 * `order` - (Optional) Order for the action.
   The action with the lowest value for order is performed first.
   Valid values are between `1` and `50000`.
@@ -335,6 +366,18 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 
 * `key` - (Required) The key of query parameter
 * `value` - (Required) The value of query parameter
+
+JWT Validation Blocks (for `jwt_validation`) supports the following:
+
+* `issuer` - (Required) Issuer of the JWT.
+* `jwks_endpoint` - (Required) JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+* `additional_claim` - (Optional) Repeatable configuration block for additional claims to validate.
+
+Additional Claim Blocks (for `additional_claim`) supports the following:
+
+* `format` - (Required) Format of the claim value. Valid values are `single-string`, `string-array` and `space-separated-values`.
+* `name` - (Required) Name of the claim to validate. `exp`, `iss`, `nbf`, or `iat` cannot be specified because they are validated by default.
+* `values` - (Required) List of expected values of the claim.
 
 ### Condition Blocks
 

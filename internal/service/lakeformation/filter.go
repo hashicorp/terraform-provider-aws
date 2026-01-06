@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -6,16 +6,7 @@ package lakeformation
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
-
-func filterPermissions(filter PermissionsFilter, allPermissions []awstypes.PrincipalResourcePermissions) []awstypes.PrincipalResourcePermissions {
-	if filter != nil {
-		return tfslices.Filter(allPermissions, filter)
-	}
-
-	return nil
-}
 
 func filterCatalogPermissions(principalIdentifier string) PermissionsFilter {
 	return func(permissions awstypes.PrincipalResourcePermissions) bool {

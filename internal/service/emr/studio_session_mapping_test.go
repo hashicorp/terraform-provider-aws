@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -6,7 +6,6 @@ package emr_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
@@ -15,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,15 +25,11 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	gName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
+	uName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	gName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckUserID(t)
-			testAccPreCheckGroupName(t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
@@ -93,15 +88,11 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	var studio awstypes.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	gName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
+	uName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	gName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckUserID(t)
-			testAccPreCheckGroupName(t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
@@ -110,8 +101,8 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,8 +110,8 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +151,7 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -172,20 +163,6 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 		}
 
 		return nil
-	}
-}
-
-func testAccPreCheckUserID(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_USER_ID") == "" {
-		t.Skip("AWS_IDENTITY_STORE_USER_ID env var must be set for AWS Identity Store User acceptance test. " +
-			"This is required until ListUsers API returns results without filtering by name.")
-	}
-}
-
-func testAccPreCheckGroupName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
-			"This is required until ListGroups API returns results without filtering by name.")
 	}
 }
 

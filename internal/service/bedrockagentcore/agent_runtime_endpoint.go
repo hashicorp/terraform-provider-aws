@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -147,8 +148,8 @@ func (r *agentRuntimeEndpointResource) Read(ctx context.Context, request resourc
 
 	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, name)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -249,7 +250,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 func (r *agentRuntimeEndpointResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, ",")
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "agent_runtime_id,name"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "agent_runtime_id,name"`, request.ID))
 		return
 	}
 
@@ -315,7 +316,7 @@ func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcore
 func statusAgentRuntimeEndpoint(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, endpointName)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

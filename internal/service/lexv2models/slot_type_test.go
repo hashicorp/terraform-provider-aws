@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -122,7 +122,7 @@ func TestAccLexV2ModelsSlotType_disappears(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceSlotType, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceSlotType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

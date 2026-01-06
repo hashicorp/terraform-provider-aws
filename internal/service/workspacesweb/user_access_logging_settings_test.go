@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,7 +119,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_disappears(t *testing.T) {
 				Config: testAccUserAccessLoggingSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &userAccessLoggingSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +138,7 @@ func testAccCheckUserAccessLoggingSettingsDestroy(ctx context.Context) resource.
 
 			_, err := tfworkspacesweb.FindUserAccessLoggingSettingsByARN(ctx, conn, rs.Primary.Attributes["user_access_logging_settings_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

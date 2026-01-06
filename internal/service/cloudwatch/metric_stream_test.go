@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -84,7 +84,7 @@ func TestAccCloudWatchMetricStream_disappears(t *testing.T) {
 				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceMetricStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatch.ResourceMetricStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -466,7 +466,7 @@ func testAccCheckMetricStreamDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfcloudwatch.FindMetricStreamByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

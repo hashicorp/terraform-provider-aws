@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -219,7 +219,7 @@ func (r *sourceAPIAssociationResource) Read(ctx context.Context, request resourc
 	}
 
 	out, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, state.AssociationID.ValueString(), state.MergedAPIID.ValueString())
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -339,7 +339,7 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	output, err := conn.GetSourceApiAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
@@ -353,11 +353,11 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	return output.SourceApiAssociation, nil
 }
 
-func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) retry.StateRefreshFunc {
+func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
 
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -370,7 +370,7 @@ func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, assoc
 }
 
 func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
 		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
 		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
@@ -389,7 +389,7 @@ func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, 
 }
 
 func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
 		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
 		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
@@ -408,7 +408,7 @@ func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, 
 }
 
 func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess, awstypes.SourceApiAssociationStatusDeletionInProgress, awstypes.SourceApiAssociationStatusDeletionScheduled),
 		Target:  []string{},
 		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),

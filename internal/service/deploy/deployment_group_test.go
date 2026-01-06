@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package deploy_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -199,7 +199,7 @@ func TestAccDeployDeploymentGroup_disappears(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceDeploymentGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodedeploy.ResourceDeploymentGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -223,7 +223,7 @@ func TestAccDeployDeploymentGroup_Disappears_app(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceApp(), "aws_codedeploy_app.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodedeploy.ResourceApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1694,7 +1694,7 @@ func testAccCheckDeploymentGroupDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfcodedeploy.FindDeploymentGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_name"], rs.Primary.Attributes["deployment_group_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

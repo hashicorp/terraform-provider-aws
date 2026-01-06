@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ce_test
@@ -80,7 +80,7 @@ func TestAccCECostAllocationTag_disappears(t *testing.T) {
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceCostAllocationTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceCostAllocationTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

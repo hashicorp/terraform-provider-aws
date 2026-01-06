@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func TestAccVPCInternetGateway_disappears(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,7 +90,7 @@ func TestAccVPCInternetGateway_Disappears_attachment(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_attachmentStandalone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -192,7 +192,7 @@ func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

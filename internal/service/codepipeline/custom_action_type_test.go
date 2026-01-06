@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codepipeline_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceCustomActionType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodepipeline.ResourceCustomActionType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -247,7 +247,7 @@ func testAccCheckCustomActionTypeDestroy(ctx context.Context) resource.TestCheck
 
 			_, err = tfcodepipeline.FindCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

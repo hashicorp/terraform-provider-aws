@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codestarnotifications_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodestarnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +70,7 @@ func TestAccCodeStarNotificationsNotificationRule_disappears(t *testing.T) {
 				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -272,7 +272,7 @@ func testAccCheckNotificationRuleDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfcodestarnotifications.FindNotificationRuleByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreaminfluxdb_test
@@ -93,7 +93,7 @@ func TestAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 				Config: testAccDBInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBInstance, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftimestreaminfluxdb.ResourceDBInstance, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

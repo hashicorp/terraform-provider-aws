@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms_test
@@ -72,7 +72,7 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceConfiguredTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceConfiguredTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

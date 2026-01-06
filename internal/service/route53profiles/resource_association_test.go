@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles_test
@@ -186,7 +186,7 @@ func TestAccRoute53ProfilesResourceAssociation_disappears(t *testing.T) {
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53ProfileResourceAssocation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53profiles.Route53ProfileResourceAssocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

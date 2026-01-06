@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -230,7 +230,7 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +254,7 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -294,7 +294,7 @@ func testAccCheckMaintenanceWindowTargetDestroy(ctx context.Context) resource.Te
 
 			_, err := tfssm.FindMaintenanceWindowTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["window_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

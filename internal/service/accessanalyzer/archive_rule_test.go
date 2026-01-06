@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer_test
@@ -140,7 +140,7 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 				Config: testAccArchiveRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, t, resourceName, &archiveRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

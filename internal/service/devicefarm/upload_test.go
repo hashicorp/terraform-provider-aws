@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -94,8 +94,8 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,8 +125,8 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +167,7 @@ func testAccCheckUploadDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			// Try to find the resource
 			_, err := tfdevicefarm.FindUploadByARN(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

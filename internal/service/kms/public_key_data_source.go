@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("customer_master_key_spec", output.KeySpec)
 	d.Set("encryption_algorithms", output.EncryptionAlgorithms)
 	d.Set("key_usage", output.KeyUsage)
-	d.Set(names.AttrPublicKey, itypes.Base64Encode(output.PublicKey))
+	d.Set(names.AttrPublicKey, inttypes.Base64Encode(output.PublicKey))
 	d.Set("public_key_pem", string(pem.EncodeToMemory(&pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: output.PublicKey,

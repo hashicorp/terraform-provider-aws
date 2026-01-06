@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -260,7 +260,7 @@ func TestAccLightsailKeyPair_disappears(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceKeyPair(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

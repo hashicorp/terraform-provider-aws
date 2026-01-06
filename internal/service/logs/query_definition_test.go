@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -74,7 +74,7 @@ func TestAccLogsQueryDefinition_disappears(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceQueryDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

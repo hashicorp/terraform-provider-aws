@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -148,7 +148,7 @@ func testAccLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, acctest.CtTrue, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceLoadBalancerStickinessPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

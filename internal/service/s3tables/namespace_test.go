@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -84,7 +84,7 @@ func TestAccS3TablesNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +103,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3tables.FindNamespaceByTwoPartKey(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -71,7 +71,7 @@ func testAccEventSourcesConfig_disappears(t *testing.T) {
 				Config: testAccEventSourcesConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourcesConfigExists(ctx, resourceName, &eventsourcesconfig),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdevopsguru.ResourceEventSourcesConfig, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceEventSourcesConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

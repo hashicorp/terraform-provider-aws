@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -76,7 +76,7 @@ func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
 				Config: testAccConfigConfig_basic(rName, "ENABLE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
