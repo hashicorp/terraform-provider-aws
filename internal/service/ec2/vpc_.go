@@ -183,6 +183,7 @@ func resourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
