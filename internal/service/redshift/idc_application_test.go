@@ -127,9 +127,9 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.lake_formation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.lake_formation.0.lake_formation_query.0.authorization", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.lake_formation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.lake_formation.0.lake_formation_query.0.authorization", "Enabled"),
 				),
 			},
 			{
@@ -159,9 +159,9 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.redshift.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.redshift.0.connect.0.authorization", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.redshift.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.redshift.0.connect.0.authorization", "Enabled"),
 				),
 			},
 			{
@@ -191,9 +191,9 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsS3AccessGrants(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.s3_access_grants.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "service_integrations.0.s3_access_grants.0.read_write_access.0.authorization", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.0.read_write_access.0.authorization", "Enabled"),
 				),
 			},
 			{
@@ -404,7 +404,7 @@ resource "aws_redshift_idc_application" "test" {
   idc_display_name              = %[1]q
   idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   redshift_idc_application_name = %[1]q
-  service_integrations {
+  service_integration {
     lake_formation {
       lake_formation_query {
         authorization = "Enabled"
@@ -424,7 +424,7 @@ resource "aws_redshift_idc_application" "test" {
   idc_display_name              = %[1]q
   idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   redshift_idc_application_name = %[1]q
-  service_integrations {
+  service_integration {
     redshift {
       connect {
         authorization = "Enabled"
@@ -444,7 +444,7 @@ resource "aws_redshift_idc_application" "test" {
   idc_display_name              = %[1]q
   idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   redshift_idc_application_name = %[1]q
-  service_integrations {
+  service_integration {
     s3_access_grants {
       read_write_access {
         authorization = "Enabled"

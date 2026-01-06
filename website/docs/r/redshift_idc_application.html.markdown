@@ -34,7 +34,7 @@ This resource supports the following arguments:
 * `identity_namespace` - (Optional) Namespace for the Amazon Redshift IAM Identity Center application instance.
 * `redshift_idc_application_name` - (Required) Name of the Redshift application in IAM Identity Center.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `service_integrations` - (Optional) Collection of service integrations for the Redshift IAM Identity Center application. Refer to the [service_integrations](#service_integrations) documentation for more details.
+* `service_integration` - (Optional) Collection of service integrations for the Redshift IAM Identity Center application. Refer to the [service_integration](#service_integration) documentation for more details.
 
 ### AuthorizedTokenIssuer
 
@@ -43,9 +43,9 @@ An `authorized_token_issuer` block supports the following:
 * `authorized_audiences_list` - List of audiences for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.
 * `trusted_token_issuer_arn` - ARN for the authorized token issuer for integrating Amazon Redshift with IDC Identity Center.
 
-### ServiceIntegrations
+### ServiceIntegration
 
-A `service_integrations` block supports the following:
+A `service_integration` block supports the following:
 
 * `lake_formation` - (Optional) List of scopes set up for Lake Formation integration. Refer to the [lake_formation](#lake_formation) documentation for more details.
 * `redshift` - (Optional) List of scopes set up for Redshift integration. Refer to the [redshift](#redshift) documentation for more details.

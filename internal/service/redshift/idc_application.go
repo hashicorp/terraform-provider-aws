@@ -121,7 +121,7 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 					},
 				},
 			},
-			"service_integrations": schema.ListNestedBlock{
+			"service_integration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[serviceIntegrationsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -352,7 +352,7 @@ type idcApplicationResourceModel struct {
 	IdentityNamespace          types.String                                                `tfsdk:"identity_namespace"`
 	RedshiftIDCApplicationARN  types.String                                                `tfsdk:"redshift_idc_application_arn"`
 	RedshiftIDCApplicationName types.String                                                `tfsdk:"redshift_idc_application_name"`
-	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]   `tfsdk:"service_integrations"`
+	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]   `tfsdk:"service_integration"`
 	Tags                       tftags.Map                                                  `tfsdk:"tags"`
 	TagsAll                    tftags.Map                                                  `tfsdk:"tags_all"`
 }
