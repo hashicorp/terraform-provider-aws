@@ -95,8 +95,8 @@ func main() {
 	}
 }
 
-//go:embed resource.tmpl
+//go:embed resource.go.gtpl
 var resourceTemplateBody string
 
-//go:embed tests.tmpl
+//go:embed tests.go.gtpl
 var resourceTestTemplateBody string

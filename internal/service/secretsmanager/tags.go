@@ -6,11 +6,27 @@ package secretsmanager
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
+
+func findSecretTag(ctx context.Context, conn *secretsmanager.Client, identifier, key string) (*string, error) {
+	listTags, err := listSecretTags(ctx, conn, identifier)
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if !listTags.KeyExists(key) {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
+	}
+
+	return listTags.KeyValue(key), nil
+}
 
 func listSecretTags(ctx context.Context, conn *secretsmanager.Client, identifier string) (tftags.KeyValueTags, error) {
 	output, err := findSecretByID(ctx, conn, identifier)

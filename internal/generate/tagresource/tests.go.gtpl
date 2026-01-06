@@ -8,20 +8,20 @@ package {{ .ServicePackage }}_test
 import (
     "context"
 	"fmt"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTagDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).{{ .AWSServiceUpper }}Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_tag" {
@@ -50,7 +50,7 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTagExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -62,7 +62,7 @@ func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).{{ .AWSServiceUpper }}Client(ctx)
 
 		_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc | FirstUpper }}(ctx, conn, identifier, key)
 

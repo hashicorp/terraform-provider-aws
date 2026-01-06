@@ -447,3 +447,20 @@ func RandomWithPrefix(t *testing.T, prefix string) string {
 
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }
+
+// RandIntRange is a VCR-friendly replacement for acctest.RandIntRange
+func RandIntRange(t *testing.T, minInt int, maxInt int) int {
+	t.Helper()
+
+	if !vcr.IsEnabled() {
+		return sdkacctest.RandIntRange(minInt, maxInt)
+	}
+
+	s, err := vcrRandomnessSource(t)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return rand.New(s.source).Intn(maxInt-minInt) + minInt
+}
