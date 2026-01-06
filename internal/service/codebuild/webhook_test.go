@@ -364,7 +364,7 @@ func TestAccCodeBuildWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceWebhook(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -393,7 +393,7 @@ func TestAccCodeBuildWebhook_Disappears_project(t *testing.T) {
 				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), projectResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceProject(), projectResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

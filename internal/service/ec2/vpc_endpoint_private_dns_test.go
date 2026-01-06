@@ -123,7 +123,7 @@ func TestAccVPCEndpointPrivateDNS_disappears_Endpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), endpointResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), endpointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

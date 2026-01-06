@@ -84,7 +84,7 @@ func TestAccKendraDataSource_disappears(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceDataSource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

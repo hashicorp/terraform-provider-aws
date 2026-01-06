@@ -81,7 +81,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_disappears(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceObjectLambdaAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

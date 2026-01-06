@@ -112,7 +112,7 @@ func TestAccAMPQueryLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccQueryLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceQueryLoggingConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceQueryLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

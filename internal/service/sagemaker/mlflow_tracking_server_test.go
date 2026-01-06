@@ -159,7 +159,7 @@ func TestAccSageMakerMlflowTrackingServer_disappears(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

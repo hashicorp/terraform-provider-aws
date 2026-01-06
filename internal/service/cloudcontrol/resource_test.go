@@ -64,7 +64,7 @@ func TestAccCloudControlResource_disappears(t *testing.T) {
 			{
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudcontrol.ResourceResource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudcontrol.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -132,7 +132,7 @@ func TestAccRoute53ProfilesAssociation_disappears(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName, &association),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53ProfileAssocation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53profiles.Route53ProfileAssocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

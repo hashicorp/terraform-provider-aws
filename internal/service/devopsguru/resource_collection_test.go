@@ -82,7 +82,7 @@ func testAccResourceCollection_disappears(t *testing.T) {
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

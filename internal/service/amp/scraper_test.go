@@ -86,7 +86,7 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraper, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -75,7 +75,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

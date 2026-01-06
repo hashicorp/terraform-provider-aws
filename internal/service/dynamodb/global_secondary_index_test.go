@@ -122,7 +122,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceGlobalSecondaryIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdynamodb.ResourceGlobalSecondaryIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -159,7 +159,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_disappears_table(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, t, resourceNameTable, &conf),
 					testAccCheckGlobalSecondaryIndexExists(ctx, t, resourceName, &gsi),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceNameTable),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTable(), resourceNameTable),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

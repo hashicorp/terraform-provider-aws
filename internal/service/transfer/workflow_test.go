@@ -197,7 +197,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWorkflow(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

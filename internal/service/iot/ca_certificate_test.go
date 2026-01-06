@@ -67,7 +67,7 @@ func TestAccIoTCACertificate_disappears(t *testing.T) {
 				Config: testAccCACertificateConfig_basic(caCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceCACertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceCACertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -73,7 +73,7 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

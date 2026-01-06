@@ -69,7 +69,7 @@ func TestAccQuickSightFolderMembership_disappears(t *testing.T) {
 				Config: testAccFolderMembershipConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderMembershipExists(ctx, resourceName, &folderMember),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceFolderMembership, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceFolderMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

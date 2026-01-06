@@ -60,7 +60,7 @@ func testAccActionTarget_disappears(t *testing.T) {
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceActionTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

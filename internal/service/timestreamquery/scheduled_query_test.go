@@ -159,7 +159,7 @@ func TestAccTimestreamQueryScheduledQuery_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledQueryExists(ctx, t, resourceName, &scheduledquery),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreamquery.ResourceScheduledQuery, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftimestreamquery.ResourceScheduledQuery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

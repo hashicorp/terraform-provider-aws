@@ -75,7 +75,7 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -196,7 +196,7 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 				Config: testAccReportGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

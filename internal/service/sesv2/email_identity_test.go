@@ -112,7 +112,7 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 				Config: testAccEmailIdentityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

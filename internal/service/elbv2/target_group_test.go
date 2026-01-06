@@ -169,7 +169,7 @@ func TestAccELBV2TargetGroup_disappears(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceTargetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTargetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -70,7 +70,7 @@ func TestAccDeployDeploymentConfig_disappears(t *testing.T) {
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceDeploymentConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodedeploy.ResourceDeploymentConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

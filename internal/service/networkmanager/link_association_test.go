@@ -59,7 +59,7 @@ func TestAccNetworkManagerLinkAssociation_disappears(t *testing.T) {
 				Config: testAccLinkAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceLinkAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceLinkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

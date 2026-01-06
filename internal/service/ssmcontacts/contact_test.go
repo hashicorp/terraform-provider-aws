@@ -185,7 +185,7 @@ func testAccContact_disappears(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceContact(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

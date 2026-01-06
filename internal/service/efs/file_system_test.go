@@ -78,7 +78,7 @@ func TestAccEFSFileSystem_disappears(t *testing.T) {
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

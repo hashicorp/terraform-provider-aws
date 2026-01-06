@@ -71,7 +71,7 @@ func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceRouteResponse(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceRouteResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
