@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func TestEmptyResultErrorAsSdkNotFoundError(t *testing.T) {
+func TestEmptyResultErrorAsSDKNotFoundError(t *testing.T) {
 	t.Parallel()
 
 	lastRequest := 123
