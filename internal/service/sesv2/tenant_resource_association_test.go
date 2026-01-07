@@ -28,7 +28,7 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var assoc *awstypes.TenantResource
+	var assoc awstypes.TenantResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
 
@@ -87,7 +87,7 @@ func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(
 						ctx,
 						acctest.Provider,
-						tfsesv2.ResourceTenantResourceAssociation,
+						tfsesv2.ResourceTenantResource,
 						resourceName,
 					),
 				),
