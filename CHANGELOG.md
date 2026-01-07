@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
 * **New Resource:** `aws_ecr_pull_time_update_exclusion` ([#45765](https://github.com/hashicorp/terraform-provider-aws/issues/45765))
 * **New Resource:** `aws_organizations_tag` ([#45730](https://github.com/hashicorp/terraform-provider-aws/issues/45730))
+* **New Resource:** `aws_secretsmanager_tag` ([#45825](https://github.com/hashicorp/terraform-provider-aws/issues/45825))
 * **New Resource:** `aws_sesv2_tenant` ([#45706](https://github.com/hashicorp/terraform-provider-aws/issues/45706))
 
 ENHANCEMENTS:
