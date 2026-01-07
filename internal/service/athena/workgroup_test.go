@@ -127,7 +127,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 
 func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var workgroup1, workgroup2 types.WorkGroup
+	var workgroup1, workgroup2, workgroup3 types.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
@@ -157,6 +157,14 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "10485760"),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 53687091200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "53687091200"),
 				),
 			},
 		},
