@@ -300,6 +300,7 @@ provider "aws" {
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
 |S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|
 |SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|Savings Plans|`savingsplans`|`AWS_ENDPOINT_URL_SAVINGSPLANS`|`savingsplans`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
