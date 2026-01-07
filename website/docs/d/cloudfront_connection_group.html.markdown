@@ -20,10 +20,10 @@ data "aws_cloudfront_connection_group" "test" {
 
 ## Argument Reference
 
-Exactly one of the following arguments must be specified for this data source:
+This data source supports the following arguments:
 
-* `id` (Optional) - Identifier for the connection group. For example: `EDFDVBD632BHDS5`. 
-* `routing_endpoint` (Optional) - Routing endpoint for the connection group. For example: `d111111abcdef8.cloudfront.net`.
+* `id` (Optional) - Identifier for the connection group. For example: `EDFDVBD632BHDS5`. Exactly one of `id` or `routing_endpoint` must be specified.
+* `routing_endpoint` (Optional) - Routing endpoint for the connection group. For example: `d111111abcdef8.cloudfront.net`. Exactly one of `id` or `routing_endpoint` must be specified.
 
 ## Attribute Reference
 
