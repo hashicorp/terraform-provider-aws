@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -285,7 +285,7 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 				Config: testAccScheduledActionConfig_pauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceScheduledAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

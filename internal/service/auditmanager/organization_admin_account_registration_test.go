@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package auditmanager_test
@@ -75,7 +75,7 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 				Config: testAccOrganizationAdminAccountRegistrationConfig_basic(adminAccountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountRegistrationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

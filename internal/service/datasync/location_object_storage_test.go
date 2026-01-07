@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -152,7 +152,7 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationObjectStorage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

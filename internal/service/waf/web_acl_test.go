@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -253,7 +253,7 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceWebACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

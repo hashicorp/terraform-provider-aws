@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -75,7 +75,7 @@ func TestAccPinpointEventStream_disappears(t *testing.T) {
 				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEventStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

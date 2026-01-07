@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -218,7 +218,7 @@ func TestAccWorkSpacesWebSessionLogger_disappears(t *testing.T) {
 				Config: testAccSessionLoggerConfig_basic(rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerExists(ctx, resourceName, &sessionLogger),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceSessionLogger, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceSessionLogger, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

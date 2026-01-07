@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -65,7 +65,7 @@ func TestAccQuickSightIAMPolicyAssignment_disappears(t *testing.T) {
 				Config: testAccIAMPolicyAssignmentConfig_basic(rName, string(awstypes.AssignmentStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceIAMPolicyAssignment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceIAMPolicyAssignment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

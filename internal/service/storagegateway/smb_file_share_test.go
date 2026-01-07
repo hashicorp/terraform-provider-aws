@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -894,7 +894,7 @@ func TestAccStorageGatewaySMBFileShare_disappears(t *testing.T) {
 				Config: testAccSMBFileShareConfig_authenticationGuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceSMBFileShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceSMBFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

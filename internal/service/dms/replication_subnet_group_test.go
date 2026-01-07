@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -72,7 +72,7 @@ func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

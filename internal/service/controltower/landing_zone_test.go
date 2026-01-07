@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower_test
@@ -71,7 +71,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceLandingZone(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceLandingZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

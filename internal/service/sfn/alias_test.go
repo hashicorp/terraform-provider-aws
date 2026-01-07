@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sfn_test
@@ -79,7 +79,7 @@ func TestAccSFNAlias_disappears(t *testing.T) {
 				Config: testAccStateMachineAliasConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

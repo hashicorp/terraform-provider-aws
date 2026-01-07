@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -94,7 +94,7 @@ func testAccApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceApp(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

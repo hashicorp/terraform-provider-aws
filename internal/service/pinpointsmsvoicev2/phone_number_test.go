@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpointsmsvoicev2_test
@@ -230,7 +230,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourcePhoneNumber, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourcePhoneNumber, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoveryreadiness_test
@@ -65,7 +65,7 @@ func TestAccRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 				Config: testAccCellConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceCell(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceCell(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

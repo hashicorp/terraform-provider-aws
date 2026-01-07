@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -115,7 +115,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_disappears(t *testing.T
 						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-							acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceDirectConnectGatewayAttachment, resourceName),
+							acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmanager.ResourceDirectConnectGatewayAttachment, resourceName),
 						),
 						ExpectNonEmptyPlan: true,
 						ConfigPlanChecks: resource.ConfigPlanChecks{

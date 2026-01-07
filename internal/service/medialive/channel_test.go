@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -843,7 +843,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

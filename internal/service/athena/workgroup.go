@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -496,7 +495,8 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.AthenaClient(ctx)
 
 	wg, err := findWorkGroupByName(ctx, conn, d.Id())
 
@@ -510,14 +510,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading Athena WorkGroup (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, workGroupARN(ctx, c, d.Id()))
 	if err := d.Set(names.AttrConfiguration, flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
@@ -1336,4 +1329,8 @@ func managedQueryResultsValidation(_ context.Context, diff *schema.ResourceDiff,
 	}
 
 	return nil
+}
+
+func workGroupARN(ctx context.Context, c *conns.AWSClient, workGroupName string) string {
+	return c.RegionalARN(ctx, "athena", fmt.Sprintf("workgroup/%s", workGroupName))
 }

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -174,7 +174,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEmailChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEmailChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

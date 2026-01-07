@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -230,7 +230,7 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +254,7 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

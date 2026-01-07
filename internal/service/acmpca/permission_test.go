@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca_test
@@ -63,7 +63,7 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

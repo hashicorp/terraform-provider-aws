@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -675,7 +675,7 @@ func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id
 
 func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		attributeValue, err := findVPCAttribute(ctx, conn, id, attribute)
+		attributeValue, err := findVPCAttributeByTwoPartKey(ctx, conn, id, attribute)
 
 		if retry.NotFound(err) {
 			return nil, "", nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -68,7 +68,7 @@ func testAccWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

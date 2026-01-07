@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional_test
@@ -118,7 +118,7 @@ func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceSizeConstraintSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceSizeConstraintSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

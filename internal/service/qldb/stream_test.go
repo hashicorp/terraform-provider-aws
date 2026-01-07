@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package qldb_test
@@ -68,7 +68,7 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqldb.ResourceStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfqldb.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

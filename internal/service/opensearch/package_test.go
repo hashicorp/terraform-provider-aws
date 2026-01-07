@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -112,7 +112,7 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 				Config: testAccPackageConfig_basic(pkgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

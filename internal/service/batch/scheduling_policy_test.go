@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -83,7 +83,7 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceSchedulingPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceSchedulingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

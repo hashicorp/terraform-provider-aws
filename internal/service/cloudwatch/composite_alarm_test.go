@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch_test
@@ -70,7 +70,7 @@ func TestAccCloudWatchCompositeAlarm_disappears(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceCompositeAlarm(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatch.ResourceCompositeAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

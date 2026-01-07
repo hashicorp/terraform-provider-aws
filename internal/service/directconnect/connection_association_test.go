@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -54,7 +54,7 @@ func TestAccDirectConnectConnectionAssociation_disappears(t *testing.T) {
 				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceConnectionAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceConnectionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

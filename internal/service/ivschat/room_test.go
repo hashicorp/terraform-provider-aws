@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivschat_test
@@ -125,7 +125,7 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 				Config: testAccRoomConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceRoom(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceRoom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

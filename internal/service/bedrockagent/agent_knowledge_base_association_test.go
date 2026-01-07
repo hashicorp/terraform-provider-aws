@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -107,7 +107,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

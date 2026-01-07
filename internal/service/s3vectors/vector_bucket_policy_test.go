@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors_test
@@ -86,7 +86,7 @@ func TestAccS3VectorsVectorBucketPolicy_disappears(t *testing.T) {
 				Config: testAccVectorBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVectorBucketPolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceVectorBucketPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceVectorBucketPolicy, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

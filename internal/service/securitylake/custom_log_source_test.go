@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -257,7 +257,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceCustomLogSource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceCustomLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

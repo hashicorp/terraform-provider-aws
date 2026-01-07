@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediastore_test
@@ -112,7 +112,7 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediastore.ResourceContainer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

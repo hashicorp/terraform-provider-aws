@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -81,7 +81,7 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrailVersion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

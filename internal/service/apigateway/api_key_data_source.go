@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -68,7 +68,8 @@ func dataSourceAPIKey() *schema.Resource {
 
 func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	id := d.Get(names.AttrID).(string)
 	apiKey, err := findAPIKeyByID(ctx, conn, id)
@@ -78,7 +79,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(aws.ToString(apiKey.Id))
-	d.Set(names.AttrARN, apiKeyARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiKeyARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -64,7 +64,7 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceHSMClientCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceHSMClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

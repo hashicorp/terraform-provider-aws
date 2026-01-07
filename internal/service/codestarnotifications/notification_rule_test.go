@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codestarnotifications_test
@@ -70,7 +70,7 @@ func TestAccCodeStarNotificationsNotificationRule_disappears(t *testing.T) {
 				Config: testAccNotificationRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarnotifications.ResourceNotificationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

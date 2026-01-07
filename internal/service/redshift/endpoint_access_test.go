@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -105,7 +105,7 @@ func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceEndpointAccess(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

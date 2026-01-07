@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -77,7 +77,7 @@ func TestAccVPCLatticeService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

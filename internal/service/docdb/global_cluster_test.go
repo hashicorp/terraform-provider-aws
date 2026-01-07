@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb_test
@@ -76,7 +76,7 @@ func TestAccDocDBGlobalCluster_disappears(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceGlobalCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceGlobalCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

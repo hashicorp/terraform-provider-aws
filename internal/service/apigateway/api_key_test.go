@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -223,7 +223,7 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceAPIKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceAPIKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

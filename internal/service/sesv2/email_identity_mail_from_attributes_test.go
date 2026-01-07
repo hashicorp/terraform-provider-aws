@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -63,7 +63,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 				Config: testAccEmailIdentityMailFromAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

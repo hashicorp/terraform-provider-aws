@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -77,7 +77,7 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T, semaphore
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

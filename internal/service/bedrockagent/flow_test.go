@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -109,7 +109,7 @@ func TestAccBedrockAgentFlow_disappears(t *testing.T) {
 				Config: testAccFlowConfig_basic(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flow),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceFlow, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceFlow, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

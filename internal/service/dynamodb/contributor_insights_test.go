@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -143,7 +143,7 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceContributorInsights(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceContributorInsights(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

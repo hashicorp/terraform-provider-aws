@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs_test
@@ -72,7 +72,7 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceFileSystemPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

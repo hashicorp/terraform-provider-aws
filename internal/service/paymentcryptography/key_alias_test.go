@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography_test
@@ -70,7 +70,7 @@ func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyAliasExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkeyalias.ResourceKeyAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkeyalias.ResourceKeyAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

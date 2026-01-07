@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs_test
@@ -79,7 +79,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceReplicationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

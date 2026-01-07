@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -130,7 +130,7 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
 			},

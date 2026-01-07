@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -229,7 +229,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourcePlatformApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourcePlatformApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

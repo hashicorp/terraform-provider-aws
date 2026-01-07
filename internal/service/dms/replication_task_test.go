@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -534,7 +534,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 				Config: testAccReplicationTaskConfig_basic(rName, "full-load"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

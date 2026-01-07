@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
@@ -88,7 +88,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

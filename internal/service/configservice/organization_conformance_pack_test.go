@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -73,7 +73,7 @@ func testAccOrganizationConformancePack_disappears(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceOrganizationConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

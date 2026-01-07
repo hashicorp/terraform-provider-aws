@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -82,7 +82,7 @@ func TestAccVPCNATGatewayEIPAssociation_disappears(t *testing.T) {
 				Config: testAccVPCNATGatewayEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNATGatewayEIPAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceNATGatewayEIPAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

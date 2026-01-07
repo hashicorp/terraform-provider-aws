@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -175,7 +175,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceMultiplex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

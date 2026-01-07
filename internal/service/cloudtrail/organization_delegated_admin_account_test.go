@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -70,7 +70,7 @@ func testAccOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

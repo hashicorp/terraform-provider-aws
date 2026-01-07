@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -580,7 +580,7 @@ func TestAccSageMakerDataQualityJobDefinition_disappears(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDataQualityJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

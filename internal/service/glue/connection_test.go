@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -360,8 +360,8 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

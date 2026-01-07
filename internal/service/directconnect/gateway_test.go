@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -210,7 +210,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -68,7 +68,7 @@ func testAccAccessGrant_disappears(t *testing.T) {
 				Config: testAccAccessGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -124,7 +124,7 @@ func TestAccRDSInstanceState_disappears_Instance(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

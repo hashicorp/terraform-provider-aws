@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreaminfluxdb_test
@@ -101,7 +101,7 @@ func TestAccTimestreamInfluxDBDBCluster_disappears(t *testing.T) {
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

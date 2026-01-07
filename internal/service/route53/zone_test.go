@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -88,7 +88,7 @@ func TestAccRoute53Zone_disappears(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

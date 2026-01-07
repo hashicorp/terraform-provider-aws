@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -512,7 +512,7 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceHealthCheck(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceHealthCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

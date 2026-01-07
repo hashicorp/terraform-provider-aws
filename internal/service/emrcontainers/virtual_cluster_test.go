@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrcontainers_test
@@ -101,7 +101,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 				Config: testAccVirtualClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

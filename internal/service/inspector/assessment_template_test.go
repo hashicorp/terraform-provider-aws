@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector_test
@@ -75,7 +75,7 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector.ResourceAssessmentTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector.ResourceAssessmentTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

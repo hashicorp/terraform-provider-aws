@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package detective_test
@@ -75,7 +75,7 @@ func testAccMember_disappears(t *testing.T) {
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdetective.ResourceMember(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

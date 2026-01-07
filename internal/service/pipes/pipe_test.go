@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes_test
@@ -98,7 +98,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpipes.ResourcePipe(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpipes.ResourcePipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

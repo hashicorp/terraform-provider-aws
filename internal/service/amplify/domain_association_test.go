@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -95,7 +95,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

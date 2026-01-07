@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -82,7 +82,7 @@ func TestAccLogsDeliveryDestination_disappears(t *testing.T) {
 				Config: testAccDeliveryDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliveryDestination, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliveryDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

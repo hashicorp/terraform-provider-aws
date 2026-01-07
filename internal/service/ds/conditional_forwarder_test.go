@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -75,7 +75,7 @@ func TestAccDSConditionalForwarder_disappears(t *testing.T) {
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceConditionalForwarder(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceConditionalForwarder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

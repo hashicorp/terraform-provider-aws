@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -96,7 +96,7 @@ func TestAccIPAMPool_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

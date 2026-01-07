@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -73,7 +73,7 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
