@@ -27,6 +27,11 @@ const (
 )
 
 const (
+	distributionTenantStatusDeployed   = "Deployed"
+	distributionTenantStatusInProgress = "InProgress"
+)
+
+const (
 	keyValueStoreStatusProvisioning = "PROVISIONING"
 	keyValueStoreStatusReady        = "READY"
 )

@@ -1280,7 +1280,11 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistribution(ctx, &input)
+	return findDistribution(ctx, conn, &input)
+}
+
+func findDistribution(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error) {
+	output, err := conn.GetDistribution(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return nil, &sdkretry.NotFoundError{
@@ -1300,7 +1304,7 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[any, string] {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
