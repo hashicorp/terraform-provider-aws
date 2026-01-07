@@ -587,7 +587,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 	id := data.ID.ValueString()
 
 	if err := disableDistributionTenant(ctx, conn, id); err != nil {
-		if retry.NotFound(err) {
+		if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -606,7 +606,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 	// Disable distribution tenant if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableDistributionTenant(ctx, conn, id); err != nil {
-			if retry.NotFound(err) {
+			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
 			resp.Diagnostics.AddError(
@@ -629,7 +629,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableDistributionTenant(ctx, conn, id); err != nil {
-			if retry.NotFound(err) {
+			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
 			resp.Diagnostics.AddError(
@@ -1101,5 +1101,3 @@ func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) dia
 
 	return diags
 }
-
-
