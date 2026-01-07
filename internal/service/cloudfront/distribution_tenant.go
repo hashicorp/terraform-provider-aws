@@ -13,8 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -22,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -238,14 +235,7 @@ type customizationsModel struct {
 	WebAcl         fwtypes.ListNestedObjectValueOf[webAclCustomizationModel]         `tfsdk:"web_acl"`
 }
 
-// Implement fwflex.Flattener interface
-var (
-	_ fwflex.Flattener = &customizationsModel{}
-	_ fwflex.Flattener = &geoRestrictionCustomizationModel{}
-	_ fwflex.Flattener = &certificateModel{}
-	_ fwflex.Flattener = &webAclCustomizationModel{}
-	_ fwflex.Flattener = &managedCertificateRequestModel{}
-)
+// Remove manual flattener interfaces - let AutoFlex handle everything
 
 type domainItemModel struct {
 	Domain types.String `tfsdk:"domain"`
@@ -957,147 +947,3 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 }
 
 // Implement fwflex.Flattener interface methods
-func (m *customizationsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.Customizations); ok {
-		if t.GeoRestrictions != nil {
-			var geoModel geoRestrictionCustomizationModel
-			diags.Append(geoModel.Flatten(ctx, t.GeoRestrictions)...)
-			if diags.HasError() {
-				return diags
-			}
-			geoList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &geoModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.GeoRestriction = geoList
-		} else {
-			m.GeoRestriction = fwtypes.NewListNestedObjectValueOfNull[geoRestrictionCustomizationModel](ctx)
-		}
-
-		if t.Certificate != nil {
-			var certModel certificateModel
-			diags.Append(certModel.Flatten(ctx, t.Certificate)...)
-			if diags.HasError() {
-				return diags
-			}
-			certList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &certModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.Certificate = certList
-		} else {
-			m.Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateModel](ctx)
-		}
-
-		if t.WebAcl != nil {
-			var webAclModel webAclCustomizationModel
-			diags.Append(webAclModel.Flatten(ctx, t.WebAcl)...)
-			if diags.HasError() {
-				return diags
-			}
-			webAclList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &webAclModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.WebAcl = webAclList
-		} else {
-			m.WebAcl = fwtypes.NewListNestedObjectValueOfNull[webAclCustomizationModel](ctx)
-		}
-	}
-
-	return diags
-}
-
-func (m *geoRestrictionCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.GeoRestrictionCustomization); ok {
-		m.RestrictionType = fwtypes.StringEnumValue(t.RestrictionType)
-
-		// Convert locations slice to SetOfString
-		if len(t.Locations) > 0 {
-			// Filter out empty strings
-			filteredLocations := make([]string, 0, len(t.Locations))
-			for _, location := range t.Locations {
-				if location != "" {
-					filteredLocations = append(filteredLocations, location)
-				}
-			}
-
-			if len(filteredLocations) > 0 {
-				// Convert strings to attr.Value slice
-				elements := make([]attr.Value, len(filteredLocations))
-				for i, location := range filteredLocations {
-					elements[i] = basetypes.NewStringValue(location)
-				}
-				setVal, d := fwtypes.NewSetValueOf[basetypes.StringValue](ctx, elements)
-				diags.Append(d...)
-				m.Locations = setVal
-			} else {
-				m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
-			}
-		} else {
-			m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
-		}
-	}
-
-	return diags
-}
-
-func (m *certificateModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.Certificate); ok {
-		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
-	}
-
-	return diags
-}
-
-func (m *webAclCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.WebAclCustomization); ok {
-		m.Action = fwtypes.StringEnumValue(t.Action)
-		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
-	}
-
-	return diags
-}
-
-func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.ManagedCertificateRequest); ok {
-		m.CertificateTransparencyLoggingPreference = fwtypes.StringEnumValue(t.CertificateTransparencyLoggingPreference)
-		m.PrimaryDomainName = fwflex.StringToFramework(ctx, t.PrimaryDomainName)
-		m.ValidationTokenHost = fwtypes.StringEnumValue(t.ValidationTokenHost)
-	}
-
-	return diags
-}
