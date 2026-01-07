@@ -347,7 +347,7 @@ func findTrustStore(ctx context.Context, conn *cloudfront.Client, input *cloudfr
 	}
 
 	if out == nil || out.TrustStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
