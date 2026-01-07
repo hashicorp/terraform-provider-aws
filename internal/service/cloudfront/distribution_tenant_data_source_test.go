@@ -184,7 +184,7 @@ resource "aws_cloudfront_cache_policy" "test" {
   }
 }
 
-resource "aws_cloudfront_distribution" "test" {
+resource "aws_cloudfront_multitenant_distribution" "test" {
   connection_mode = "tenant-only"
   enabled         = true
 
@@ -221,7 +221,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
   domains {
     domain = %[2]q
   }
@@ -266,7 +266,7 @@ resource "aws_cloudfront_cache_policy" "test" {
   }
 }
 
-resource "aws_cloudfront_distribution" "test" {
+resource "aws_cloudfront_multitenant_distribution" "test" {
   connection_mode = "tenant-only"
   enabled         = true
 
@@ -303,7 +303,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
   domains {
     domain = %[2]q
   }
@@ -348,7 +348,7 @@ resource "aws_cloudfront_cache_policy" "test" {
   }
 }
 
-resource "aws_cloudfront_distribution" "test" {
+resource "aws_cloudfront_multitenant_distribution" "test" {
   connection_mode = "tenant-only"
   enabled         = true
 
@@ -385,7 +385,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
   domains {
     domain = %[2]q
   }
@@ -430,7 +430,7 @@ resource "aws_cloudfront_cache_policy" "test" {
   }
 }
 
-resource "aws_cloudfront_distribution" "test" {
+resource "aws_cloudfront_multitenant_distribution" "test" {
   connection_mode = "tenant-only"
   enabled         = true
 
@@ -467,7 +467,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id = aws_cloudfront_distribution.test.id
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
   domains {
     domain = %[2]q
   }
