@@ -192,15 +192,11 @@ func (r *connectionGroupResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	connectionGroup := output.ConnectionGroup
-
-	// Flatten the connection group data into the model
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, connectionGroup, &data)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.ConnectionGroup, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ConnectionGroup.LastModifiedTime)
 
@@ -299,7 +295,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, id, err),
 			err.Error(),
 		)
 		return
@@ -318,7 +314,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 				return
 			}
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, id, err),
 				err.Error(),
 			)
 			return
@@ -341,7 +337,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, data.ID.String(), err),
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameConnectionGroup, id, err),
 			err.Error(),
 		)
 		return
@@ -418,9 +414,8 @@ func disableConnectionGroup(ctx context.Context, conn *cloudfront.Client, id str
 	input := cloudfront.UpdateConnectionGroupInput{
 		Id:      aws.String(id),
 		IfMatch: output.ETag,
+		Enabled: aws.Bool(false),
 	}
-
-	input.Enabled = aws.Bool(false)
 
 	_, err = conn.UpdateConnectionGroup(ctx, &input)
 
