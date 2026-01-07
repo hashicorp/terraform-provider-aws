@@ -6,9 +6,13 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_connection_group` ([#44885](https://github.com/hashicorp/terraform-provider-aws/issues/44885))
+* **New Data Source:** `aws_cloudfront_distribution_tenant` ([#45088](https://github.com/hashicorp/terraform-provider-aws/issues/45088))
 * **New List Resource:** `aws_kms_alias` ([#45700](https://github.com/hashicorp/terraform-provider-aws/issues/45700))
 * **New List Resource:** `aws_sqs_queue` ([#45691](https://github.com/hashicorp/terraform-provider-aws/issues/45691))
 * **New Resource:** `aws_cloudfront_connection_function` ([#45664](https://github.com/hashicorp/terraform-provider-aws/issues/45664))
+* **New Resource:** `aws_cloudfront_connection_group` ([#44885](https://github.com/hashicorp/terraform-provider-aws/issues/44885))
+* **New Resource:** `aws_cloudfront_distribution_tenant` ([#45088](https://github.com/hashicorp/terraform-provider-aws/issues/45088))
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
 * **New Resource:** `aws_dynamodb_global_secondary_index` ([#44999](https://github.com/hashicorp/terraform-provider-aws/issues/44999))
 * **New Resource:** `aws_ecr_pull_time_update_exclusion` ([#45765](https://github.com/hashicorp/terraform-provider-aws/issues/45765))
@@ -39,6 +43,7 @@ ENHANCEMENTS:
 * resource/aws_athena_workgroup: Add `enable_minimum_encryption_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_athena_workgroup: Add `monitoring_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_cleanrooms_collaboration: Add resource identity support ([#45548](https://github.com/hashicorp/terraform-provider-aws/issues/45548))
+* resource/aws_cloudfront_distribution: Add `connection_function_association` and `viewer_mtls_config` arguments ([#45847](https://github.com/hashicorp/terraform-provider-aws/issues/45847))
 * resource/aws_cloudfront_distribution: Add `owner_account_id` argument to `vpc_origin_config` for cross-account VPC origin support ([#45011](https://github.com/hashicorp/terraform-provider-aws/issues/45011))
 * resource/aws_cloudwatch_log_subscription_filter: Add `apply_on_transformed_logs` argument ([#45826](https://github.com/hashicorp/terraform-provider-aws/issues/45826))
 * resource/aws_cloudwatch_log_subscription_filter: Add `emit_system_fields` argument ([#45760](https://github.com/hashicorp/terraform-provider-aws/issues/45760))
