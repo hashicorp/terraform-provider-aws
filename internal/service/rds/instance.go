@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -677,6 +677,10 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"s3_import",
 				},
+			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"upgrade_storage_config": {
 				Type:     schema.TypeBool,
@@ -1940,10 +1944,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			// Retry with `identifier`
 			v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
@@ -2070,6 +2074,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
+	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
 	d.Set(names.AttrUsername, v.MasterUsername)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
@@ -2819,7 +2824,7 @@ func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns
 	output, err := findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if idLooksLikeDbiResourceID && tfresource.NotFound(err) {
+	if idLooksLikeDbiResourceID && retry.NotFound(err) {
 		input = &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
@@ -2876,7 +2881,7 @@ func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options))
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2913,7 +2918,9 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusResettingMasterCredentials,
 			instanceStatusStarting,
 			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
 			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
@@ -3072,7 +3079,7 @@ func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFu
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -3085,8 +3092,9 @@ func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFu
 
 func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
-		PollInterval: 10 * time.Second,
-		Delay:        1 * time.Minute,
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
 	}
 	for _, fn := range optFns {
 		fn(&options)

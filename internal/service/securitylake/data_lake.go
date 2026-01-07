@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -194,7 +195,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateDataLakeOutput, error) {
+	output, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateDataLakeOutput, error) {
 		return conn.CreateDataLake(ctx, input)
 	})
 
@@ -248,7 +249,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 
 	dataLake, err := findDataLakeByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -301,7 +302,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.UpdateDataLakeOutput, error) {
+		_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.UpdateDataLakeOutput, error) {
 			return conn.UpdateDataLake(ctx, input)
 		})
 
@@ -339,7 +340,7 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 		Regions: []string{region},
 	}
 
-	_, err = retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+	_, err = retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -411,11 +412,11 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	return dataLakes, nil
 }
 
-func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -427,11 +428,11 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 	}
 }
 
-func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -448,7 +449,7 @@ func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
@@ -471,7 +472,7 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
 		Refresh: statusDataLakeUpdate(ctx, conn, arn),
@@ -494,7 +495,7 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted, awstypes.DataLakeStatusFailed),
 		Target:  []string{},
 		Refresh: statusDataLakeCreate(ctx, conn, arn),
@@ -579,19 +580,12 @@ type dataLakeReplicationConfigurationModel struct {
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
 }
 
-func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, error)) (T, error) {
+func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func(ctx context.Context) (T, error)) (T, error) {
 	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
 	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
 
-	const dataLakeTimeout = 2 * time.Minute
-
-	raw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, dataLakeTimeout, func(ctx context.Context) (any, error) {
-		return f()
-	})
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return raw.(T), err
+	const (
+		dataLakeTimeout = 2 * time.Minute
+	)
+	return tfresource.RetryWhenIsA[T, *awstypes.ConflictException](ctx, dataLakeTimeout, f)
 }

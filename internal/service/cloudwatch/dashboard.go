@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -12,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,7 +86,7 @@ func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta any)
 		d.SetId(name)
 	}
 
-	return append(diags, resourceDashboardRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDashboardRead(ctx, d, meta))
 }
 
 func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -93,8 +95,8 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findDashboardByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Dashboard (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -135,7 +137,7 @@ func findDashboardByName(ctx context.Context, conn *cloudwatch.Client, name stri
 	output, err := conn.GetDashboard(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFound) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		})

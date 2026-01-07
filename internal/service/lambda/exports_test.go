@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -6,6 +6,7 @@ package lambda
 // Exports for use in tests only.
 var (
 	ResourceAlias                        = resourceAlias
+	ResourceCapacityProvider             = newResourceCapacityProvider
 	ResourceCodeSigningConfig            = resourceCodeSigningConfig
 	ResourceEventSourceMapping           = resourceEventSourceMapping
 	ResourceFunction                     = resourceFunction
@@ -18,6 +19,7 @@ var (
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
+	FindCapacityProviderByName                   = findCapacityProviderByName
 	FindCodeSigningConfigByARN                   = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName
@@ -35,6 +37,7 @@ var (
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
+	InvocationParseResourceID                    = invocationParseResourceID
 
 	ValidFunctionName               = validFunctionName
 	ValidPermissionAction           = validPermissionAction

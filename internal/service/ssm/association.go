@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -16,14 +16,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,6 +73,13 @@ func resourceAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"calendar_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"compliance_severity": {
 				Type:             schema.TypeString,
@@ -191,6 +200,10 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+		input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("compliance_severity"); ok {
 		input.ComplianceSeverity = awstypes.AssociationComplianceSeverity(v.(string))
 	}
@@ -251,7 +264,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	association, err := findAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -273,6 +286,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrAssociationID, association.AssociationId)
 	d.Set("association_name", association.AssociationName)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
+	d.Set("calendar_names", association.CalendarNames)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("max_concurrency", association.MaxConcurrency)
@@ -313,6 +327,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("automation_target_parameter_name"); ok {
 			input.AutomationTargetParameterName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("compliance_severity"); ok {
@@ -389,7 +407,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	output, err := conn.DescribeAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -406,11 +424,11 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -425,7 +443,7 @@ func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.S
 }
 
 func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.AssociationDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
 		Refresh: statusAssociation(ctx, conn, id),

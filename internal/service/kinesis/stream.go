@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis
@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -124,6 +125,12 @@ func resourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"max_record_size_in_kib": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1024, 10240),
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -173,6 +180,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	name := d.Get(names.AttrName).(string)
 	input := kinesis.CreateStreamInput{
 		StreamName: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("max_record_size_in_kib"); ok {
+		input.MaxRecordSizeInKiB = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -272,7 +283,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrName).(string)
 	stream, err := findStreamByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -285,6 +296,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, stream.StreamARN)
 	d.Set("encryption_type", stream.EncryptionType)
 	d.Set(names.AttrKMSKeyID, stream.KeyId)
+	d.Set("max_record_size_in_kib", stream.MaxRecordSizeInKiB)
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
 	streamMode := types.StreamModeProvisioned
@@ -480,6 +492,25 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
+	if d.HasChange("max_record_size_in_kib") {
+		_, n := d.GetChange("max_record_size_in_kib")
+
+		input := kinesis.UpdateMaxRecordSizeInput{
+			MaxRecordSizeInKiB: aws.Int32(int32(n.(int))),
+			StreamARN:          aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateMaxRecordSize(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "update Kinesis Stream (%s) max record size: %s", name, err)
+		}
+
+		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateMaxRecordSize): %s", name, err)
+		}
+	}
+
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
@@ -547,7 +578,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	output, err := conn.DescribeStreamSummary(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -564,11 +595,11 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	return output.StreamDescriptionSummary, nil
 }
 
-func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.StateRefreshFunc {
+func streamStatus(ctx context.Context, conn *kinesis.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStreamByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -581,7 +612,7 @@ func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.
 }
 
 func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusCreating),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    streamStatus(ctx, conn, name),
@@ -600,7 +631,7 @@ func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusDeleting),
 		Target:     []string{},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -619,7 +650,7 @@ func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusUpdating),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    streamStatus(ctx, conn, name),

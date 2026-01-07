@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -279,7 +280,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	api, err := findRestAPIByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway REST API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -316,7 +317,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	switch {
 	case err == nil:
 		d.Set("root_resource_id", rootResource.Id)
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
@@ -594,7 +595,7 @@ func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*
 	output, err := conn.GetRestApi(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

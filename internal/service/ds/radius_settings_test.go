@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -94,7 +94,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceRadiusSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,7 +113,7 @@ func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfds.FindRadiusSettingsByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

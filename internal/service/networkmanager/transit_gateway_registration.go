@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -59,19 +59,16 @@ func resourceTransitGatewayRegistration() *schema.Resource {
 
 func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	id := transitGatewayRegistrationCreateResourceID(globalNetworkID, transitGatewayARN)
-	input := &networkmanager.RegisterTransitGatewayInput{
+	input := networkmanager.RegisterTransitGatewayInput{
 		GlobalNetworkId:   aws.String(globalNetworkID),
 		TransitGatewayArn: aws.String(transitGatewayARN),
 	}
-
-	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Registration: %#v", input)
-	_, err := conn.RegisterTransitGateway(ctx, input)
+	_, err := conn.RegisterTransitGateway(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway Registration (%s): %s", id, err)
@@ -88,18 +85,16 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 
 func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID, transitGatewayARN, err := transitGatewayRegistrationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	transitGatewayRegistration, err := findTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Registration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,11 +112,9 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 
 func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID, transitGatewayARN, err := transitGatewayRegistrationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -139,10 +132,11 @@ func deregisterTransitGateway(ctx context.Context, conn *networkmanager.Client, 
 	id := transitGatewayRegistrationCreateResourceID(globalNetworkID, transitGatewayARN)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Registration: %s", id)
-	_, err := conn.DeregisterTransitGateway(ctx, &networkmanager.DeregisterTransitGatewayInput{
+	input := networkmanager.DeregisterTransitGatewayInput{
 		GlobalNetworkId:   aws.String(globalNetworkID),
 		TransitGatewayArn: aws.String(transitGatewayARN),
-	})
+	}
+	_, err := conn.DeregisterTransitGateway(ctx, &input)
 
 	if globalNetworkIDNotFoundError(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
@@ -166,15 +160,7 @@ func findTransitGatewayRegistration(ctx context.Context, conn *networkmanager.Cl
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findTransitGatewayRegistrations(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetTransitGatewayRegistrationsInput) ([]awstypes.TransitGatewayRegistration, error) {
@@ -186,8 +172,7 @@ func findTransitGatewayRegistrations(ctx context.Context, conn *networkmanager.C
 
 		if globalNetworkIDNotFoundError(err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -202,12 +187,12 @@ func findTransitGatewayRegistrations(ctx context.Context, conn *networkmanager.C
 }
 
 func findTransitGatewayRegistrationByTwoPartKey(ctx context.Context, conn *networkmanager.Client, globalNetworkID, transitGatewayARN string) (*awstypes.TransitGatewayRegistration, error) {
-	input := &networkmanager.GetTransitGatewayRegistrationsInput{
+	input := networkmanager.GetTransitGatewayRegistrationsInput{
 		GlobalNetworkId:    aws.String(globalNetworkID),
 		TransitGatewayArns: []string{transitGatewayARN},
 	}
 
-	output, err := findTransitGatewayRegistration(ctx, conn, input)
+	output, err := findTransitGatewayRegistration(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -215,26 +200,23 @@ func findTransitGatewayRegistrationByTwoPartKey(ctx context.Context, conn *netwo
 
 	if state := output.State.Code; state == awstypes.TransitGatewayRegistrationStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.TransitGatewayArn) != transitGatewayARN {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusTransitGatewayRegistrationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, transitGatewayARN string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTransitGatewayRegistrationState(conn *networkmanager.Client, globalNetworkID, transitGatewayARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -251,7 +233,7 @@ func waitTransitGatewayRegistrationCreated(ctx context.Context, conn *networkman
 		Pending: enum.Slice(awstypes.TransitGatewayRegistrationStatePending),
 		Target:  enum.Slice(awstypes.TransitGatewayRegistrationStateAvailable),
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRegistrationState(ctx, conn, globalNetworkID, transitGatewayARN),
+		Refresh: statusTransitGatewayRegistrationState(conn, globalNetworkID, transitGatewayARN),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -272,7 +254,7 @@ func waitTransitGatewayRegistrationDeleted(ctx context.Context, conn *networkman
 		Pending: enum.Slice(awstypes.TransitGatewayRegistrationStateAvailable, awstypes.TransitGatewayRegistrationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRegistrationState(ctx, conn, globalNetworkID, transitGatewayARN),
+		Refresh: statusTransitGatewayRegistrationState(conn, globalNetworkID, transitGatewayARN),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

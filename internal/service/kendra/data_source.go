@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -697,7 +698,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	resp, err := FindDataSourceByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -853,7 +854,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusCreating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -875,7 +876,7 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -897,7 +898,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -915,11 +916,11 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

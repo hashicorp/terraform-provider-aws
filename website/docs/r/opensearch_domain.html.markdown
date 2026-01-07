@@ -321,6 +321,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `aiml_options` - (Optional) Configuration block for parameters required to enable all machine learning features. Detailed below.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your OpenSearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -332,6 +333,7 @@ The following arguments are optional:
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `identity_center_options` - (Optional) Configuration block for enabling and managing IAM Identity Center integration within a domain. Detailed below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
@@ -354,6 +356,19 @@ The following arguments are optional:
 * `master_user_arn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
 * `master_user_name` - (Optional) Main user's username, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 * `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+
+### aiml_options
+
+* `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
+* `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+
+#### natural_language_query_generation_options
+
+* `desired_state` - (Optional)  The desired state of the natural language query generation feature. Valid values are `ENABLED` and `DISABLED`.
+
+#### s3_vectors_engine
+
+* `enabled` - (Optional) Enables S3 vectors engine features.
 
 ### auto_tune_options
 
@@ -436,6 +451,13 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
+
+### identity_center_options
+
+* enabled_api_access - (Optional) Boolean that indicates whether IAM Identity Center is enabled for API access. [Fine-grained access control](#enabling-fine-grained-access-control-on-an-existing-domain) must be enabled to use this feature. To disable it after enabling, set this argument to `false` or remove the `identity_center_options` block entirely.
+* identity_center_instance_arn - (Optional) ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication. Required if `enabled_api_access` is set to `true`.
+* roles_key - (Optional) Attribute that contains the backend role identifier in IAM Identity Center. Valid values: `GroupName`, `GroupId`. Defaults to `GroupId`.
+* subject_key - (Optional) Attribute that contains the subject identifier in IAM Identity Center. Valid values: `UserName`, `UserId`, `Email`. Defaults to `UserId`.
 
 ### encrypt_at_rest
 

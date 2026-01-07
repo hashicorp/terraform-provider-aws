@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
@@ -106,7 +107,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 			return t, err
 		}
 
-		if any(t) == nil {
+		if inttypes.IsZero(t) {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
@@ -162,9 +163,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 
 	// Timed out or Context canceled.
 	if l.Remaining() == 0 {
-		var zero T
-
-		return zero, &TimeoutError{
+		return inttypes.Zero[T](), &TimeoutError{
 			LastError:     err,
 			LastState:     string(currentState),
 			Timeout:       conf.Timeout,

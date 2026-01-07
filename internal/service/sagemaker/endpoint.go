@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -277,7 +278,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -302,9 +303,11 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
+		_, n := d.GetChange("endpoint_config_name")
+
 		input := &sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
-			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
+			EndpointConfigName: aws.String(n.(string)),
 		}
 
 		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
@@ -361,7 +364,7 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -374,7 +377,7 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -391,11 +394,11 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -411,7 +414,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
 		Refresh: statusEndpoint(ctx, conn, name),
@@ -435,7 +438,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEndpoint(ctx, conn, name),

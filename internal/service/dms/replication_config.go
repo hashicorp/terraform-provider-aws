@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -14,7 +14,7 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -225,7 +226,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 	replicationConfig, err := findReplicationConfigByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -380,7 +381,7 @@ func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -426,7 +427,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -442,11 +443,11 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 	return output, nil
 }
 
-func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
+func statusReplication(ctx context.Context, conn *dms.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -472,7 +473,7 @@ func setLastReplicationError(err error, replication *awstypes.Replication) {
 }
 
 func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			replicationStatusReady,
 			replicationStatusInitialising,
@@ -501,7 +502,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
 		Refresh:    statusReplication(ctx, conn, arn),
@@ -521,7 +522,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, t
 }
 
 func waitReplicationDeleted(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},
 		Refresh:    statusReplication(ctx, conn, arn),
@@ -577,7 +578,7 @@ func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout
 func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 

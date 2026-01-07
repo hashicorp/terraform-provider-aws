@@ -1,0 +1,21 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: internal-retry-notfound
+    languages: [go]
+    message: "Prefer retry.NotFound to tfresource.NotFound"
+    pattern: |
+      tfresource.NotFound($ERR)
+    fix: |
+      retry.NotFound($ERR)
+    severity: ERROR
+
+  - id: internal-retry-timedout
+    languages: [go]
+    message: "Prefer retry.TimedOut to tfresource.TimedOut"
+    pattern: |
+      tfresource.TimedOut($ERR)
+    fix: |
+      retry.TimedOut($ERR)
+    severity: ERROR

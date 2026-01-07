@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecatalyst_test
@@ -72,7 +72,7 @@ func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceSourceRepository(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecatalyst.ResourceSourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

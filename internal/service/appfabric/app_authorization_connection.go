@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -177,7 +178,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 
 	output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -208,7 +209,7 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 	output, err := conn.GetAppAuthorization(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -225,11 +226,11 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 	return output.AppAuthorization, nil
 }
 
-func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
+func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -242,7 +243,7 @@ func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, 
 }
 
 func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppAuthorizationStatusPendingConnect),
 		Target:  enum.Slice(awstypes.AppAuthorizationStatusConnected),
 		Refresh: statusConnectAppAuthorization(ctx, conn, appAuthorizationARN, appBundleArn),

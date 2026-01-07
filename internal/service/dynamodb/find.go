@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,7 +23,7 @@ func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, op
 	output, err := conn.DescribeTable(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -41,11 +42,14 @@ func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, op
 
 func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
 	table, err := findTableByName(ctx, conn, tableName)
-
 	if err != nil {
 		return nil, err
 	}
 
+	return findGSIFromTable(table, indexName)
+}
+
+func findGSIFromTable(table *awstypes.TableDescription, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
 	for _, v := range table.GlobalSecondaryIndexes {
 		if aws.ToString(v.IndexName) == indexName {
 			return &v, nil
@@ -63,7 +67,7 @@ func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName s
 	output, err := conn.DescribeContinuousBackups(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -88,7 +92,7 @@ func findTTLByTableName(ctx context.Context, conn *dynamodb.Client, tableName st
 	output, err := conn.DescribeTimeToLive(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -113,7 +117,7 @@ func findImportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*a
 	output, err := conn.DescribeImport(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

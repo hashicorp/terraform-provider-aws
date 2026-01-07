@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -23,13 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -229,7 +230,7 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -388,7 +389,7 @@ func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client,
 	}
 
 	if status := output.Status; status == awstypes.VPCConnectionResourceStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -401,7 +402,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 	output, err := conn.DescribeVPCConnection(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -438,7 +439,7 @@ func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *
 }
 
 func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusCreationInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusCreationSuccessful),
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -456,7 +457,7 @@ func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusUpdateInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusUpdateSuccessful),
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -474,7 +475,7 @@ func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusDeletionInProgress),
 		Target:     []string{},
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -491,11 +492,11 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsA
 	return nil, err
 }
 
-func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) retry.StateRefreshFunc {
+func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

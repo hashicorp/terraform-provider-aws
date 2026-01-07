@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -42,6 +42,10 @@ func dataSourceInvocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -59,6 +63,10 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		InvocationType: awstypes.InvocationTypeRequestResponse,
 		Payload:        payload,
 		Qualifier:      aws.String(qualifier),
+	}
+
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
 	}
 
 	output, err := conn.Invoke(ctx, input)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -23,10 +23,6 @@ import (
 )
 
 func testAccDelivery_basic(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -38,13 +34,7 @@ func testAccDelivery_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
@@ -76,10 +66,6 @@ func testAccDelivery_basic(t *testing.T) {
 }
 
 func testAccDelivery_disappears(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -91,19 +77,13 @@ func testAccDelivery_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDelivery, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDelivery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,10 +92,6 @@ func testAccDelivery_disappears(t *testing.T) {
 }
 
 func testAccDelivery_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -127,13 +103,7 @@ func testAccDelivery_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -198,10 +168,6 @@ func testAccDelivery_tags(t *testing.T) {
 }
 
 func testAccDelivery_update(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -213,13 +179,7 @@ func testAccDelivery_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),

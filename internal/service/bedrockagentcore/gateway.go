@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -145,6 +145,59 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
+			"interceptor_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeBetween(1, 2),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"interception_points": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.GatewayInterceptionPoint](),
+							Required:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"input_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorInputConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"pass_request_headers": schema.BoolAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+						"interceptor": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[interceptorConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"lambda": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaInterceptorConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrARN: schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"protocol_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayProtocolConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -190,7 +243,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 
 func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var data gatewayResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -208,7 +261,7 @@ func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.Valid
 
 func (r *gatewayResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data gatewayResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -216,7 +269,7 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var input bedrockagentcorecontrol.CreateGatewayInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -245,17 +298,17 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Set values for unknowns.
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, gateway, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, gateway, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data gatewayResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -264,8 +317,8 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
 	out, err := findGatewayByID(ctx, conn, gatewayID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -274,18 +327,18 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old gatewayResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -293,7 +346,7 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -301,7 +354,7 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 	if diff.HasChanges() {
 		gatewayID := fwflex.StringValueFromFramework(ctx, new.GatewayID)
 		var input bedrockagentcorecontrol.UpdateGatewayInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -321,12 +374,12 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data gatewayResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -412,7 +465,7 @@ func waitGatewayDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 func statusGateway(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findGatewayByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -455,22 +508,23 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 
 type gatewayResourceModel struct {
 	framework.WithRegionModel
-	AuthorizerConfiguration fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]      `tfsdk:"authorizer_configuration"`
-	AuthorizerType          fwtypes.StringEnum[awstypes.AuthorizerType]                        `tfsdk:"authorizer_type"`
-	Description             types.String                                                       `tfsdk:"description"`
-	ExceptionLevel          fwtypes.StringEnum[awstypes.ExceptionLevel]                        `tfsdk:"exception_level"`
-	GatewayARN              types.String                                                       `tfsdk:"gateway_arn"`
-	GatewayID               types.String                                                       `tfsdk:"gateway_id"`
-	GatewayURL              types.String                                                       `tfsdk:"gateway_url"`
-	KMSKeyARN               fwtypes.ARN                                                        `tfsdk:"kms_key_arn"`
-	Name                    types.String                                                       `tfsdk:"name"`
-	ProtocolConfiguration   fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel] `tfsdk:"protocol_configuration"`
-	ProtocolType            fwtypes.StringEnum[awstypes.GatewayProtocolType]                   `tfsdk:"protocol_type"`
-	RoleARN                 fwtypes.ARN                                                        `tfsdk:"role_arn"`
-	Tags                    tftags.Map                                                         `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                                         `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value                                                     `tfsdk:"timeouts"`
-	WorkloadIdentityDetails fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]      `tfsdk:"workload_identity_details"`
+	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]         `tfsdk:"authorizer_configuration"`
+	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                           `tfsdk:"authorizer_type"`
+	Description               types.String                                                          `tfsdk:"description"`
+	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                           `tfsdk:"exception_level"`
+	GatewayARN                types.String                                                          `tfsdk:"gateway_arn"`
+	GatewayID                 types.String                                                          `tfsdk:"gateway_id"`
+	GatewayURL                types.String                                                          `tfsdk:"gateway_url"`
+	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel] `tfsdk:"interceptor_configuration"`
+	KMSKeyARN                 fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
+	Name                      types.String                                                          `tfsdk:"name"`
+	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]    `tfsdk:"protocol_configuration"`
+	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                      `tfsdk:"protocol_type"`
+	RoleARN                   fwtypes.ARN                                                           `tfsdk:"role_arn"`
+	Tags                      tftags.Map                                                            `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                            `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                        `tfsdk:"timeouts"`
+	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]         `tfsdk:"workload_identity_details"`
 }
 
 type gatewayProtocolConfigurationModel struct {
@@ -487,7 +541,7 @@ func (m *gatewayProtocolConfigurationModel) Flatten(ctx context.Context, v any) 
 	switch t := v.(type) {
 	case awstypes.GatewayProtocolConfigurationMemberMcp:
 		var data mcpGatewayConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
 		}
@@ -507,12 +561,12 @@ func (m gatewayProtocolConfigurationModel) Expand(ctx context.Context) (any, dia
 	switch {
 	case !m.MCP.IsNull():
 		data, d := m.MCP.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.GatewayProtocolConfigurationMemberMcp
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -525,4 +579,66 @@ type mcpGatewayConfigurationModel struct {
 	Instructions      types.String                            `tfsdk:"instructions"`
 	SearchType        fwtypes.StringEnum[awstypes.SearchType] `tfsdk:"search_type"`
 	SupportedVersions fwtypes.SetOfString                     `tfsdk:"supported_versions"`
+}
+
+type gatewayInterceptorConfigurationModel struct {
+	InputConfiguration fwtypes.ListNestedObjectValueOf[interceptorInputConfigurationModel] `tfsdk:"input_configuration"`
+	InterceptionPoints fwtypes.SetOfStringEnum[awstypes.GatewayInterceptionPoint]          `tfsdk:"interception_points"`
+	Interceptor        fwtypes.ListNestedObjectValueOf[interceptorConfigurationModel]      `tfsdk:"interceptor"`
+}
+
+type interceptorInputConfigurationModel struct {
+	PassRequestHeaders types.Bool `tfsdk:"pass_request_headers"`
+}
+
+type interceptorConfigurationModel struct {
+	Lambda fwtypes.ListNestedObjectValueOf[lambdaInterceptorConfigurationModel] `tfsdk:"lambda"`
+}
+
+var (
+	_ fwflex.Expander  = interceptorConfigurationModel{}
+	_ fwflex.Flattener = &interceptorConfigurationModel{}
+)
+
+func (m *interceptorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.InterceptorConfigurationMemberLambda:
+		var data lambdaInterceptorConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.Lambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("interceptor configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m interceptorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Lambda.IsNull():
+		data, d := m.Lambda.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.InterceptorConfigurationMemberLambda
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+type lambdaInterceptorConfigurationModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
 }

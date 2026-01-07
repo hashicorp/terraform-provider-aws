@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrcontainers
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -135,6 +136,7 @@ func resourceJobTemplate() *schema.Resource {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ForceNew:         true,
+													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
 												},
 												"s3_monitoring_configuration": {
@@ -293,7 +295,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	vc, err := findJobTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Job Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -352,7 +354,7 @@ func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emr
 	output, err := conn.DescribeJobTemplate(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -499,7 +501,7 @@ func expandCloudWatchMonitoringConfiguration(tfMap map[string]any) *awstypes.Par
 
 	apiObject := &awstypes.ParametricCloudWatchMonitoringConfiguration{}
 
-	if v, ok := tfMap["log_group_mame"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -620,7 +622,7 @@ func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOv
 	tfMap := map[string]any{}
 
 	if v := apiObject.ApplicationConfiguration; v != nil {
-		tfMap["application_configuration"] = []any{flattenConfigurations(v)}
+		tfMap["application_configuration"] = flattenConfigurations(v)
 	}
 
 	if v := apiObject.MonitoringConfiguration; v != nil {

@@ -294,11 +294,11 @@ The following arguments are required:
 
 * `name` - (Required) Name of the gateway target.
 * `gateway_identifier` - (Required) Identifier of the gateway that this target belongs to.
-* `credential_provider_configuration` - (Required) Configuration for authenticating requests to the target. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `target_configuration` - (Required) Configuration for the target endpoint. See [`target_configuration`](#target_configuration) below.
 
 The following arguments are optional:
 
+* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
@@ -338,6 +338,7 @@ The `target_configuration` block supports the following:
 The `mcp` block supports exactly one of the following:
 
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
+* `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
 * `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
 * `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
 
@@ -370,6 +371,12 @@ The `s3` block supports the following:
 
 * `uri` - (Optional) S3 URI where the tool schema is stored.
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+
+### `mcp_server`
+
+The `mcp_server` block supports the following:
+
+* `endpoint` - (Required) Endpoint for the MCP server target configuration.
 
 ### `api_schema_configuration`
 

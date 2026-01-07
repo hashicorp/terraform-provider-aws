@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -17,18 +17,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
-// @Region(global=true)
 func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSettingsResource{}
 
@@ -37,10 +37,6 @@ func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 
 	return r, nil
 }
-
-const (
-	ResNameAccountSettings = "Account Settings"
-)
 
 type accountSettingsResource struct {
 	framework.ResourceWithModel[accountSettingsResourceModel]
@@ -108,7 +104,7 @@ func (r *accountSettingsResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findAccountSettingsByID(ctx, conn, data.AWSAccountID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -206,7 +202,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 	output, err := conn.DescribeAccountSettings(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
@@ -224,6 +220,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 }
 
 type accountSettingsResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID                 types.String   `tfsdk:"aws_account_id"`
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	TerminationProtectionEnabled types.Bool     `tfsdk:"termination_protection_enabled"`

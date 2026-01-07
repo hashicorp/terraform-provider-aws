@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -224,7 +224,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 			"credential_provider_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[credentialProviderConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -385,6 +384,25 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 											},
 										},
 									},
+									"mcp_server": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mcpServerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrEndpoint: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`https://.*`),
+															"Must start with https://",
+														),
+													},
+												},
+											},
+										},
+									},
 									"open_api_schema": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchemaConfigurationModel](ctx),
 										Validators: []validator.List{
@@ -480,7 +498,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 
 func (r *gatewayTargetResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data gatewayTargetResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -489,7 +507,7 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 
 	gatewayIdentifier := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier)
 	var input bedrockagentcorecontrol.CreateGatewayTargetInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -511,12 +529,12 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data gatewayTargetResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -525,8 +543,8 @@ func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadR
 
 	gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, data.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, data.TargetID)
 	out, err := findGatewayTargetByTwoPartKey(ctx, conn, gatewayIdentifier, targetID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -535,18 +553,18 @@ func (r *gatewayTargetResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"GatewayArn"})))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *gatewayTargetResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old gatewayTargetResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -554,7 +572,7 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -562,7 +580,7 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 	if diff.HasChanges() {
 		gatewayIdentifier, targetID := fwflex.StringValueFromFramework(ctx, new.GatewayIdentifier), fwflex.StringValueFromFramework(ctx, new.TargetID)
 		var input bedrockagentcorecontrol.UpdateGatewayTargetInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -580,12 +598,12 @@ func (r *gatewayTargetResource) Update(ctx context.Context, request resource.Upd
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *gatewayTargetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data gatewayTargetResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -616,12 +634,12 @@ func (r *gatewayTargetResource) ImportState(ctx context.Context, request resourc
 	parts := strings.Split(request.ID, ",")
 
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("target_id"), parts[1]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("gateway_identifier"), parts[0]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("target_id"), parts[1]))
 }
 
 func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -631,16 +649,16 @@ func (r gatewayTargetResource) ModifyPlan(ctx context.Context, request resource.
 
 	// Force replacement if target configuration changes between lambda, smithy_model, and open_api_schema
 	var plan, state gatewayTargetResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	planTargetData, diags := plan.TargetConfiguration.ToPtr(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	stateTargetData, diags := state.TargetConfiguration.ToPtr(ctx)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -709,7 +727,7 @@ func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol
 func statusGatewayTarget(conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findGatewayTargetByTwoPartKey(ctx, conn, gatewayIdentifier, targetID)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -781,7 +799,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 		case awstypes.CredentialProviderTypeApiKey:
 			if apiKeyProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberApiKeyCredentialProvider); ok {
 				var model apiKeyCredentialProviderModel
-				smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, apiKeyProvider.Value, &model))
+				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, apiKeyProvider.Value, &model))
 				if diags.HasError() {
 					return diags
 				}
@@ -791,7 +809,7 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 		case awstypes.CredentialProviderTypeOauth:
 			if oauthProvider, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberOauthCredentialProvider); ok {
 				var model oauthCredentialProviderModel
-				smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, oauthProvider.Value, &model))
+				smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, oauthProvider.Value, &model))
 				if diags.HasError() {
 					return diags
 				}
@@ -823,13 +841,13 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 	switch {
 	case !m.ApiKey.IsNull():
 		apiKeyCredentialProviderConfigurationData, d := m.ApiKey.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.CredentialProviderMemberApiKeyCredentialProvider
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, apiKeyCredentialProviderConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, apiKeyCredentialProviderConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -839,13 +857,13 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 
 	case !m.OAuth.IsNull():
 		oauthCredentialProviderConfigurationData, d := m.OAuth.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.CredentialProviderMemberOauthCredentialProvider
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, oauthCredentialProviderConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, oauthCredentialProviderConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -875,6 +893,8 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 	switch mcpData, _ := m.MCP.ToPtr(ctx); {
 	case !mcpData.Lambda.IsNull():
 		return "lambda"
+	case !mcpData.MCPServer.IsNull():
+		return "mcp_server"
 	case !mcpData.OpenApiSchema.IsNull():
 		return "open_api_schema"
 	case !mcpData.SmithyModel.IsNull():
@@ -894,7 +914,7 @@ func (m *targetConfigurationModel) Flatten(ctx context.Context, v any) diag.Diag
 	switch t := v.(type) {
 	case awstypes.TargetConfigurationMemberMcp:
 		var model mcpConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -914,13 +934,13 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 	switch {
 	case !m.MCP.IsNull():
 		mcpConfigurationData, d := m.MCP.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.TargetConfigurationMemberMcp
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, mcpConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, mcpConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -933,6 +953,7 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 
 type mcpConfigurationModel struct {
 	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaConfigurationModel] `tfsdk:"lambda"`
+	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerConfigurationModel] `tfsdk:"mcp_server"`
 	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"smithy_model"`
 	OpenApiSchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"open_api_schema"`
 }
@@ -947,15 +968,23 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnos
 	switch t := v.(type) {
 	case awstypes.McpTargetConfigurationMemberLambda:
 		var model mcpLambdaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
 		m.Lambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
+	case awstypes.McpTargetConfigurationMemberMcpServer:
+		var model mcpServerConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.MCPServer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
 	case awstypes.McpTargetConfigurationMemberOpenApiSchema:
 		var model apiSchemaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -963,7 +992,7 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnos
 
 	case awstypes.McpTargetConfigurationMemberSmithyModel:
 		var model apiSchemaConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -983,13 +1012,27 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostic
 	switch {
 	case !m.Lambda.IsNull():
 		lambdaMCPConfigurationData, d := m.Lambda.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.McpTargetConfigurationMemberLambda
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MCPServer.IsNull():
+		mcpServerConfigurationData, d := m.MCPServer.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpTargetConfigurationMemberMcpServer
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, mcpServerConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -997,13 +1040,13 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostic
 
 	case !m.OpenApiSchema.IsNull():
 		openApiMCPConfigurationData, d := m.OpenApiSchema.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.McpTargetConfigurationMemberOpenApiSchema
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, openApiMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, openApiMCPConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1011,12 +1054,12 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostic
 
 	case !m.SmithyModel.IsNull():
 		smithyMCPConfigurationData, d := m.SmithyModel.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.McpTargetConfigurationMemberSmithyModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, smithyMCPConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, smithyMCPConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1064,7 +1107,7 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 		var toolDefModels []*toolDefinitionModel
 		for _, toolDef := range t.Value {
 			var model toolDefinitionModel
-			smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, toolDef, &model))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, toolDef, &model))
 			if diags.HasError() {
 				return diags
 			}
@@ -1074,7 +1117,7 @@ func (m *toolSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 
 	case awstypes.ToolSchemaMemberS3:
 		var model s3ConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
 		if diags.HasError() {
 			return diags
 		}
@@ -1094,7 +1137,7 @@ func (m toolSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	switch {
 	case !m.InlinePayload.IsNull():
 		inlinePayloadToolSchemaData, d := m.InlinePayload.ToSlice(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1102,7 +1145,7 @@ func (m toolSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 		var toolDefs []awstypes.ToolDefinition
 		for _, toolDefModel := range inlinePayloadToolSchemaData {
 			var toolDef awstypes.ToolDefinition
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, toolDefModel, &toolDef))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, toolDefModel, &toolDef))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -1115,13 +1158,13 @@ func (m toolSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 
 	case !m.S3.IsNull():
 		s3ToolSchemaData, d := m.S3.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ToolSchemaMemberS3
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, s3ToolSchemaData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3ToolSchemaData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1159,7 +1202,7 @@ func (m *schemaDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnos
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaDefinitionCoreModel))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaDefinitionCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1171,7 +1214,7 @@ func (m *schemaDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnos
 
 		if t.Properties != nil {
 			properties, d := flattenTargetSchemaProperties(ctx, t.Properties, t.Required)
-			smerr.EnrichAppend(ctx, &diags, d)
+			smerr.AddEnrich(ctx, &diags, d)
 			if diags.HasError() {
 				return diags
 			}
@@ -1198,7 +1241,7 @@ func (m schemaDefinitionModel) Expand(ctx context.Context) (any, diag.Diagnostic
 
 	if !m.Properties.IsNull() {
 		properties, requiredProps, d := expandTargetSchemaProperties(ctx, m.Properties)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1231,7 +1274,7 @@ func (m *schemaItemsModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyLeafModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsCoreModel))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1243,7 +1286,7 @@ func (m *schemaItemsModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 
 		if t.Properties != nil {
 			properties, d := flattenTargetSchemaLeafProperties(ctx, t.Properties, t.Required)
-			smerr.EnrichAppend(ctx, &diags, d)
+			smerr.AddEnrich(ctx, &diags, d)
 			if diags.HasError() {
 				return diags
 			}
@@ -1270,7 +1313,7 @@ func (m schemaItemsModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 
 	if !m.Properties.IsNull() {
 		properties, requiredProps, d := expandTargetSchemaLeafProperties(ctx, m.Properties)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1305,7 +1348,7 @@ func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) diag.Diagnosti
 	m.Properties = fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyLeafModel](ctx)
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyCoreModel))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1317,7 +1360,7 @@ func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) diag.Diagnosti
 
 		if t.Properties != nil {
 			properties, d := flattenTargetSchemaLeafProperties(ctx, t.Properties, t.Required)
-			smerr.EnrichAppend(ctx, &diags, d)
+			smerr.AddEnrich(ctx, &diags, d)
 			if diags.HasError() {
 				return diags
 			}
@@ -1335,14 +1378,14 @@ func (m *schemaPropertyModel) Flatten(ctx context.Context, v any) diag.Diagnosti
 func (m schemaPropertyModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var schemaDefinitionLeafData = awstypes.SchemaDefinition{}
-	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyCoreModel, &schemaDefinitionLeafData))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyCoreModel, &schemaDefinitionLeafData))
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	if !m.Properties.IsNull() {
 		properties, requiredProps, d := expandTargetSchemaLeafProperties(ctx, m.Properties)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1374,7 +1417,7 @@ func (m *schemaItemsLeafModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsLeafCoreModel))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaItemsLeafCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1421,14 +1464,14 @@ func (m schemaItemsLeafModel) Expand(ctx context.Context) (any, diag.Diagnostics
 	var diags diag.Diagnostics
 	var sd awstypes.SchemaDefinition
 	// Expand core (type/description)
-	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaItemsLeafCoreModel, &sd))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.schemaItemsLeafCoreModel, &sd))
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	if isNonEmpty(m.ItemsJSON) {
 		jsd, d := parseJSONSchemaDefinition(m.ItemsJSON.ValueString())
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1436,7 +1479,7 @@ func (m schemaItemsLeafModel) Expand(ctx context.Context) (any, diag.Diagnostics
 	}
 	if isNonEmpty(m.PropertiesJSON) {
 		jsd, d := parseJSONSchemaDefinition(m.PropertiesJSON.ValueString())
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1470,7 +1513,7 @@ func (m *schemaPropertyLeafModel) Flatten(ctx context.Context, v any) diag.Diagn
 	var diags diag.Diagnostics
 	switch t := v.(type) {
 	case awstypes.SchemaDefinition:
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyLeafCoreModel))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, &m.schemaPropertyLeafCoreModel))
 		if diags.HasError() {
 			return diags
 		}
@@ -1517,14 +1560,14 @@ func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnost
 	var diags diag.Diagnostics
 	var schemaDefinitionData = awstypes.SchemaDefinition{}
 
-	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyLeafCoreModel, &schemaDefinitionData))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.schemaPropertyLeafCoreModel, &schemaDefinitionData))
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	if isNonEmpty(m.ItemsJSON) {
 		jsd, d := parseJSONSchemaDefinition(m.ItemsJSON.ValueString())
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1532,7 +1575,7 @@ func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnost
 	}
 	if isNonEmpty(m.PropertiesJSON) {
 		jsd, d := parseJSONSchemaDefinition(m.PropertiesJSON.ValueString())
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1545,6 +1588,10 @@ func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnost
 type s3ConfigurationModel struct {
 	BucketOwnerAccountId types.String `tfsdk:"bucket_owner_account_id"`
 	Uri                  types.String `tfsdk:"uri"`
+}
+
+type mcpServerConfigurationModel struct {
+	Endpoint types.String `tfsdk:"endpoint"`
 }
 
 type apiSchemaConfigurationModel struct {
@@ -1569,7 +1616,7 @@ func (m *apiSchemaConfigurationModel) Flatten(ctx context.Context, v any) diag.D
 	case awstypes.ApiSchemaConfigurationMemberS3:
 		var model s3ConfigurationModel
 		d := fwflex.Flatten(ctx, t.Value, &model)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return diags
 		}
@@ -1589,7 +1636,7 @@ func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 	switch {
 	case !m.InlinePayload.IsNull():
 		inlinePayloadApiSchemaConfigurationData, d := m.InlinePayload.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1600,13 +1647,13 @@ func (m apiSchemaConfigurationModel) Expand(ctx context.Context) (any, diag.Diag
 
 	case !m.S3.IsNull():
 		s3ApiSchemaConfigurationData, d := m.S3.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		var r awstypes.ApiSchemaConfigurationMemberS3
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, s3ApiSchemaConfigurationData, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, s3ApiSchemaConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1639,7 +1686,7 @@ func flattenTargetSchemaProperties(
 	for name, schemaDefn := range properties {
 		pm := &schemaPropertyModel{}
 		d := pm.Flatten(ctx, schemaDefn)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyModel](ctx), diags
 		}
@@ -1659,14 +1706,14 @@ func expandTargetSchemaProperties(ctx context.Context, properties fwtypes.SetNes
 	var requiredProps []string
 
 	propertySlice, d := properties.ToSlice(ctx)
-	smerr.EnrichAppend(ctx, &diags, d)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() {
 		return nil, nil, diags
 	}
 
 	for _, propertyModel := range propertySlice {
 		expandedValue, d := propertyModel.Expand(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, nil, diags
 		}
@@ -1696,7 +1743,7 @@ func flattenTargetSchemaLeafProperties(ctx context.Context, properties map[strin
 	for name, schemaDefn := range properties {
 		pm := &schemaPropertyLeafModel{}
 		d := pm.Flatten(ctx, schemaDefn)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return fwtypes.NewSetNestedObjectValueOfNull[schemaPropertyLeafModel](ctx), diags
 		}
@@ -1713,14 +1760,14 @@ func expandTargetSchemaLeafProperties(ctx context.Context, properties fwtypes.Se
 	var requiredProps []string
 
 	propertySlice, d := properties.ToSlice(ctx)
-	smerr.EnrichAppend(ctx, &diags, d)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() {
 		return nil, nil, diags
 	}
 
 	for _, propertyModel := range propertySlice {
 		expandedValue, d := propertyModel.Expand(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, nil, diags
 		}

@@ -1,17 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
 
 import (
 	"time"
-)
-
-type TableType string
-
-const (
-	TableTypeTable            TableType = "Table"
-	TableTypeTableWithColumns TableType = "TableWithColumns"
 )
 
 const (

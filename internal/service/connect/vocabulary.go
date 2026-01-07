@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -17,13 +17,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -146,7 +147,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	vocabulary, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -239,7 +240,7 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	output, err := conn.DescribeVocabulary(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -256,11 +257,11 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	return output.Vocabulary, nil
 }
 
-func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) retry.StateRefreshFunc {
+func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -273,7 +274,7 @@ func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, voc
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VocabularyStateCreationInProgress),
 		Target:  enum.Slice(awstypes.VocabularyStateActive, awstypes.VocabularyStateCreationFailed),
 		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),
@@ -294,7 +295,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VocabularyStateDeleteInProgress),
 		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),

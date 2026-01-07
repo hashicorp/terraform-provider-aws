@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -9,16 +9,19 @@ import (
 	"log"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,12 +83,12 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	output, err := conn.CreateType(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appsync Type: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	d.SetId(typeCreateResourceID(apiID, output.Type.Format, aws.ToString(output.Type.Name)))
 
-	return append(diags, resourceTypeRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceTypeRead(ctx, d, meta))
 }
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -94,19 +97,19 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	apiID, format, name, err := typeParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	resp, err := findTypeByThreePartKey(ctx, conn, apiID, format, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync Type (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Type %q: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", apiID)
@@ -125,7 +128,7 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	apiID, format, name, err := typeParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	input := &appsync.UpdateTypeInput{
@@ -138,10 +141,10 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	_, err = conn.UpdateType(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync Type (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceTypeRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceTypeRead(ctx, d, meta))
 }
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -150,7 +153,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	apiID, _, name, err := typeParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Appsync Type: %s", d.Id())
@@ -165,7 +168,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync Type (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -184,7 +187,7 @@ func typeParseResourceID(id string) (string, awstypes.TypeDefinitionFormat, stri
 	parts := strings.Split(id, typeResourceIDSeparator)
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sFORMAT%[2]sTYPE-NAME", id, typeResourceIDSeparator)
+		return "", "", "", smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sFORMAT%[2]sTYPE-NAME", id, typeResourceIDSeparator))
 	}
 
 	return parts[0], awstypes.TypeDefinitionFormat(parts[1]), parts[2], nil
@@ -200,18 +203,15 @@ func findTypeByThreePartKey(ctx context.Context, conn *appsync.Client, apiID str
 	output, err := conn.GetType(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.Type == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output.Type, nil

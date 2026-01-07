@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -213,7 +213,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block key list": {
 			Source: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -242,7 +242,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block key set": {
 			Source: &tfMapBlockSet{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -329,7 +329,7 @@ func TestExpandMapBlock(t *testing.T) {
 		},
 		"map block enum key": {
 			Source: &tfMapBlockListEnumKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementEnumKey](ctx, []tfMapBlockElementEnumKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementEnumKey{
 					{
 						MapBlockKey: fwtypes.StringEnumValue(testEnumList),
 						Attr1:       types.StringValue("a"),
@@ -359,7 +359,7 @@ func TestExpandMapBlock(t *testing.T) {
 
 		"map block list no key": {
 			Source: &tfMapBlockListNoKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementNoKey](ctx, []tfMapBlockElementNoKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementNoKey{
 					{
 						Attr1: types.StringValue("a"),
 						Attr2: types.StringValue("b"),
@@ -491,7 +491,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockList{},
 			WantTarget: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -511,7 +511,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockSet{},
 			WantTarget: &tfMapBlockSet{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -540,7 +540,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockList{},
 			WantTarget: &tfMapBlockList{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElement](ctx, []tfMapBlockElement{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElement{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -580,7 +580,7 @@ func TestFlattenMapBlock(t *testing.T) {
 			},
 			Target: &tfMapBlockListEnumKey{},
 			WantTarget: &tfMapBlockListEnumKey{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[tfMapBlockElementEnumKey](ctx, []tfMapBlockElementEnumKey{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfMapBlockElementEnumKey{
 					{
 						MapBlockKey: fwtypes.StringEnumValue(testEnumList),
 						Attr1:       types.StringValue("a"),

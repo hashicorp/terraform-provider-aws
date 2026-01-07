@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivschat_test
@@ -282,7 +282,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

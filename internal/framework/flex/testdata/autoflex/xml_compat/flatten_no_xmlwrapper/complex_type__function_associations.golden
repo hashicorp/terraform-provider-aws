@@ -1,0 +1,216 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigAWS",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigAWS",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper",
+    "source_type": "flex.DistributionConfigAWS"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigAWS",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FunctionAssociations",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigAWS",
+    "autoflex.target.fieldname": "FunctionAssociations",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.DistributionConfigTFNoXMLWrapper"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "FunctionAssociations",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "Items",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "source_type": "[]flex.FunctionAssociation",
+    "target_type": "ListNestedObjectTypeOf[flex.FunctionAssociationTF]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: First element of nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "element_type": "flex.FunctionAssociation"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "field_name": "EventType",
+    "field_type": "string",
+    "is_nil": false,
+    "is_zero": false
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: Struct field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.path": "FunctionAssociations.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
+    "field_name": "FunctionARN",
+    "field_type": "*string",
+    "is_nil": false,
+    "is_zero": false
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "EventType",
+    "autoflex.source.path": "FunctionAssociations.Items[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "EventType",
+    "autoflex.target.path": "FunctionAssociations.Items[0]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items[0].EventType",
+    "autoflex.source.type": "string",
+    "autoflex.target.path": "FunctionAssociations.Items[0].EventType",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FunctionARN",
+    "autoflex.source.path": "FunctionAssociations.Items[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "FunctionARN",
+    "autoflex.target.path": "FunctionAssociations.Items[0]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items[0].FunctionARN",
+    "autoflex.source.type": "*string",
+    "autoflex.target.path": "FunctionAssociations.Items[0].FunctionARN",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "EventType",
+    "autoflex.source.path": "FunctionAssociations.Items[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "EventType",
+    "autoflex.target.path": "FunctionAssociations.Items[1]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items[1].EventType",
+    "autoflex.source.type": "string",
+    "autoflex.target.path": "FunctionAssociations.Items[1].EventType",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FunctionARN",
+    "autoflex.source.path": "FunctionAssociations.Items[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
+    "autoflex.target.fieldname": "FunctionARN",
+    "autoflex.target.path": "FunctionAssociations.Items[1]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Items[1].FunctionARN",
+    "autoflex.source.type": "*string",
+    "autoflex.target.path": "FunctionAssociations.Items[1].FunctionARN",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Quantity",
+    "autoflex.source.path": "FunctionAssociations",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "Quantity",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Quantity",
+    "autoflex.source.type": "*int32",
+    "autoflex.target.path": "FunctionAssociations.Quantity",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
+  }
+]

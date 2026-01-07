@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,7 +100,7 @@ func (e *secretsEphemeralResource) Open(ctx context.Context, request ephemeral.O
 		}
 		input.EncryptionContext = fwflex.ExpandFrameworkStringValueMap(ctx, v.Context)
 
-		payload, err := itypes.Base64Decode(v.Payload.ValueString())
+		payload, err := inttypes.Base64Decode(v.Payload.ValueString())
 		if err != nil {
 			response.Diagnostics.AddError(
 				"invalid base64 value for secret",

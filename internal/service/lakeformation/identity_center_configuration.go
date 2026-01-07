@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -86,7 +86,7 @@ func (r *resourceIdentityCenterConfiguration) Create(ctx context.Context, req re
 	conn := r.Meta().LakeFormationClient(ctx)
 
 	var plan resourceIdentityCenterConfigurationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -96,7 +96,7 @@ func (r *resourceIdentityCenterConfiguration) Create(ctx context.Context, req re
 	}
 
 	var input lakeformation.CreateLakeFormationIdentityCenterConfigurationInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -111,7 +111,7 @@ func (r *resourceIdentityCenterConfiguration) Create(ctx context.Context, req re
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, createOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, createOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -122,19 +122,19 @@ func (r *resourceIdentityCenterConfiguration) Create(ctx context.Context, req re
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, readOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, readOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourceIdentityCenterConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
 	var state resourceIdentityCenterConfigurationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,12 +150,12 @@ func (r *resourceIdentityCenterConfiguration) Read(ctx context.Context, req reso
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceIdentityCenterConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -165,7 +165,7 @@ func (r *resourceIdentityCenterConfiguration) Delete(ctx context.Context, req re
 	conn := r.Meta().LakeFormationClient(ctx)
 
 	var state resourceIdentityCenterConfigurationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package billing
@@ -47,13 +47,13 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 	conn := d.Meta().BillingClient(ctx)
 
 	var data dataSourceViewsModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var billingViewTypes []awstypes.BillingViewType
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, data.BillingViewTypes.ElementsAs(ctx, &billingViewTypes, false))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, data.BillingViewTypes.ElementsAs(ctx, &billingViewTypes, false))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -64,12 +64,12 @@ func (d *dataSourceViews) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.BillingView, flex.WithFieldNamePrefix("Views")), smerr.ID, data.BillingViewTypes.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data.BillingView, flex.WithFieldNamePrefix("Views")), smerr.ID, data.BillingViewTypes.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.BillingViewTypes.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.BillingViewTypes.String())
 }
 
 func findViewsByViewTypes(ctx context.Context, conn *billing.Client, billingViewTypes []awstypes.BillingViewType) ([]awstypes.BillingViewListElement, error) {

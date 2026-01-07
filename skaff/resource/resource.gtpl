@@ -1,9 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}
 
-{{- if .IncludeComments }}
+{{ if .IncludeComments -}}
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -35,423 +35,442 @@ import (
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
+	// awstypes.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
-	"fmt"
-	"log"
-	"reflect"
-	"regexp"
-	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/YakDriver/smarterr"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-{{ if .IncludeComments }}
+{{- if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
 // All resources should follow this basic outline. Improve this resource's
 // maintainability by sticking to it.
 //
 // 1. Package declaration
 // 2. Imports
-// 3. Main resource function with schema
-// 4. Create, read, update, delete functions (in that order)
+// 3. Main resource struct with schema method
+// 4. Create, read, update, delete methods (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-{{- end }}
 
+{{ end -}}
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
+// @FrameworkResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
-// Tagging annotations are used for "transparent tagging".
-// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 {{- end }}
-func Resource{{ .Resource }}() *schema.Resource {
-	return &schema.Resource{
-		{{- if .IncludeComments }}
-		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
-		// These 4 functions handle CRUD responsibilities below.
-		{{- end }}
-		CreateWithoutTimeout: resource{{ .Resource }}Create,
-		ReadWithoutTimeout:   resource{{ .Resource }}Read,
-		UpdateWithoutTimeout: resource{{ .Resource }}Update,
-		DeleteWithoutTimeout: resource{{ .Resource }}Delete,
-		{{ if .IncludeComments }}
-		// TIP: ==== TERRAFORM IMPORTING ====
-		// If Read can get all the information it needs from the Identifier
-		// (i.e., d.Id()), you can use the Passthrough importer. Otherwise,
-		// you'll need a custom import function.
-		//
-		// See more:
-		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
-		{{- end }}
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		{{ if .IncludeComments }}
-		// TIP: ==== CONFIGURABLE TIMEOUTS ====
-		// Users can configure timeout lengths but you need to use the times they
-		// provide. Access the timeout they configure (or the defaults) using,
-		// e.g., d.Timeout(schema.TimeoutCreate) (see below). The times here are
-		// the defaults if they don't configure timeouts.
-		{{- end }}
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
-		},
-		{{ if .IncludeComments }}
-		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the attributes in snake case (e.g.,
-		// delete_automated_backups).
-		//
-		// Formatting rules:
-		// * Alphabetize attributes to make them easier to find.
-		// * Do not add a blank line between attributes.
-		//
-		// Attribute basics:
-		// * If a user can provide a value ("configure a value") for an
-		//   attribute (e.g., instances = 5), we call the attribute an
-		//   "argument."
-		// * You change the way users interact with attributes using:
-		//     - Required
-		//     - Optional
-		//     - Computed
-		// * There are only four valid combinations:
-		//
-		// 1. Required only - the user must provide a value
-		// Required: true,
-		//
-		// 2. Optional only - the user can configure or omit a value; do not
-		//    use Default or DefaultFunc
-		// Optional: true,
-		//
-		// 3. Computed only - the provider can provide a value but the user
-		//    cannot, i.e., read-only
-		// Computed: true,
-		//
-		// 4. Optional AND Computed - the provider or user can provide a value;
-		//    use this combination if you are using Default or DefaultFunc
-		// Optional: true,
-		// Computed: true,
-		//
-		// You will typically find arguments in the input struct
-		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-		// the modify operation.
-		//
-		// For more about schema options, visit
-		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
-		{{- end }}
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, resources have an `arn` attribute.{{- end }}
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replace_with_arguments": { {{- if .IncludeComments }} // TIP: Add all your arguments and attributes.{{- end }}
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"complex_argument": { {{- if .IncludeComments }} // TIP: See setting, getting, flattening, expanding examples below for this complex argument.{{- end }}
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sub_field_one": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"sub_field_two": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			{{- if .IncludeTags }}
-			names.AttrTags:    tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			{{- end }}
-		},
-	}
+func newResource{{ .Resource }}(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resource{{ .Resource }}{}
+
+	{{ if .IncludeComments -}}
+	// TIP: ==== CONFIGURABLE TIMEOUTS ====
+	// Users can configure timeout lengths but you need to use the times they
+	// provide. Access the timeout they configure (or the defaults) using,
+	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
+	// the defaults if they don't configure timeouts.
+	{{- end }}
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
 }
 
 const (
 	ResName{{ .Resource }} = "{{ .HumanResourceName }}"
 )
 
-func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+type resource{{ .Resource }} struct {
+	framework.ResourceWithModel[resource{{ .Resource }}Model]
+	framework.WithTimeouts
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== SCHEMA ====
+// In the schema, add each of the attributes in snake case (e.g.,
+// delete_automated_backups).
+//
+// Formatting rules:
+// * Alphabetize attributes to make them easier to find.
+// * Do not add a blank line between attributes.
+//
+// Attribute basics:
+// * If a user can provide a value ("configure a value") for an
+//   attribute (e.g., instances = 5), we call the attribute an
+//   "argument."
+// * You change the way users interact with attributes using:
+//     - Required
+//     - Optional
+//     - Computed
+// * There are only four valid combinations:
+//
+// 1. Required only - the user must provide a value
+// Required: true,
+//
+// 2. Optional only - the user can configure or omit a value; do not
+//    use Default or DefaultFunc
+// Optional: true,
+//
+// 3. Computed only - the provider can provide a value but the user
+//    cannot, i.e., read-only
+// Computed: true,
+//
+// 4. Optional AND Computed - the provider or user can provide a value;
+//    use this combination if you are using Default
+// Optional: true,
+// Computed: true,
+//
+// You will typically find arguments in the input struct
+// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
+// they are only in the input struct (e.g., ModifyDBInstanceInput) for
+// the modify operation.
+//
+// For more about schema options, visit
+// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
+{{- end }}
+func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
+			{{- if .IncludeComments }}
+			// TIP: ==== "ID" ATTRIBUTE ====
+			// When using the Terraform Plugin Framework, there is no required "id" attribute.
+			// This is different from the Terraform Plugin SDK.
+			//
+			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
+			{{- end }}
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				{{- if .IncludeComments }}
+				// TIP: ==== PLAN MODIFIERS ====
+				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
+				// for adjusting planned changes prior to apply. The planmodifier subpackage
+				// provides built-in modifiers for many common use cases such as
+				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
+				// resources).
+				//
+				// See more:
+				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+				{{- end }}
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			{{- if .IncludeTags }}
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			{{- end }}
+			"type": schema.StringAttribute{
+				Required: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"complex_argument": schema.ListNestedBlock{
+				{{- if .IncludeComments }}
+				// TIP: ==== CUSTOM TYPES ====
+				// Use a custom type to identify the model type of the tested object
+				{{- end }}
+				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
+				{{- if .IncludeComments }}
+				// TIP: ==== LIST VALIDATORS ====
+				// List and set validators take the place of MaxItems and MinItems in
+				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
+				// make a nested object required. Similar to Plugin-SDK, complex objects
+				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
+				//
+				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
+				// see:
+				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
+				{{- end }}
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"nested_required": schema.StringAttribute{
+							Required: true,
+						},
+						"nested_computed": schema.StringAttribute{
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
 	// sure there is a good reason if you don't do one of these.
 	//
 	// 1. Get a client connection to the relevant service
-	// 2. Populate a create input structure
-	// 3. Call the AWS create/put function
-	// 4. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work. At a minimum, set the
-	//    resource ID. E.g., d.SetId(<Identifier, such as AWS ID or ARN>)
-	// 5. Use a waiter to wait for create to complete
-	// 6. Call the Read function in the Create return
+	// 2. Fetch the plan
+	// 3. Populate a create input structure
+	// 4. Call the AWS create/put function
+	// 5. Using the output from the create function, set the minimum arguments
+	//    and attributes for the Read function to work, as well as any computed
+	//    only attributes.
+	// 6. Use a waiter to wait for create to complete
+	// 7. Save the request plan to response state
 	{{- end }}
 	{{- if .IncludeComments }}
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
-	// TIP: -- 2. Populate a create input structure
+	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	in := &{{ .SDKPackage }}.Create{{ .Resource }}Input{
-		{{- if .IncludeComments }}
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		{{- end }}
-		{{ .Resource }}Name: aws.String(d.Get(names.AttrName).(string)),
-		{{ .Resource }}Type: aws.String(d.Get(names.AttrType).(string)),
-		{{ if .IncludeComments }}
-		// TIP: Not all resources support tags and tags don't always make sense. If
-		// your resource doesn't need tags, you can remove the tags lines here and
-		// below. Many resources do include tags so this a reminder to include them
-		// where possible.
-		{{- end }}
-		{{- if .IncludeTags }}
-		Tags: getTagsIn(ctx),
-		{{- end }}
+	var plan resource{{ .Resource }}Model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("max_size"); ok {
-		{{- if .IncludeComments }}
-		// TIP: Optional fields should be set based on whether or not they are
-		// used.
-		{{- end }}
-		in.MaxSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]any)) > 0 {
-		{{- if .IncludeComments }}
-		// TIP: Use an expander to assign a complex argument.
-		{{- end }}
-		in.ComplexArguments = expandComplexArguments(v.([]any))
-	}
-
-	{{ if .IncludeComments }}
-	// TIP: -- 3. Call the AWS create function
+	{{ if .IncludeComments -}}
+	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
-	out, err := conn.Create{{ .Resource }}(ctx, in)
+	var input {{ .SDKPackage }}.Create{{ .ResourceAWS }}Input
+	{{ if .IncludeComments -}}
+	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .ResourceAWS }}Id`
+	{{- end }}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	{{ if .IncludeTags -}}
+	input.Tags = getTagsIn(ctx)
+	{{- end }}
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 4. Call the AWS Create function
+	{{- end }}
+	out, err := conn.Create{{ .ResourceAWS }}(ctx, &input)
 	if err != nil {
 		{{- if .IncludeComments }}
-		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
+		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
 		// in error messages at this point.
 		{{- end }}
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Get(names.AttrName).(string))
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+	if out == nil || out.{{ .ResourceAWS }} == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		return
 	}
 
-	if out == nil || out.{{ .Resource }} == nil {
-		return smerr.Append(ctx, diags, errors.New("empty output"), smerr.ID, d.Get(names.AttrName).(string))
+	{{ if .IncludeComments -}}
+	// TIP: -- 5. Using the output from the create function, set attributes
+	{{- end }}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 6. Use a waiter to wait for create to complete
+	{{- end }}
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = wait{{ .Resource }}Created(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
-	// work.
+	// TIP: -- 7. Save the request plan to response state
 	{{- end }}
-	d.SetId(aws.ToString(out.{{ .Resource }}.{{ .Resource }}ID))
-	{{ if .IncludeComments }}
-	// TIP: -- 5. Use a waiter to wait for create to complete
-	{{- end }}
-	if _, err := wait{{ .Resource }}Created(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-	}
-	{{ if .IncludeComments }}
-	// TIP: -- 6. Call the Read function in the Create return
-	{{- end }}
-	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
 	// Generally, the Read function should do the following things. Make
 	// sure there is a good reason if you don't do one of these.
 	//
 	// 1. Get a client connection to the relevant service
-	// 2. Get the resource from AWS
-	// 3. Set ID to empty where resource is not new and not found
-	// 4. Set the arguments and attributes
-	// 5. Set the tags
-	// 6. Return diags
+	// 2. Fetch the state
+	// 3. Get the resource from AWS
+	// 4. Remove resource from state if it is not found
+	// 5. Set the arguments and attributes
+	// 6. Set the state
 	{{- end }}
 	{{- if .IncludeComments }}
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
-	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
+	// TIP: -- 2. Fetch the state
+	{{- end }}
+	var state resource{{ .Resource }}Model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	{{ if .IncludeComments }}
+	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
 	{{- end }}
-	out, err := find{{ .Resource }}ByID(ctx, conn, d.Id())
-	{{ if .IncludeComments }}
-	// TIP: -- 3. Set ID to empty where resource is not new and not found
+	out, err := find{{ .Resource }}ByID(ctx, conn, state.ID.ValueString())
+	{{- if .IncludeComments }}
+	// TIP: -- 4. Remove resource from state if it is not found
 	{{- end }}
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] {{ .Service }} {{ .Resource }} (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
 	}
-
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 4. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
-	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
-	// necessary.
-	//
-	// However, there are some situations where more handling is needed.
-	// a. Complex data types (e.g., schema.TypeList, schema.TypeSet)
-	// b. Where errorneous diffs occur. For example, a schema.TypeString may be
-	//    a JSON. AWS may return the JSON in a slightly different order but it
-	//    is equivalent to what is already set. In that case, you may check if
-	//    it is equivalent before setting the different JSON.
+	// TIP: -- 5. Set the arguments and attributes
 	{{- end }}
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrName, out.Name)
-	{{ if .IncludeComments }}
-	// TIP: Setting a complex type.
-	// For more information, see:
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
-	{{- end }}
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: Setting a JSON string to avoid errorneous diffs.
+	// TIP: -- 6. Set the state
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-	}
-
-	d.Set("policy", p)
-
-	{{ if .IncludeComments }}
-	// TIP: -- 6. Return diags
-	{{- end }}
-	return diags
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE UPDATE ====
 	// Not all resources have Update functions. There are a few reasons:
 	// a. The AWS API does not support changing a resource
-	// b. All arguments have ForceNew: true, set
+	// b. All arguments have RequiresReplace() plan modifiers
 	// c. The AWS API uses a create call to modify an existing resource
 	//
-	// In the cases of a. and b., the main resource function will not have a
-	// UpdateWithoutTimeout defined. In the case of c., Update and Create are
-	// the same.
+	// In the cases of a. and b., the resource will not have an update method
+	// defined. In the case of c., Update and Create can be refactored to call
+	// the same underlying function.
 	//
 	// The rest of the time, there should be an Update function and it should
 	// do the following things. Make sure there is a good reason if you don't
 	// do one of these.
 	//
 	// 1. Get a client connection to the relevant service
-	// 2. Populate a modify input structure and check for changes
-	// 3. Call the AWS modify/update function
-	// 4. Use a waiter to wait for update to complete
-	// 5. Call the Read function in the Update return
+	// 2. Fetch the plan and state
+	// 3. Populate a modify input structure and check for changes
+	// 4. Call the AWS modify/update function
+	// 5. Use a waiter to wait for update to complete
+	// 6. Save the request plan to response state
 	{{- end }}
-	{{- if .IncludeComments }}
 
+	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
-	// TIP: -- 2. Populate a modify input structure and check for changes
-	//
-	// When creating the input structure, only include mandatory fields. Other
-	// fields are set as needed. You can use a flag, such as update below, to
-	// determine if a certain portion of arguments have been changed and
-	// whether to call the AWS update function.
+	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	update := false
-
-	in := &{{ .ServiceLower }}.Update{{ .Resource }}Input{
-		Id: aws.String(d.Id()),
+	var plan, state resource{{ .Resource }}Model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	{{ if .IncludeComments }}
+	// TIP: -- 3. Get the difference between the plan and state, if any
+	{{- end }}
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
-		update = true
-	}
-
-	if !update {
-		{{- if .IncludeComments }}
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return diags. Otherwise, return a read call, as below.
+	if diff.HasChanges() {
+		var input {{ .SDKPackage }}.Update{{ .ResourceAWS }}Input
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		{{ if .IncludeComments }}
+		// TIP: -- 4. Call the AWS modify/update function
 		{{- end }}
-		return diags
+		out, err := conn.Update{{ .ResourceAWS }}(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+		if out == nil || out.{{ .ResourceAWS }} == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			return
+		}
+		{{ if .IncludeComments }}
+		// TIP: Using the output from the update function, re-set any computed attributes
+		{{- end }}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 3. Call the AWS modify/update function
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 5. Use a waiter to wait for update to complete
 	{{- end }}
-	log.Printf("[DEBUG] Updating {{ .Service }} {{ .Resource }} (%s): %#v", d.Id(), in)
-	out, err := conn.Update{{ .Resource }}(ctx, in)
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := wait{{ .Resource }}Updated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 4. Use a waiter to wait for update to complete
+
+	{{ if .IncludeComments -}}
+	// TIP: -- 6. Save the request plan to response state
 	{{- end }}
-	if _, err := wait{{ .Resource }}Updated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-	}
-	{{ if .IncludeComments }}
-	// TIP: -- 5. Call the Read function in the Update return
-	{{- end }}
-	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE DELETE ====
 	// Most resources have Delete functions. There are rare situations
@@ -464,52 +483,74 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	// is a good reason if you don't do one of these.
 	//
 	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return diags
+	// 2. Fetch the state
+	// 3. Populate a delete input structure
+	// 4. Call the AWS delete function
+	// 5. Use a waiter to wait for delete to complete
 	{{- end }}
-	{{- if .IncludeComments }}
 
+	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := r.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
-	// TIP: -- 2. Populate a delete input structure
+	// TIP: -- 2. Fetch the state
 	{{- end }}
-	log.Printf("[INFO] Deleting {{ .Service }} {{ .Resource }} %s", d.Id())
+	var state resource{{ .Resource }}Model
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Call the AWS delete function
+	// TIP: -- 3. Populate a delete input structure
 	{{- end }}
-	_, err := conn.Delete{{ .Resource }}(ctx, &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
-		Id: aws.String(d.Id()),
-	})
+	input := {{ .ServiceLower }}.Delete{{ .ResourceAWS }}Input{
+		{{ .ResourceAWS }}Id: state.ID.ValueStringPointer(),
+	}
 	{{ if .IncludeComments }}
+	// TIP: -- 4. Call the AWS delete function
+	{{- end }}
+	_, err := conn.Delete{{ .ResourceAWS }}(ctx, &input)
+	{{- if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
-	if errs.IsA[*types.ResourceNotFoundException](err){
-		return diags
-	}
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 4. Use a waiter to wait for delete to complete
+	// TIP: -- 5. Use a waiter to wait for delete to complete
 	{{- end }}
-	if _, err := wait{{ .Resource }}Deleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = wait{{ .Resource }}Deleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 5. Return diags
-	{{- end }}
-	return diags
 }
+{{ if .IncludeComments }}
+// TIP: ==== TERRAFORM IMPORTING ====
+// If Read can get all the information it needs from the Identifier
+// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
+// you'll need a custom import function.
+//
+// See more:
+// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
+{{- end }}
+func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+}
+
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
 // already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
+// provided in the service if available (e.g., awstypes.StatusInProgress).
 {{- end }}
 const (
 	statusChangePending = "Pending"
@@ -532,18 +573,18 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
-func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   status{{ .Resource }}(ctx, conn, id),
+		Refresh:                   status{{ .Resource }}(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -555,18 +596,18 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 {{- end }}
-func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
-		Refresh:                   status{{ .Resource }}(ctx, conn, id),
+		Refresh:                   status{{ .Resource }}(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -576,16 +617,16 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 {{- end }}
-func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   status{{ .Resource }}(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: status{{ .Resource }}(conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -600,10 +641,10 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func status{{ .Resource }}(conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -621,154 +662,99 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 {{- end }}
-func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
+func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .ResourceAWS }}, error) {
+	input := {{ .ServiceLower }}.Get{{ .ResourceAWS }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err){
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		})
-	}
+	out, err := conn.Get{{ .ResourceAWS }}(ctx, &input)
 	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError:   err,
+			})
+		}
+
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.{{ .Resource }} == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
+	if out == nil || out.{{ .ResourceAWS }} == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
-	return out.{{ .Resource }}, nil
+	return out.{{ .ResourceAWS }}, nil
 }
 {{ if .IncludeComments }}
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return something you can use in
-// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
+// TIP: ==== DATA STRUCTURES ====
+// With Terraform Plugin-Framework configurations are deserialized into
+// Go types, providing type safety without the need for type assertions.
+// These structs should match the schema definition exactly, and the `tfsdk`
+// tag value should match the attribute name.
 //
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-{{- end }}
-func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]any{}
-
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
-	}
-
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
-	}
-
-	return m
-}
-{{ if .IncludeComments }}
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-{{- end }}
-func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []any
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
-	}
-
-	return l
-}
-{{ if .IncludeComments }}
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
+// Nested objects are represented in their own data struct. These will
+// also have a corresponding attribute type mapping for use inside flex
+// functions.
 //
 // See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
+// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-func expandComplexArgument(tfMap map[string]any) *{{ .ServiceLower }}.ComplexArgument {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &{{ .ServiceLower }}.ComplexArgument{}
-
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
-	}
-
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
-	}
-
-	return a
+type resource{{ .Resource }}Model struct {
+	framework.WithRegionModel
+	ARN             types.String                                          `tfsdk:"arn"`
+	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
+	Description     types.String                                          `tfsdk:"description"`
+	ID              types.String                                          `tfsdk:"id"`
+	Name            types.String                                          `tfsdk:"name"`
+	{{- if .IncludeTags }}
+	Tags            tftags.Map                                            `tfsdk:"tags"`
+	TagsAll         tftags.Map                                            `tfsdk:"tags_all"`
+	{{- end }}
+	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
+	Type            types.String                                          `tfsdk:"type"`
 }
+
+type complexArgumentModel struct {
+	NestedRequired types.String `tfsdk:"nested_required"`
+	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
 {{ if .IncludeComments }}
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
+// TIP: ==== SWEEPERS ====
+// When acceptance testing resources, interrupted or failed tests may
+// leave behind orphaned resources in an account. To facilitate cleaning
+// up lingering resources, each resource implementation should include
+// a corresponding "sweeper" function.
+//
+// The sweeper function lists all resources of a given type and sets the
+// appropriate identifers required to delete the resource via the Delete
+// method implemented above.
+//
+// Once the sweeper function is implemented, register it in sweep.go
+// as follows:
+//
+//  awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
+//
+// See more:
+// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
 {{- end }}
-func expandComplexArguments(tfList []any) []*{{ .ServiceLower }}.ComplexArgument {
-	{{- if .IncludeComments }}
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-	{{- end }}
-	{{ if .IncludeComments }}
-	// TIP: Option 1: Returning nil for zero-length list
-    if len(tfList) == 0 {
-        return nil
-    }
-	{{- end }}
+func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := {{ .ServiceLower }}.List{{ .ResourceAWS }}sInput{}
+	conn := client.{{ .Service }}Client(ctx)
+	var sweepResources []sweep.Sweepable
 
-    var s []*{{ .ServiceLower }}.ComplexArgument
-	{{ if .IncludeComments }}
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	{{- end }}
-	// s := make([]*{{ .ServiceLower }}.ComplexArgument, 0)
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]any)
-
-		if !ok {
-			continue
+	pages := {{ .ServiceLower }}.NewList{{ .ResourceAWS }}sPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
 		}
 
-		a := expandComplexArgument(m)
-
-		if a == nil {
-			continue
+		for _, v := range page.{{ .ResourceAWS }}s {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .ResourceAWS }}Id))),
+			)
 		}
-
-		s = append(s, a)
 	}
 
-	return s
+	return sweepResources, nil
 }

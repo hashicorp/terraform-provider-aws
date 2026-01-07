@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -197,13 +197,13 @@ func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planm
 
 	var plannedType awstypes.OverrideType
 	overrideTypePath := path.Root(names.AttrConfiguration).AtListIndex(0).AtName(names.AttrType)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, overrideTypePath, &plannedType))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var stateType awstypes.OverrideType
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, overrideTypePath, &stateType))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -213,28 +213,25 @@ func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planm
 	}
 
 	stateList, sDiags := req.StateValue.ToListValue(ctx)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, sDiags)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sDiags)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	planList, pDiags := req.PlanValue.ToListValue(ctx)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, pDiags)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, pDiags)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
-		resp.Diagnostics.AddError(
-			"Invalid Configuration Change",
-			fmt.Sprintf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
 	}
 }
 
 func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	var data memoryStrategyResourceModel
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -245,30 +242,21 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 
 	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
 		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
-			response.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is `CUSTOM`, the configuration block is required.",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
 			return
 		} else {
 			c, diags := data.Configuration.ToPtr(ctx)
-			smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
+			smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 			if response.Diagnostics.HasError() {
 				return
 			}
 			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
-				response.Diagnostics.AddError(
-					"Invalid Configuration",
-					"When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined.",
-				)
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
 			}
 		}
 	} else {
 		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
-			response.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is not `CUSTOM`, the configuration block must be omitted.",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
 		}
 	}
 }
@@ -277,13 +265,13 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var plan memoryStrategyResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var strategyInput awstypes.MemoryStrategyInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &strategyInput))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &strategyInput))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -321,7 +309,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("create memory strategy: API response missing strategy name %q", plan.Name.ValueString()), smerr.ID, plan.GetIdentifier())
 			return
 		}
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -337,21 +325,21 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var state memoryStrategyResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -361,33 +349,33 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Memory")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &state))
 }
 
 func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var plan, state memoryStrategyResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var strategyInput awstypes.ModifyMemoryStrategyInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &strategyInput))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &strategyInput))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -424,21 +412,21 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("update memory strategy: API response missing strategy id %q", plan.MemoryStrategyID.ValueString()))
 				return
 			}
-			smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
+			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, found, &plan, fwflex.WithFieldNamePrefix("Memory")))
 		})
 	}
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	var state memoryStrategyResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -475,11 +463,11 @@ func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resour
 	const idParts = 2
 	parts, err := intflex.ExpandResourceId(request.ID, idParts, false)
 	if err != nil {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
 		return
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_id"), parts[0]))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), parts[1]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_id"), parts[0]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_strategy_id"), parts[1]))
 }
 
 // withMemoryLock acquires a per-memory mutex to serialize modifications (and subsequent waits)
@@ -523,7 +511,7 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 
 		switch {
 		case errs.IsA[*awstypes.ConflictException](err):
-			return true, err
+			return true, smarterr.NewError(err)
 
 		case errs.IsA[*awstypes.ValidationException](err):
 			msg := err.Error()
@@ -531,11 +519,11 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 				return false, nil
 			}
 			if strings.Contains(msg, msgMemoryStrategiesBeingModified) || strings.Contains(msg, msgMemoryStrategyTransitionalState) {
-				return true, err
+				return true, smarterr.NewError(err)
 			}
 		}
 
-		return false, err
+		return false, smarterr.NewError(err)
 	}
 }
 
@@ -575,7 +563,7 @@ func waitMemoryStrategyDeleted(ctx context.Context, conn *bedrockagentcorecontro
 func statusMemoryStrategy(conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findMemoryStrategyByTwoPartKey(ctx, conn, memoryID, memoryStrategyID)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -591,12 +579,13 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 	memory, err := findMemoryByID(ctx, conn, memoryID)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {
+	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 		return aws.ToString(v.StrategyId) == memoryStrategyID
 	}))
+	return smarterr.Assert(result, err)
 }
 
 type memoryStrategyResourceModel struct {
@@ -647,7 +636,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 	switch m.Type.ValueEnum() {
 	case awstypes.MemoryStrategyTypeSummarization:
 		var r awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -655,7 +644,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 
 	case awstypes.MemoryStrategyTypeSemantic:
 		var r awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -663,7 +652,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 
 	case awstypes.MemoryStrategyTypeUserPreference:
 		var r awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -671,7 +660,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 
 	case awstypes.MemoryStrategyTypeCustom:
 		var r awstypes.MemoryStrategyInputMemberCustomMemoryStrategy
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -689,7 +678,7 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 	type modelAlias memoryStrategyResourceModel
 	alias := modelAlias(m)
 	var r awstypes.ModifyMemoryStrategyInput
-	smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r))
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -715,13 +704,13 @@ func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 
 		if t.Consolidation != nil {
 			var consolidation OverrideDetailsModel
-			smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &consolidation))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Consolidation, &consolidation))
 			if diags.HasError() {
 				return diags
 			}
 			if !consolidation.AppendToPrompt.IsNull() && !consolidation.ModelID.IsNull() {
 				m.Consolidation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &consolidation)
-				smerr.EnrichAppend(ctx, &diags, d)
+				smerr.AddEnrich(ctx, &diags, d)
 				if diags.HasError() {
 					return diags
 				}
@@ -730,13 +719,13 @@ func (m *CustomConfigurationModel) Flatten(ctx context.Context, v any) (diags di
 
 		if t.Extraction != nil {
 			var extraction OverrideDetailsModel
-			smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &extraction))
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Extraction, &extraction))
 			if diags.HasError() {
 				return diags
 			}
 			if !extraction.AppendToPrompt.IsNull() && !extraction.ModelID.IsNull() {
 				m.Extraction, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &extraction)
-				smerr.EnrichAppend(ctx, &diags, d)
+				smerr.AddEnrich(ctx, &diags, d)
 				if diags.HasError() {
 					return diags
 				}
@@ -774,7 +763,7 @@ func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 	case awstypes.OverrideTypeSemanticOverride:
 
 		var r awstypes.CustomConfigurationInputMemberSemanticOverride
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -782,7 +771,7 @@ func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeSummaryOverride:
 		var r awstypes.CustomConfigurationInputMemberSummaryOverride
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -790,7 +779,7 @@ func (m CustomConfigurationModel) expandToCustomConfigurationInput(ctx context.C
 
 	case awstypes.OverrideTypeUserPreferenceOverride:
 		var r awstypes.CustomConfigurationInputMemberUserPreferenceOverride
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -812,14 +801,14 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 
 	if !m.Consolidation.IsNull() {
 		consolidation, d = m.Consolidation.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 	}
 	if !m.Extraction.IsNull() {
 		extraction, d = m.Extraction.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -829,7 +818,7 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	case awstypes.OverrideTypeSemanticOverride:
 		if consolidation != nil {
 			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberSemanticConsolidationOverride
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -840,7 +829,7 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 
 		if extraction != nil {
 			var extractionInput awstypes.CustomExtractionConfigurationInputMemberSemanticExtractionOverride
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -852,7 +841,7 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	case awstypes.OverrideTypeSummaryOverride:
 		if consolidation != nil {
 			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberSummaryConsolidationOverride
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -868,7 +857,7 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 	case awstypes.OverrideTypeUserPreferenceOverride:
 		if consolidation != nil {
 			var consolidationInput awstypes.CustomConsolidationConfigurationInputMemberUserPreferenceConsolidationOverride
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, consolidation, &consolidationInput.Value))
 			if diags.HasError() {
 				return nil, diags
 			}
@@ -879,7 +868,7 @@ func (m CustomConfigurationModel) expandToModifyStrategyConfiguration(ctx contex
 
 		if extraction != nil {
 			var extractionInput awstypes.CustomExtractionConfigurationInputMemberUserPreferenceExtractionOverride
-			smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
+			smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, extraction, &extractionInput.Value))
 			if diags.HasError() {
 				return nil, diags
 			}

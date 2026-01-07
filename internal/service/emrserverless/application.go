@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrserverless
@@ -668,7 +668,7 @@ func statusApplication(conn *emrserverless.Client, id string) retry.StateRefresh
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

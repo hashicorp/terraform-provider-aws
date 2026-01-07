@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOp=ListResourceTags -ListTagsOpPaginated -ListTagsInIDElem=KeyId -ServiceTagsSlice -TagInIDElem=KeyId -TagTypeKeyElem=TagKey -TagTypeValElem=TagValue -UpdateTags -Wait -WaitContinuousOccurence 5 -WaitMinTimeout 1s -WaitTimeout 10m -ParentNotFoundErrCode=NotFoundException

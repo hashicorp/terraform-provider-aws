@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Go-VCR
 
 The Terraform AWS provider utilizes [`go-vcr`](https://github.com/dnaeon/go-vcr) to improve acceptance test performance and reduce costs.

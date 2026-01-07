@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +70,7 @@ func testAccMesh_disappears(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceMesh(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceMesh(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,7 +177,7 @@ func testAccCheckServiceMeshDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfappmesh.FindMeshByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["mesh_owner"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

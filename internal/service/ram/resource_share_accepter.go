@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -15,12 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -164,7 +165,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 
 	resourceShare, err := findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] No RAM Resource Share %s found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -334,7 +335,7 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -354,11 +355,11 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 	return output, nil
 }
 
-func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
+func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) || maybeInvitation.IsNone() {
+		if retry.NotFound(err) || maybeInvitation.IsNone() {
 			return nil, "", nil
 		}
 
@@ -373,7 +374,7 @@ func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn st
 }
 
 func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShareInvitation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareInvitationStatusPending),
 		Target:  enum.Slice(awstypes.ResourceShareInvitationStatusAccepted),
 		Refresh: statusResourceShareInvitation(ctx, conn, arn),
@@ -390,7 +391,7 @@ func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, 
 }
 
 func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShare, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
 		Target:  []string{},
 		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),

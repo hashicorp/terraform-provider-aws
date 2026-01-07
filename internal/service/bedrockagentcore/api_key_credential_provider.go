@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -99,11 +100,11 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 
 func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan, config apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -112,7 +113,7 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input bedrockagentcorecontrol.CreateApiKeyCredentialProviderInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -129,17 +130,17 @@ func (r *apiKeyCredentialProviderResource) Create(ctx context.Context, request r
 	}
 
 	// Set values for unknowns.
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -148,8 +149,8 @@ func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request res
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	out, err := findAPIKeyCredentialProviderByName(ctx, conn, name)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -158,19 +159,19 @@ func (r *apiKeyCredentialProviderResource) Read(ctx context.Context, request res
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var plan, state, config apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -178,7 +179,7 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -186,7 +187,7 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 	if diff.HasChanges() {
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
 		var input bedrockagentcorecontrol.UpdateApiKeyCredentialProviderInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -203,12 +204,12 @@ func (r *apiKeyCredentialProviderResource) Update(ctx context.Context, request r
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *apiKeyCredentialProviderResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data apiKeyCredentialProviderResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}

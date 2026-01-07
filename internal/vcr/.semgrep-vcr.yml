@@ -1,5 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
 
 rules:
   - id: use-acctest-test
@@ -46,6 +46,18 @@ rules:
       sdkacctest.RandInt()
     fix: |
       acctest.RandInt(t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randintrange
+    languages: [go]
+    message: "Use acctest.RandIntRange instead of sdkacctest.RandIntRange for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandIntRange($X, $Y)
+    fix: |
+      acctest.RandIntRange(t, $X, $Y)
     paths:
       include:
         - "**/*_test.go"
@@ -218,30 +230,6 @@ rules:
       retry.NotFoundError {
         $...ARGS,
       }
-    paths:
-      include:
-        - "**/*.go"
-
-  - id: internal-retry-notfound
-    languages: [go]
-    message: "Use retry.NotFound to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.NotFound($ERR)
-    fix: |
-      retry.NotFound($ERR)
-    paths:
-      include:
-        - "**/*.go"
-
-  - id: internal-retry-timedout
-    languages: [go]
-    message: "Use retry.TimedOut to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.TimedOut($ERR)
-    fix: |
-      retry.TimedOut($ERR)
     paths:
       include:
         - "**/*.go"

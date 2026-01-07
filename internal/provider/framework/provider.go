@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -49,6 +50,7 @@ var (
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 	_ provider.ProviderWithListResources      = &frameworkProvider{}
+	_ provider.ProviderWithMetaSchema         = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
@@ -199,6 +201,14 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
 			},
+			"tag_policy_compliance": schema.StringAttribute{
+				Optional: true,
+				Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+					`At this time this only includes compliance with required tag keys by resource type. ` +
+					`Valid values are "error", "warning", and "disabled". ` +
+					`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+					`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
+			},
 			"token": schema.StringAttribute{
 				Optional:    true,
 				Description: "session token. A session token is only required if you are\nusing temporary security credentials.",
@@ -214,6 +224,11 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 			"use_fips_endpoint": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Resolve an endpoint with FIPS capability",
+			},
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -343,6 +358,18 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 	}
 }
 
+func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
+	resp.Schema = metaschema.Schema{
+		Attributes: map[string]metaschema.Attribute{
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			},
+		},
+	}
+}
+
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
@@ -398,6 +425,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
+		tffunction.NewUserAgentFunction,
 	}
 }
 

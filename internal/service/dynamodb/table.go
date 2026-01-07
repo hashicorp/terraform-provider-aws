@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -30,8 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,6 +47,7 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -68,8 +70,8 @@ func resourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validStreamSpec(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateTableAttributes(diff)
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -144,6 +146,18 @@ func resourceTable() *schema.Resource {
 			}),
 			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
+			func(ctx context.Context, diff *schema.ResourceDiff, i any) error {
+				rs := diff.GetRawState()
+				if rs.IsNull() {
+					return nil
+				}
+
+				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					_ = diff.Clear("attribute")
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -187,6 +201,7 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
@@ -222,6 +237,22 @@ func resourceTable() *schema.Resource {
 								Type:     schema.TypeInt,
 								Optional: true,
 								Computed: true,
+							},
+						},
+					},
+				},
+				"global_table_witness": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"region_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidRegionName,
 							},
 						},
 					},
@@ -884,7 +915,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), v.List(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := createReplicas(ctx, conn, d.Id(), v.List(), expandGlobalTableWitness(d.Get("global_table_witness")), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
@@ -903,7 +934,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	table, err := findTableByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, resNameTable, d.Id())
 		d.SetId("")
 		return diags
@@ -949,6 +980,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
+	}
+
+	if err := d.Set("global_table_witness", flattenGlobalTableWitnesses(table.GlobalTableWitnesses)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_table_witness", err)
 	}
 
 	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
@@ -1393,10 +1428,11 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
-		if err := deleteReplicas(ctx, conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "MultiRegionConsistency must be set as STRONG when GlobalTableWitnessUpdates parameter is present") &&
 				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
@@ -1471,7 +1507,7 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 	return nil
 }
 
-func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, create bool, timeout time.Duration) error {
+func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, globalTableWitnessRegionName string, create bool, timeout time.Duration) error {
 	// Duplicating this for MRSC Adoption. If using MRSC and CreateReplicationGroupMemberAction list isn't initiated for at least 2 replicas
 	// then the update table action will fail with
 	// "Unsupported table replica count for global tables with MultiRegionConsistency set to STRONG"
@@ -1492,14 +1528,18 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 	}
 
 	if numReplicasMRSC > 0 {
+		mrscErrorMsg := "creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas, or 1 replica and 1 witness region."
 		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
+			return errors.New(mrscErrorMsg)
 		}
-		if numReplicasMRSC == 1 {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas. ")
+		if numReplicasMRSC == 1 && globalTableWitnessRegionName == "" {
+			return fmt.Errorf("%s Only MRSC Replica count of 1 was provided but no Witness region was provided", mrscErrorMsg)
+		}
+		if numReplicasMRSC == 2 && (numReplicasMRSC == numReplicas && globalTableWitnessRegionName != "") {
+			return fmt.Errorf("%s MRSC Replica count of 2 was provided and a Witness region was also provided", mrscErrorMsg)
 		}
 		if numReplicasMRSC > 2 {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency supports at most 2 replicas. ")
+			return fmt.Errorf("%s Too many Replicas were provided %d", mrscErrorMsg, numReplicasMRSC)
 		}
 
 		mrscInput = awstypes.MultiRegionConsistencyStrong
@@ -1530,14 +1570,24 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			})
 		}
 
-		input := &dynamodb.UpdateTableInput{
-			TableName:              aws.String(tableName),
-			ReplicaUpdates:         replicaCreates,
-			MultiRegionConsistency: mrscInput,
+		var gtgwu []awstypes.GlobalTableWitnessGroupUpdate
+		if globalTableWitnessRegionName != "" {
+			var cgtwgma = awstypes.CreateGlobalTableWitnessGroupMemberAction{
+				RegionName: aws.String(globalTableWitnessRegionName),
+			}
+			gtgwu = append(gtgwu, awstypes.GlobalTableWitnessGroupUpdate{
+				Create: &cgtwgma,
+			})
+		}
+		input := dynamodb.UpdateTableInput{
+			GlobalTableWitnessUpdates: gtgwu,
+			MultiRegionConsistency:    mrscInput,
+			ReplicaUpdates:            replicaCreates,
+			TableName:                 aws.String(tableName),
 		}
 
 		err := tfresource.Retry(ctx, max(replicaUpdateTimeout, timeout), func(ctx context.Context) *tfresource.RetryError {
-			_, err := conn.UpdateTable(ctx, input)
+			_, err := conn.UpdateTable(ctx, &input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
 					return tfresource.RetryableError(err)
@@ -1655,7 +1705,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
 
 			if create && tfawserr.ErrMessageContains(err, errCodeValidationException, "already exist") {
-				return createReplicas(ctx, conn, tableName, tfList, false, timeout)
+				return createReplicas(ctx, conn, tableName, tfList, globalTableWitnessRegionName, false, timeout)
 			}
 
 			if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
@@ -1898,20 +1948,22 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 		}
 	}
 
+	globalTableWitnessRegionName := expandGlobalTableWitness(d.Get("global_table_witness"))
+
 	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
-		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, globalTableWitnessRegionName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toRemove) > 0 {
-		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, globalTableWitnessRegionName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, globalTableWitnessRegionName, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
@@ -2164,8 +2216,8 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 	return err
 }
 
-func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, timeout time.Duration) error {
-	var g multierror.Group
+func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, globalTableWitnessRegionName string, timeout time.Duration) error {
+	var g tfsync.Group
 
 	var replicaDeletes []awstypes.ReplicationGroupUpdate
 	for _, tfMapRaw := range tfList {
@@ -2199,12 +2251,22 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 	// We built an array of MultiRegionStrongConsistency replicas that need deletion.
 	// These need to all happen concurrently
 	if len(replicaDeletes) > 0 {
-		input := &dynamodb.UpdateTableInput{
-			TableName:      aws.String(tableName),
-			ReplicaUpdates: replicaDeletes,
+		var witnessDeletes []awstypes.GlobalTableWitnessGroupUpdate
+		if globalTableWitnessRegionName != "" {
+			witnessDeletes = append(witnessDeletes, awstypes.GlobalTableWitnessGroupUpdate{
+				Delete: &awstypes.DeleteGlobalTableWitnessGroupMemberAction{
+					RegionName: aws.String(globalTableWitnessRegionName),
+				},
+			})
+		}
+
+		input := dynamodb.UpdateTableInput{
+			GlobalTableWitnessUpdates: witnessDeletes,
+			ReplicaUpdates:            replicaDeletes,
+			TableName:                 aws.String(tableName),
 		}
 		err := tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
-			_, err := conn.UpdateTable(ctx, input)
+			_, err := conn.UpdateTable(ctx, &input)
 			notFoundRetries := 0
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
@@ -2262,7 +2324,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				continue
 			}
 
-			g.Go(func() error {
+			g.Go(ctx, func(ctx context.Context) error {
 				input := &dynamodb.UpdateTableInput{
 					TableName: aws.String(tableName),
 					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
@@ -2311,7 +2373,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return nil
 			})
 		}
-		return g.Wait().ErrorOrNil()
+		return g.Wait(ctx)
 	}
 }
 
@@ -2560,10 +2622,11 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	for _, g := range gsi {
 		gsi := make(map[string]any)
 
+		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
 
 		for _, attribute := range g.KeySchema {
@@ -2692,6 +2755,24 @@ func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroug
 	}
 
 	return []any{m}
+}
+
+func expandGlobalTableWitness(v any) string {
+	if v == nil || len(v.([]any)) == 0 || v.([]any)[0] == nil {
+		return ""
+	}
+
+	return v.([]any)[0].(map[string]any)["region_name"].(string)
+}
+
+func flattenGlobalTableWitnesses(apiObjects []awstypes.GlobalTableWitnessDescription) []any {
+	if len(apiObjects) != 1 {
+		return []any{}
+	}
+
+	return []any{map[string]any{
+		"region_name": aws.ToString(apiObjects[0].RegionName),
+	}}
 }
 
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]any {
@@ -2996,7 +3077,9 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 
 // validators
 
-func validateTableAttributes(d *schema.ResourceDiff) error {
+func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 
@@ -3014,7 +3097,14 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			indexedAttributes[rangeKey] = true
 		}
 	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
+
+	config := d.GetRawConfig()
+	hasConfiguredGsi := false
+	if config.IsKnown() {
+		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
+	}
+
+	if v, ok := d.GetOk("global_secondary_index"); ok && hasConfiguredGsi {
 		indexes := v.(*schema.Set).List()
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
@@ -3028,14 +3118,46 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
+	remoteGSIAttributes := map[string]bool{}
+	table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string))
+	if err != nil && !retry.NotFound(err) {
+		return err
+	}
+
+	if table != nil {
+		for _, g := range table.GlobalSecondaryIndexes {
+			for _, ks := range g.KeySchema {
+				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+				delete(indexedAttributes, aws.ToString(ks.AttributeName))
+			}
+		}
+	}
+
 	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
+	var attributes []any
+	if hasConfiguredGsi {
+		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
+		for _, v := range vals {
+			attr := map[string]any{}
+			for k, v := range v.AsValueMap() {
+				attr[k] = v.AsString()
+			}
+			attributes = append(attributes, attr)
+		}
+	} else {
+		attributes = d.Get("attribute").(*schema.Set).List()
+	}
+
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]any)
 		attrName := attribute[names.AttrName].(string)
 
-		if _, ok := indexedAttributes[attrName]; !ok {
+		_, ok1 := indexedAttributes[attrName]
+		_, ok2 := remoteGSIAttributes[attrName]
+
+		if !ok1 && !ok2 {
 			unindexedAttributes = append(unindexedAttributes, attrName)
 		} else {
 			delete(indexedAttributes, attrName)

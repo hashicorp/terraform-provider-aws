@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -73,12 +74,6 @@ func resourceCapacityProvider() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"cluster": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateClusterName,
 			},
 			"auto_scaling_group_provider": {
 				Type:     schema.TypeList,
@@ -147,6 +142,12 @@ func resourceCapacityProvider() *schema.Resource {
 					},
 				},
 			},
+			"cluster": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateClusterName,
+			},
 			"managed_instances_provider": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -154,6 +155,20 @@ func resourceCapacityProvider() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"infrastructure_optimization": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scale_in_after": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(-1, 3600),
+									},
+								},
+							},
+						},
 						"infrastructure_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -165,6 +180,13 @@ func resourceCapacityProvider() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"capacity_option_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+									},
 									"ec2_instance_profile_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -575,7 +597,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findCapacityProviderByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -717,7 +739,7 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	}
 
 	if status := output.Status; status == awstypes.CapacityProviderStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -726,11 +748,11 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	return output, nil
 }
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -742,11 +764,11 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) r
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -759,7 +781,7 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn str
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
 		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
@@ -778,7 +800,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 }
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive, awstypes.CapacityProviderStatusDeprovisioning),
 		Target:  []string{},
 		Refresh: statusCapacityProvider(ctx, conn, arn),
@@ -885,9 +907,9 @@ func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider
 
 	p := map[string]any{
 		"auto_scaling_group_arn":         aws.ToString(provider.AutoScalingGroupArn),
-		"managed_draining":               string(provider.ManagedDraining),
+		"managed_draining":               provider.ManagedDraining,
 		"managed_scaling":                []map[string]any{},
-		"managed_termination_protection": string(provider.ManagedTerminationProtection),
+		"managed_termination_protection": provider.ManagedTerminationProtection,
 	}
 
 	if provider.ManagedScaling != nil {
@@ -895,7 +917,7 @@ func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider
 			"instance_warmup_period":    aws.ToInt32(provider.ManagedScaling.InstanceWarmupPeriod),
 			"maximum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MaximumScalingStepSize),
 			"minimum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MinimumScalingStepSize),
-			names.AttrStatus:            string(provider.ManagedScaling.Status),
+			names.AttrStatus:            provider.ManagedScaling.Status,
 			"target_capacity":           aws.ToInt32(provider.ManagedScaling.TargetCapacity),
 		}
 
@@ -917,6 +939,10 @@ func expandManagedInstancesProviderCreate(configured any) *awstypes.CreateManage
 
 	tfMap := configured.([]any)[0].(map[string]any)
 	apiObject := &awstypes.CreateManagedInstancesProviderConfiguration{}
+
+	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
+		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
+	}
 
 	if v, ok := tfMap["infrastructure_role_arn"].(string); ok && v != "" {
 		apiObject.InfrastructureRoleArn = aws.String(v)
@@ -945,6 +971,10 @@ func expandManagedInstancesProviderUpdate(configured any) *awstypes.UpdateManage
 	tfMap := configured.([]any)[0].(map[string]any)
 	apiObject := &awstypes.UpdateManagedInstancesProviderConfiguration{}
 
+	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
+		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
+	}
+
 	if v, ok := tfMap["infrastructure_role_arn"].(string); ok && v != "" {
 		apiObject.InfrastructureRoleArn = aws.String(v)
 	}
@@ -960,6 +990,21 @@ func expandManagedInstancesProviderUpdate(configured any) *awstypes.UpdateManage
 	return apiObject
 }
 
+func expandInfrastructureOptimization(tfList []any) *awstypes.InfrastructureOptimization {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.InfrastructureOptimization{}
+
+	if v, ok := tfMap["scale_in_after"].(int); ok {
+		apiObject.ScaleInAfter = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTemplate {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -967,6 +1012,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplate{}
+
+	if v, ok := tfMap["capacity_option_type"].(string); ok && v != "" {
+		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
+	}
 
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
@@ -1341,11 +1390,27 @@ func flattenManagedInstancesProvider(provider *awstypes.ManagedInstancesProvider
 
 	tfMap := map[string]any{
 		"infrastructure_role_arn": aws.ToString(provider.InfrastructureRoleArn),
-		names.AttrPropagateTags:   string(provider.PropagateTags),
+		names.AttrPropagateTags:   provider.PropagateTags,
 	}
 
 	if provider.InstanceLaunchTemplate != nil {
 		tfMap["instance_launch_template"] = flattenInstanceLaunchTemplate(provider.InstanceLaunchTemplate)
+	}
+
+	if provider.InfrastructureOptimization != nil {
+		tfMap["infrastructure_optimization"] = flattenInfrastructureOptimization(provider.InfrastructureOptimization)
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenInfrastructureOptimization(apiObject *awstypes.InfrastructureOptimization) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"scale_in_after": aws.ToInt32(apiObject.ScaleInAfter),
 	}
 
 	return []map[string]any{tfMap}
@@ -1357,8 +1422,9 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	}
 
 	tfMap := map[string]any{
+		"capacity_option_type":     template.CapacityOptionType,
 		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
-		"monitoring":               string(template.Monitoring),
+		"monitoring":               template.Monitoring,
 	}
 
 	if template.InstanceRequirements != nil {
@@ -1390,9 +1456,9 @@ func flattenInstanceRequirementsRequest(req *awstypes.InstanceRequirementsReques
 	}
 
 	tfMap := map[string]any{
-		"bare_metal":            string(req.BareMetal),
-		"burstable_performance": string(req.BurstablePerformance),
-		"local_storage":         string(req.LocalStorage),
+		"bare_metal":            req.BareMetal,
+		"burstable_performance": req.BurstablePerformance,
+		"local_storage":         req.LocalStorage,
 		"max_spot_price_as_percentage_of_optimal_on_demand_price": aws.ToInt32(req.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice),
 		"on_demand_max_price_percentage_over_lowest_price":        aws.ToInt32(req.OnDemandMaxPricePercentageOverLowestPrice),
 		"require_hibernate_support":                               aws.ToBool(req.RequireHibernateSupport),

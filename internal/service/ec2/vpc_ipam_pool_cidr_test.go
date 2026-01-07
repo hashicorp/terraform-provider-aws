@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -95,7 +95,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPoolCIDR(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +120,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAM(), ipamResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +160,7 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr"], rs.Primary.Attributes["ipam_pool_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

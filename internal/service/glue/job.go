@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,6 +42,8 @@ func resourceJob() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: resourceJobCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -55,7 +58,7 @@ func resourceJob() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "glueetl",
+							Default:  jobCommandNameApacheSparkETL,
 						},
 						"python_version": {
 							Type:         schema.TypeString,
@@ -179,6 +182,10 @@ func resourceJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"source_control_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -226,14 +233,9 @@ func resourceJob() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"worker_type": {
 				Type:          schema.TypeString,
@@ -292,12 +294,12 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.JobRunQueuingEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
-		input.MaxCapacity = aws.Float64(v.(float64))
-	}
-
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -349,7 +351,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	job, err := findJobByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -359,14 +361,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
-	jobARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("job/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, jobARN)
+	d.Set(names.AttrARN, jobARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
 	}
@@ -478,8 +473,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrTimeout); ok {
-			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
+		if !strings.EqualFold(jobCommandNameRay, aws.ToString(jobUpdate.Command.Name)) {
+			if v, ok := d.GetOk(names.AttrTimeout); ok {
+				jobUpdate.Timeout = aws.Int32(int32(v.(int)))
+			}
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
@@ -522,6 +519,31 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	return diags
 }
 
+func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if command := expandJobCommand(diff.Get("command").([]any)); command != nil {
+		commandName := aws.ToString(command.Name)
+		// Allow 0 timeout for streaming jobs.
+		var minVal int64
+		if !strings.EqualFold(jobCommandNameApacheSparkStreamingETL, commandName) {
+			minVal = 1
+		}
+
+		key := names.AttrTimeout
+		if v := diff.GetRawConfig().GetAttr(key); v.IsKnown() && !v.IsNull() {
+			// InvalidInputException: Timeout not supported for Ray jobs.
+			if strings.EqualFold(jobCommandNameRay, commandName) {
+				return fmt.Errorf("%s must not be configured for Ray jobs", key)
+			}
+
+			if v, _ := v.AsBigFloat().Int64(); v < minVal {
+				return fmt.Errorf("expected %s to be at least (%d), got %d", key, minVal, v)
+			}
+		}
+	}
+
+	return nil
+}
+
 func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
 	input := glue.GetJobInput{
 		JobName: aws.String(name),
@@ -530,7 +552,7 @@ func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstyp
 	output, err := conn.GetJob(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -691,4 +713,8 @@ func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDet
 
 func workerType_Values() []string {
 	return tfslices.AppendUnique(enum.Values[awstypes.WorkerType](), "G.12X", "G.16X", "R.1X", "R.2X", "R.4X", "R.8X")
+}
+
+func jobARN(ctx context.Context, c *conns.AWSClient, jobID string) string {
+	return c.RegionalARN(ctx, "glue", "job/"+jobID)
 }

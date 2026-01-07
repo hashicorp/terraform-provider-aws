@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -92,7 +92,7 @@ func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfoam.ResourceLink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfoam.ResourceLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

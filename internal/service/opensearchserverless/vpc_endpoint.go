@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -182,7 +183,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 
 	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -378,7 +379,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	output, err := conn.BatchGetVpcEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -395,11 +396,11 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	return output.VpcEndpointDetails, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -412,7 +413,7 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, i
 }
 
 func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
@@ -435,7 +436,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
@@ -457,7 +458,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
 		Target:                    []string{},
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
