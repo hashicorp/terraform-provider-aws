@@ -19,7 +19,7 @@ func TestAccCloudFrontDistributionTenantDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution_tenant.test"
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -54,7 +54,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byARN(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution_tenant.test"
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -89,7 +89,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byName(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution_tenant.test"
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -124,7 +124,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byDomain(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_distribution_tenant.test"
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)

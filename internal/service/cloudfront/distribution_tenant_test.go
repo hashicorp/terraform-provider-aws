@@ -33,7 +33,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -81,7 +81,7 @@ func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -118,7 +118,7 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -160,7 +160,7 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -202,7 +202,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -591,7 +591,6 @@ resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
   description = "tftest"
   scope       = "CLOUDFRONT"
-  region      = "us-east-1"
 
   default_action {
     allow {
