@@ -269,18 +269,17 @@ func (r *connectionGroupResource) Update(ctx context.Context, req resource.Updat
 			}
 		}
 
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, updateOutput.ConnectionGroup, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
 		new.LastModifiedTime = fwflex.TimeToFramework(ctx, updateOutput.ConnectionGroup.LastModifiedTime)
 	} else {
 		new.LastModifiedTime = old.LastModifiedTime
+		new.ETag = old.ETag
 	}
-
-	// Flatten the connection group data into the model
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, updateOutput.ConnectionGroup, &new)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
