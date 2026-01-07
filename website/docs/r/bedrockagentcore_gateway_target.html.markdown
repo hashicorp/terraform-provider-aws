@@ -310,7 +310,9 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
     allowed_query_parameters = ["version"]
   }
 }
-```## Argument Reference
+```
+
+## Argument Reference
 
 The following arguments are required:
 
