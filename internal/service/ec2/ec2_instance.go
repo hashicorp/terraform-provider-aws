@@ -105,7 +105,6 @@ func resourceInstance() *schema.Resource {
 			},
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
-				ForceNew: true,
 				Computed: true,
 				Optional: true,
 			},
@@ -1241,6 +1240,39 @@ func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	if d.HasChange("associate_public_ip_address") {
+		instance, err := findInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryNetworkInterfaceID string
+		for _, ni := range instance.NetworkInterfaces {
+			if ni.Attachment != nil && aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				primaryNetworkInterfaceID = aws.ToString(ni.NetworkInterfaceId)
+				break
+			}
+		}
+
+		if primaryNetworkInterfaceID == "" {
+			return sdkdiag.AppendErrorf(diags, "unable to find primary network interface for EC2 Instance (%s)", d.Id())
+		}
+
+		associatePublicIP := d.Get("associate_public_ip_address").(bool)
+
+		log.Printf("[DEBUG] Modifying associate_public_ip_address on EC2 Instance (%s) network interface (%s): %t",
+			d.Id(), primaryNetworkInterfaceID, associatePublicIP)
+
+		_, err = conn.ModifyNetworkInterfaceAttribute(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:       aws.String(primaryNetworkInterfaceID),
+			AssociatePublicIpAddress: aws.Bool(associatePublicIP),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) associate_public_ip_address: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volIDs, err := getInstanceVolIDs(ctx, conn, d.Id())
