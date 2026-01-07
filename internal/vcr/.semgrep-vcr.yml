@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
@@ -46,6 +46,18 @@ rules:
       sdkacctest.RandInt()
     fix: |
       acctest.RandInt(t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randintrange
+    languages: [go]
+    message: "Use acctest.RandIntRange instead of sdkacctest.RandIntRange for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandIntRange($X, $Y)
+    fix: |
+      acctest.RandIntRange(t, $X, $Y)
     paths:
       include:
         - "**/*_test.go"
