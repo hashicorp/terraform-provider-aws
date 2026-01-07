@@ -577,11 +577,17 @@ func TestUpdateDiffGSI(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if got, want := ops, tc.ExpectedUpdates; !reflect.DeepEqual(got, want) {
-				t.Errorf(
-					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-					got,
-					want)
+			if diff := cmp.Diff(ops, tc.ExpectedUpdates, cmpopts.IgnoreUnexported(
+				awstypes.GlobalSecondaryIndexUpdate{},
+				awstypes.CreateGlobalSecondaryIndexAction{},
+				awstypes.UpdateGlobalSecondaryIndexAction{},
+				awstypes.DeleteGlobalSecondaryIndexAction{},
+				awstypes.KeySchemaElement{},
+				awstypes.Projection{},
+				awstypes.ProvisionedThroughput{},
+				awstypes.WarmThroughput{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
