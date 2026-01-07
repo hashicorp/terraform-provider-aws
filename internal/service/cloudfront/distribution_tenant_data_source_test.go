@@ -185,8 +185,8 @@ resource "aws_cloudfront_cache_policy" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  connection_mode = "tenant-only"
-  enabled         = true
+  enabled = true
+  comment = "Test multi-tenant distribution"
 
   origin {
     domain_name = "www.example.com"
@@ -201,11 +201,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -217,6 +220,18 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   viewer_certificate {
     acm_certificate_arn = data.aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 }
 
@@ -267,8 +282,8 @@ resource "aws_cloudfront_cache_policy" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  connection_mode = "tenant-only"
-  enabled         = true
+  enabled = true
+  comment = "Test multi-tenant distribution"
 
   origin {
     domain_name = "www.example.com"
@@ -283,11 +298,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -299,6 +317,18 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   viewer_certificate {
     acm_certificate_arn = data.aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 }
 
@@ -349,8 +379,8 @@ resource "aws_cloudfront_cache_policy" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  connection_mode = "tenant-only"
-  enabled         = true
+  enabled = true
+  comment = "Test multi-tenant distribution"
 
   origin {
     domain_name = "www.example.com"
@@ -365,11 +395,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -381,6 +414,18 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   viewer_certificate {
     acm_certificate_arn = data.aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 }
 
@@ -431,8 +476,8 @@ resource "aws_cloudfront_cache_policy" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  connection_mode = "tenant-only"
-  enabled         = true
+  enabled = true
+  comment = "Test multi-tenant distribution"
 
   origin {
     domain_name = "www.example.com"
@@ -447,11 +492,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -463,6 +511,18 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   viewer_certificate {
     acm_certificate_arn = data.aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 }
 
