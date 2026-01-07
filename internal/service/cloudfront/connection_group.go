@@ -291,8 +291,12 @@ func (r *connectionGroupResource) Update(ctx context.Context, req resource.Updat
 		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
 		new.LastModifiedTime = fwflex.TimeToFramework(ctx, updateOutput.ConnectionGroup.LastModifiedTime)
 	} else {
-		new.LastModifiedTime = old.LastModifiedTime
+		// Tag-only update - preserve all computed fields from old state
 		new.ETag = old.ETag
+		new.IsDefault = old.IsDefault
+		new.LastModifiedTime = old.LastModifiedTime
+		new.RoutingEndpoint = old.RoutingEndpoint
+		new.Status = old.Status
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
