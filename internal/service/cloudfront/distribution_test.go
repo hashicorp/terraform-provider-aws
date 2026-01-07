@@ -4010,7 +4010,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 // CloudFront Distribution ACM Certificates must be created in us-east-1
-func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t *testing.T, commonName string) string {
+func testAccDistributionConfig_baseViewerCertificateACMCertificateARN(t *testing.T, commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
@@ -4023,7 +4023,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccDistributionConfig_viewerCertificateACMCertificateARN(t *testing.T, retainOnDelete bool) string {
-	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionConfig_baseViewerCertificateACMCertificateARN(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
   retain_on_delete = %[1]t
@@ -4070,7 +4070,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t *testing.T, retainOnDelete bool) string {
-	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionConfig_baseViewerCertificateACMCertificateARN(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
   retain_on_delete = %[1]t

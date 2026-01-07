@@ -10,6 +10,7 @@ var (
 	ResourceConnectionGroup             = newConnectionGroupResource
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
+	ResourceDistributionTenant          = newDistributionTenantResource
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
@@ -30,6 +31,7 @@ var (
 	FindConnectionGroupById                    = findConnectionGroupByID
 	FindConnectionGroupByRoutingEndpoint       = findConnectionGroupByRoutingEndpoint
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
+	FindDistributionTenantByIdentifier         = findDistributionTenantByIdentifier
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
