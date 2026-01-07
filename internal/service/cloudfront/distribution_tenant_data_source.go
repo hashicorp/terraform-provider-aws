@@ -6,18 +6,14 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -148,11 +144,14 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 					},
 				},
 			},
-			"domains": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemDataSourceModel](ctx),
+			names.AttrDomain: schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrDomain: schema.StringAttribute{
+							Required: true,
+						},
+						names.AttrStatus: schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -280,17 +279,6 @@ type customizationsDataSourceModel struct {
 	WebAcl         fwtypes.ListNestedObjectValueOf[webAclDataSourceModel]         `tfsdk:"web_acl"`
 }
 
-// Implement fwflex.Flattener interface
-var (
-	_ fwflex.Flattener = &customizationsDataSourceModel{}
-	_ fwflex.Flattener = &geoRestrictionDataSourceModel{}
-	_ fwflex.Flattener = &certificateDataSourceModel{}
-	_ fwflex.Flattener = &webAclDataSourceModel{}
-	_ fwflex.Flattener = &managedCertificateRequestDataSourceModel{}
-	_ fwflex.Flattener = &parameterDataSourceModel{}
-	_ fwflex.Flattener = &domainItemDataSourceModel{}
-)
-
 type domainItemDataSourceModel struct {
 	Domain types.String `tfsdk:"domain"`
 }
@@ -345,179 +333,4 @@ func findDistributionTenantByDomain(ctx context.Context, conn *cloudfront.Client
 	}
 
 	return output, nil
-}
-
-// Implement fwflex.Flattener interface methods
-func (m *customizationsDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.Customizations); ok {
-		if t.GeoRestrictions != nil {
-			var geoModel geoRestrictionDataSourceModel
-			diags.Append(geoModel.Flatten(ctx, t.GeoRestrictions)...)
-			if diags.HasError() {
-				return diags
-			}
-			geoList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &geoModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.GeoRestriction = geoList
-		} else {
-			m.GeoRestriction = fwtypes.NewListNestedObjectValueOfNull[geoRestrictionDataSourceModel](ctx)
-		}
-
-		if t.Certificate != nil {
-			var certModel certificateDataSourceModel
-			diags.Append(certModel.Flatten(ctx, t.Certificate)...)
-			if diags.HasError() {
-				return diags
-			}
-			certList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &certModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.Certificate = certList
-		} else {
-			m.Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateDataSourceModel](ctx)
-		}
-
-		if t.WebAcl != nil {
-			var webAclModel webAclDataSourceModel
-			diags.Append(webAclModel.Flatten(ctx, t.WebAcl)...)
-			if diags.HasError() {
-				return diags
-			}
-			webAclList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &webAclModel)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-			m.WebAcl = webAclList
-		} else {
-			m.WebAcl = fwtypes.NewListNestedObjectValueOfNull[webAclDataSourceModel](ctx)
-		}
-	}
-
-	return diags
-}
-
-func (m *geoRestrictionDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.GeoRestrictionCustomization); ok {
-		m.RestrictionType = fwtypes.StringEnumValue(t.RestrictionType)
-
-		// Convert locations slice to SetOfString
-		if len(t.Locations) > 0 {
-			// Filter out empty strings
-			filteredLocations := make([]string, 0, len(t.Locations))
-			for _, location := range t.Locations {
-				if location != "" {
-					filteredLocations = append(filteredLocations, location)
-				}
-			}
-
-			if len(filteredLocations) > 0 {
-				// Convert strings to attr.Value slice
-				elements := make([]attr.Value, len(filteredLocations))
-				for i, location := range filteredLocations {
-					elements[i] = basetypes.NewStringValue(location)
-				}
-				setVal, d := fwtypes.NewSetValueOf[basetypes.StringValue](ctx, elements)
-				diags.Append(d...)
-				m.Locations = setVal
-			} else {
-				m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
-			}
-		} else {
-			m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
-		}
-	}
-
-	return diags
-}
-
-func (m *certificateDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.Certificate); ok {
-		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
-	}
-
-	return diags
-}
-
-func (m *webAclDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.WebAclCustomization); ok {
-		m.Action = fwtypes.StringEnumValue(t.Action)
-		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
-	}
-
-	return diags
-}
-
-func (m *managedCertificateRequestDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.ManagedCertificateRequest); ok {
-		m.CertificateTransparencyLoggingPreference = fwtypes.StringEnumValue(t.CertificateTransparencyLoggingPreference)
-		m.PrimaryDomainName = fwflex.StringToFramework(ctx, t.PrimaryDomainName)
-		m.ValidationTokenHost = fwtypes.StringEnumValue(t.ValidationTokenHost)
-	}
-
-	return diags
-}
-
-func (m *parameterDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.Parameter); ok {
-		m.Name = fwflex.StringToFramework(ctx, t.Name)
-		m.Value = fwflex.StringToFramework(ctx, t.Value)
-	}
-
-	return diags
-}
-
-func (m *domainItemDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if v == nil {
-		return diags
-	}
-
-	if t, ok := v.(*awstypes.DomainResult); ok {
-		m.Domain = fwflex.StringToFramework(ctx, t.Domain)
-	}
-
-	return diags
 }

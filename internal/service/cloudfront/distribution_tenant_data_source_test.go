@@ -189,7 +189,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
   origin {
     domain_name = "www.example.com"
-    origin_id   = "test"
+    id          = "test"
 
     custom_origin_config {
       http_port              = 80
@@ -285,7 +285,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
   origin {
     domain_name = "www.example.com"
-    origin_id   = "test"
+    id          = "test"
 
     custom_origin_config {
       http_port              = 80
@@ -381,7 +381,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
   origin {
     domain_name = "www.example.com"
-    origin_id   = "test"
+    id          = "test"
 
     custom_origin_config {
       http_port              = 80
@@ -477,7 +477,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
   origin {
     domain_name = "www.example.com"
-    origin_id   = "test"
+    id          = "test"
 
     custom_origin_config {
       http_port              = 80
