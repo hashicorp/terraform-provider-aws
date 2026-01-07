@@ -33,7 +33,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -81,7 +81,7 @@ func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -118,7 +118,7 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -160,7 +160,7 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -202,7 +202,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_cloudfront_distribution_tenant.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
@@ -427,7 +427,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 }
 
 func testAccDistributionTenantConfig_customCertificate(rName, rootDomain, tenantDomain string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, "*."+rootDomain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
   comment = "Test multi-tenant distribution"
@@ -506,7 +506,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 }
 
 func testAccDistributionTenantConfig_customCertificateWithWebACL(rName, rootDomain, tenantDomain string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, "*."+rootDomain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
   comment = "Test multi-tenant distribution"
@@ -613,7 +613,7 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 func testAccDistributionTenantConfig_tags1(rName, rootDomain, tenantDomain, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, "*."+rootDomain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
   comment = "Test multi-tenant distribution"
@@ -686,7 +686,7 @@ resource "aws_cloudfront_distribution_tenant" "test" {
 }
 
 func testAccDistributionTenantConfig_tags2(rName, rootDomain, tenantDomain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, "*."+rootDomain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
   comment = "Test multi-tenant distribution"
