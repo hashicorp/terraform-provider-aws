@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	ret "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -180,7 +180,7 @@ func (r *connectionGroupResource) Read(ctx context.Context, req resource.ReadReq
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	output, err := findConnectionGroupByID(ctx, conn, data.ID.ValueString())
-	if ret.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -296,7 +296,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 	id := data.ID.ValueString()
 
 	if err := disableConnectionGroup(ctx, conn, id); err != nil {
-		if ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
+		if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -308,14 +308,14 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 
 	err := deleteConnectionGroup(ctx, conn, id)
 
-	if err == nil || ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
+	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 		return
 	}
 
 	// Disable connection group if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableConnectionGroup(ctx, conn, id); err != nil {
-			if ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
+			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
 			resp.Diagnostics.AddError(
@@ -358,8 +358,7 @@ func findConnectionGroupByID(ctx context.Context, conn *cloudfront.Client, id st
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -383,8 +382,7 @@ func findConnectionGroupByRoutingEndpoint(ctx context.Context, conn *cloudfront.
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -464,7 +462,7 @@ func deleteConnectionGroup(ctx context.Context, conn *cloudfront.Client, id stri
 }
 
 func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetConnectionGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress},
 		Target:     []string{connectionGroupStatusDeployed},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
@@ -483,7 +481,7 @@ func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, i
 }
 
 func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetConnectionGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress, connectionGroupStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
@@ -501,11 +499,11 @@ func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id
 	return nil, err
 }
 
-func statusConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func statusConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectionGroupByID(ctx, conn, id)
 
-		if ret.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
