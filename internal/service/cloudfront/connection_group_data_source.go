@@ -104,7 +104,6 @@ func (d *connectionGroupDataSource) Read(ctx context.Context, request datasource
 		return
 	}
 
-	// Handle both output types
 	var connectionGroup *awstypes.ConnectionGroup
 	var etag *string
 
@@ -117,18 +116,14 @@ func (d *connectionGroupDataSource) Read(ctx context.Context, request datasource
 		etag = v.ETag
 	}
 
-	// Flatten the connection group data into the model
 	response.Diagnostics.Append(fwflex.Flatten(ctx, connectionGroup, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Set computed fields that need special handling
 	data.ID = fwflex.StringToFramework(ctx, connectionGroup.Id)
 	data.ETag = fwflex.StringToFramework(ctx, etag)
-	if connectionGroup.LastModifiedTime != nil {
-		data.LastModifiedTime = fwflex.TimeToFramework(ctx, connectionGroup.LastModifiedTime)
-	}
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, connectionGroup.LastModifiedTime)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
