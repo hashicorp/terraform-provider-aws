@@ -1520,6 +1520,29 @@ func waitNATGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, tim
 	return nil, err
 }
 
+func waitNATGatewayAttachedAppliancesDetached(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.NatGatewayApplianceStateAttaching,
+			awstypes.NatGatewayApplianceStateAttached,
+			awstypes.NatGatewayApplianceStateDetaching,
+		),
+		Target:     enum.Slice(awstypes.NatGatewayApplianceStateDetached),
+		Refresh:    statusNATGatewayAttachedAppliances(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInsightsAnalysis, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.AnalysisStatusRunning),

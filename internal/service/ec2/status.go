@@ -1683,6 +1683,31 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 	}
 }
 
+func statusNATGatewayAttachedAppliances(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNATGatewayByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Check if there are any attached appliances that are not in detached state
+		for _, appliance := range output.AttachedAppliances {
+			if appliance.AttachmentState != awstypes.NatGatewayApplianceStateDetached {
+				// Return the first non-detached state found
+				return output, string(appliance.AttachmentState), nil
+			}
+		}
+
+		// All appliances are detached (or no appliances exist)
+		return output, string(awstypes.NatGatewayApplianceStateDetached), nil
+	}
+}
+
 func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNetworkInsightsAnalysisByID(ctx, conn, id)
