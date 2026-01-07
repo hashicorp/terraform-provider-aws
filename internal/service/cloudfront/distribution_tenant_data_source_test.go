@@ -161,7 +161,6 @@ func testAccDistributionTenantDataSourceConfig_basic(t *testing.T, rName string)
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain      = %[3]q
-  region      = "us-east-1"
   most_recent = true
 }
 
@@ -258,7 +257,6 @@ func testAccDistributionTenantDataSourceConfig_byARN(t *testing.T, rName string)
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain      = %[3]q
-  region      = "us-east-1"
   most_recent = true
 }
 
@@ -355,7 +353,6 @@ func testAccDistributionTenantDataSourceConfig_byName(t *testing.T, rName string
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain      = %[3]q
-  region      = "us-east-1"
   most_recent = true
 }
 
@@ -452,7 +449,6 @@ func testAccDistributionTenantDataSourceConfig_byDomain(t *testing.T, rName stri
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain      = %[3]q
-  region      = "us-east-1"
   most_recent = true
 }
 

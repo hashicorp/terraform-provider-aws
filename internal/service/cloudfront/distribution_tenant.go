@@ -945,5 +945,3 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 
 	return domainItems
 }
-
-// Implement fwflex.Flattener interface methods
