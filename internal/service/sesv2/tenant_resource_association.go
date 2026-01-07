@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	//"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	//	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	//	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -69,9 +72,15 @@ func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req reso
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"resource_arn": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"tenant_name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -110,14 +119,7 @@ func (r *resourceTenantResourceAssociation) Create(ctx context.Context, req reso
 		return
 	}
 
-	// ID will is constructed to look like "<tenantName>|<resourceARN>"
-	plan.ID = types.StringValue(
-		fmt.Sprintf(
-			"%s|%s",
-			plan.TenantName.ValueString(),
-			plan.ResourceArn.ValueString(),
-		),
-	)
+	plan.ID = types.StringValue(createID(plan.TenantName.ValueString(), plan.ResourceArn.ValueString()))
 	fmt.Printf("DEBUG :::: ID of the resource is %v", plan.ID)
 
 	// TIP: -- 5. Using the output from the create function, set attributes
@@ -162,7 +164,7 @@ func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resour
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := FindTenantResourceAssociationByID(ctx, conn, state.ID)
+	out, err := findTenantResourceAssociationByID(ctx, conn, state.ID.String())
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -419,38 +421,44 @@ func (r *resourceTenantResourceAssociation) ImportState(ctx context.Context, req
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func FindTenantResourceAssociationByTenantID(ctx context.Context, conn *sesv2.Client, resourceID string) (*awstypes.TenantResource, error) {
+func findTenantResourceAssociationByID(
+	ctx context.Context,
+	conn *sesv2.Client,
+	resourceID string,
+) (*awstypes.TenantResource, error) {
 
 	parts := strings.SplitN(resourceID, "|", 2)
-	tenantName := parts[0]
-	resourceARN := parts[0]
+	if len(parts) != 2 {
+		return nil, smarterr.NewError(
+			tfresource.NewEmptyResultError(resourceID),
+		)
+	}
 
-	input := sesv2.ListTenantResourcesInput{
+	tenantName := parts[0]
+	resourceARN := parts[1]
+
+	input := &sesv2.ListTenantResourcesInput{
 		TenantName: aws.String(tenantName),
 	}
 
-	out, err := conn.ListTenantResources(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
+	p := sesv2.NewListTenantResourcesPaginator(conn, input)
+
+	for p.HasMorePages() {
+		out, err := p.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
 		}
 
-		return nil, smarterr.NewError(err)
-	}
-
-	for _, r := range out.TenantResources {
-		if aws.ToString(r.ResourceArn) == resourceARN {
-			return &r, nil
+		for _, tenantResource := range out.TenantResources {
+			if aws.ToString(tenantResource.ResourceArn) == resourceARN {
+				return &tenantResource, nil
+			}
 		}
 	}
 
-	if out == nil || out.TenantResources == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
-	}
-
-	return nil, nil
+	return nil, smarterr.NewError(&retry.NotFoundError{
+		LastError: errors.New("tenant resource association not found"),
+	})
 }
 
 // TIP: ==== DATA STRUCTURES ====
@@ -504,11 +512,26 @@ func sweepTenantResourceAssociations(ctx context.Context, client *conns.AWSClien
 		}
 
 		for _, v := range page.ResourceTenants {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTenantResourceAssociation, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TenantResourceAssociationId))),
+			sweepResources = append(
+				sweepResources,
+				sweepfw.NewSweepResource(
+					newResourceTenantResourceAssociation,
+					client,
+					sweepfw.NewAttribute(
+						names.AttrID,
+						createID(
+							aws.ToString(v.TenantName),
+							aws.ToString(v.ResourceArn),
+						),
+					),
+				),
 			)
 		}
 	}
 
 	return sweepResources, nil
+}
+
+func createID(tenantName, resourceARN string) string {
+	return fmt.Sprintf("%s|%s", tenantName, resourceARN)
 }

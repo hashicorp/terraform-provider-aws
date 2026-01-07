@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,14 +28,13 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var assoc sesv2.DescribeTenantResourceAssociationResponse
+	var assoc *awstypes.TenantResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SESV2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
@@ -67,14 +67,13 @@ func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var assoc sesv2.DescribeTenantResourceAssociationResponse
+	var assoc awstypes.TenantResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SESV2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
@@ -138,7 +137,7 @@ func testAccCheckTenantResourceAssociationExists(
 	ctx context.Context,
 	t *testing.T,
 	name string,
-	out *sesv2.DescribeTenantResourceAssociationResponse,
+	out *awstypes.TenantResource,
 ) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
