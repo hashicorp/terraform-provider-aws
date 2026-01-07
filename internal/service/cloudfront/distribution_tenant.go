@@ -20,8 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -45,7 +43,6 @@ func newDistributionTenantResource(context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameDistributionTenant      = "Distribution Tenant"
 	distributionTenantPollInterval = 30 * time.Second
 )
 
@@ -93,11 +90,6 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 			"customizations": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customizationsModel](ctx),
 				Validators: []validator.List{
@@ -105,25 +97,6 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"geo_restriction": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionCustomizationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"locations": schema.SetAttribute{
-										ElementType: types.StringType,
-										Optional:    true,
-										Computed:    true,
-									},
-									"restriction_type": schema.StringAttribute{
-										Optional:   true,
-										CustomType: fwtypes.StringEnumType[awstypes.GeoRestrictionType](),
-									},
-								},
-							},
-						},
 						names.AttrCertificate: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
 							Validators: []validator.List{
@@ -132,8 +105,27 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrARN: schema.StringAttribute{
-										Optional:   true,
 										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
+								},
+							},
+						},
+						"geo_restriction": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionCustomizationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"locations": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
+										Computed:   true,
+									},
+									"restriction_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.GeoRestrictionType](),
+										Optional:   true,
 									},
 								},
 							},
@@ -146,15 +138,28 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrAction: schema.StringAttribute{
-										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.CustomizationActionType](),
+										Optional:   true,
 									},
 									names.AttrARN: schema.StringAttribute{
-										Optional:   true,
 										CustomType: fwtypes.ARNType,
+										Optional:   true,
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			names.AttrDomain: schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainResultModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrDomain: schema.StringAttribute{
+							Required: true,
+						},
+						names.AttrStatus: schema.StringAttribute{
+							Computed: true,
 						},
 					},
 				},
@@ -167,28 +172,15 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"certificate_transparency_logging_preference": schema.StringAttribute{
-							Optional:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.CertificateTransparencyLoggingPreference](),
+							Optional:   true,
 						},
 						"primary_domain_name": schema.StringAttribute{
 							Optional: true,
 						},
 						"validation_token_host": schema.StringAttribute{
-							Optional:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.ValidationTokenHost](),
-						},
-					},
-				},
-			},
-			names.AttrDomain: schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrDomain: schema.StringAttribute{
-							Required: true,
-						},
-						names.AttrStatus: schema.StringAttribute{
-							Computed: true,
+							Optional:   true,
 						},
 					},
 				},
@@ -206,6 +198,11 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -215,7 +212,7 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainResultModel]               `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
@@ -230,14 +227,14 @@ type distributionTenantResourceModel struct {
 }
 
 type customizationsModel struct {
-	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionCustomizationModel] `tfsdk:"geo_restriction"`
 	Certificate    fwtypes.ListNestedObjectValueOf[certificateModel]                 `tfsdk:"certificate"`
+	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionCustomizationModel] `tfsdk:"geo_restriction"`
 	WebAcl         fwtypes.ListNestedObjectValueOf[webAclCustomizationModel]         `tfsdk:"web_acl"`
 }
 
 // Remove manual flattener interfaces - let AutoFlex handle everything
 
-type domainItemModel struct {
+type domainResultModel struct {
 	Domain types.String `tfsdk:"domain"`
 	Status types.String `tfsdk:"status"`
 }
@@ -276,8 +273,9 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.CreateDistributionTenantInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input cloudfront.CreateDistributionTenantInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -288,12 +286,9 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		}
 	}
 
-	output, err := conn.CreateDistributionTenant(ctx, input)
+	output, err := conn.CreateDistributionTenant(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionCreating, ResNameDistributionTenant, data.Name.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("creating CloudFront Distribution Tenant (%s)", name), err.Error())
 		return
 	}
 
@@ -310,16 +305,14 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	// Set fields that AutoFlex might not handle correctly
-	data.ID = fwflex.StringToFramework(ctx, output.DistributionTenant.Id)
+	id := aws.ToString(output.DistributionTenant.Id)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 	data.ARN = fwflex.StringToFramework(ctx, output.DistributionTenant.Arn)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	if data.WaitForDeployment.ValueBool() {
-		if _, err := waitDistributionTenantDeployed(ctx, conn, data.ID.ValueString()); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameDistributionTenant, data.ID.String(), err),
-				err.Error(),
-			)
+		if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) deploy", id), err.Error())
 			return
 		}
 
@@ -331,21 +324,15 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
-			if err := waitManagedCertificateReady(ctx, conn, data.ID.ValueString(), managedCertRequest); err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameDistributionTenant, data.ID.String(), err),
-					err.Error(),
-				)
+			if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest); err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 				return
 			}
 
 			// Refresh the distribution tenant data after managed certificate processing
-			refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, data.ID.ValueString())
+			refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, data.ID.String(), err),
-					err.Error(),
-				)
+				resp.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Distribution Tenant (%s)", id), err.Error())
 				return
 			}
 
@@ -377,16 +364,14 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findDistributionTenantByIdentifier(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findDistributionTenantByIdentifier(ctx, conn, id)
 	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, data.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Distribution Tenant (%s)", id), err.Error())
 		return
 	}
 
@@ -420,6 +405,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
+	id := fwflex.StringValueFromFramework(ctx, new.ID)
 	var output *cloudfront.UpdateDistributionTenantOutput
 
 	// Check if configuration changed (excluding tags)
@@ -437,7 +423,7 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 
 		// Handle special fields manually
-		input.Id = fwflex.StringFromFramework(ctx, new.ID)
+		input.Id = aws.String(id)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
 		_, err := conn.UpdateDistributionTenant(ctx, input)
@@ -445,13 +431,10 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
 			var etag string
-			etag, err = distributionTenantETag(ctx, conn, new.ID.ValueString())
+			etag, err = distributionTenantETag(ctx, conn, id)
 
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameDistributionTenant, new.ID.String(), err),
-					err.Error(),
-				)
+				resp.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Distribution Tenant (%s) Etag", id), err.Error())
 				return
 			}
 
@@ -460,19 +443,13 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		}
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameDistributionTenant, new.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("updating CloudFront Distribution Tenant (%s)", id), err.Error())
 			return
 		}
 
 		if new.WaitForDeployment.ValueBool() {
-			if _, err := waitDistributionTenantDeployed(ctx, conn, new.ID.ValueString()); err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameDistributionTenant, new.ID.String(), err),
-					err.Error(),
-				)
+			if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) deploy", id), err.Error())
 				return
 			}
 
@@ -484,21 +461,15 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
-				if err := waitManagedCertificateReady(ctx, conn, new.ID.ValueString(), managedCertRequest); err != nil {
-					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameDistributionTenant, new.ID.String(), err),
-						err.Error(),
-					)
+				if err := waitManagedCertificateReady(ctx, conn, id, managedCertRequest); err != nil {
+					resp.Diagnostics.AddError(fmt.Sprintf("waiting CloudFront Distribution Tenant (%s) managed certificate", id), err.Error())
 					return
 				}
 
 				// Refresh the distribution tenant data after managed certificate processing
-				refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, new.ID.ValueString())
+				refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
 				if err != nil {
-					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, new.ID.String(), err),
-						err.Error(),
-					)
+					resp.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Distribution Tenant (%s)", id), err.Error())
 					return
 				}
 
@@ -537,15 +508,9 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 	} else {
 		// If no update was performed (e.g., tag-only changes), we still need to refresh the distribution tenant data
 		// to ensure all computed fields are properly set
-		input := cloudfront.GetDistributionTenantInput{
-			Identifier: fwflex.StringFromFramework(ctx, new.ID),
-		}
-		getOutput, err := conn.GetDistributionTenant(ctx, &input)
+		getOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, new.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Distribution Tenant (%s)", id), err.Error())
 			return
 		}
 
@@ -574,16 +539,13 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
-	id := data.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
 	if err := disableDistributionTenant(ctx, conn, id); err != nil {
 		if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("disabling CloudFront Distribution Tenant (%s)", id), err.Error())
 		return
 	}
 
@@ -599,10 +561,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("disabling CloudFront Distribution Tenant (%s)", id), err.Error())
 			return
 		}
 
@@ -622,10 +581,7 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("disabling CloudFront Distribution Tenant (%s)", id), err.Error())
 			return
 		}
 
@@ -637,18 +593,20 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront Distribution Tenant (%s)", id), err.Error())
 		return
 	}
 }
+
 func findDistributionTenantByIdentifier(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	input := &cloudfront.GetDistributionTenantInput{
+	input := cloudfront.GetDistributionTenantInput{
 		Identifier: aws.String(id),
 	}
 
+	return findDistributionTenant(ctx, conn, &input)
+}
+
+func findDistributionTenant(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetDistributionTenantInput) (*cloudfront.GetDistributionTenantOutput, error) {
 	output, err := conn.GetDistributionTenant(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
@@ -688,17 +646,15 @@ func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id 
 	}
 
 	input := cloudfront.UpdateDistributionTenantInput{
-		Id:                aws.String(id),
-		IfMatch:           output.ETag,
 		ConnectionGroupId: output.DistributionTenant.ConnectionGroupId,
 		Customizations:    output.DistributionTenant.Customizations,
 		DistributionId:    output.DistributionTenant.DistributionId,
 		Domains:           convertDomainResultsToDomainItems(output.DistributionTenant.Domains),
+		Enabled:           aws.Bool(false),
+		Id:                aws.String(id),
+		IfMatch:           output.ETag,
 		Parameters:        output.DistributionTenant.Parameters,
 	}
-
-	input.Enabled = aws.Bool(false)
-
 	_, err = conn.UpdateDistributionTenant(ctx, &input)
 
 	if err != nil {
@@ -723,7 +679,6 @@ func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id s
 		Id:      aws.String(id),
 		IfMatch: aws.String(etag),
 	}
-
 	_, err = conn.DeleteDistributionTenant(ctx, &input)
 
 	if err != nil {
@@ -738,10 +693,10 @@ func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id s
 }
 
 func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress},
 		Target:     []string{distributionTenantStatusDeployed},
-		Refresh:    statusDistributionTenant(ctx, conn, id),
+		Refresh:    statusDistributionTenant(conn, id),
 		Timeout:    30 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -757,10 +712,10 @@ func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client
 }
 
 func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionTenantStatusInProgress, distributionTenantStatusDeployed},
 		Target:     []string{},
-		Refresh:    statusDistributionTenant(ctx, conn, id),
+		Refresh:    statusDistributionTenant(conn, id),
 		Timeout:    30 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -775,8 +730,8 @@ func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client,
 	return nil, err
 }
 
-func statusDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDistributionTenant(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionTenantByIdentifier(ctx, conn, id)
 
 		if retry.NotFound(err) {

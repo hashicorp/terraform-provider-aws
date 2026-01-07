@@ -358,7 +358,7 @@ data "aws_acm_certificate" "test" {
 }
 
 func testAccDistributionTenantConfig_basic(rName, rootDomain, tenantDomain string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, "*."+rootDomain), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = true
   comment = "Test multi-tenant distribution"
