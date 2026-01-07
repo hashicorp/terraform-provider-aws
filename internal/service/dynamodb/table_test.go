@@ -53,12 +53,12 @@ const (
 func TestUpdateDiffGSI(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
+	testCases := map[string]struct {
 		Old             []any
 		New             []any
 		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
 	}{
-		{ // No-op => no changes
+		"no changes": { // No-op => no changes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -79,7 +79,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			ExpectedUpdates: nil,
 		},
-		{ // No-op => ignore ordering of non_key_attributes
+		"non-key attribute order": { // No-op => ignore ordering of non_key_attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:       "att1-index",
@@ -103,7 +103,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			ExpectedUpdates: nil,
 		},
 
-		{ // Creation
+		"add GSI": { // Creation
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -151,7 +151,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Creation with warm throughput
+		"add GSI with warm throughput": { // Creation with warm throughput
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -219,7 +219,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Deletion
+		"remove GSI": { // Deletion
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -254,7 +254,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update
+		"update RW capacity": { // Update RW capacity
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -286,7 +286,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 1: update in place
+		"update warm throughput in place": { // Update warm throughput 1: update in place
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -330,7 +330,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 2: update via recreate
+		"decrease warm throughput": { // Update warm throughput 2: update via recreate
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att2-index",
@@ -392,7 +392,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 3: update in place at the same moment as capacity
+		"update capacity and warm throughput": { // Update warm throughput 3: update in place at the same moment as capacity
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -445,7 +445,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update of non-capacity attributes
+		"change key schema and non-key attributes": { // Update of non-capacity attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -498,7 +498,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update of all attributes
+		"update everything": { // Update of all attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -568,19 +568,22 @@ func TestUpdateDiffGSI(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testCases {
-		ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-		if got, want := ops, tc.ExpectedUpdates; !reflect.DeepEqual(got, want) {
-			t.Errorf(
-				"%d: Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				i,
-				got,
-				want)
-		}
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if got, want := ops, tc.ExpectedUpdates; !reflect.DeepEqual(got, want) {
+				t.Errorf(
+					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+					got,
+					want)
+			}
+		})
 	}
 }
 
