@@ -1,13 +1,19 @@
 ## 6.28.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dynamodb_global_secondary_index: This resource type is experimental.  The schema or behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. ([#44999](https://github.com/hashicorp/terraform-provider-aws/issues/44999))
+
 FEATURES:
 
 * **New List Resource:** `aws_kms_alias` ([#45700](https://github.com/hashicorp/terraform-provider-aws/issues/45700))
 * **New List Resource:** `aws_sqs_queue` ([#45691](https://github.com/hashicorp/terraform-provider-aws/issues/45691))
 * **New Resource:** `aws_cloudfront_connection_function` ([#45664](https://github.com/hashicorp/terraform-provider-aws/issues/45664))
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
+* **New Resource:** `aws_dynamodb_global_secondary_index` ([#44999](https://github.com/hashicorp/terraform-provider-aws/issues/44999))
 * **New Resource:** `aws_ecr_pull_time_update_exclusion` ([#45765](https://github.com/hashicorp/terraform-provider-aws/issues/45765))
 * **New Resource:** `aws_organizations_tag` ([#45730](https://github.com/hashicorp/terraform-provider-aws/issues/45730))
+* **New Resource:** `aws_redshift_idc_application` ([#37345](https://github.com/hashicorp/terraform-provider-aws/issues/37345))
 * **New Resource:** `aws_secretsmanager_tag` ([#45825](https://github.com/hashicorp/terraform-provider-aws/issues/45825))
 * **New Resource:** `aws_sesv2_tenant` ([#45706](https://github.com/hashicorp/terraform-provider-aws/issues/45706))
 
