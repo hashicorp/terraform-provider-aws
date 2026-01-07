@@ -6,6 +6,8 @@ description: |-
   Provides a CloudFront connection group resource.
 ---
 
+# Resource: aws_cloudfront_connection_group
+
 Creates an Amazon CloudFront Connection Group.
 
 For information about CloudFront Connection Groups, see the [AWS CloudFormation Documentation][1].
