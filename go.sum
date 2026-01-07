@@ -179,8 +179,8 @@ github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3 h1:wR5xcjlEF8WQXIPE1Qh
 github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3/go.mod h1:YLdvUdON6hTkRfGXL3QPmCX64ITWW7XQzwaWeD+poVI=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.8 h1:ENC1H0LNnV949o8dN8NUF5J8Q7rxCBLyaHIxsmHrdBg=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.8/go.mod h1:2WcV0WCSt3drw3u8eqS6Dm0baa6rckkm8d4nJbhv5SI=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.62.0 h1:YD2xJ3wFL8svkw7cEpt/1rUq1NeMnz+TRXgMooMFoqo=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.62.0/go.mod h1:SCRS6FhD8HFqq9ISjLdNO4X6uCZ/ESRL2JlIKSI75RQ=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.0 h1:MxxUtHtUa5XPmnFbJA/f434qLriLRRFqdc7uuTl1F9I=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.0/go.mod h1:SCRS6FhD8HFqq9ISjLdNO4X6uCZ/ESRL2JlIKSI75RQ=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.3 h1:y7yX+6Al6Cr7f7GGzggUzwbZ5pUMRDCZXArDENRHmc4=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.3/go.mod h1:Z+ouuVGLwSuIyRuunY+6IRWMmlBzDOQ7Sfmxds8n+qs=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.55.2 h1:94By+RbpCU08VbTO3JSPQRSCHK3mFQ1PEX6mG8ee+m0=
@@ -249,8 +249,8 @@ github.com/aws/aws-sdk-go-v2/service/emr v1.57.4 h1:6gpOrv5HebiRILDlq6quIr4Utmhy
 github.com/aws/aws-sdk-go-v2/service/emr v1.57.4/go.mod h1:qHrbyloGbgvGIYYWn51aHx7HK9gVQKHTWZPLmhlfgtQ=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.12 h1:dv2EK9cBFGs8G6pZXyZzi7gTUVaAmbpfa5MYwyv/t88=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.12/go.mod h1:KyRoDDA2VTHmV/AK4lLOiHLl5ZwWwWL7XhxocfKu6YI=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.38.0 h1:YObgp4P5C0fQcRO/0oDG5dsnMp4BpjoopbEoI3qqays=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.38.0/go.mod h1:spi79hiF2QfdVOizehc2d5N6gQbFRI0F3+Z7GCatTok=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.0 h1:QiF8LJ0ccoMd/v+nEBIYIoITce+Pf33OagQa7VIyd+4=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.0/go.mod h1:spi79hiF2QfdVOizehc2d5N6gQbFRI0F3+Z7GCatTok=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.17 h1:ltbEzdlO5qKYK1FuwTt2LibddWFmH/QY6usxvPOQP08=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.17/go.mod h1:KXFNdzl+mZpQlLYm378Ml18wBHybbMpyBwNXuYjbDT4=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.28.15 h1:pMNPYK8BGTO8vagcanFWy7GYsujUCULKeJGxV4oT1oA=

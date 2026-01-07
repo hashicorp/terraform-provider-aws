@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.8
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.62.0
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.4
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.17
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.4
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.12
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.17
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.15
 	github.com/aws/aws-sdk-go-v2/service/evs v1.5.12
