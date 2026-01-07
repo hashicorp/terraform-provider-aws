@@ -12,6 +12,8 @@ Provides an AWS Backup plan resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_backup_plan" "example" {
   name = "tf_example_backup_plan"
@@ -31,6 +33,32 @@ resource "aws_backup_plan" "example" {
       WindowsVSS = "enabled"
     }
     resource_type = "EC2"
+  }
+}
+```
+
+### S3 Advanced Backup Settings
+
+```terraform
+resource "aws_backup_plan" "example" {
+  name = "tf_example_backup_plan"
+
+  rule {
+    rule_name         = "tf_example_backup_rule"
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      delete_after = 30
+    }
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      BackupObjectTags = "enabled"
+      BackupACLs       = "enabled"
+    }
+    resource_type = "S3"
   }
 }
 ```
@@ -89,8 +117,8 @@ This resource supports the following arguments:
 
 `advanced_backup_setting` supports the following arguments:
 
-* `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resource_type` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
+* `backup_options` - (Required) Specifies the backup option for a selected resource. For Windows VSS backup jobs, set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup. For S3 backups, supported options are `BackupObjectTags` and `BackupACLs` which can be set to `"enabled"` or `"disabled"`.
+* `resource_type` - (Required) The type of AWS resource to be backed up. Valid values: `EC2`, `S3`.
 
 ### Scan Setting Arguments
 
