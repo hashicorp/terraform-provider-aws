@@ -4,6 +4,7 @@
 package cloudfront_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -181,9 +182,11 @@ data "aws_cloudfront_distribution_tenant" "test" {
 }
 
 func testAccDistributionTenantDataSourceConfig_byDomain(rName, rootDomain, tenantDomain string) string {
-	return acctest.ConfigCompose(testAccDistributionTenantConfig_basic(rName, rootDomain, tenantDomain), `
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_basic(rName, rootDomain, tenantDomain), fmt.Sprintf(`
 data "aws_cloudfront_distribution_tenant" "test" {
-  domain = aws_cloudfront_distribution_tenant.test.domain[0].domain
+  domain = %[1]q
+
+  depends_on = [aws_cloudfront_distribution_tenant.test]
 }
-`)
+`, tenantDomain))
 }
