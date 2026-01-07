@@ -265,7 +265,7 @@ func findAssessmentTemplates(ctx context.Context, conn *inspector.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err := failedItemsError(output.FailedItems); err != nil {
