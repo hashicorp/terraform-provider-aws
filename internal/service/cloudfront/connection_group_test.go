@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -58,7 +58,7 @@ func TestAccCloudFrontConnectionGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
-					"status",
+					names.AttrStatus,
 				},
 			},
 		},
@@ -85,7 +85,7 @@ func TestAccCloudFrontConnectionGroup_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
 					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceConnectionGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceConnectionGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -271,7 +271,7 @@ resource "aws_cloudfront_connection_group" "test" {
 func testAccConnectionGroupConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_connection_group" "test" {
-  name 		   = %[1]q
+  name         = %[1]q
   ipv6_enabled = false
 }
 `, rName)

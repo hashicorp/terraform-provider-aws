@@ -14,9 +14,9 @@ For information about CloudFront Connection Groups, see the [AWS CloudFormation 
 
 ```terraform
 resource "aws_cloudfront_connection_group" "example" {
-  name 				 = "example"
-  enabled            = true
-  ipv6_enabled 		 = true
+  name         = "example"
+  enabled      = true
+  ipv6_enabled = true
 }
 ```
 

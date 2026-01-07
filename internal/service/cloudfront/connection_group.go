@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -296,7 +296,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 	id := data.ID.ValueString()
 
 	if err := disableConnectionGroup(ctx, conn, id); err != nil {
-		if ret.NotFound(err) {
+		if ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -315,7 +315,7 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 	// Disable connection group if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
 		if err := disableConnectionGroup(ctx, conn, id); err != nil {
-			if ret.NotFound(err) {
+			if ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
 			resp.Diagnostics.AddError(
