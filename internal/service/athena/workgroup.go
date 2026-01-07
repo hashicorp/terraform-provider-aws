@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,12 +54,13 @@ func resourceWorkGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bytes_scanned_cutoff_per_query": {
-							Type:     schema.TypeInt,
+							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.Any(
-								validation.IntAtLeast(10485760),
-								validation.IntInSlice([]int{0}),
+								validation.IsUint64String,
+								validation.StringInSlice([]string{"0"}, false),
 							),
+							DiffSuppressFunc: verify.SuppressEquivalentNetUint64String,
 						},
 						"enforce_workgroup_configuration": {
 							Type:     schema.TypeBool,
@@ -359,8 +361,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 
 	configuration := &types.WorkGroupConfiguration{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"].(int64); ok && v > 0 {
-		configuration.BytesScannedCutoffPerQuery = aws.Int64(v)
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(string); ok && v != "" {
+		if cutoff, err := strconv.ParseInt(v, 10, 64); err == nil && cutoff > 0 {
+			configuration.BytesScannedCutoffPerQuery = aws.Int64(cutoff)
+		}
 	}
 
 	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
@@ -419,8 +423,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 
 	configurationUpdates := &types.WorkGroupConfigurationUpdates{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"].(int64); ok && v > 0 {
-		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(v)
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(string); ok && v != "" {
+		if cutoff, err := strconv.ParseInt(v, 10, 64); err == nil && cutoff > 0 {
+			configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(cutoff)
+		}
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
 	}
@@ -435,6 +441,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 
 	if v, ok := m["execution_role"].(string); ok && v != "" {
 		configurationUpdates.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrEngineVersion].([]any); ok && len(v) > 0 && v[0] != nil {
+		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
@@ -562,7 +572,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"bytes_scanned_cutoff_per_query":     fmt.Sprintf("%d", aws.ToInt64(configuration.BytesScannedCutoffPerQuery)),
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
 		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
