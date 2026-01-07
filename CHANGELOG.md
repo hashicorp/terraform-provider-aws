@@ -93,7 +93,9 @@ BUG FIXES:
 * resource/aws_batch_job_definition: Fix handling of logically deleted results in List ([#45694](https://github.com/hashicorp/terraform-provider-aws/issues/45694))
 * resource/aws_cloudwatch_log_subscription_filter: CloudWatch Logs: `PutSubscriptionFilter`: Retry `ValidationException: Make sure you have given CloudWatch Logs permission to assume the provided role` ([#43762](https://github.com/hashicorp/terraform-provider-aws/issues/43762))
 * resource/aws_ec2_subnet_cidr_reservation: Fix 255 subnet CIDR reservation limit ([#45778](https://github.com/hashicorp/terraform-provider-aws/issues/45778))
+* resource/aws_nat_gateway: Handle eventual consistency with attached appliances on delete ([#45842](https://github.com/hashicorp/terraform-provider-aws/issues/45842))
 * resource/aws_vpc: Fix `reading EC2 VPC (...) default Security Group: empty result` and `reading EC2 VPC (...) main Route Table: empty result` errors when importing RAM-shared VPCs. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#45780](https://github.com/hashicorp/terraform-provider-aws/issues/45780))
+* resource/aws_vpc_endpoint: Fix "InvalidParameter: DnsOptions PrivateDnsOnlyForInboundResolverEndpoint is applicable only to Interface VPC Endpoints" error when creating S3 gateway VPC endpoint with IPv6 enabled ([#45849](https://github.com/hashicorp/terraform-provider-aws/issues/45849))
 * resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 
 ## 6.27.0 (December 17, 2025)
