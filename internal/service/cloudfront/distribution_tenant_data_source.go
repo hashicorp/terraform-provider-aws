@@ -521,5 +521,3 @@ func (m *domainItemDataSourceModel) Flatten(ctx context.Context, v any) diag.Dia
 
 	return diags
 }
-
-
