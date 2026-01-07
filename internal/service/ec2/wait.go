@@ -1527,7 +1527,7 @@ func waitNATGatewayAttachedAppliancesDetached(ctx context.Context, conn *ec2.Cli
 			awstypes.NatGatewayApplianceStateAttached,
 			awstypes.NatGatewayApplianceStateDetaching,
 		),
-		Target:     enum.Slice(awstypes.NatGatewayApplianceStateDetached),
+		Target:     []string{},
 		Refresh:    statusNATGatewayAttachedAppliances(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,

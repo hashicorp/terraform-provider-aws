@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -1696,15 +1697,13 @@ func statusNATGatewayAttachedAppliances(ctx context.Context, conn *ec2.Client, i
 		}
 
 		// Check if there are any attached appliances that are not in detached state
-		for _, appliance := range output.AttachedAppliances {
-			if appliance.AttachmentState != awstypes.NatGatewayApplianceStateDetached {
-				// Return the first non-detached state found
-				return output, string(appliance.AttachmentState), nil
-			}
+		if v := tfslices.Filter(output.AttachedAppliances, func(v awstypes.NatGatewayAttachedAppliance) bool {
+			return v.AttachmentState != awstypes.NatGatewayApplianceStateDetached
+		}); len(v) > 0 {
+			return output, string(v[0].AttachmentState), nil
 		}
 
-		// All appliances are detached (or no appliances exist)
-		return output, string(awstypes.NatGatewayApplianceStateDetached), nil
+		return nil, "", nil
 	}
 }
 
