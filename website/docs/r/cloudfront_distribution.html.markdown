@@ -408,11 +408,11 @@ resource "aws_cloudfront_distribution" "example" {
 
   viewer_mtls_config {
     mode = "verify"
-    
+
     trust_store_config {
-      trust_store_id                   = aws_cloudfront_trust_store.example.id
-      advertise_trust_store_ca_names   = true
-      ignore_certificate_expiry        = false
+      trust_store_id                 = aws_cloudfront_trust_store.example.id
+      advertise_trust_store_ca_names = true
+      ignore_certificate_expiry      = false
     }
   }
 

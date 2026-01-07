@@ -923,7 +923,7 @@ func resourceDistribution() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ViewerMtlsMode](),
@@ -2988,7 +2988,7 @@ func expandViewerMtlsConfig(tfMap map[string]any) *awstypes.ViewerMtlsConfig {
 
 	apiObject := &awstypes.ViewerMtlsConfig{}
 
-	if v, ok := tfMap["mode"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrMode]; ok && v.(string) != "" {
 		apiObject.Mode = awstypes.ViewerMtlsMode(v.(string))
 	}
 
@@ -3007,7 +3007,7 @@ func flattenViewerMtlsConfig(apiObject *awstypes.ViewerMtlsConfig) []any {
 	tfMap := make(map[string]any)
 
 	if apiObject.Mode != "" {
-		tfMap["mode"] = string(apiObject.Mode)
+		tfMap[names.AttrMode] = string(apiObject.Mode)
 	}
 
 	if apiObject.TrustStoreConfig != nil {
