@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -33,6 +34,11 @@ import (
 // @Tags(identifierAttribute="arn")
 func newConnectionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionGroupResource{}
+
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
 	return r, nil
 }
 
@@ -44,6 +50,7 @@ const (
 type connectionGroupResource struct {
 	framework.ResourceWithModel[connectionGroupResourceModel]
 	framework.WithImportByID
+	framework.WithTimeouts
 }
 
 func (r *connectionGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -94,6 +101,16 @@ func (r *connectionGroupResource) Schema(ctx context.Context, req resource.Schem
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create:            true,
+				Update:            true,
+				Delete:            true,
+				CreateDescription: "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Default is 90 minutes.",
+				UpdateDescription: "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Default is 90 minutes.",
+				DeleteDescription: "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Default is 90 minutes.",
+			}),
+		},
 	}
 }
 
@@ -109,6 +126,7 @@ type connectionGroupResourceModel struct {
 	Name              types.String      `tfsdk:"name"`
 	RoutingEndpoint   types.String      `tfsdk:"routing_endpoint"`
 	Status            types.String      `tfsdk:"status"`
+	Timeouts          timeouts.Value    `tfsdk:"timeouts"`
 	WaitForDeployment types.Bool        `tfsdk:"wait_for_deployment"`
 	Tags              tftags.Map        `tfsdk:"tags"`
 	TagsAll           tftags.Map        `tfsdk:"tags_all"`
@@ -158,7 +176,7 @@ func (r *connectionGroupResource) Create(ctx context.Context, req resource.Creat
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	if data.WaitForDeployment.ValueBool() {
-		if _, err := waitConnectionGroupDeployed(ctx, conn, data.ID.ValueString()); err != nil {
+		if _, err := waitConnectionGroupDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameConnectionGroup, data.ID.String(), err),
 				err.Error(),
@@ -256,7 +274,7 @@ func (r *connectionGroupResource) Update(ctx context.Context, req resource.Updat
 		}
 
 		if new.WaitForDeployment.ValueBool() {
-			if _, err := waitConnectionGroupDeployed(ctx, conn, new.ID.ValueString()); err != nil {
+			if _, err := waitConnectionGroupDeployed(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameConnectionGroup, new.ID.String(), err),
 					err.Error(),
@@ -290,7 +308,8 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 	conn := r.Meta().CloudFrontClient(ctx)
 	id := data.ID.ValueString()
 
-	if err := disableConnectionGroup(ctx, conn, id); err != nil {
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if err := disableConnectionGroup(ctx, conn, id, deleteTimeout); err != nil {
 		if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 			return
 		}
@@ -301,15 +320,14 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	err := deleteConnectionGroup(ctx, conn, id)
-
+	err := deleteConnectionGroup(ctx, conn, id, deleteTimeout)
 	if err == nil || retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 		return
 	}
 
 	// Disable connection group if it is not yet disabled and attempt deletion again.
 	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
-		if err := disableConnectionGroup(ctx, conn, id); err != nil {
+		if err := disableConnectionGroup(ctx, conn, id, deleteTimeout); err != nil {
 			if retry.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
 				return
 			}
@@ -321,13 +339,13 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 		}
 
 		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, connectionGroupPollInterval, func(ctx context.Context) (any, error) {
-			return nil, deleteConnectionGroup(ctx, conn, id)
+			return nil, deleteConnectionGroup(ctx, conn, id, deleteTimeout)
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, connectionGroupPollInterval, func(ctx context.Context) (any, error) {
-			return nil, deleteConnectionGroup(ctx, conn, id)
+			return nil, deleteConnectionGroup(ctx, conn, id, deleteTimeout)
 		})
 	}
 
@@ -392,7 +410,7 @@ func findConnectionGroupByRoutingEndpoint(ctx context.Context, conn *cloudfront.
 	return output, nil
 }
 
-func disableConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string) error {
+func disableConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
 	output, err := findConnectionGroupByID(ctx, conn, id)
 
 	if err != nil {
@@ -400,7 +418,7 @@ func disableConnectionGroup(ctx context.Context, conn *cloudfront.Client, id str
 	}
 
 	if aws.ToString(output.ConnectionGroup.Status) == connectionGroupStatusInProgress {
-		output, err = waitConnectionGroupDeployed(ctx, conn, id)
+		output, err = waitConnectionGroupDeployed(ctx, conn, id, timeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for CloudFront Connection Group (%s) deploy: %w", id, err)
@@ -423,14 +441,14 @@ func disableConnectionGroup(ctx context.Context, conn *cloudfront.Client, id str
 		return fmt.Errorf("updating CloudFront Connection Group (%s): %w", id, err)
 	}
 
-	if _, err := waitConnectionGroupDeployed(ctx, conn, id); err != nil {
+	if _, err := waitConnectionGroupDeployed(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for CloudFront Connection Group (%s) deploy: %w", id, err)
 	}
 
 	return nil
 }
 
-func deleteConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string) error {
+func deleteConnectionGroup(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
 	etag, err := connectionGroupETag(ctx, conn, id)
 
 	if err != nil {
@@ -448,19 +466,19 @@ func deleteConnectionGroup(ctx context.Context, conn *cloudfront.Client, id stri
 		return fmt.Errorf("deleting CloudFront Connection Group (%s): %w", id, err)
 	}
 
-	if _, err := waitConnectionGroupDeleted(ctx, conn, id); err != nil {
+	if _, err := waitConnectionGroupDeleted(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for CloudFront Connection Group (%s) delete: %w", id, err)
 	}
 
 	return nil
 }
 
-func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetConnectionGroupOutput, error) {
+func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetConnectionGroupOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress},
 		Target:     []string{connectionGroupStatusDeployed},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
-		Timeout:    30 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
@@ -474,12 +492,12 @@ func waitConnectionGroupDeployed(ctx context.Context, conn *cloudfront.Client, i
 	return nil, err
 }
 
-func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetConnectionGroupOutput, error) {
+func waitConnectionGroupDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetConnectionGroupOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{connectionGroupStatusInProgress, connectionGroupStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusConnectionGroup(ctx, conn, id),
-		Timeout:    30 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
 	}
