@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"reflect"
 	"slices"
 	"time"
@@ -147,6 +148,7 @@ func resourceTable() *schema.Resource {
 			}),
 			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
+			customDiffGlobalSecondaryIndex,
 		),
 
 		SchemaVersion: 1,
@@ -190,6 +192,7 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
@@ -2666,9 +2669,8 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 		// Set single values or lists based on count
 		if len(hashKeys) == 1 {
 			gsi["hash_key"] = hashKeys[0]
-		} else if len(hashKeys) > 1 {
-			gsi["hash_keys"] = hashKeys
 		}
+		gsi["hash_keys"] = hashKeys
 
 		if len(rangeKeys) == 1 {
 			gsi["range_key"] = rangeKeys[0]
@@ -3406,4 +3408,128 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// !! Not a validation error for attribute_name to be set when enabled is false !!
 	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
 	// The diff is handled by DiffSuppressFunc of attribute_name.
+}
+
+func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	if diff.Id() == "" {
+		return nil
+	}
+	if !diff.HasChange("global_secondary_index") {
+		return nil
+	}
+
+	configRaw := diff.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+	configGSI := configRaw.GetAttr("global_secondary_index")
+	config := collectGSI(configGSI)
+	if len(config) > 0 {
+	}
+
+	stateRaw := diff.GetRawState()
+	if !stateRaw.IsKnown() || stateRaw.IsNull() {
+		return nil
+	}
+	stateGSI := stateRaw.GetAttr("global_secondary_index")
+	state := collectGSI(stateGSI)
+	if len(state) > 0 {
+	}
+
+	planRaw := diff.GetRawPlan()
+	if !planRaw.IsKnown() || planRaw.IsNull() {
+		return nil
+	}
+	planGSI := planRaw.GetAttr("global_secondary_index")
+	plan := collectGSI(planGSI)
+	if len(plan) > 0 {
+	}
+
+	// Adding or removing GSIs
+	if len(plan) != len(state) {
+		return nil
+	}
+
+	// GSI name mismatch
+	for name := range state {
+		if _, ok := plan[name]; !ok {
+			return nil
+		}
+	}
+
+	for name, vState := range state {
+		vPlan := plan[name]
+
+		for attrName := range vState.Type().AttributeTypes() {
+			s := vState.GetAttr(attrName)
+			p := vPlan.GetAttr(attrName)
+			switch attrName {
+			case "hash_keys":
+				if p.IsNull() && !s.IsNull() {
+					// "hash_key" is set
+					continue // change to "hash_key" will be caught by equality test
+				}
+
+			default:
+				switch {
+				case s.Type().IsSetType():
+					if p.IsNull() && s.LengthInt() == 0 {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
+
+				case s.Type().IsListType():
+					if p.IsNull() && s.LengthInt() == 0 {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
+
+				case s.Type() == cty.String:
+					if p.IsNull() && s.AsString() == "" {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
+
+				case s.Type() == cty.Number:
+					var zero big.Float
+					if p.IsNull() && zero.Cmp(s.AsBigFloat()) == 0 {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
+
+				default:
+					if s.Equals(p).False() {
+						return nil
+					}
+				}
+			}
+		}
+	}
+
+	return diff.Clear("global_secondary_index")
+}
+
+func collectGSI(v cty.Value) map[string]cty.Value {
+	result := make(map[string]cty.Value, v.LengthInt())
+	if v.IsKnown() && !v.IsNull() {
+		it := v.ElementIterator()
+		for it.Next() {
+			_, v := it.Element()
+			name := v.GetAttr(names.AttrName)
+			result[name.AsString()] = v
+		}
+	}
+	return result
 }
