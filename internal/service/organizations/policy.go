@@ -221,10 +221,14 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Policy, error) {
-	input := &organizations.DescribePolicyInput{
+	input := organizations.DescribePolicyInput{
 		PolicyId: aws.String(id),
 	}
 
+	return findPolicy(ctx, conn, &input)
+}
+
+func findPolicy(ctx context.Context, conn *organizations.Client, input *organizations.DescribePolicyInput) (*awstypes.Policy, error) {
 	output, err := conn.DescribePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {

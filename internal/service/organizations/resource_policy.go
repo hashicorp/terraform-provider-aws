@@ -159,8 +159,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awstypes.ResourcePolicy, error) {
-	input := organizations.DescribeResourcePolicyInput{}
-
+	var input organizations.DescribeResourcePolicyInput
 	output, err := conn.DescribeResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.ResourcePolicyNotFoundException](err) {

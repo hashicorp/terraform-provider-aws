@@ -153,11 +153,11 @@ func policyAttachmentCreateResourceID(targetID, policyID string) string {
 }
 
 func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
-	input := &organizations.ListTargetsForPolicyInput{
+	input := organizations.ListTargetsForPolicyInput{
 		PolicyId: aws.String(policyID),
 	}
 
-	return findPolicyTarget(ctx, conn, input, func(v *awstypes.PolicyTargetSummary) bool {
+	return findPolicyTarget(ctx, conn, &input, func(v *awstypes.PolicyTargetSummary) bool {
 		return aws.ToString(v.TargetId) == targetID
 	})
 }

@@ -69,11 +69,11 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 }
 
 func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {
-	input := &organizations.ListDelegatedServicesForAccountInput{
+	input := organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(accountID),
 	}
 
-	return findDelegatedServices(ctx, conn, input)
+	return findDelegatedServices(ctx, conn, &input)
 }
 
 func findDelegatedServices(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedServicesForAccountInput) ([]awstypes.DelegatedService, error) {
