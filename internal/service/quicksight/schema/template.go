@@ -61,7 +61,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 					},
 				},
 				"parameters_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					MinItems: 1,
 					MaxItems: 200,
 					Optional: true,
