@@ -762,6 +762,52 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 				},
 			},
 		},
+
+		"change multiple hash_keys to hash_key": {
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_keys":       []any{"att1", "att2"},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -1469,6 +1515,56 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 				map[string]any{
 					names.AttrName: "att1-index",
 					"hash_keys":    []any{"att1"},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"change multiple hash_keys to hash_key": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_keys":    []any{"att1", "att2"},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
