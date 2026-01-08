@@ -71,6 +71,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceAccessEntry,
 			TypeName: "aws_eks_access_entry",
 			Name:     "Access Entry",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
