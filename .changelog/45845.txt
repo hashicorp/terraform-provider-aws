@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc: Fix perpetual diffs in `ipv6_netmask_length` when using IPAM-managed IPv6 pools
+```
