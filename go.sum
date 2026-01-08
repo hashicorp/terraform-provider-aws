@@ -317,8 +317,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15 h1:Z5cflX4kjGZLiGLfnd/7JRC
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15/go.mod h1:GMxmqIMp4krKrwo1pkSxm+sjgfIilXRK7IUnpEi/iZM=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.46.6 h1:8GwQKeGyOuZIS7DtWmAZzoh2sJq6QeCdiL6i3TyYJ8A=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.46.6/go.mod h1:cjAeQGjIRvsHQ/GSr2TEJ717iupfC8PXXqP3nDiIIR4=
-github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.0 h1:+21GreH95KBzX39lZ7RQewl/laKO/XTHXO1P69xm+8Y=
-github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.0/go.mod h1:kcnzHaqqDu2+e1gd5+0aG7rbPHKD7GEQWrwe03BKL24=
+github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.1 h1:5j03A5C8gvE+5dc4Qm4XIW2TlsrknS1nEjip9Mm7w94=
+github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.1/go.mod h1:kcnzHaqqDu2+e1gd5+0aG7rbPHKD7GEQWrwe03BKL24=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.60.16 h1:gUGA/Mi0aITrmMcRmyb1kFlrh4EnNBmi6KLfDc9MSSE=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.60.16/go.mod h1:Bkd0XZrhja+uUbHC1/by3ooJrm4zWB9qC1Xwnfwkzys=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.9 h1:uuGIXcnc1VAKjGZmj/IDdRafKS2+vgcAtGAi+9SFUNs=
@@ -569,8 +569,8 @@ github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16 h1:4didnRJQAlxCk4W
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16/go.mod h1:CNXHJEKMQjuo/68B7pvzuKRLlVg/km1mbxO21MoWWho=
 github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14 h1:KO4c6BVLvcis8woz4HxiF1TDSN0aClpB6/uZjfsWvio=
 github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14/go.mod h1:X0g10TB/bjaxaQTW90Lp3CxRka4gvyYj3juxn/gqgUA=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8 h1:R20c4Sd0yMGBo2cBQbxuNvnSDTVxaPEb5+Hz4pWopZU=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8/go.mod h1:SAY6RAMYsWaNU4IDumvkpP0CIztTjivTmB8t+1uyKW0=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.0 h1:Yd1MXOGaCKmnzEJHmxk6nNlrXcuCqjSEvQvLBKKp59s=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.0/go.mod h1:SAY6RAMYsWaNU4IDumvkpP0CIztTjivTmB8t+1uyKW0=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.0 h1:tyAhAO/IjhOApLsWAdvubWrctuSYkcVQ5W8Ntc549jI=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.0/go.mod h1:aCbE7Dmv6EUotKG+ExXSows4ZDOIXDYprJ3uK6Pn7tw=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.16 h1:QmiDhZi76gIQXhZttJvkrJQBEiMQtnvD1SykHVWRD7A=
