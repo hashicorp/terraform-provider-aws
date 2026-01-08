@@ -865,13 +865,13 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 					"hash_key":     "att1",
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
-						"max_write_request_units": 10,
+						"max_write_request_units": 5,
 					}},
 					"projection_type": "ALL",
 					"warm_throughput": []any{
 						map[string]any{
-							"read_units_per_second":  10,
-							"write_units_per_second": 10,
+							"read_units_per_second":  5,
+							"write_units_per_second": 5,
 						}},
 				},
 			},
@@ -881,13 +881,13 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 					"hash_key":     "att1",
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
-						"max_write_request_units": 10,
+						"max_write_request_units": 5,
 					}},
 					"projection_type": "ALL",
 					"warm_throughput": []any{
 						map[string]any{
-							"read_units_per_second":  10,
-							"write_units_per_second": 10,
+							"read_units_per_second":  5,
+							"write_units_per_second": 5,
 						}},
 				},
 				map[string]any{
@@ -917,8 +917,8 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 							},
 						},
 						OnDemandThroughput: &awstypes.OnDemandThroughput{
-							MaxReadRequestUnits:  aws.Int64(10),
-							MaxWriteRequestUnits: aws.Int64(15),
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
 						},
 						WarmThroughput: &awstypes.WarmThroughput{
 							ReadUnitsPerSecond:  aws.Int64(10),

@@ -2031,14 +2031,19 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			idxName := m[names.AttrName].(string)
 
 			c := awstypes.CreateGlobalSecondaryIndexAction{
-				IndexName:             aws.String(idxName),
-				KeySchema:             expandKeySchema(m),
-				ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
-				Projection:            expandProjection(m),
+				IndexName:  aws.String(idxName),
+				KeySchema:  expandKeySchema(m),
+				Projection: expandProjection(m),
 			}
 
-			if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
-				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			switch billingMode {
+			case awstypes.BillingModeProvisioned:
+				c.ProvisionedThroughput = expandProvisionedThroughput(m, billingMode)
+
+			case awstypes.BillingModePayPerRequest:
+				if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+					c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+				}
 			}
 
 			if v, ok := m["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2110,50 +2115,57 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 
 			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
 
-			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
-			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
-					},
-				}
-				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !gsiNeedsRecreate && billingMode == awstypes.BillingModePayPerRequest {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:          aws.String(idxName),
-						OnDemandThroughput: newOnDemandThroughput,
-					},
-				}
-				ops = append(ops, update)
-			} else if gsiNeedsRecreate {
-				// Other attributes cannot be updated
+			if gsiNeedsRecreate {
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
 						IndexName: aws.String(idxName),
 					},
 				})
 
-				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
-					Create: &awstypes.CreateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						KeySchema:             expandKeySchema(newMap),
-						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
-						Projection:            expandProjection(newMap),
-						WarmThroughput:        newWarmThroughput,
-					},
-				})
-			}
-			// Separating the WarmThroughput updates from the others
-			if !gsiNeedsRecreate && warmThroughputChanged {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:      aws.String(idxName),
-						WarmThroughput: newWarmThroughput,
-					},
+				c := awstypes.CreateGlobalSecondaryIndexAction{
+					IndexName:      aws.String(idxName),
+					KeySchema:      expandKeySchema(newMap),
+					Projection:     expandProjection(newMap),
+					WarmThroughput: newWarmThroughput,
 				}
-				ops = append(ops, update)
+				switch billingMode {
+				case awstypes.BillingModeProvisioned:
+					c.ProvisionedThroughput = expandProvisionedThroughput(newMap, billingMode)
+
+				case awstypes.BillingModePayPerRequest:
+					c.OnDemandThroughput = newOnDemandThroughput
+				}
+				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
+					Create: &c,
+				})
+			} else {
+				if capacityChanged && billingMode == awstypes.BillingModeProvisioned {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:             aws.String(idxName),
+							ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
+						},
+					}
+					ops = append(ops, update)
+				} else if onDemandThroughputChanged && billingMode == awstypes.BillingModePayPerRequest {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:          aws.String(idxName),
+							OnDemandThroughput: newOnDemandThroughput,
+						},
+					}
+					ops = append(ops, update)
+				}
+				// Separating the WarmThroughput updates from the others
+				if warmThroughputChanged {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:      aws.String(idxName),
+							WarmThroughput: newWarmThroughput,
+						},
+					}
+					ops = append(ops, update)
+				}
 			}
 		} else {
 			idxName := oldName
@@ -2899,14 +2911,19 @@ func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 
 func expandGlobalSecondaryIndex(data map[string]any, billingMode awstypes.BillingMode) *awstypes.GlobalSecondaryIndex {
 	output := awstypes.GlobalSecondaryIndex{
-		IndexName:             aws.String(data[names.AttrName].(string)),
-		KeySchema:             expandKeySchema(data),
-		Projection:            expandProjection(data),
-		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
+		IndexName:  aws.String(data[names.AttrName].(string)),
+		KeySchema:  expandKeySchema(data),
+		Projection: expandProjection(data),
 	}
 
-	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
-		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	switch billingMode {
+	case awstypes.BillingModeProvisioned:
+		output.ProvisionedThroughput = expandProvisionedThroughput(data, billingMode)
+
+	case awstypes.BillingModePayPerRequest:
+		if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+			output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+		}
 	}
 
 	if v, ok := data["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
