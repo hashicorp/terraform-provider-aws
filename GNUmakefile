@@ -599,12 +599,25 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
@@ -616,27 +629,6 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
-
-semgrep-extra: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Extra
-	@echo "make: Semgrep Checks / Code Quality Scan..."
-	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
-	@semgrep $(SEMGREP_ARGS) \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config 'r/dgryski.semgrep-go.anon-struct-args' \
-		--config 'r/dgryski.semgrep-go.contextcancelable' \
-		--config 'r/dgryski.semgrep-go.ctx-time' \
-		--config 'r/dgryski.semgrep-go.ioutil' \
-		--config 'r/dgryski.semgrep-go.mail-address' \
-		--config 'r/dgryski.semgrep-go.marshaljson' \
-		--config 'r/dgryski.semgrep-go.oddcompare' \
-		--config 'r/dgryski.semgrep-go.parseint-downcast' \
-		--config 'r/dgryski.semgrep-go.readeof' \
-		--config 'r/dgryski.semgrep-go.readfull' \
-		--config 'r/dgryski.semgrep-go.sprinterr' \
-		--config 'r/dgryski.semgrep-go.timeafter' \
-		--config 'r/dgryski.semgrep-go.unixnano' \
-		--config 'r/dgryski.semgrep-go.writestring' \
-		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
