@@ -55,7 +55,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceSinks,
+			Factory:  dataSourceSinks,
 			TypeName: "aws_oam_sinks",
 			Name:     "Sinks",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

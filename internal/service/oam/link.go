@@ -158,7 +158,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ObservabilityAccessManager Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -174,7 +174,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("sink_arn", out.SinkArn)
 	d.Set("sink_identifier", out.SinkArn)
 
-	return nil
+	return diags
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

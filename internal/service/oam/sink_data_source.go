@@ -60,5 +60,5 @@ func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, out.Name)
 	d.Set("sink_id", out.Id)
 
-	return nil
+	return diags
 }

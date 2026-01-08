@@ -111,5 +111,5 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("resource_types", out.ResourceTypes)
 	d.Set("sink_arn", out.SinkArn)
 
-	return nil
+	return diags
 }

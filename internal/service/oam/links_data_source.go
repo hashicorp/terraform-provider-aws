@@ -48,7 +48,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return aws.ToString(v.Arn)
 	}))
 
-	return nil
+	return diags
 }
 
 func findLinks(ctx context.Context, conn *oam.Client, input *oam.ListLinksInput) ([]awstypes.ListLinksItem, error) {
