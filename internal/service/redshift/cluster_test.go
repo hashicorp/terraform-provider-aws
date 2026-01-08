@@ -58,6 +58,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5439"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
