@@ -2103,61 +2103,12 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
 
-			oldAttributes, err := stripCapacityAttributes(oldMap)
+			recreateAttributesChanged, err := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
 			if err != nil {
 				return ops, err
 			}
-			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripOnDemandThroughputAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripWarmThroughputAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			// Remove empty hash_keys/range_keys to avoid false positive diffs
-			if hks, ok := oldAttributes["hash_keys"]; ok {
-				if set, ok := hks.(*schema.Set); ok && set.Len() == 0 {
-					delete(oldAttributes, "hash_keys")
-				}
-			}
-			if rks, ok := oldAttributes["range_keys"]; ok {
-				if set, ok := rks.(*schema.Set); ok && set.Len() == 0 {
-					delete(oldAttributes, "range_keys")
-				}
-			}
-			newAttributes, err := stripCapacityAttributes(newMap)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripNonKeyAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripOnDemandThroughputAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			// Remove empty hash_keys/range_keys to avoid false positive diffs
-			if hks, ok := newAttributes["hash_keys"]; ok {
-				if set, ok := hks.(*schema.Set); ok && set.Len() == 0 {
-					delete(newAttributes, "hash_keys")
-				}
-			}
-			if rks, ok := newAttributes["range_keys"]; ok {
-				if set, ok := rks.(*schema.Set); ok && set.Len() == 0 {
-					delete(newAttributes, "range_keys")
-				}
-			}
-			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
+
+			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
 
 			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
 			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
@@ -2214,6 +2165,21 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 		}
 	}
 	return ops, nil
+}
+
+func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) (bool, error) {
+	oldAttributes := stripGSIUpdatableAttributes(oldMap)
+
+	newAttributes := stripGSIUpdatableAttributes(newMap)
+
+	oHk, oOk := oldAttributes["hash_key"]
+	nHk, nOk := newAttributes["hash_key"]
+	if oOk && nOk && oHk == nHk {
+		delete(oldAttributes, "hash_keys")
+		delete(newAttributes, "hash_keys")
+	}
+
+	return !reflect.DeepEqual(oldAttributes, newAttributes), nil
 }
 
 func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) error {
