@@ -43,6 +43,8 @@ import (
 // @CustomImport
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
 // @Testing(plannableImportAction="Replace")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
