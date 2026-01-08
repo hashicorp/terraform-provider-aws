@@ -13,6 +13,7 @@ var (
 	ResourceMaintenanceWindowTarget = resourceMaintenanceWindowTarget
 	ResourceMaintenanceWindowTask   = resourceMaintenanceWindowTask
 	ResourceParameter               = resourceParameter
+	ResourceParameterVersionLabels  = resourceParameterVersionLabels
 	ResourcePatchBaseline           = resourcePatchBaseline
 	ResourcePatchGroup              = resourcePatchGroup
 	ResourceResourceDataSync        = resourceResourceDataSync
@@ -27,8 +28,11 @@ var (
 	FindMaintenanceWindowTargetByTwoPartKey            = findMaintenanceWindowTargetByTwoPartKey
 	FindMaintenanceWindowTaskByTwoPartKey              = findMaintenanceWindowTaskByTwoPartKey
 	FindParameterByName                                = findParameterByName
+	FindParameterVersionLabels                         = findParameterVersionLabels
 	FindPatchBaselineByID                              = findPatchBaselineByID
 	FindPatchGroupByTwoPartKey                         = findPatchGroupByTwoPartKey
 	FindResourceDataSyncByName                         = findResourceDataSyncByName
 	FindServiceSettingByID                             = findServiceSettingByID
+
+	ParameterVersionLabelsParseResourceID = parameterVersionLabelsParseResourceID
 )
