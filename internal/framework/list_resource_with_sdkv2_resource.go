@@ -87,6 +87,7 @@ func (l *listResourceWithSDKv2Resource[T]) SetIdentitySpec(identitySpec inttypes
 }
 
 func (l *listResourceWithSDKv2Resource[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
 	params := any(listresource.InterceptorParamsSDK{
 		C:            awsClient,
 		ResourceData: d,
@@ -96,19 +97,21 @@ func (l *listResourceWithSDKv2Resource[T]) runResultInterceptors(ctx context.Con
 	switch when {
 	case listresource.Before:
 		for interceptor := range slices.Values(l.interceptors) {
-			if err := interceptor.Read(ctx, params); err.HasError() {
-				return err
+			diags.Append(interceptor.Read(ctx, params)...)
+			if diags.HasError() {
+				return diags
 			}
 		}
 	case listresource.After:
 		for interceptor := range tfslices.BackwardValues(l.interceptors) {
-			if err := interceptor.Read(ctx, params); err.HasError() {
-				return err
+			diags.Append(interceptor.Read(ctx, params)...)
+			if diags.HasError() {
+				return diags
 			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func (l *listResourceWithSDKv2Resource[T]) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {

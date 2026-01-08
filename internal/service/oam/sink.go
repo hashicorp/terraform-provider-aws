@@ -104,7 +104,7 @@ func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrName, out.Name)
 	d.Set("sink_id", out.Id)
 
-	return nil
+	return diags
 }
 
 func resourceSinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
