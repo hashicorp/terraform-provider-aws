@@ -10,12 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,10 +26,10 @@ func TestAccRedshiftIntegration_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
@@ -39,12 +37,12 @@ func TestAccRedshiftIntegration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_dynamodb_table.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -74,10 +72,10 @@ func TestAccRedshiftIntegration_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
@@ -85,12 +83,12 @@ func TestAccRedshiftIntegration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceIntegration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,10 +109,10 @@ func TestAccRedshiftIntegration_optional(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
@@ -122,12 +120,12 @@ func TestAccRedshiftIntegration_optional(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_optional(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
@@ -159,12 +157,12 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
-	integrationName := sdkacctest.RandomWithPrefix("tf-acc-test-update")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	description := acctest.RandomWithPrefix(t, "tf-acc-test-update")
+	integrationName := acctest.RandomWithPrefix(t, "tf-acc-test-update")
 	resourceName := "aws_redshift_integration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
@@ -172,12 +170,12 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_s3_bucket.test", names.AttrARN),
@@ -199,7 +197,7 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integrationName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &integration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "integration_name", integrationName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_s3_bucket.test", names.AttrARN),
@@ -222,9 +220,9 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_integration" {
@@ -248,14 +246,14 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *awstypes.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindIntegrationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -281,7 +279,7 @@ func testAccIntegrationImportStateIDFunc(n string) resource.ImportStateIdFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 	input := &redshift.DescribeIntegrationsInput{}
 
