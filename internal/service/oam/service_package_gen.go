@@ -40,7 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceLinks,
+			Factory:  dataSourceLinks,
 			TypeName: "aws_oam_links",
 			Name:     "Links",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
