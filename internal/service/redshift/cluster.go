@@ -790,6 +790,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
 		}
 
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
+		}
+
 		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
 			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}

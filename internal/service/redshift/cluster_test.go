@@ -1256,6 +1256,24 @@ func TestAccRedshiftCluster_port(t *testing.T) {
 					names.AttrApplyImmediately,
 				},
 			},
+			{
+				Config: testAccClusterConfig_port(rName, portUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, portUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					names.AttrApplyImmediately,
+				},
+			},
 		},
 	})
 }
