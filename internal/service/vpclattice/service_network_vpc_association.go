@@ -296,7 +296,7 @@ func waitServiceNetworkVPCAssociationCreated(ctx context.Context, conn *vpclatti
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkVpcAssociationOutput); ok {
 		if output.Status == types.ServiceNetworkVpcAssociationStatusCreateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -317,7 +317,7 @@ func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclatti
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkVpcAssociationOutput); ok {
 		if output.Status == types.ServiceNetworkVpcAssociationStatusDeleteFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

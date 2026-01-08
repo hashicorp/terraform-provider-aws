@@ -461,7 +461,7 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
 		if v := output.UpdateStatus; v != nil {
 			if v := v.Exception; v != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+				retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
 			}
 		}
 
@@ -484,7 +484,7 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
 		if v := output.UpdateStatus; v != nil {
 			if v := v.Exception; v != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+				retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
 			}
 		}
 
@@ -507,7 +507,7 @@ func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn str
 	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
 		if v := output.UpdateStatus; v != nil {
 			if v := v.Exception; v != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+				retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
 			}
 		}
 

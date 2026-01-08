@@ -358,7 +358,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 
@@ -378,7 +378,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 
@@ -396,7 +396,7 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 

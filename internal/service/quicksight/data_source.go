@@ -431,7 +431,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err
@@ -455,7 +455,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err

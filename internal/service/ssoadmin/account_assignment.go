@@ -385,7 +385,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -406,7 +406,7 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

@@ -304,7 +304,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.JournalKinesisStreamDescription); ok {
-		tfresource.SetLastError(err, errors.New(string(output.ErrorCause)))
+		retry.SetLastError(err, errors.New(string(output.ErrorCause)))
 
 		return output, err
 	}
@@ -340,7 +340,7 @@ func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.JournalKinesisStreamDescription); ok {
-		tfresource.SetLastError(err, errors.New(string(output.ErrorCause)))
+		retry.SetLastError(err, errors.New(string(output.ErrorCause)))
 
 		return output, err
 	}

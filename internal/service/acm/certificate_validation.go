@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -180,9 +179,9 @@ func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, ti
 	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		switch output.Status {
 		case types.CertificateStatusFailed:
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		case types.CertificateStatusRevoked:
-			tfresource.SetLastError(err, errors.New(string(output.RevocationReason)))
+			retry.SetLastError(err, errors.New(string(output.RevocationReason)))
 		}
 
 		return output, err

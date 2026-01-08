@@ -235,7 +235,7 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -254,7 +254,7 @@ func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -273,7 +273,7 @@ func waitInboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}

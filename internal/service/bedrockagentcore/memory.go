@@ -272,7 +272,7 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -289,7 +289,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 

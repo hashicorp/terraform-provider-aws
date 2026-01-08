@@ -528,7 +528,7 @@ func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, t
 
 	if output, ok := outputRaw.(*datasync.DescribeTaskOutput); ok {
 		if errorCode, errorDetail := aws.ToString(output.ErrorCode), aws.ToString(output.ErrorDetail); errorCode != "" && errorDetail != "" {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
 		}
 
 		return output, err
