@@ -6,6 +6,8 @@ package oam
 // Exports for use in tests only.
 var (
 	ResourceLink = resourceLink
+	ResourceSink = resourceSink
 
 	FindLinkByID = findLinkByID
+	FindSinkByID = findSinkByID
 )
