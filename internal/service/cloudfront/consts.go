@@ -27,6 +27,16 @@ const (
 )
 
 const (
+	connectionGroupStatusDeployed   = "Deployed"
+	connectionGroupStatusInProgress = "InProgress"
+)
+
+const (
+	distributionTenantStatusDeployed   = "Deployed"
+	distributionTenantStatusInProgress = "InProgress"
+)
+
+const (
 	keyValueStoreStatusProvisioning = "PROVISIONING"
 	keyValueStoreStatusReady        = "READY"
 )

@@ -7,8 +7,10 @@ package cloudfront
 var (
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceConnectionFunction          = newResourceConnectionFunction
+	ResourceConnectionGroup             = newConnectionGroupResource
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
+	ResourceDistributionTenant          = newDistributionTenantResource
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
@@ -26,7 +28,10 @@ var (
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindConnectionFunctionByTwoPartKey         = findConnectionFunctionByTwoPartKey
+	FindConnectionGroupById                    = findConnectionGroupByID
+	FindConnectionGroupByRoutingEndpoint       = findConnectionGroupByRoutingEndpoint
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
+	FindDistributionTenantByIdentifier         = findDistributionTenantByIdentifier
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
