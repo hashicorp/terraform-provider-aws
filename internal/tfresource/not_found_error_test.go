@@ -17,7 +17,6 @@ import (
 func TestEmptyResultErrorAsSDKNotFoundError(t *testing.T) {
 	t.Parallel()
 
-	lastRequest := 123
 	err := NewEmptyResultError()
 
 	var nfe *sdkretry.NotFoundError
@@ -29,7 +28,7 @@ func TestEmptyResultErrorAsSDKNotFoundError(t *testing.T) {
 	if nfe.Message != "empty result" {
 		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
 	}
-	if nfe.LastRequest != lastRequest {
+	if nfe.LastRequest != nil {
 		t.Errorf("unexpected value for LastRequest")
 	}
 }
