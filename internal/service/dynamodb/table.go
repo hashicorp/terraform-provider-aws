@@ -200,7 +200,7 @@ func resourceTable() *schema.Resource {
 								Optional: true,
 							},
 							"hash_keys": {
-								Type:     schema.TypeSet,
+								Type:     schema.TypeList,
 								Optional: true,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2995,20 +2995,20 @@ func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 	keySchema := []awstypes.KeySchemaElement{}
 
 	hKey, hKok := data["hash_key"]
-	hKeys, hKsok := data["hash_keys"].(*schema.Set)
+	hKeys, hKsok := data["hash_keys"].([]any)
 	rKey, rKok := data["range_key"]
 	rKeys, rKsok := data["range_keys"].(*schema.Set)
 
 	if hKok || hKsok {
-		if (hKey != nil && hKey != "") && (hKeys == nil || hKeys.Len() == 0) {
+		if (hKey != nil && hKey != "") && (len(hKeys) == 0) {
 			// use hash_key
 			keySchema = append(keySchema, awstypes.KeySchemaElement{
 				AttributeName: aws.String(hKey.(string)),
 				KeyType:       awstypes.KeyTypeHash,
 			})
-		} else if hKeys != nil && hKeys.Len() > 0 {
+		} else if len(hKeys) > 0 {
 			//use hash_keys
-			for _, hKeyItem := range hKeys.List() {
+			for _, hKeyItem := range hKeys {
 				keySchema = append(keySchema, awstypes.KeySchemaElement{
 					AttributeName: aws.String(hKeyItem.(string)),
 					KeyType:       awstypes.KeyTypeHash,
@@ -3165,19 +3165,6 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
 
-			if hashKey, ok := index["hash_key"]; ok && hashKey != "" {
-				indexedAttributes[hashKey.(string)] = true
-			}
-			if v, ok := index["hash_keys"]; ok {
-				if hashKeys, ok := v.(*schema.Set); ok {
-					for _, v := range hashKeys.List() {
-						if key, ok := v.(string); ok && key != "" {
-							indexedAttributes[key] = true
-						}
-					}
-				}
-			}
-
 			if rangeKey, ok := index["range_key"]; ok && rangeKey != "" {
 				indexedAttributes[rangeKey.(string)] = true
 			}
@@ -3187,6 +3174,31 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 						if key, ok := v.(string); ok && key != "" {
 							indexedAttributes[key] = true
 						}
+					}
+				}
+			}
+		}
+	}
+
+	// schema.ResourceDiff.GetOk() has a bug when retrieving a list inside a set
+	planRaw := d.GetRawPlan()
+	if planRaw.IsKnown() && !planRaw.IsNull() {
+		planGSI := planRaw.GetAttr("global_secondary_index")
+		if planGSI.IsKnown() && !planGSI.IsNull() {
+			it := planGSI.ElementIterator()
+			for it.Next() {
+				_, v := it.Element()
+
+				hashKey := v.GetAttr("hash_key")
+				if hashKey.IsKnown() && !hashKey.IsNull() {
+					indexedAttributes[hashKey.AsString()] = true
+				}
+				hashKeys := v.GetAttr("hash_keys")
+				if hashKeys.IsKnown() && !hashKeys.IsNull() {
+					it := hashKeys.ElementIterator()
+					for it.Next() {
+						_, v := it.Element()
+						indexedAttributes[v.AsString()] = true
 					}
 				}
 			}
@@ -3235,15 +3247,15 @@ func validateGSISchema(d *schema.ResourceDiff) error {
 			index := idx.(map[string]any)
 
 			hk, hkok := index["hash_key"].(string)
-			hks, hksok := index["hash_keys"].(*schema.Set)
-			if (hkok && hksok) && (hk != "" && hks.Len() > 0) {
-				errs = append(errs, fmt.Errorf("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set: %q, %v", hk, hks.List()))
+			hks, hksok := index["hash_keys"].([]any)
+			if (hkok && hksok) && (hk != "" && len(hks) > 0) {
+				errs = append(errs, errors.New("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set."))
 			}
 
 			rk, rkok := index["range_key"].(string)
 			rks, rksok := index["range_keys"].(*schema.Set)
 			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
-				errs = append(errs, fmt.Errorf("At most one can be set for range_key (String type) or range_keys (Set type) but both are set: %q, %v", rk, rks.List()))
+				errs = append(errs, errors.New("At most one can be set for range_key (String type) or range_keys (Set type) but both are set."))
 			}
 		}
 	}
@@ -3464,10 +3476,34 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 			s := vState.GetAttr(attrName)
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
+			case "hash_key":
+				if p.IsNull() && !s.IsNull() {
+					// "hash_keys" is set
+					continue // change to "hash_keys" will be caught by equality test
+				} else {
+					// case s.Type() == cty.String:
+					if p.IsNull() && s.AsString() == "" {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
+				}
+
 			case "hash_keys":
 				if p.IsNull() && !s.IsNull() {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
+				} else {
+					// case s.Type().IsSetType():
+					if p.IsNull() && s.LengthInt() == 0 {
+						continue
+					} else {
+						if s.Equals(p).False() {
+							return nil
+						}
+					}
 				}
 
 			default:
