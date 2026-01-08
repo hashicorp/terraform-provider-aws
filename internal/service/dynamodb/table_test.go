@@ -1955,7 +1955,55 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_Single(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_singleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1998,7 +2046,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTableConfig_GSI_multipleHashKey(rName),
+				Config: testAccTableConfig_GSI_HashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 				),
@@ -2037,7 +2085,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2054,7 +2102,89 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_multipleHashKey(rName),
+				Config: testAccTableConfig_GSI_singleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey2"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+								knownvalue.StringExact("TestTableHashKey2"),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_HashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 				),
@@ -2086,6 +2216,88 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey(t *testing.T) {
 			},
 			{
 				Config: testAccTableConfig_GSI_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey"),
+							"type": knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name": knownvalue.StringExact("TestTableHashKey2"),
+							"type": knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("TestTableHashKey"),
+								knownvalue.StringExact("TestTableHashKey2"),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_singleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 				),
@@ -2990,6 +3202,16 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 						"on_demand_throughput.0.max_write_request_units": "10",
 					}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -8198,7 +8420,31 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_GSI_multipleHashKey(rName string) string {
+func testAccTableConfig_GSI_singleHashKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "GSI"
+    hash_keys       = ["TestTableHashKey"]
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_HashKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
