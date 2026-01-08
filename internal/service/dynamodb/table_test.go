@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 	"time"
@@ -16,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -715,11 +716,64 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 				},
 			},
 		},
+
+		"remove key from hash_keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_keys":       []any{"att1", "att2"},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_keys":       []any{"att1"},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			for i, v := range tc.Old {
+				tc.Old[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
+			for i, v := range tc.New {
+				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
 
 			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
 			if err != nil {
@@ -1398,19 +1452,67 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 				},
 			},
 		},
+
+		"remove key from hash_keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_keys":    []any{"att1", "att2"},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_keys":    []any{"att1"},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			for _, v := range tc.Old {
-				v.(map[string]any)["read_capacity"] = 0
-				v.(map[string]any)["write_capacity"] = 0
+			for i, v := range tc.Old {
+				tc.Old[i] = normalizeGSIMapValue(v.(map[string]any))
 			}
-			for _, v := range tc.New {
-				v.(map[string]any)["read_capacity"] = 0
-				v.(map[string]any)["write_capacity"] = 0
+			for i, v := range tc.New {
+				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
 			}
 
 			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModePayPerRequest)
@@ -1432,6 +1534,26 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			}
 		})
 	}
+}
+
+func normalizeGSIMapValue(v map[string]any) map[string]any {
+	result := map[string]any{
+		"hash_key":             "",
+		"hash_keys":            nil,
+		names.AttrName:         "",
+		"non_key_attributes":   nil,
+		"on_demand_throughput": nil,
+		"projection_type":      "",
+		"range_key":            "",
+		"range_keys":           nil,
+		"read_capacity":        0,
+		"warm_throughput":      nil,
+		"write_capacity":       0,
+	}
+
+	maps.Copy(result, v)
+
+	return result
 }
 
 func TestAccDynamoDBTable_basic(t *testing.T) {

@@ -2186,7 +2186,7 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) (bool, e
 
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
-	if oOk && nOk && oHk == nHk {
+	if oOk && nOk && oHk == nHk && oHk != "" {
 		delete(oldAttributes, "hash_keys")
 		delete(newAttributes, "hash_keys")
 	}
