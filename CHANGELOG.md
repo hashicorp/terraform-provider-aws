@@ -1,4 +1,6 @@
-## 6.28.0 (Unreleased)
+## 6.29.0 (Unreleased)
+
+## 6.28.0 (January 7, 2026)
 
 NOTES:
 
@@ -6,9 +8,13 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_connection_group` ([#44885](https://github.com/hashicorp/terraform-provider-aws/issues/44885))
+* **New Data Source:** `aws_cloudfront_distribution_tenant` ([#45088](https://github.com/hashicorp/terraform-provider-aws/issues/45088))
 * **New List Resource:** `aws_kms_alias` ([#45700](https://github.com/hashicorp/terraform-provider-aws/issues/45700))
 * **New List Resource:** `aws_sqs_queue` ([#45691](https://github.com/hashicorp/terraform-provider-aws/issues/45691))
 * **New Resource:** `aws_cloudfront_connection_function` ([#45664](https://github.com/hashicorp/terraform-provider-aws/issues/45664))
+* **New Resource:** `aws_cloudfront_connection_group` ([#44885](https://github.com/hashicorp/terraform-provider-aws/issues/44885))
+* **New Resource:** `aws_cloudfront_distribution_tenant` ([#45088](https://github.com/hashicorp/terraform-provider-aws/issues/45088))
 * **New Resource:** `aws_cloudfront_multitenant_distribution` ([#45535](https://github.com/hashicorp/terraform-provider-aws/issues/45535))
 * **New Resource:** `aws_dynamodb_global_secondary_index` ([#44999](https://github.com/hashicorp/terraform-provider-aws/issues/44999))
 * **New Resource:** `aws_ecr_pull_time_update_exclusion` ([#45765](https://github.com/hashicorp/terraform-provider-aws/issues/45765))
@@ -39,6 +45,7 @@ ENHANCEMENTS:
 * resource/aws_athena_workgroup: Add `enable_minimum_encryption_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_athena_workgroup: Add `monitoring_configuration` argument ([#45744](https://github.com/hashicorp/terraform-provider-aws/issues/45744))
 * resource/aws_cleanrooms_collaboration: Add resource identity support ([#45548](https://github.com/hashicorp/terraform-provider-aws/issues/45548))
+* resource/aws_cloudfront_distribution: Add `connection_function_association` and `viewer_mtls_config` arguments ([#45847](https://github.com/hashicorp/terraform-provider-aws/issues/45847))
 * resource/aws_cloudfront_distribution: Add `owner_account_id` argument to `vpc_origin_config` for cross-account VPC origin support ([#45011](https://github.com/hashicorp/terraform-provider-aws/issues/45011))
 * resource/aws_cloudwatch_log_subscription_filter: Add `apply_on_transformed_logs` argument ([#45826](https://github.com/hashicorp/terraform-provider-aws/issues/45826))
 * resource/aws_cloudwatch_log_subscription_filter: Add `emit_system_fields` argument ([#45760](https://github.com/hashicorp/terraform-provider-aws/issues/45760))
@@ -93,7 +100,9 @@ BUG FIXES:
 * resource/aws_batch_job_definition: Fix handling of logically deleted results in List ([#45694](https://github.com/hashicorp/terraform-provider-aws/issues/45694))
 * resource/aws_cloudwatch_log_subscription_filter: CloudWatch Logs: `PutSubscriptionFilter`: Retry `ValidationException: Make sure you have given CloudWatch Logs permission to assume the provided role` ([#43762](https://github.com/hashicorp/terraform-provider-aws/issues/43762))
 * resource/aws_ec2_subnet_cidr_reservation: Fix 255 subnet CIDR reservation limit ([#45778](https://github.com/hashicorp/terraform-provider-aws/issues/45778))
+* resource/aws_nat_gateway: Handle eventual consistency with attached appliances on delete ([#45842](https://github.com/hashicorp/terraform-provider-aws/issues/45842))
 * resource/aws_vpc: Fix `reading EC2 VPC (...) default Security Group: empty result` and `reading EC2 VPC (...) main Route Table: empty result` errors when importing RAM-shared VPCs. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#45780](https://github.com/hashicorp/terraform-provider-aws/issues/45780))
+* resource/aws_vpc_endpoint: Fix "InvalidParameter: DnsOptions PrivateDnsOnlyForInboundResolverEndpoint is applicable only to Interface VPC Endpoints" error when creating S3 gateway VPC endpoint with IPv6 enabled ([#45849](https://github.com/hashicorp/terraform-provider-aws/issues/45849))
 * resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew` ([#45679](https://github.com/hashicorp/terraform-provider-aws/issues/45679))
 
 ## 6.27.0 (December 17, 2025)

@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.62.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.4 // indirect
@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.38.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evs v1.5.12 // indirect
@@ -165,7 +165,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.9 // indirect
@@ -291,13 +291,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.16 // indirect
 	github.com/aws/smithy-go v1.24.0 // indirect
 	github.com/beevik/etree v1.6.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/cedar-policy/cedar-go v1.3.1 // indirect
+	github.com/cedar-policy/cedar-go v1.4.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -305,7 +305,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/goccy/go-yaml v1.19.1 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
