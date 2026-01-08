@@ -5,9 +5,11 @@ package oam
 
 // Exports for use in tests only.
 var (
-	ResourceLink = resourceLink
-	ResourceSink = resourceSink
+	ResourceLink       = resourceLink
+	ResourceSink       = resourceSink
+	ResourceSinkPolicy = resourceSinkPolicy
 
-	FindLinkByID = findLinkByID
-	FindSinkByID = findSinkByID
+	FindLinkByID       = findLinkByID
+	FindSinkByID       = findSinkByID
+	FindSinkPolicyByID = findSinkPolicyByID
 )

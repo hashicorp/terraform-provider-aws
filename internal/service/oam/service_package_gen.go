@@ -84,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSinkPolicy,
+			Factory:  resourceSinkPolicy,
 			TypeName: "aws_oam_sink_policy",
 			Name:     "Sink Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
