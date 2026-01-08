@@ -99,7 +99,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Resource Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -148,7 +148,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeleteResourcePolicy(ctx, &organizations.DeleteResourcePolicyInput{})
 
 	if errs.IsA[*awstypes.ResourcePolicyNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

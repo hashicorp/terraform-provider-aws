@@ -22,6 +22,7 @@ import (
 func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
 				Type:         schema.TypeString,
@@ -64,7 +65,7 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {

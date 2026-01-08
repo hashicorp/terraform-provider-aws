@@ -121,7 +121,7 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
-		return nil
+		return diags
 	}
 
 	targetID := d.Get("target_id").(string)
