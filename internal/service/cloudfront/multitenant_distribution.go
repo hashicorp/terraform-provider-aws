@@ -84,7 +84,6 @@ func newMultiTenantDistributionResource(_ context.Context) (resource.ResourceWit
 
 type multiTenantDistributionResource struct {
 	framework.ResourceWithModel[multiTenantDistributionResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -934,6 +933,23 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 	// 7. If err != nil, add error
 	response.Diagnostics.AddError("deleting CloudFront Multi-tenant Distribution", err.Error())
+}
+
+func (r *multiTenantDistributionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	output, err := findDistributionByID(ctx, conn, request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Multi-tenant Distribution (%s)", request.ID), err.Error())
+		return
+	}
+
+	if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode != awstypes.ConnectionModeTenantOnly {
+		response.Diagnostics.AddError(fmt.Sprintf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_distribution resource instead", request.ID, connectionMode), "")
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
