@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sagemaker_cluster
+```
+
+```release-note:new-guide
+AWS: aws_sagemaker_cluster
+```
