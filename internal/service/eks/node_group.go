@@ -575,12 +575,15 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			}
 		}
 
-		if v, ok := d.GetOk("release_version"); ok && d.HasChange("release_version") {
-			input.ReleaseVersion = aws.String(v.(string))
-		}
+		// If either version or release_version is changing, include both values in the input
+		if d.HasChanges(names.AttrVersion, "release_version") {
+			if v, ok := d.GetOk(names.AttrVersion); ok {
+				input.Version = aws.String(v.(string))
+			}
 
-		if v, ok := d.GetOk(names.AttrVersion); ok && d.HasChange(names.AttrVersion) {
-			input.Version = aws.String(v.(string))
+			if v, ok := d.GetOk("release_version"); ok {
+				input.ReleaseVersion = aws.String(v.(string))
+			}
 		}
 
 		output, err := conn.UpdateNodegroupVersion(ctx, input)
