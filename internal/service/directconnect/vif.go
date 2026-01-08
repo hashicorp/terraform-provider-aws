@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -91,7 +92,7 @@ func findVirtualInterfaceByID(ctx context.Context, conn *directconnect.Client, i
 	}
 
 	if state := output.VirtualInterfaceState; state == awstypes.VirtualInterfaceStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -124,11 +125,11 @@ func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, inpu
 	return tfslices.Filter(output.VirtualInterfaces, tfslices.PredicateValue(filter)), nil
 }
 
-func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVirtualInterfaceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -141,7 +142,7 @@ func statusVirtualInterface(ctx context.Context, conn *directconnect.Client, id 
 }
 
 func waitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, pending, target []string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
 		Refresh:    statusVirtualInterface(ctx, conn, id),
@@ -160,7 +161,7 @@ func waitVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitVirtualInterfaceDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.VirtualInterfaceStateAvailable,
 			awstypes.VirtualInterfaceStateConfirming,

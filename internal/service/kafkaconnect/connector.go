@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -445,7 +446,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	connector, err := findConnectorByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -594,7 +595,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -611,11 +612,11 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	return output, nil
 }
 
-func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectorByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -628,7 +629,7 @@ func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string)
 }
 
 func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateCreating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -639,7 +640,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -649,7 +650,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -660,7 +661,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -670,7 +671,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnector(ctx, conn, arn),
@@ -681,7 +682,7 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err

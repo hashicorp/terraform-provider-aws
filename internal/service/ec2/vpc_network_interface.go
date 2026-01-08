@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -25,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -524,7 +525,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		return findNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1155,7 +1156,7 @@ func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 
 	_, err = waitNetworkInterfaceDetached(ctx, conn, attachmentID, timeout)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 
@@ -1501,7 +1502,7 @@ func flattenIPv6PrefixSpecifications(apiObjects []awstypes.Ipv6PrefixSpecificati
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while
 // which can prevent security groups and subnets attached to such ENIs from being destroyed
 func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, resourceId string, timeout time.Duration) error {
-	var g multierror.Group
+	var g tfsync.Group
 
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
@@ -1530,10 +1531,10 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 		deleteLingeringQuickSightENI(ctx, &g, conn, eni, timeout)
 	}
 
-	return g.Wait().ErrorOrNil()
+	return g.Wait(ctx)
 }
 
-func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringLambdaENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
 	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1543,12 +1544,12 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.ToString(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
 			networkInterface, err := waitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -1574,7 +1575,7 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 	return true
 }
 
-func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringComprehendENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, eni *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1584,7 +1585,7 @@ func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil {
@@ -1603,7 +1604,7 @@ func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn
 	return true
 }
 
-func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringDMSENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1613,7 +1614,7 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {
@@ -1632,7 +1633,7 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 	return true
 }
 
-func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringRDSENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1642,7 +1643,7 @@ func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {
@@ -1661,7 +1662,7 @@ func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 	return true
 }
 
-func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringQuickSightENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1671,7 +1672,7 @@ func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn
 		return false
 	}
 
-	g.Go(func() error {
+	g.Go(ctx, func(ctx context.Context) error {
 		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {

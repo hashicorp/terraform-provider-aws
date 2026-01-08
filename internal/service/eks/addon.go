@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -17,13 +17,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,7 +219,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -423,7 +424,7 @@ func findAddon(ctx context.Context, conn *eks.Client, input *eks.DescribeAddonIn
 	output, err := conn.DescribeAddon(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -450,11 +451,11 @@ func findAddonUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cluste
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) retry.StateRefreshFunc {
+func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -466,11 +467,11 @@ func statusAddon(ctx context.Context, conn *eks.Client, clusterName, addonName s
 	}
 }
 
-func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) retry.StateRefreshFunc {
+func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addonName, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAddonUpdateByThreePartKey(ctx, conn, clusterName, addonName, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -483,7 +484,7 @@ func statusAddonUpdate(ctx context.Context, conn *eks.Client, clusterName, addon
 }
 
 func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonName string, timeout time.Duration) (*types.Addon, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.AddonStatusCreating, types.AddonStatusDegraded),
 		Target:  enum.Slice(types.AddonStatusActive),
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
@@ -494,7 +495,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -504,7 +505,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 }
 
 func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonName string, timeout time.Duration) (*types.Addon, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.AddonStatusActive, types.AddonStatusDeleting),
 		Target:  []string{},
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
@@ -515,7 +516,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -525,7 +526,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonN
 }
 
 func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, addonName, id string, timeout time.Duration) (*types.Update, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
 		Refresh: statusAddonUpdate(ctx, conn, clusterName, addonName, id),
@@ -536,7 +537,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterNam
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err

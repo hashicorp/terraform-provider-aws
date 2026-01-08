@@ -7,6 +7,16 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject"
   },
   {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderPtrSlice",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject",
+    "source_type": "flex.awsExpanderPtrSlice"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
@@ -43,7 +53,19 @@
     "autoflex.source.size": 2,
     "autoflex.source.type": "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "source_type": "[]*flex.awsExpander",
+    "target_type": "ListNestedObjectTypeOf[flex.tfFlexer]"
+  },
+  {
+    "@level": "debug",
+    "@message": "DEBUG: First element of nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "element_type": "*flex.awsExpander"
   },
   {
     "@level": "info",

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -429,7 +430,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	).Generate()
 	exist, err := findTargetGroupByName(ctx, conn, name)
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
 	}
 
@@ -597,7 +598,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	targetGroup, err := findTargetGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -955,7 +956,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -976,7 +977,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1002,7 +1003,7 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1026,7 +1027,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	output, err := conn.DescribeTargetGroupAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

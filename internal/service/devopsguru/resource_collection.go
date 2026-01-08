@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -165,7 +166,7 @@ func (r *resourceCollectionResource) Read(ctx context.Context, req resource.Read
 	}
 
 	out, err := findResourceCollectionByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -256,7 +257,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	out, err := conn.GetResourceCollection(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -275,7 +276,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 		// a non-empty array of stack names
 		if out.ResourceCollection.CloudFormation == nil ||
 			len(out.ResourceCollection.CloudFormation.StackNames) == 0 {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: in,
 			}
 		}
@@ -284,7 +285,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 		// and that object should have a TagValues array with at least 1 item
 		if len(out.ResourceCollection.Tags) == 0 ||
 			len(out.ResourceCollection.Tags) == 1 && len(out.ResourceCollection.Tags[0].TagValues) == 0 {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: in,
 			}
 		}

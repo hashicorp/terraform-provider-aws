@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: "2"
 linters:
   default: none
@@ -29,8 +32,12 @@ linters:
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
+          alias: sdkretry
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
+        - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
+          alias: ""
     mnd:
       checks:
         - argument

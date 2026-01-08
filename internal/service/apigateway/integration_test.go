@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -623,15 +623,89 @@ func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
 				),
 			},
 			{
-				// Switch back to Stream
-				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				// Switch back to Stream, with timeout specified
+				Config: testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "900000"),
 				),
+			},
+			{
+				// Invalid: Stream with timeout > 900000
+				Config:      testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900001),
+				ExpectError: regexache.MustCompile(`timeout_milliseconds must be at most 900000 when response_transfer_mode is STREAM`),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_lambdaIntegrationResponseTransferModeBuffered(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_lambdaIntegration(rName, "invoke_arn", string(awstypes.ResponseTransferModeBuffered), 29000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "POST"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURI, lambdaFunctionResourceName, "invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeBuffered)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_lambdaIntegrationResponseTransferModeStream(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_lambdaIntegration(rName, "response_streaming_invoke_arn", string(awstypes.ResponseTransferModeStream), 900000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "POST"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrURI, lambdaFunctionResourceName, "response_streaming_invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "900000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -653,7 +727,7 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -693,7 +767,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1419,6 +1493,39 @@ resource "aws_api_gateway_integration" "test" {
 `, rName, responseTransferMode)
 }
 
+func testAccIntegrationConfig_responseTransferModeWithTimeout(rName, responseTransferMode string, timeoutMilliseconds int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+  timeout_milliseconds   = %[3]d
+}
+`, rName, responseTransferMode, timeoutMilliseconds)
+}
+
 func testAccIntegrationConfig_vpcLinkV2ALB(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
@@ -1607,4 +1714,76 @@ resource "aws_api_gateway_integration" "test" {
   uri                     = "http://example.com"
 }
 `, rName, rName2))
+}
+
+func testAccIntegrationConfig_lambdaIntegration(rName, invokeArnIdentifier, responseTransferMode string, timeoutMilliseconds int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.role.arn
+  handler       = "lambdatest.handler"
+  runtime       = "nodejs22.x"
+  timeout       = 900
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.test.%[2]s
+  response_transfer_mode  = %[3]q
+  timeout_milliseconds    = %[4]d
+}
+`, rName, invokeArnIdentifier, responseTransferMode, timeoutMilliseconds)
 }

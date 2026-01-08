@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -129,7 +129,7 @@ func testAccOptIn_disappears(t *testing.T) {
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, resourceName, &optin),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceOptIn, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceOptIn, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},

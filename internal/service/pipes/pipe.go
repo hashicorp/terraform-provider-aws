@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -194,7 +195,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findPipeByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Pipes Pipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -341,7 +342,7 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	output, err := conn.DescribePipe(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -358,11 +359,11 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	return output, nil
 }
 
-func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
+func statusPipe(ctx context.Context, conn *pipes.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPipeByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -375,7 +376,7 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.Stat
 }
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateCreating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
@@ -386,7 +387,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -395,7 +396,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateUpdating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
@@ -406,7 +407,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -415,7 +416,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PipeStateDeleting),
 		Target:  []string{},
 		Refresh: statusPipe(ctx, conn, id),
@@ -424,7 +425,7 @@ func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

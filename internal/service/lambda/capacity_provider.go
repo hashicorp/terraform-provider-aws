@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -44,6 +44,7 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
 // @Testing(preIdentityVersion="v6.25.0")
+// @Testing(preCheck="testAccCapacityProviderPreCheck")
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 

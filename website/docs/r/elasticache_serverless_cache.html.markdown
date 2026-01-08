@@ -106,7 +106,7 @@ The following arguments are optional:
 * `snapshot_retention_limit` - (Optional, Redis only) The number of snapshots that will be retained for the serverless cache that is being created. As new snapshots beyond this limit are added, the oldest snapshots will be deleted on a rolling basis. Available for Redis only.
 * `subnet_ids` - (Optional) A list of the identifiers of the subnets where the VPC endpoint for the serverless cache will be deployed. All the subnetIds must belong to the same VPC.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_group_id` - (Optional) The identifier of the UserGroup to be associated with the serverless cache. Available for Redis only. Default is NULL.
+* `user_group_id` - (Optional) The identifier of the UserGroup to be associated with the serverless cache. Available for Redis and Valkey. Default is NULL.
 
 ### `cache_usage_limits` Block
 

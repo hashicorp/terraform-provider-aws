@@ -1,7 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
-// Copyright 2025 Twilio Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// Copyright 2025 Twilio Inc.
 package logs_test
 
 import (
@@ -73,7 +73,7 @@ func TestAccLogsTransformer_disappears(t *testing.T) {
 				Config: testAccTransformerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceTransformer, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceTransformer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccLogsTransformer_disappears_logGroup(t *testing.T) {
 				Config: testAccTransformerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

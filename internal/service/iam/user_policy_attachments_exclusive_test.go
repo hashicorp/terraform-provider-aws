@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -84,8 +84,8 @@ func TestAccIAMUserPolicyAttachmentsExclusive_disappears_User(t *testing.T) {
 					testAccCheckUserPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policies must be detached before user can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUser(), userResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), userResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,8 +116,8 @@ func TestAccIAMUserPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 					testAccCheckUserPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policy must be detached before it can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourcePolicy(), policyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

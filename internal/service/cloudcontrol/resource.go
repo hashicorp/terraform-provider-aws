@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudcontrol
@@ -386,7 +386,7 @@ func statusProgressEventOperation(conn *cloudcontrol.Client, requestToken string
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -13,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -113,7 +113,7 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	cache, err := findAPICacheByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
@@ -190,7 +190,7 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	output, err := conn.GetApiCache(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
@@ -204,11 +204,11 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	return output.ApiCache, nil
 }
 
-func statusAPICache(ctx context.Context, conn *appsync.Client, name string) retry.StateRefreshFunc {
+func statusAPICache(ctx context.Context, conn *appsync.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAPICacheByID(ctx, conn, name)
 
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -224,7 +224,7 @@ func waitAPICacheAvailable(ctx context.Context, conn *appsync.Client, id string)
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApiCacheStatusCreating, awstypes.ApiCacheStatusModifying),
 		Target:  enum.Slice(awstypes.ApiCacheStatusAvailable),
 		Refresh: statusAPICache(ctx, conn, id),
@@ -244,7 +244,7 @@ func waitAPICacheDeleted(ctx context.Context, conn *appsync.Client, id string) (
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApiCacheStatusDeleting),
 		Target:  []string{},
 		Refresh: statusAPICache(ctx, conn, id),

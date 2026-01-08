@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -172,7 +173,7 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	out, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -251,7 +252,7 @@ func findNamespace(ctx context.Context, conn *quicksight.Client, input *quicksig
 	output, err := conn.DescribeNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -302,7 +303,7 @@ type namespaceResourceModel struct {
 }
 
 func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusCreating),
 		Target:     enum.Slice(awstypes.NamespaceStatusCreated),
 		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
@@ -320,7 +321,7 @@ func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
@@ -337,11 +338,11 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 	return nil, err
 }
 
-func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
+func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

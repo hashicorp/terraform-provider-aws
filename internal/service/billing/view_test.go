@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package billing_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbilling "github.com/hashicorp/terraform-provider-aws/internal/service/billing"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -125,7 +125,7 @@ func TestAccBillingView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbilling.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbilling.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,7 +203,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfbilling.FindViewByARN(ctx, conn, arn)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,7 +85,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	resolverConfig, err := findResolverConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +140,7 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -159,11 +160,11 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResolverConfigByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -188,7 +189,7 @@ func waitAutodefinedReverseUpdated(ctx context.Context, conn *route53resolver.Cl
 }
 
 func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusEnabled),
 		Refresh: statusAutodefinedReverse(ctx, conn, id),
@@ -205,7 +206,7 @@ func waitAutodefinedReverseEnabled(ctx context.Context, conn *route53resolver.Cl
 }
 
 func waitAutodefinedReverseDisabled(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabling),
 		Target:  enum.Slice(awstypes.ResolverAutodefinedReverseStatusDisabled),
 		Refresh: statusAutodefinedReverse(ctx, conn, id),

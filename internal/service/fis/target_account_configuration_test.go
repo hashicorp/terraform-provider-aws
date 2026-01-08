@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fis_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -124,7 +124,7 @@ func TestAccFISTargetAccountConfiguration_disappears(t *testing.T) {
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffis.ResourceTargetAccountConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffis.ResourceTargetAccountConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func testAccCheckTargetAccountConfigurationDestroy(ctx context.Context) resource
 			accountId := aws.String(rs.Primary.Attributes[names.AttrAccountID])
 			experimentId := aws.String(rs.Primary.Attributes["experiment_template_id"])
 			_, err := tffis.FindTargetAccountConfigurationByID(ctx, conn, accountId, experimentId)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

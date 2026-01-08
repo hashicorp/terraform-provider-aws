@@ -58,10 +58,9 @@ EOF
 ## Lambda integration
 
 ```terraform
-# Variables
-variable "myregion" {}
-
-variable "accountId" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 # API Gateway
 resource "aws_api_gateway_rest_api" "api" {
@@ -98,7 +97,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+  source_arn = "arn:${data.aws_partition.current.partition}:execute-api:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -128,6 +127,24 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_role" "role" {
   name               = "myrole"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+```
+
+## Lambda integration with response streaming
+
+All other resources and data sources are the same as in [the previous example](#lambda-integration); only the integration configuration differs.
+Note that the `timeout` of the `aws_lambda_function` may need to be adjusted.
+
+```terraform
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.lambda.response_streaming_invoke_arn
+  response_transfer_mode  = "STREAM"
+  timeout_milliseconds    = 900000
 }
 ```
 
@@ -289,7 +306,7 @@ This resource supports the following arguments:
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.
 * `content_handling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
-* `timeout_milliseconds` - (Optional) Custom timeout between 50 and 300,000 milliseconds. The default value is 29,000 milliseconds. You need to raise a [Service Quota Ticket](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) to increase time beyond 29,000 milliseconds.
+* `timeout_milliseconds` - (Optional) Custom timeout in milliseconds. The minimum value is 50. The maximum value is 300,000 when `response_transfer_mode` is `BUFFERED`, and 900,000 when `response_transfer_mode` is `STREAM`. The default value is 29,000 milliseconds. You need to raise a [Service Quota Ticket](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) to increase time beyond 29,000 milliseconds for `BUFFERED` mode.
 * `tls_config` - (Optional) TLS configuration. See below.
 
 ### tls_config Configuration Block

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -30,8 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,6 +47,7 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -68,8 +70,8 @@ func resourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validStreamSpec(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateTableAttributes(diff)
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -144,6 +146,18 @@ func resourceTable() *schema.Resource {
 			}),
 			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
+			func(ctx context.Context, diff *schema.ResourceDiff, i any) error {
+				rs := diff.GetRawState()
+				if rs.IsNull() {
+					return nil
+				}
+
+				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					_ = diff.Clear("attribute")
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -187,6 +201,7 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
@@ -919,7 +934,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	table, err := findTableByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, resNameTable, d.Id())
 		d.SetId("")
 		return diags
@@ -2202,7 +2217,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 }
 
 func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, globalTableWitnessRegionName string, timeout time.Duration) error {
-	var g multierror.Group
+	var g tfsync.Group
 
 	var replicaDeletes []awstypes.ReplicationGroupUpdate
 	for _, tfMapRaw := range tfList {
@@ -2309,7 +2324,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				continue
 			}
 
-			g.Go(func() error {
+			g.Go(ctx, func(ctx context.Context) error {
 				input := &dynamodb.UpdateTableInput{
 					TableName: aws.String(tableName),
 					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
@@ -2358,7 +2373,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return nil
 			})
 		}
-		return g.Wait().ErrorOrNil()
+		return g.Wait(ctx)
 	}
 }
 
@@ -2607,10 +2622,11 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	for _, g := range gsi {
 		gsi := make(map[string]any)
 
+		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
 
 		for _, attribute := range g.KeySchema {
@@ -3061,7 +3077,9 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 
 // validators
 
-func validateTableAttributes(d *schema.ResourceDiff) error {
+func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 
@@ -3079,7 +3097,14 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			indexedAttributes[rangeKey] = true
 		}
 	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
+
+	config := d.GetRawConfig()
+	hasConfiguredGsi := false
+	if config.IsKnown() {
+		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
+	}
+
+	if v, ok := d.GetOk("global_secondary_index"); ok && hasConfiguredGsi {
 		indexes := v.(*schema.Set).List()
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
@@ -3093,14 +3118,46 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
+	remoteGSIAttributes := map[string]bool{}
+	table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string))
+	if err != nil && !retry.NotFound(err) {
+		return err
+	}
+
+	if table != nil {
+		for _, g := range table.GlobalSecondaryIndexes {
+			for _, ks := range g.KeySchema {
+				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+				delete(indexedAttributes, aws.ToString(ks.AttributeName))
+			}
+		}
+	}
+
 	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
+	var attributes []any
+	if hasConfiguredGsi {
+		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
+		for _, v := range vals {
+			attr := map[string]any{}
+			for k, v := range v.AsValueMap() {
+				attr[k] = v.AsString()
+			}
+			attributes = append(attributes, attr)
+		}
+	} else {
+		attributes = d.Get("attribute").(*schema.Set).List()
+	}
+
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]any)
 		attrName := attribute[names.AttrName].(string)
 
-		if _, ok := indexedAttributes[attrName]; !ok {
+		_, ok1 := indexedAttributes[attrName]
+		_, ok2 := remoteGSIAttributes[attrName]
+
+		if !ok1 && !ok2 {
 			unindexedAttributes = append(unindexedAttributes, attrName)
 		} else {
 			delete(indexedAttributes, attrName)

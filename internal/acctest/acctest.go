@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -63,11 +63,13 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -128,7 +130,7 @@ var (
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
 )
 
-// Provider is the "main" provider instance
+// Provider is the "default" provider instance.
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
@@ -139,6 +141,12 @@ var (
 )
 
 type ProviderFunc func() *schema.Provider
+
+var (
+	DefaultProviderFunc ProviderFunc = func() *schema.Provider {
+		return Provider
+	}
+)
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -1164,7 +1172,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -1178,7 +1186,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
-	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	return PreCheckOrganizationsEnabledWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
@@ -1200,7 +1208,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 
 	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 
@@ -1214,7 +1222,7 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1236,7 +1244,7 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, DefaultProviderFunc)
 }
 
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
@@ -1255,6 +1263,27 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	}
 }
 
+func PreCheckSameOrganization(ctx context.Context, t *testing.T, providerFs ...ProviderFunc) {
+	t.Helper()
+
+	var organizations []*organizationstypes.Organization
+
+	for _, providerF := range providerFs {
+		organizations = append(organizations, PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF))
+	}
+
+	slices.SortFunc(organizations, func(a, b *organizationstypes.Organization) int {
+		return strings.Compare(aws.ToString(a.Id), aws.ToString(b.Id))
+	})
+	organizations = slices.CompactFunc(organizations, func(a, b *organizationstypes.Organization) bool {
+		return aws.ToString(a.Id) == aws.ToString(b.Id)
+	})
+
+	if len(organizations) != 1 {
+		t.Skip("all AWS accounts must be members of the same AWS Organization")
+	}
+}
+
 func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
@@ -1264,6 +1293,30 @@ func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckRAMSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx, t, DefaultProviderFunc)
+}
+
+func PreCheckRAMSharingWithOrganizationEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	err := tfram.FindSharingWithOrganization(ctx, providerF().Meta().(*conns.AWSClient))
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if retry.NotFound(err) {
+		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
 	}
 
 	if err != nil {
@@ -1340,7 +1393,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
@@ -1356,7 +1409,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
 
-	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, DefaultProviderFunc, pathPrefix)
 }
 
 func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
@@ -1559,7 +1612,23 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
-func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+type providerMetaFunc func(ctx context.Context) *conns.AWSClient
+
+func providerMeta(t *testing.T) providerMetaFunc {
+	return func(ctx context.Context) *conns.AWSClient {
+		return ProviderMeta(ctx, t)
+	}
+}
+
+func CheckSDKResourceDisappears(ctx context.Context, t *testing.T, resource *schema.Resource, n string) resource.TestCheckFunc {
+	return checkSDKResourceDisappears(ctx, providerMeta(t), resource, n)
+}
+
+func CheckSDKResourceDisappearsWithProvider(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+	return checkSDKResourceDisappears(ctx, func(context.Context) *conns.AWSClient { return provider.Meta().(*conns.AWSClient) }, resource, n)
+}
+
+func checkSDKResourceDisappears(ctx context.Context, providerMetaF providerMetaFunc, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1576,7 +1645,7 @@ func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, res
 			return err
 		}
 
-		return DeleteResource(ctx, resource, resource.Data(&state), provider.Meta())
+		return DeleteResource(ctx, resource, resource.Data(&state), providerMetaF(ctx))
 	}
 }
 
@@ -2195,9 +2264,16 @@ func SkipIfExeNotOnPath(t *testing.T, file string) string {
 	return v
 }
 
+// SkipIfNotRunningAcceptanceTests skips the current test if it's not an acceptance test (TF_ACC is set in the environment).
+func SkipIfNotRunningAcceptanceTests(t *testing.T) {
+	t.Helper()
+	SkipIfEnvVarNotSet(t, resource.EnvTfAcc)
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
+	SkipIfNotRunningAcceptanceTests(t)
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {

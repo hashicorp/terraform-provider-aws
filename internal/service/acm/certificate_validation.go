@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,7 +114,7 @@ func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceDa
 	arn := d.Get(names.AttrCertificateARN).(string)
 	certificate, err := findCertificateValidationByARN(ctx, conn, arn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", arn)
 		d.SetId("")
 		return diags
@@ -138,15 +138,14 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 
 	if status := output.Status; status != types.CertificateStatusIssued {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: arn,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
+func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
 		input := acm.DescribeCertificateInput{
@@ -155,7 +154,7 @@ func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.
 
 		output, err := findCertificate(ctx, conn, &input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -168,7 +167,7 @@ func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.
 }
 
 func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateStatusPendingValidation),
 		Target:  enum.Slice(types.CertificateStatusIssued),
 		Refresh: statusCertificate(ctx, conn, arn),
@@ -180,9 +179,9 @@ func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, ti
 	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		switch output.Status {
 		case types.CertificateStatusFailed:
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		case types.CertificateStatusRevoked:
-			tfresource.SetLastError(err, errors.New(string(output.RevocationReason)))
+			retry.SetLastError(err, errors.New(string(output.RevocationReason)))
 		}
 
 		return output, err

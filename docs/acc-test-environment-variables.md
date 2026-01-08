@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Acceptance Testing Environment Variable Dictionary
 
 Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `internal/acctest` package.
@@ -110,6 +113,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_AWS_CONTROLTOWER_CONTROL_OU_NAME`                           | Organizational unit name to be targeted by the Control Tower control.                                                                                                                            |
 | `TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN`              | Enable baseline ARN.                                                                                                                                                                             |
 | `TF_AWS_DATAEXCHANGE_DATA_SET_ID`                               | ID of DataExchange Data Set to use for testing.                                                                                                                                                  |
+| `TF_AWS_KENDRA_INDEX_ARN`                               | ARN of Kendra Index to use for testing.                                                                                                                                                  |
 | `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION`                      | Region where a License Manager license is imported.                                                                                                                                              |
 | `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN`                      | ARN for a License Manager license imported into the current account.                                                                                                                             |
 | `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL`                        | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit.                                                                          |

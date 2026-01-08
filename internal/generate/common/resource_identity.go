@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -50,6 +50,8 @@ type ResourceIdentity struct {
 	CustomInherentRegionParser     string
 	HasV6_0NullValuesError         bool
 	HasV6_0RefreshError            bool
+	ImportIDHandler                string
+	SetIDAttribute                 bool
 }
 
 func (r ResourceIdentity) HasResourceIdentity() bool {
@@ -72,6 +74,14 @@ func (r ResourceIdentity) IsParameterizedIdentity() bool {
 	return len(r.IdentityAttributes) > 0
 }
 
+func (r ResourceIdentity) IsSingleParameterizedIdentity() bool {
+	return len(r.IdentityAttributes) == 1
+}
+
+func (r ResourceIdentity) IsMultipleParameterizedIdentity() bool {
+	return len(r.IdentityAttributes) > 1
+}
+
 func (r ResourceIdentity) IsSingletonIdentity() bool {
 	return r.isSingletonIdentity
 }
@@ -92,6 +102,15 @@ func (r ResourceIdentity) IdentityDuplicateAttrs() []string {
 	return tfslices.ApplyToAll(r.IdentityDuplicateAttrNames, func(s string) string {
 		return namesgen.ConstOrQuote(s)
 	})
+}
+
+func (r ResourceIdentity) Validate() error {
+	if r.IsMultipleParameterizedIdentity() {
+		if r.ImportIDHandler == "" {
+			return errors.New("ImportIDHandler required for multiple parameterized identity")
+		}
+	}
+	return nil
 }
 
 type IdentityAttribute struct {
@@ -184,6 +203,25 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		if attr, ok := args.Keyword["sdkV2IdentityUpgraders"]; ok {
 			attrs := strings.Split(attr, ";")
 			d.SDKv2IdentityUpgraders = attrs
+		}
+
+	case "ImportIDHandler":
+		attr := args.Positional[0]
+		if typeName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return err
+		} else {
+			d.ImportIDHandler = typeName
+			if importSpec != nil {
+				*goImports = append(*goImports, *importSpec)
+			}
+		}
+
+		if attr, ok := args.Keyword["setIDAttribute"]; ok {
+			if b, err := strconv.ParseBool(attr); err != nil {
+				return err
+			} else {
+				d.SetIDAttribute = b
+			}
 		}
 
 	case "MutableIdentity":

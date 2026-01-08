@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,7 +83,7 @@ func TestAccTransferWebAppCustomization_disappears(t *testing.T) {
 				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebAppCustomization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceWebAppCustomization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -120,7 +120,7 @@ func TestAccTransferWebAppCustomization_Disappears_webApp(t *testing.T) {
 				Config: testAccWebAppCustomizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebAppCustomizationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceWebApp, webAppResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceWebApp, webAppResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -287,7 +287,7 @@ func testAccCheckWebAppCustomizationDestroy(ctx context.Context) resource.TestCh
 			}
 
 			_, err := tftransfer.FindWebAppCustomizationByID(ctx, conn, rs.Primary.Attributes["web_app_id"])
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

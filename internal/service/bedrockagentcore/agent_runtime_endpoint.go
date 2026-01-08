@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -271,7 +271,7 @@ func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcore
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -289,7 +289,7 @@ func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcore
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -306,7 +306,7 @@ func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcore
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
