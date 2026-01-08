@@ -148,7 +148,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.9
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.15
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.6
-	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.0
+	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.16
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.9
@@ -272,7 +272,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.6
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.14
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.8
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.16
 	github.com/aws/smithy-go v1.24.0
