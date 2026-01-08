@@ -41,9 +41,22 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Set non API attributes to their Default settings in the schema
+				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+				output, err := findDistributionByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return nil, err
+				}
+
+				if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode == awstypes.ConnectionModeTenantOnly {
+					return nil, fmt.Errorf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_multitenant_distribution resource instead", d.Id(), connectionMode)
+				}
+
+				// Set non API attributes to their default settings in the schema.
 				d.Set("retain_on_delete", false)
 				d.Set("wait_for_deployment", true)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
