@@ -50,7 +50,7 @@ const (
 	streamLabelRegex = `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}`
 )
 
-func TestUpdateDiffGSI(t *testing.T) {
+func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -79,6 +79,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			ExpectedUpdates: nil,
 		},
+
 		"non-key attribute order": { // No-op => ignore ordering of non_key_attributes
 			Old: []any{
 				map[string]any{
@@ -612,6 +613,108 @@ func TestUpdateDiffGSI(t *testing.T) {
 				},
 			},
 		},
+
+		// "add with multiple hash_keys": {
+		// 	Old: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	New: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 		map[string]any{
+		// 			names.AttrName:    "att2-index",
+		// 			"hash_keys":       []string{"att2", "att1"},
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+		// 		{
+		// 			Create: &awstypes.CreateGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att2-index"),
+		// 				KeySchema: []awstypes.KeySchemaElement{
+		// 					{
+		// 						AttributeName: aws.String("att2"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 					{
+		// 						AttributeName: aws.String("att1"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 				},
+		// 				ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+		// 					WriteCapacityUnits: aws.Int64(10),
+		// 					ReadCapacityUnits:  aws.Int64(10),
+		// 				},
+		// 				Projection: &awstypes.Projection{
+		// 					ProjectionType: awstypes.ProjectionTypeAll,
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+
+		// "change hash_key to multiple hash_keys": {
+		// 	Old: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	New: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_keys":       []string{"att1", "att2"},
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+		// 		{
+		// 			Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att1-index"),
+		// 			},
+		// 		},
+		// 		{
+		// 			Create: &awstypes.CreateGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att1-index"),
+		// 				KeySchema: []awstypes.KeySchemaElement{
+		// 					{
+		// 						AttributeName: aws.String("att1"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 					{
+		// 						AttributeName: aws.String("att2"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 				},
+		// 				ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+		// 					WriteCapacityUnits: aws.Int64(10),
+		// 					ReadCapacityUnits:  aws.Int64(10),
+		// 				},
+		// 				Projection: &awstypes.Projection{
+		// 					ProjectionType: awstypes.ProjectionTypeAll,
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 	}
 
 	for name, tc := range testCases {
@@ -631,6 +734,688 @@ func TestUpdateDiffGSI(t *testing.T) {
 				awstypes.KeySchemaElement{},
 				awstypes.Projection{},
 				awstypes.ProvisionedThroughput{},
+				awstypes.WarmThroughput{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdateDiffGSI_OnDemand(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		Old             []any
+		New             []any
+		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
+	}{
+		"no changes": { // No-op => no changes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+
+		"non-key attribute order": { // No-op => ignore ordering of non_key_attributes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr3", "attr1", "attr2"}),
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr1", "attr2", "attr3"}),
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+
+		"add GSI": { // Creation
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"add GSI with warm throughput": { // Creation with warm throughput
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						}},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						}},
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(10),
+							MaxWriteRequestUnits: aws.Int64(15),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(10),
+							WriteUnitsPerSecond: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"remove GSI": { // Deletion
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+			},
+		},
+
+		"update warm throughput in place": { // Update warm throughput 1: update in place
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 12,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(12),
+						},
+					},
+				},
+			},
+		},
+
+		"decrease warm throughput": { // Update warm throughput 2: update via recreate
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  15000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  14000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(14000),
+							WriteUnitsPerSecond: aws.Int64(5000),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"update capacity and warm throughput": { // Update warm throughput 3: update in place at the same moment as capacity
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  10,
+						"max_write_request_units": 15,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 16,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(10),
+							MaxWriteRequestUnits: aws.Int64(15),
+						},
+					},
+				},
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(16),
+						},
+					},
+				},
+			},
+		},
+
+		"change key schema and non-key attributes": { // Update of non-capacity attributes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att-new",
+					"range_key":    "new-range-key",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "KEYS_ONLY",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"RandomAttribute"}),
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("new-range-key"),
+								KeyType:       awstypes.KeyTypeRange,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType:   awstypes.ProjectionTypeKeysOnly,
+							NonKeyAttributes: []string{"RandomAttribute"},
+						},
+					},
+				},
+			},
+		},
+
+		"update hash_key only": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att-new",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"update on_demand_throughput only": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  10,
+						"max_write_request_units": 15,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(10),
+							MaxWriteRequestUnits: aws.Int64(15),
+						},
+					},
+				},
+			},
+		},
+
+		// "add with multiple hash_keys": {
+		// 	Old: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	New: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 		map[string]any{
+		// 			names.AttrName:    "att2-index",
+		// 			"hash_keys":       []string{"att2", "att1"},
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+		// 		{
+		// 			Create: &awstypes.CreateGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att2-index"),
+		// 				KeySchema: []awstypes.KeySchemaElement{
+		// 					{
+		// 						AttributeName: aws.String("att2"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 					{
+		// 						AttributeName: aws.String("att1"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 				},
+		// 				ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+		// 					WriteCapacityUnits: aws.Int64(10),
+		// 					ReadCapacityUnits:  aws.Int64(10),
+		// 				},
+		// 				Projection: &awstypes.Projection{
+		// 					ProjectionType: awstypes.ProjectionTypeAll,
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+
+		// "change hash_key to multiple hash_keys": {
+		// 	Old: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_key":        "att1",
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	New: []any{
+		// 		map[string]any{
+		// 			names.AttrName:    "att1-index",
+		// 			"hash_keys":       []string{"att1", "att2"},
+		// 			"write_capacity":  10,
+		// 			"read_capacity":   10,
+		// 			"projection_type": "ALL",
+		// 		},
+		// 	},
+		// 	ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+		// 		{
+		// 			Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att1-index"),
+		// 			},
+		// 		},
+		// 		{
+		// 			Create: &awstypes.CreateGlobalSecondaryIndexAction{
+		// 				IndexName: aws.String("att1-index"),
+		// 				KeySchema: []awstypes.KeySchemaElement{
+		// 					{
+		// 						AttributeName: aws.String("att1"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 					{
+		// 						AttributeName: aws.String("att2"),
+		// 						KeyType:       awstypes.KeyTypeHash,
+		// 					},
+		// 				},
+		// 				ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+		// 					WriteCapacityUnits: aws.Int64(10),
+		// 					ReadCapacityUnits:  aws.Int64(10),
+		// 				},
+		// 				Projection: &awstypes.Projection{
+		// 					ProjectionType: awstypes.ProjectionTypeAll,
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			for _, v := range tc.Old {
+				v.(map[string]any)["read_capacity"] = 0
+				v.(map[string]any)["write_capacity"] = 0
+			}
+			for _, v := range tc.New {
+				v.(map[string]any)["read_capacity"] = 0
+				v.(map[string]any)["write_capacity"] = 0
+			}
+
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModePayPerRequest)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(ops, tc.ExpectedUpdates, cmpopts.IgnoreUnexported(
+				awstypes.GlobalSecondaryIndexUpdate{},
+				awstypes.CreateGlobalSecondaryIndexAction{},
+				awstypes.UpdateGlobalSecondaryIndexAction{},
+				awstypes.DeleteGlobalSecondaryIndexAction{},
+				awstypes.KeySchemaElement{},
+				awstypes.OnDemandThroughput{},
+				awstypes.Projection{},
 				awstypes.WarmThroughput{},
 			)); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
