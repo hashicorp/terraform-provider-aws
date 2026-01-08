@@ -157,3 +157,145 @@ func Test_expandWebACLRulesJSON(t *testing.T) {
 		})
 	}
 }
+
+func Test_flattenWebACLRules_sortsByPriority(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input    []awstypes.Rule
+		expected []int32
+	}{
+		"empty slice": {
+			input:    []awstypes.Rule{},
+			expected: []int32{},
+		},
+		"single rule": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-1"), Priority: 10},
+			},
+			expected: []int32{10},
+		},
+		"already sorted": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-1"), Priority: 1},
+				{Name: aws.String("rule-2"), Priority: 5},
+				{Name: aws.String("rule-3"), Priority: 10},
+			},
+			expected: []int32{1, 5, 10},
+		},
+		"reverse order": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-3"), Priority: 10},
+				{Name: aws.String("rule-2"), Priority: 5},
+				{Name: aws.String("rule-1"), Priority: 1},
+			},
+			expected: []int32{1, 5, 10},
+		},
+		"random order": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-2"), Priority: 19},
+				{Name: aws.String("rule-4"), Priority: 50},
+				{Name: aws.String("rule-1"), Priority: 5},
+				{Name: aws.String("rule-3"), Priority: 23},
+			},
+			expected: []int32{5, 19, 23, 50},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result := flattenWebACLRules(tc.input)
+			rules, ok := result.([]map[string]any)
+			if !ok {
+				t.Fatalf("expected []map[string]any, got %T", result)
+			}
+
+			if len(rules) != len(tc.expected) {
+				t.Fatalf("expected %d rules, got %d", len(tc.expected), len(rules))
+			}
+
+			for i, rule := range rules {
+				priority, ok := rule["priority"].(int32)
+				if !ok {
+					t.Fatalf("expected priority to be int32, got %T", rule["priority"])
+				}
+				if priority != tc.expected[i] {
+					t.Errorf("rule[%d]: expected priority %d, got %d", i, tc.expected[i], priority)
+				}
+			}
+		})
+	}
+}
+
+func Test_flattenRules_sortsByPriority(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input    []awstypes.Rule
+		expected []int32
+	}{
+		"empty slice": {
+			input:    []awstypes.Rule{},
+			expected: []int32{},
+		},
+		"single rule": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-1"), Priority: 10},
+			},
+			expected: []int32{10},
+		},
+		"already sorted": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-1"), Priority: 1},
+				{Name: aws.String("rule-2"), Priority: 5},
+				{Name: aws.String("rule-3"), Priority: 10},
+			},
+			expected: []int32{1, 5, 10},
+		},
+		"reverse order": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-3"), Priority: 10},
+				{Name: aws.String("rule-2"), Priority: 5},
+				{Name: aws.String("rule-1"), Priority: 1},
+			},
+			expected: []int32{1, 5, 10},
+		},
+		"random order": {
+			input: []awstypes.Rule{
+				{Name: aws.String("rule-2"), Priority: 19},
+				{Name: aws.String("rule-4"), Priority: 50},
+				{Name: aws.String("rule-1"), Priority: 5},
+				{Name: aws.String("rule-3"), Priority: 23},
+			},
+			expected: []int32{5, 19, 23, 50},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result := flattenRules(tc.input)
+			rules, ok := result.([]map[string]any)
+			if !ok {
+				t.Fatalf("expected []map[string]any, got %T", result)
+			}
+
+			if len(rules) != len(tc.expected) {
+				t.Fatalf("expected %d rules, got %d", len(tc.expected), len(rules))
+			}
+
+			for i, rule := range rules {
+				priority, ok := rule["priority"].(int32)
+				if !ok {
+					t.Fatalf("expected priority to be int32, got %T", rule["priority"])
+				}
+				if priority != tc.expected[i] {
+					t.Errorf("rule[%d]: expected priority %d, got %d", i, tc.expected[i], priority)
+				}
+			}
+		})
+	}
+}

@@ -4,9 +4,11 @@
 package wafv2
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -2044,6 +2046,11 @@ func expandFieldToProtect(tfList []any) *awstypes.FieldToProtect {
 }
 
 func flattenRules(r []awstypes.Rule) any {
+	// Sort rules by priority to ensure consistent ordering and avoid spurious diffs
+	slices.SortFunc(r, func(a, b awstypes.Rule) int {
+		return cmp.Compare(a.Priority, b.Priority)
+	})
+
 	out := make([]map[string]any, len(r))
 	for i, rule := range r {
 		m := make(map[string]any)
@@ -2943,6 +2950,11 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 }
 
 func flattenWebACLRules(r []awstypes.Rule) any {
+	// Sort rules by priority to ensure consistent ordering and avoid spurious diffs
+	slices.SortFunc(r, func(a, b awstypes.Rule) int {
+		return cmp.Compare(a.Priority, b.Priority)
+	})
+
 	out := make([]map[string]any, len(r))
 	for i, rule := range r {
 		m := make(map[string]any)
