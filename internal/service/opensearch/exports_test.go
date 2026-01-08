@@ -21,6 +21,8 @@ var (
 
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
+	ExpandServerlessVectorAcceleration  = expandServerlessVectorAcceleration
+	FlattenServerlessVectorAcceleration = flattenServerlessVectorAcceleration
 	ParseEngineVersion                  = parseEngineVersion
 	VPCEndpointsError                   = vpcEndpointsError
 	WaitForDomainCreation               = waitForDomainCreation
