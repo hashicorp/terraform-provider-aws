@@ -10,14 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_oam_link", name="Link")
-func DataSourceLink() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+func dataSourceLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinkRead,
 
@@ -90,41 +90,26 @@ func DataSourceLink() *schema.Resource {
 	}
 }
 
-const (
-	DSNameLink = "Link Data Source"
-)
-
 func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	linkIdentifier := d.Get("link_identifier").(string)
-
 	out, err := findLinkByID(ctx, conn, linkIdentifier)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, linkIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Link (%s): %s", linkIdentifier, err)
 	}
 
-	d.SetId(aws.ToString(out.Arn))
-
-	d.Set(names.AttrARN, out.Arn)
+	arn := aws.ToString(out.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("label", out.Label)
 	d.Set("label_template", out.LabelTemplate)
 	d.Set("link_configuration", flattenLinkConfiguration(out.LinkConfiguration))
 	d.Set("link_id", out.Id)
-	d.Set("resource_types", flex.FlattenStringValueList(out.ResourceTypes))
+	d.Set("resource_types", out.ResourceTypes)
 	d.Set("sink_arn", out.SinkArn)
-
-	tags, err := listTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, d.Id(), err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameLink, d.Id(), err)
-	}
 
 	return nil
 }

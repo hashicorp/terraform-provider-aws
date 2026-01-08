@@ -31,10 +31,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLink,
+			Factory:  dataSourceLink,
 			TypeName: "aws_oam_link",
 			Name:     "Link",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  DataSourceLinks,
