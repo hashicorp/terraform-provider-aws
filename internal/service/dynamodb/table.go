@@ -2069,8 +2069,8 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
-			oldOnDemandThroughput := &awstypes.OnDemandThroughput{}
-			newOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			var oldOnDemandThroughput *awstypes.OnDemandThroughput
+			var newOnDemandThroughput *awstypes.OnDemandThroughput
 			if v, ok := oldMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
 				oldOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
