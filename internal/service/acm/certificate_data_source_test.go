@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +22,7 @@ func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +44,7 @@ func TestAccACMCertificateDataSource_byDomainNoMatch(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +63,7 @@ func TestAccACMCertificateDataSource_byDomainMultiple(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,9 +83,9 @@ func TestAccACMCertificateDataSource_byDomainAndTags(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -110,7 +109,7 @@ func TestAccACMCertificateDataSource_byDomainAndStatuses(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,7 +133,7 @@ func TestAccACMCertificateDataSource_byDomainAndKeyTypes(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -158,7 +157,7 @@ func TestAccACMCertificateDataSource_byDomainAndTypes(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -180,7 +179,7 @@ func TestAccACMCertificateDataSource_byDomainAndTypesNoMatch(t *testing.T) {
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -207,7 +206,7 @@ func TestAccACMCertificateDataSource_byDomainAndKeyTypesMostRecent(t *testing.T)
 	time.Sleep(1 * time.Minute)
 	certificate3 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -246,9 +245,9 @@ func TestAccACMCertificateDataSource_byTags(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -268,9 +267,9 @@ func TestAccACMCertificateDataSource_byTagsNoMatch(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -290,9 +289,9 @@ func TestAccACMCertificateDataSource_byTagsAndKeyTypes(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
 	domain := acctest.RandomDomain().String()
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
