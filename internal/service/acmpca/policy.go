@@ -26,6 +26,8 @@ import (
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,

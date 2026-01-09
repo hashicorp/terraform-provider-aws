@@ -45,7 +45,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("certificate_authority_arn"), compare.ValuesSame()),
@@ -250,7 +250,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +264,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -334,7 +334,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_NoRe
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -349,7 +349,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_NoRe
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
