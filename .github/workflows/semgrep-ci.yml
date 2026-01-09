@@ -53,7 +53,7 @@ jobs:
           semgrep --quiet --test .ci/semgrep/
 
   semgrep:
-    name: Code Quality Scan
+    name: Code Quality Scan (make semgrep-code-quality)
     needs: [semgrep-test]
     runs-on: ubuntu-latest
     container:
@@ -66,15 +66,28 @@ jobs:
           --config .ci/.semgrep-constants.yml \
           --config .ci/.semgrep-test-constants.yml \
           --config .ci/semgrep/ \
+          --config 'r/dgryski.semgrep-go.anon-struct-args' \
           --config 'r/dgryski.semgrep-go.badnilguard' \
+          --config 'r/dgryski.semgrep-go.contextcancelable' \
+          --config 'r/dgryski.semgrep-go.ctx-time' \
           --config 'r/dgryski.semgrep-go.errnilcheck' \
+          --config 'r/dgryski.semgrep-go.ioutil' \
+          --config 'r/dgryski.semgrep-go.mail-address' \
           --config 'r/dgryski.semgrep-go.marshaljson' \
           --config 'r/dgryski.semgrep-go.nilerr' \
+          --config 'r/dgryski.semgrep-go.oddcompare' \
           --config 'r/dgryski.semgrep-go.oddifsequence' \
-          --config 'r/dgryski.semgrep-go.oserrors'
+          --config 'r/dgryski.semgrep-go.oserrors' \
+          --config 'r/dgryski.semgrep-go.parseint-downcast' \
+          --config 'r/dgryski.semgrep-go.readeof' \
+          --config 'r/dgryski.semgrep-go.readfull' \
+          --config 'r/dgryski.semgrep-go.sprinterr' \
+          --config 'r/dgryski.semgrep-go.unixnano' \
+          --config 'r/dgryski.semgrep-go.writestring' \
+          --config 'r/dgryski.semgrep-go.wrongerrcall'
 
   naming_cae:
-    name: Naming Scan Caps/AWS/EC2
+    name: Naming Scan Caps/AWS/EC2 (make semgrep-naming-cae)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
@@ -85,7 +98,7 @@ jobs:
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-caps-aws-ec2.yml
 
   naming_tests:
-    name: Test Configs Scan
+    name: Test Configs Scan (make semgrep-naming)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
@@ -96,7 +109,7 @@ jobs:
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-configs.yml
 
   naming_semgrep0:
-    name: Service Name Scan A-C
+    name: Service Name Scan A-C (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
@@ -107,7 +120,7 @@ jobs:
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name0.yml
 
   naming_semgrep1:
-    name: Service Name Scan C-I
+    name: Service Name Scan C-I (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
@@ -118,7 +131,7 @@ jobs:
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name1.yml
 
   naming_semgrep2:
-    name: Service Name Scan I-Q
+    name: Service Name Scan I-Q (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
@@ -129,7 +142,7 @@ jobs:
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name2.yml
 
   naming_semgrep3:
-    name: Service Name Scan Q-Z
+    name: Service Name Scan Q-Z (make semgrep-service-naming)
     runs-on: ubuntu-latest
     container:
       image: "semgrep/semgrep:1.147.0"
