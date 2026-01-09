@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc_ipam_resource_discovery: Add `organizational_unit_exclusion` argument.
+```
