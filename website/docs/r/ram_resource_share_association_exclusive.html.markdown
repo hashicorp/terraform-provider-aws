@@ -139,7 +139,7 @@ The following arguments are required:
 * `resource_share_arn` - (Required) The Amazon Resource Name (ARN) of the resource share. Changing this value forces creation of a new resource.
 
 The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principals` - (Optional) A set of principals to associate with the resource share. Principals not configured in this argument will be removed. Valid values include:
     * AWS account ID (exactly 12 digits, e.g., `123456789012`)
     * AWS Organizations Organization ARN (e.g., `arn:aws:organizations::123456789012:organization/o-exampleorgid`)
