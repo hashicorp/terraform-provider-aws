@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -14,19 +14,19 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
 
-// ramARNValidator validates ARNs specifically for RAM principals.
+// ARNValidator validates ARNs specifically for RAM principals.
 // Only allows: organizations (organization/, ou/) and iam (role/, user/) ARNs.
-type ramARNValidator struct{}
+type ARNValidator struct{}
 
-func (v ramARNValidator) Description(_ context.Context) string {
+func (v ARNValidator) Description(_ context.Context) string {
 	return "value must be a valid RAM principal ARN (organization, OU, IAM role, or IAM user)"
 }
 
-func (v ramARNValidator) MarkdownDescription(ctx context.Context) string {
+func (v ARNValidator) MarkdownDescription(ctx context.Context) string {
 	return v.Description(ctx)
 }
 
-func (v ramARNValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v ARNValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
@@ -73,12 +73,12 @@ func (v ramARNValidator) ValidateString(ctx context.Context, request validator.S
 	))
 }
 
-// newRAMARNValidator returns a validator that checks for valid RAM principal ARNs.
-func ramARN() validator.String {
-	return ramARNValidator{}
+// arnValidator returns a validator that checks for valid RAM principal ARNs.
+func arnValidator() validator.String {
+	return ARNValidator{}
 }
 
-// newRAMPrincipalValidator returns a string validator which ensures that any configured
+// PrincipalValidator returns a string validator which ensures that any configured
 // attribute value is a valid RAM principal:
 //   - AWS account ID (exactly 12 digits) - uses fwvalidators.AWSAccountID()
 //   - Organization ARN
@@ -88,10 +88,10 @@ func ramARN() validator.String {
 //   - Service principal name - uses fwvalidators.ServicePrincipal()
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func ramPrincipal() validator.String {
+func PrincipalValidator() validator.String {
 	return stringvalidator.Any(
 		fwvalidators.AWSAccountID(),
-		ramARN(),
+		arnValidator(),
 		fwvalidators.ServicePrincipal(),
 	)
 }
