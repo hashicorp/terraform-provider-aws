@@ -39,13 +39,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	//	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_sesv2_tenant_resource_association", name="Tenant Resource Association")
-// @Tags(identifierAttribute="id")
+// @FrameworkResource("aws_sesv2_tenant_resource_association", name="Tenant Resource Association", tags=false)
 // @Testing(importStateIdAttribute="tenant_name")
 func newResourceTenantResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTenantResourceAssociation{}
@@ -70,6 +69,9 @@ func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req reso
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
 			"resource_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -82,8 +84,6 @@ func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req reso
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -475,11 +475,10 @@ func findTenantResourceAssociationByID(
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTenantResourceAssociationModel struct {
 	framework.WithRegionModel
+	ARN         types.String `tfsdk:"arn"`
 	ResourceArn types.String `tfsdk:"resource_arn"`
 	ID          types.String `tfsdk:"id"`
 	TenantName  types.String `tfsdk:"tenant_name"`
-	Tags        tftags.Map   `tfsdk:"tags"`
-	TagsAll     tftags.Map   `tfsdk:"tags_all"`
 }
 
 // TIP: ==== SWEEPERS ====

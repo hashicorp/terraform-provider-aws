@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	//	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,6 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +46,6 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
 					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "CONFIGURATION_SET"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -74,7 +72,6 @@ func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,7 +83,7 @@ func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(
 						ctx,
-						acctest.Provider,
+						t,
 						tfsesv2.ResourceTenantResource,
 						resourceName,
 					),
@@ -161,18 +158,6 @@ func testAccCheckTenantResourceAssociationExists(
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
-
-	_, err := conn.ListTenantResources(ctx, &sesv2.ListTenantResourcesInput{})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance tests: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected precheck error: %s", err)
-	}
-}
-
 func testAccTenantResourceAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_tenant" "test" {
@@ -186,7 +171,6 @@ resource "aws_sesv2_configuration_set" "test" {
 resource "aws_sesv2_tenant_resource_association" "test" {
   tenant_name   = aws_sesv2_tenant.test.tenant_name
   resource_arn  = aws_sesv2_configuration_set.test.arn
-  resource_type = "CONFIGURATION_SET"
 }
 `, name)
 }
