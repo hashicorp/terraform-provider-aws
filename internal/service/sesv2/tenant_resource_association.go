@@ -472,7 +472,7 @@ func findTenantResourceAssociationByID(
 		}
 	}
 
-	return nil, nil
+	return nil, tfresource.ErrEmptyResult
 }
 
 // TIP: ==== DATA STRUCTURES ====
