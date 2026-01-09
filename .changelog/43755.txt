@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_function: Improve validation of Lambda function name length to enforce 64-character limit
+```
