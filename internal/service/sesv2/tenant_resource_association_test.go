@@ -46,7 +46,6 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
 					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{

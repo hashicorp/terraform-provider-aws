@@ -68,7 +68,6 @@ type resourceTenantResourceAssociation struct {
 func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -120,7 +119,7 @@ func (r *resourceTenantResourceAssociation) Create(ctx context.Context, req reso
 	}
 
 	plan.ID = types.StringValue(createID(plan.TenantName.ValueString(), plan.ResourceArn.ValueString()))
-	fmt.Printf("DEBUG :::: ID of the resource is %v", plan.ID)
+	//fmt.Printf("DEBUG :::: ID of the resource is %v\n", plan.ID)
 
 	// TIP: -- 5. Using the output from the create function, set attributes
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
@@ -164,7 +163,7 @@ func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resour
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findTenantResourceAssociationByID(ctx, conn, state.ID.String())
+	out, err := findTenantResourceAssociationByID(ctx, conn, state.ID.ValueString())
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -309,6 +308,20 @@ func (r *resourceTenantResourceAssociation) Delete(ctx context.Context, req reso
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 func (r *resourceTenantResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	customID := req.ID
+	//fmt.Printf("DEBUG :::: Custom ID %v\n", customID)
+	parts := strings.Split(customID, "|")
+	if len(parts) != 2 {
+		resp.Diagnostics.AddError(
+			"Invalid ID Format",
+			fmt.Sprintf("Expected ID in the format of tenant_name|resource_arn, got: %s", customID),
+		)
+	}
+	tenantName := parts[0]
+	resourceARN := parts[1]
+	resp.State.SetAttribute(ctx, path.Root("id"), customID)
+	resp.State.SetAttribute(ctx, path.Root("tenant_name"), tenantName)
+	resp.State.SetAttribute(ctx, path.Root("resource_arn"), resourceARN)
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
@@ -434,8 +447,11 @@ func findTenantResourceAssociationByID(
 		)
 	}
 
+	//fmt.Printf("DEBUG :::: %v\n", resourceID)
 	tenantName := parts[0]
 	resourceARN := parts[1]
+	//	fmt.Printf("DEBUG :::: Tenant Name => %v\n", tenantName)
+	//	fmt.Printf("DEBUG :::: Resource ARN => %v\n", resourceARN)
 
 	input := &sesv2.ListTenantResourcesInput{
 		TenantName: aws.String(tenantName),
@@ -446,7 +462,7 @@ func findTenantResourceAssociationByID(
 	for p.HasMorePages() {
 		out, err := p.NextPage(ctx)
 		if err != nil {
-			return nil, smarterr.NewError(err)
+			return nil, tfresource.ErrEmptyResult
 		}
 
 		for _, tenantResource := range out.TenantResources {
@@ -456,9 +472,7 @@ func findTenantResourceAssociationByID(
 		}
 	}
 
-	return nil, smarterr.NewError(&retry.NotFoundError{
-		LastError: errors.New("tenant resource association not found"),
-	})
+	return nil, nil
 }
 
 // TIP: ==== DATA STRUCTURES ====
@@ -475,7 +489,6 @@ func findTenantResourceAssociationByID(
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTenantResourceAssociationModel struct {
 	framework.WithRegionModel
-	ARN         types.String `tfsdk:"arn"`
 	ResourceArn types.String `tfsdk:"resource_arn"`
 	ID          types.String `tfsdk:"id"`
 	TenantName  types.String `tfsdk:"tenant_name"`
