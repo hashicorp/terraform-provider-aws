@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -113,7 +113,7 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceVirtualMFADevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

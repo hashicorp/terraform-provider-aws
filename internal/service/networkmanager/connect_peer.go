@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -387,7 +387,7 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
-		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+		retry.SetLastError(err, connectPeersError(output.LastModificationErrors))
 
 		return output, err
 	}
@@ -409,7 +409,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateconf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
-		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+		retry.SetLastError(err, connectPeersError(output.LastModificationErrors))
 
 		return output, err
 	}

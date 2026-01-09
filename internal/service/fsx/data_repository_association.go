@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -364,7 +364,7 @@ func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -386,7 +386,7 @@ func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -408,7 +408,7 @@ func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client,
 
 	if output, ok := outputRaw.(*awstypes.DataRepositoryAssociation); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.DataRepositoryLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

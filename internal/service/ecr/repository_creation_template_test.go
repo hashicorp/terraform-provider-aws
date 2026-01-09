@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -78,7 +78,7 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

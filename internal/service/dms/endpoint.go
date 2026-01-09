@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -2542,7 +2542,7 @@ func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
 		return output, err
 	}
 

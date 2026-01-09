@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -79,7 +79,7 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semapho
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

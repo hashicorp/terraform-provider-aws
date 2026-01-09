@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -258,7 +258,7 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}
@@ -280,7 +280,7 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}

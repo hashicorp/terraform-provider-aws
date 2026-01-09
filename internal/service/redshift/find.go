@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -939,4 +939,46 @@ func findClusterParameters(ctx context.Context, conn *redshift.Client, input *re
 	}
 
 	return output, nil
+}
+
+func findRedshiftIDCApplications(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) ([]awstypes.RedshiftIdcApplication, error) { // nosemgrep:ci.redshift-in-func-name
+	var output []awstypes.RedshiftIdcApplication
+
+	pages := redshift.NewDescribeRedshiftIdcApplicationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RedshiftIdcApplications...)
+	}
+
+	return output, nil
+}
+
+func findRedshiftIDCApplication(ctx context.Context, conn *redshift.Client, input *redshift.DescribeRedshiftIdcApplicationsInput) (*awstypes.RedshiftIdcApplication, error) { // nosemgrep:ci.redshift-in-func-name
+	output, err := findRedshiftIDCApplications(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRedshiftIDCApplicationByARN(ctx context.Context, conn *redshift.Client, arn string) (*awstypes.RedshiftIdcApplication, error) { // nosemgrep:ci.redshift-in-func-name
+	input := redshift.DescribeRedshiftIdcApplicationsInput{
+		RedshiftIdcApplicationArn: aws.String(arn),
+	}
+
+	return findRedshiftIDCApplication(ctx, conn, &input)
 }

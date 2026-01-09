@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -214,7 +214,7 @@ func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketMetadataConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketMetadataConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

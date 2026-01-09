@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -356,7 +356,7 @@ func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DBSnapshot); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%d%% progress", aws.ToInt32(output.PercentProgress)))
+		retry.SetLastError(err, fmt.Errorf("%d%% progress", aws.ToInt32(output.PercentProgress)))
 		return output, err
 	}
 

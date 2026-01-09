@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -136,7 +136,7 @@ func TestAccLambdaFunctionRecursionConfig_disappears_Function(t *testing.T) {
 				Config: testAccFunctionRecursionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionRecursionConfigExists(ctx, resourceName, &recursionConfig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), functionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), functionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

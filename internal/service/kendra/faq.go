@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -316,7 +316,7 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 
 	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
 		if output.Status == types.FaqStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -335,7 +335,7 @@ func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

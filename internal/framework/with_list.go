@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -15,55 +15,54 @@ import (
 )
 
 // Lister is an interface for resources that support List operations
-type Lister interface {
-	AppendResultInterceptor(listresource.ListResultInterceptor)
+type Lister[T listresource.InterceptorParams | listresource.InterceptorParamsSDK] interface {
+	AppendResultInterceptor(listresource.ListResultInterceptor[T])
 }
 
-var _ Lister = &WithList{}
+var _ Lister[listresource.InterceptorParams] = &withList[listresource.InterceptorParams]{}
+
+type WithList = withList[listresource.InterceptorParams]
 
 // WithList provides common functionality for ListResources
-type WithList struct {
+type withList[T listresource.InterceptorParams] struct {
 	withListResourceConfigSchema
-	interceptors []listresource.ListResultInterceptor
+	interceptors []listresource.ListResultInterceptor[T]
 }
 
 type flattenFunc func()
 
-func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor) {
+func (w *withList[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[T]) {
 	w.interceptors = append(w.interceptors, interceptor)
 }
 
-func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor {
+func (w withList[T]) ResultInterceptors() []listresource.ListResultInterceptor[T] {
 	return w.interceptors
 }
 
-func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
+func (w *withList[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
-	params := listresource.InterceptorParams{
+	params := any(listresource.InterceptorParams{
 		C:      awsClient,
 		Result: result,
 		Data:   data,
-	}
+		When:   when,
+	}).(T)
 
 	switch when {
 	case listresource.Before:
-		params.When = listresource.Before
 		for interceptor := range slices.Values(w.interceptors) {
 			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	case listresource.After:
-		params.When = listresource.After
 		for interceptor := range tfslices.BackwardValues(w.interceptors) {
 			diags.Append(interceptor.Read(ctx, params)...)
 		}
-		return diags
 	}
 
 	return diags
 }
 
-func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
+func (w *withList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
 	var diags diag.Diagnostics
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, data, result)...)

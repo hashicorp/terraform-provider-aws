@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -198,7 +198,7 @@ func waitAlertManagerDefinitionCreated(ctx context.Context, conn *amp.Client, id
 
 	if output, ok := outputRaw.(*types.AlertManagerDefinitionDescription); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.AlertManagerDefinitionStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -222,7 +222,7 @@ func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *amp.Client, id
 
 	if output, ok := outputRaw.(*types.AlertManagerDefinitionDescription); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.AlertManagerDefinitionStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err

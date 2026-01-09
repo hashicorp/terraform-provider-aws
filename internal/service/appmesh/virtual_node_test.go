@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -80,7 +80,7 @@ func testAccVirtualNode_disappears(t *testing.T) {
 				Config: testAccVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualNode(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualNode(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

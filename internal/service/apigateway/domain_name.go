@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -612,7 +612,7 @@ func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainN
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DomainName); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
 
 		return err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -82,8 +82,8 @@ func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Role(t *testing.T) {
 					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policies must be detached before role can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), roleResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,8 +114,8 @@ func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policy must be detached before it can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourcePolicy(), policyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

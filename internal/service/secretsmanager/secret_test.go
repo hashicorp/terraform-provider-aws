@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager_test
@@ -107,7 +107,7 @@ func TestAccSecretsManagerSecret_disappears(t *testing.T) {
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

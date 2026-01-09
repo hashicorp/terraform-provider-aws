@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -497,7 +497,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.CreateAccountStatus); ok {
 		if state := output.State; state == awstypes.CreateAccountStateFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err

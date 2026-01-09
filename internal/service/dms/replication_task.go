@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -423,7 +423,7 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 		errs = append(errs, errors.New(v))
 	}
 
-	tfresource.SetLastError(err, errors.Join(errs...))
+	retry.SetLastError(err, errors.Join(errs...))
 }
 
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {

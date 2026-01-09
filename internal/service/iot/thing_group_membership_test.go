@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -64,7 +64,7 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingGroupMembership(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThingGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThing(), thingResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThing(), thingResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +114,7 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingGroup(), thingGroupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThingGroup(), thingGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

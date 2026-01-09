@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -110,7 +110,7 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceActivation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceActivation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

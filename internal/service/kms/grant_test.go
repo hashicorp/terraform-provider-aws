@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -233,7 +233,7 @@ func TestAccKMSGrant_disappears(t *testing.T) {
 				Config: testAccGrantConfig_basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceGrant(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

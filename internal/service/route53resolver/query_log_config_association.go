@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -179,7 +179,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -200,7 +200,7 @@ func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

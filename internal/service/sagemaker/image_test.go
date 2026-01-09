@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -196,7 +196,7 @@ func TestAccSageMakerImage_disappears(t *testing.T) {
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

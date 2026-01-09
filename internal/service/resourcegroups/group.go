@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourcegroups
@@ -372,7 +372,7 @@ func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.Cli
 
 	if output, ok := outputRaw.(*types.GroupConfiguration); ok {
 		if status := output.Status; status == types.GroupConfigurationStatusUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

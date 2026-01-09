@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -285,7 +285,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID
 
 	if output, ok := outputRaw.(*awstypes.Vocabulary); ok {
 		if state := output.State; state == awstypes.VocabularyStateCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

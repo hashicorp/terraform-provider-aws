@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediaconvert_test
@@ -69,7 +69,7 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediaconvert.ResourceQueue(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediaconvert.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

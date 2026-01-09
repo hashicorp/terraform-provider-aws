@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -70,7 +70,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_disappears(t *testing.T) {
 				Config: testAccDomainNameAccessAssociationConfig_basic(rName, domain, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDomainNameAccessAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigateway.ResourceDomainNameAccessAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

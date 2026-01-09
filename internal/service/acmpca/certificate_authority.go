@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca
@@ -610,7 +610,7 @@ func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, a
 
 	if output, ok := outputRaw.(*types.CertificateAuthority); ok {
 		if output.Status == types.CertificateAuthorityStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err

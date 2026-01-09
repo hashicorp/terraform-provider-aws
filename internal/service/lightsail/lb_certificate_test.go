@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -149,7 +149,7 @@ func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_basic(rName, lbName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceLoadBalancerCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

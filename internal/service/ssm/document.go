@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -596,7 +596,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -618,7 +618,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}

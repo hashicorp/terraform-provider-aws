@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -262,7 +262,7 @@ func TestAccGluePartition_disappears(t *testing.T) {
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -286,7 +286,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

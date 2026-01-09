@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -157,7 +157,7 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -407,7 +407,7 @@ func waitReplicatorCreated(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -427,7 +427,7 @@ func waitReplicatorUpdated(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -447,7 +447,7 @@ func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err

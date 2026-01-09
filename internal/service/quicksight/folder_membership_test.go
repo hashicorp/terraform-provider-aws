@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -69,7 +69,7 @@ func TestAccQuickSightFolderMembership_disappears(t *testing.T) {
 				Config: testAccFolderMembershipConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderMembershipExists(ctx, resourceName, &folderMember),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceFolderMembership, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceFolderMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

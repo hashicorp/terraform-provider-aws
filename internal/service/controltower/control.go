@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower
@@ -447,7 +447,7 @@ func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
 		return output.ControlOperation, err
 	}

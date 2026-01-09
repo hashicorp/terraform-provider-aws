@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -478,7 +478,7 @@ func waitBucketMetadataInventoryTableConfigurationCreated(ctx context.Context, c
 
 	if output, ok := outputRaw.(*awstypes.InventoryTableConfigurationResult); ok {
 		if v := output.Error; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
 
 		return output, err
@@ -500,7 +500,7 @@ func waitBucketMetadataJournalTableConfigurationCreated(ctx context.Context, con
 
 	if output, ok := outputRaw.(*awstypes.JournalTableConfigurationResult); ok {
 		if v := output.Error; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
 
 		return output, err

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -788,6 +788,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("manage_master_password") {
 			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
+		}
+
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 		}
 
 		if d.HasChange(names.AttrPreferredMaintenanceWindow) {

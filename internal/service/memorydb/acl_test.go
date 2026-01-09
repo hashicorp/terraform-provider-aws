@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -67,7 +67,7 @@ func TestAccMemoryDBACL_disappears(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, nil, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -73,7 +73,7 @@ func TestAccMemoryDBMultiRegionCluster_disappears(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceMultiRegionCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmemorydb.ResourceMultiRegionCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

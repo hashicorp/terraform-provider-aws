@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -243,7 +243,7 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceReplicator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceReplicator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -135,7 +135,7 @@ func TestAccAutoScalingAttachment_disappears(t *testing.T) {
 				Config: testAccAttachmentConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

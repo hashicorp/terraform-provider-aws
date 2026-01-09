@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fis_test
@@ -124,7 +124,7 @@ func TestAccFISTargetAccountConfiguration_disappears(t *testing.T) {
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffis.ResourceTargetAccountConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffis.ResourceTargetAccountConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

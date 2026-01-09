@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -319,7 +319,7 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 					testAccCheckProxyExists(ctx, resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxy(), dbProxyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

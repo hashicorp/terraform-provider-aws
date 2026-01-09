@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -110,7 +110,7 @@ func testAccFileCache_disappears(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceFileCache(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceFileCache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

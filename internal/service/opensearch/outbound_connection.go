@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -319,7 +319,7 @@ func waitOutboundConnectionCreated(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.OutboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -343,7 +343,7 @@ func waitOutboundConnectionDeleted(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.OutboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}

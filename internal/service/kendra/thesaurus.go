@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -324,7 +324,7 @@ func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
 		if out.Status == types.ThesaurusStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -345,7 +345,7 @@ func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
 		if out.Status == types.ThesaurusStatusActiveButUpdateFailed || out.Status == types.ThesaurusStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -364,7 +364,7 @@ func waitThesaurusDeleted(ctx context.Context, conn *kendra.Client, id, indexId 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
 		if out.Status == types.ThesaurusStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}

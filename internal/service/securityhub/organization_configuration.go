@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -233,7 +233,7 @@ func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*securityhub.DescribeOrganizationConfigurationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.OrganizationConfiguration.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.OrganizationConfiguration.StatusMessage)))
 
 		return output, err
 	}

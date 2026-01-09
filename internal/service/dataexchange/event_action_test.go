@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -181,7 +181,7 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceEventAction, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceEventAction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -241,8 +241,8 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

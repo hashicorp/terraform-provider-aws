@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -68,7 +68,7 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceAuthenticationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

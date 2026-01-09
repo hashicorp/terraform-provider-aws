@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -90,7 +90,7 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_disappears(t *testing.T) {
 				Config: testAccNetworkSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceNetworkSettingsAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceNetworkSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

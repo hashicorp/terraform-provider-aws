@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -96,7 +96,7 @@ func TestAccDSTrust_disappears(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfds.ResourceTrust, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfds.ResourceTrust, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

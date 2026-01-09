@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -629,7 +629,7 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	if output, ok := outputRaw.(*awstypes.StackSetOperation); ok {
 		if output.Status == awstypes.StackSetOperationStatusFailed {
 			if results, findErr := findStackSetOperationResultsByThreePartKey(ctx, conn, stackSetName, operationID, callAs); findErr == nil {
-				tfresource.SetLastError(err, stackSetOperationError(results))
+				retry.SetLastError(err, stackSetOperationError(results))
 			}
 		}
 

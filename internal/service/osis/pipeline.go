@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package osis
@@ -95,6 +95,17 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 28),
+				},
+			},
+			"pipeline_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(20, 2048),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -253,6 +264,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	// Set values for unknowns.
 	data.IngestEndpointURLs.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
+	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -424,7 +436,7 @@ func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -447,7 +459,7 @@ func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -470,7 +482,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -491,6 +503,7 @@ type pipelineResourceModel struct {
 	PipelineARN               types.String                                                  `tfsdk:"pipeline_arn"`
 	PipelineConfigurationBody types.String                                                  `tfsdk:"pipeline_configuration_body"`
 	PipelineName              types.String                                                  `tfsdk:"pipeline_name"`
+	PipelineRoleARN           fwtypes.ARN                                                   `tfsdk:"pipeline_role_arn"`
 	Tags                      tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`

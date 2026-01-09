@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rum_test
@@ -64,8 +64,8 @@ func TestAccRUMMetricsDestination_disappears(t *testing.T) {
 				Config: testAccMetricsDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricsDestinationExists(ctx, resourceName, &dest),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,8 +89,8 @@ func TestAccRUMMetricsDestination_disappears_appMonitor(t *testing.T) {
 				Config: testAccMetricsDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricsDestinationExists(ctx, resourceName, &dest),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), "aws_rum_app_monitor.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceAppMonitor(), "aws_rum_app_monitor.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceMetricsDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

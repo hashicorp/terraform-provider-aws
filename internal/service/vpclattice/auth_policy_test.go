@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -73,7 +73,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceAuthPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceAuthPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

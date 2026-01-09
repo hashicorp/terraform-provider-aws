@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -75,7 +75,7 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

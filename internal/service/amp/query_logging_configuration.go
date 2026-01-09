@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -315,7 +315,7 @@ func waitQueryLoggingConfigurationCreated(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -334,7 +334,7 @@ func waitQueryLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -353,7 +353,7 @@ func waitQueryLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -112,7 +112,7 @@ func TestAccAMPQueryLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccQueryLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceQueryLoggingConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceQueryLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

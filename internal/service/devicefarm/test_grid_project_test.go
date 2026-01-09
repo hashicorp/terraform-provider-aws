@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm_test
@@ -177,8 +177,8 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceTestGridProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

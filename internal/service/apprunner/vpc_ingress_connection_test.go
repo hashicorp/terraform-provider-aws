@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner_test
@@ -71,7 +71,7 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceVPCIngressConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

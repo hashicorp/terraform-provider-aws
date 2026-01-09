@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -67,7 +67,7 @@ func TestAccELBV2TrustStore_disappears(t *testing.T) {
 				Config: testAccTrustStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceTrustStore(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTrustStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

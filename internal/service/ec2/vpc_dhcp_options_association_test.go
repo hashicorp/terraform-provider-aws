@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -60,7 +60,7 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), "aws_vpc.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), "aws_vpc.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptions(), "aws_vpc_dhcp_options.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCDHCPOptions(), "aws_vpc_dhcp_options.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func TestAccVPCDHCPOptionsAssociation_disappears(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptionsAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCDHCPOptionsAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

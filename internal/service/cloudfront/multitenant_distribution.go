@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -84,7 +84,6 @@ func newMultiTenantDistributionResource(_ context.Context) (resource.ResourceWit
 
 type multiTenantDistributionResource struct {
 	framework.ResourceWithModel[multiTenantDistributionResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -656,6 +655,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"cloudfront_default_certificate": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 						},
 						"minimum_protocol_version": schema.StringAttribute{
 							Optional:   true,
@@ -726,12 +726,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	// Read the distribution to get consistent state
 	data.ETag = fwflex.StringToFramework(ctx, distro.ETag)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -748,11 +747,12 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findDistributionByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findDistributionByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		response.Diagnostics.AddWarning(
 			"CloudFront Multi-tenant Distribution not found",
-			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", data.ID.ValueString()),
+			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", id),
 		)
 		response.State.RemoveResource(ctx)
 		return
@@ -887,7 +887,7 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
-	id := data.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
 	// 1. Start by waiting for deployment (returns immediate if already deployed)
 	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil && !retry.NotFound(err) && !errs.IsA[*awstypes.NoSuchDistribution](err) {
@@ -906,9 +906,10 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	// 4. If not disabled error, disable, wait for deploy, delete
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		disableErr := disableMultiTenantDistribution(ctx, conn, id)
-		if disableErr == nil || retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
+		if retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
 			return
 		}
+
 		if disableErr != nil {
 			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
 			return
@@ -932,6 +933,23 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 	// 7. If err != nil, add error
 	response.Diagnostics.AddError("deleting CloudFront Multi-tenant Distribution", err.Error())
+}
+
+func (r *multiTenantDistributionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	output, err := findDistributionByID(ctx, conn, request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Multi-tenant Distribution (%s)", request.ID), err.Error())
+		return
+	}
+
+	if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode != awstypes.ConnectionModeTenantOnly {
+		response.Diagnostics.AddError(fmt.Sprintf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_distribution resource instead", request.ID, connectionMode), "")
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {

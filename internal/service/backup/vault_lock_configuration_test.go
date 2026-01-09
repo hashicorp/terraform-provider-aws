@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -67,7 +67,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultLockConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVaultLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

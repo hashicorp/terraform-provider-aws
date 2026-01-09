@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -75,7 +75,7 @@ func TestAccRedshiftSnapshotSchedule_disappears(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotSchedule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceSnapshotSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

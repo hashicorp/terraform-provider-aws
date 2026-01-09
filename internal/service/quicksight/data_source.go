@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -431,7 +431,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err
@@ -455,7 +455,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err

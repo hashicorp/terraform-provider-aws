@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -239,7 +239,8 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -258,7 +259,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, c, apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -278,8 +279,8 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, c, apiID, stageName))
+	d.Set("invoke_url", c.APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
 	}

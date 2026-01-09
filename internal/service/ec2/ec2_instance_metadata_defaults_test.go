@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -96,7 +96,7 @@ func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceMetadataDefaults, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceMetadataDefaults, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

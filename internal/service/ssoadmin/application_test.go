@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -87,7 +87,7 @@ func TestAccSSOAdminApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, testAccApplicationProviderARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

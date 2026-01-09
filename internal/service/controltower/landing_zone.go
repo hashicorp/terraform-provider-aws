@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower
@@ -308,7 +308,7 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 
 	if output, ok := outputRaw.(*types.LandingZoneOperationDetail); ok {
 		if status := output.Status; status == types.LandingZoneOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

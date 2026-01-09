@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -409,7 +409,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err
@@ -430,7 +430,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err

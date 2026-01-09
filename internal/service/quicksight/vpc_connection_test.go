@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -69,7 +69,7 @@ func TestAccQuickSightVPCConnection_disappears(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceVPCConnection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceVPCConnection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

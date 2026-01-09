@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeguruprofiler_test
@@ -84,7 +84,7 @@ func TestAccCodeGuruProfilerProfilingGroup_disappears(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcodeguruprofiler.ResourceProfilingGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeguruprofiler.ResourceProfilingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

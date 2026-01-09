@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -63,7 +63,7 @@ func TestAccAutoScalingNotification_disappears(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceNotification(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceNotification(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

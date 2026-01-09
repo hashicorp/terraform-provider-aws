@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -74,7 +74,7 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupEgressRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupEgressRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupEgressRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupEgressRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

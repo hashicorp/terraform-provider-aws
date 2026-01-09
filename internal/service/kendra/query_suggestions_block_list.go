@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -324,7 +324,7 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -345,7 +345,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusActiveButUpdateFailed || out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -364,7 +364,7 @@ func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -73,7 +73,7 @@ func TestAccKMSAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -469,7 +469,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
@@ -490,7 +490,7 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err

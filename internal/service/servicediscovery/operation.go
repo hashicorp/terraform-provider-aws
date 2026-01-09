@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -37,7 +37,7 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 		//   "ErrorMessage":"The VPC that you chose, vpc-xxx in region xxx, is already associated with another private hosted zone that has an overlapping name space, xxx.. (Service: AmazonRoute53; Status Code: 400; Error Code: ConflictingDomainExists; Request ID: xxx)"
 		//   "Status":"FAIL",
 		if status := output.Status; status == awstypes.OperationStatusFail {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.ErrorCode), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.ErrorCode), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

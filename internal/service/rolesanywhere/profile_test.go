@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rolesanywhere_test
@@ -150,7 +150,7 @@ func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrolesanywhere.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrolesanywhere.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

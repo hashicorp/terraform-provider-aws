@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -14,6 +14,7 @@ var (
 	ResourceTableReplica                = resourceTableReplica
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
+	ResourceGlobalSecondaryIndex        = newResourceGlobalSecondaryIndex
 
 	ARNForNewRegion                              = arnForNewRegion
 	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID
@@ -21,6 +22,7 @@ var (
 	ExpandTableItemQueryKey                      = expandTableItemQueryKey
 	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
 	FindGlobalTableByName                        = findGlobalTableByName
+	FindGSIByTwoPartKey                          = findGSIByTwoPartKey
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindTableByName                              = findTableByName
@@ -34,4 +36,8 @@ var (
 	TableNameFromARN                             = tableNameFromARN
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
+)
+
+const (
+	GlobalSecondaryIndexExperimentalFlagEnvVar = globalSecondaryIndexExperimentalFlagEnvVar
 )

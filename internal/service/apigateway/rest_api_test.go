@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -87,7 +87,7 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 				Config: testAccRestAPIConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

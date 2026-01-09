@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -70,7 +70,7 @@ func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 				Config: testAccDataShareConsumerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

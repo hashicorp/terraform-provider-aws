@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -489,7 +489,7 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.Client, awsAccou
 
 	if output, ok := outputRaw.(*awstypes.Dashboard); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dashboardError(apiErrors))
+			retry.SetLastError(err, dashboardError(apiErrors))
 		}
 
 		return output, err
@@ -510,7 +510,7 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.Client, awsAccou
 
 	if output, ok := outputRaw.(*awstypes.Dashboard); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dashboardError(apiErrors))
+			retry.SetLastError(err, dashboardError(apiErrors))
 		}
 
 		return output, err

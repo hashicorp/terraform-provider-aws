@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -145,7 +145,7 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceIPSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

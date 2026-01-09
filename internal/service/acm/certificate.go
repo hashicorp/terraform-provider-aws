@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -929,7 +929,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 
 	if output, ok := outputRaw.(*types.RenewalSummary); ok {
 		if output.RenewalStatus == types.RenewalStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
+			retry.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
 		}
 
 		return output, err

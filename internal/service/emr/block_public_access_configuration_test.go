@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -94,7 +94,7 @@ func testAccBlockPublicAccessConfiguration_disappears(t *testing.T) {
 				Config: testAccBlockPublicAccessConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceBlockPublicAccessConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceBlockPublicAccessConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

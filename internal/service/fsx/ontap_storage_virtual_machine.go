@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -443,7 +443,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -465,7 +465,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -488,7 +488,7 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err

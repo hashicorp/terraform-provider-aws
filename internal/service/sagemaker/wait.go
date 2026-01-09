@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -65,7 +65,7 @@ func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -86,7 +86,7 @@ func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -107,7 +107,7 @@ func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -128,7 +128,7 @@ func waitNotebookInstanceDeleted(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -183,7 +183,7 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
 		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); (status == awstypes.ImageStatusCreateFailed || status == awstypes.ImageStatusUpdateFailed) && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -204,7 +204,7 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
 		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); status == awstypes.ImageStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -225,7 +225,7 @@ func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
 		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -246,7 +246,7 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
 		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -267,7 +267,7 @@ func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.DomainStatusFailed || status == awstypes.DomainStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -288,7 +288,7 @@ func waitDomainDeleted(ctx context.Context, conn *sagemaker.Client, domainID str
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.DomainStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -309,7 +309,7 @@ func waitFeatureGroupCreated(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if status, reason := output.FeatureGroupStatus, aws.ToString(output.FailureReason); status == awstypes.FeatureGroupStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -330,7 +330,7 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if status, reason := output.FeatureGroupStatus, aws.ToString(output.FailureReason); status == awstypes.FeatureGroupStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -351,7 +351,7 @@ func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
-			tfresource.SetLastError(err, errors.New(*v.FailureReason))
+			retry.SetLastError(err, errors.New(*v.FailureReason))
 		}
 
 		return output, err
@@ -372,7 +372,7 @@ func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, use
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.AppStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -393,7 +393,7 @@ func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userP
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.AppStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -414,7 +414,7 @@ func waitFlowDefinitionActive(ctx context.Context, conn *sagemaker.Client, name 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
 		if status, reason := output.FlowDefinitionStatus, aws.ToString(output.FailureReason); status == awstypes.FlowDefinitionStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -435,7 +435,7 @@ func waitFlowDefinitionDeleted(ctx context.Context, conn *sagemaker.Client, name
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
 		if status, reason := output.FlowDefinitionStatus, aws.ToString(output.FailureReason); status == awstypes.FlowDefinitionStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -456,7 +456,7 @@ func waitProjectDeleted(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -477,7 +477,7 @@ func waitProjectCreated(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -498,7 +498,7 @@ func waitProjectUpdated(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -519,7 +519,7 @@ func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name strin
 
 	if output, ok := outputRaw.(*awstypes.Workforce); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.WorkforceStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -540,7 +540,7 @@ func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name stri
 
 	if output, ok := outputRaw.(*awstypes.Workforce); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.WorkforceStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -561,7 +561,7 @@ func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, n
 
 	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.SpaceStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -582,7 +582,7 @@ func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, nam
 
 	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.SpaceStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -603,7 +603,7 @@ func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
 		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -624,7 +624,7 @@ func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client,
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
 		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -696,7 +696,7 @@ func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
 		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -717,7 +717,7 @@ func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
 		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -738,7 +738,7 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
 		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err

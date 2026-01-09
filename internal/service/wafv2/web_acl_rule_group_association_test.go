@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -187,7 +187,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -675,7 +676,7 @@ func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id
 
 func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		attributeValue, err := findVPCAttribute(ctx, conn, id, attribute)
+		attributeValue, err := findVPCAttributeByTwoPartKey(ctx, conn, id, attribute)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1680,6 +1681,29 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusNATGatewayAttachedAppliances(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNATGatewayByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Check if there are any attached appliances that are not in detached state
+		if v := tfslices.Filter(output.AttachedAppliances, func(v awstypes.NatGatewayAttachedAppliance) bool {
+			return v.AttachmentState != awstypes.NatGatewayApplianceStateDetached
+		}); len(v) > 0 {
+			return output, string(v[0].AttachmentState), nil
+		}
+
+		return nil, "", nil
 	}
 }
 

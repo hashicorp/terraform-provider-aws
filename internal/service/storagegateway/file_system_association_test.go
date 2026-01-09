@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -213,7 +213,7 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,7 +239,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -270,7 +270,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rolesanywhere_test
@@ -160,7 +160,7 @@ func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
 				Config: testAccTrustAnchorConfig_basic(rName, caCommonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrolesanywhere.ResourceTrustAnchor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrolesanywhere.ResourceTrustAnchor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
