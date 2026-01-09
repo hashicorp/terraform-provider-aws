@@ -1974,7 +1974,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var conf awstypes.TableDescription
@@ -2041,7 +2041,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_Single(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var conf awstypes.TableDescription
@@ -2055,7 +2055,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_Single(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_singleHashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2092,7 +2092,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_Single(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2138,7 +2138,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *t
 				},
 			},
 			{
-				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2183,7 +2183,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *t
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2200,7 +2200,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_singleHashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2229,7 +2229,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2274,7 +2274,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2291,7 +2291,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2365,7 +2365,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2382,7 +2382,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_HashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2419,7 +2419,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T
 				},
 			},
 			{
-				Config: testAccTableConfig_GSI_singleHashKeys(rName),
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2456,7 +2456,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_maxSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2473,7 +2473,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeysMultipelRangeKeys_max(rName),
+				Config: testAccTableConfig_keySchema_maxKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -2828,7 +2828,7 @@ func TestAccDynamoDBTable_GSI_validate_exactlyOneOfKeySchemaHashKey(t *testing.T
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
+func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHASHKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2840,7 +2840,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_addSecondaryGSI_multipleHashKeys_tooMany(rName),
+				Config:      testAccTableConfig_GSI_keySchema_tooManyHASHKeys(rName),
 				ExpectError: regexache.MustCompile(`at least 1 and at most 4 elements with "key_type" "HASH"`),
 			},
 		},
@@ -8667,7 +8667,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_GSI_singleHashKeys(rName string) string {
+func testAccTableConfig_GSI_keySchema_singleHashKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -8694,7 +8694,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_GSI_HashKeys(rName string) string {
+func testAccTableConfig_GSI_keySchema_multipleHashKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -8730,7 +8730,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleHashKeysMultipelRangeKeys_max(rName string) string {
+func testAccTableConfig_keySchema_maxKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -9059,7 +9059,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleHashKeys_tooMany(rName string) string {
+func testAccTableConfig_GSI_keySchema_tooManyHASHKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
