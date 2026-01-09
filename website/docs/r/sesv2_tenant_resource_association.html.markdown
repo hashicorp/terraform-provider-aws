@@ -26,6 +26,8 @@ Manages an AWS SESv2 (Simple Email V2) Tenant Resource Association.
 
 ```terraform
 resource "aws_sesv2_tenant_resource_association" "example" {
+  tenant_name  = "example-tenant"
+  resource_arn = "arn:aws:ses:us-east-1:123456789012:configuration-set/example"
 }
 ```
 
@@ -33,18 +35,17 @@ resource "aws_sesv2_tenant_resource_association" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
+* `tenant_name` - (Required) Name of SES Tenant.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `resource_arn` - (Required) ARN of the SES resource to associate with the tenant.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Tenant Resource Association.
-* `example_attribute` - Brief description of the attribute.
+* `id` - Identifier for the tenant resource association.  The ID is a composite value in the form of `tenant_name|resource_arn`
 
 ## Timeouts
 
@@ -61,12 +62,13 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sesv2_tenant_resource_association.example
-  id = "tenant_resource_association-id-12345678"
+  id = "example-tenant|arn:aws:ses:us-east-1:123456789012:configuration-set/example"
 }
 ```
 
 Using `terraform import`, import SESv2 (Simple Email V2) Tenant Resource Association using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_sesv2_tenant_resource_association.example tenant_resource_association-id-12345678
+% terraform import aws_sesv2_tenant_resource_association.example example-tenant|arn:aws:ses:us-east-1:123456789012:configuration-set/example
+
 ```
