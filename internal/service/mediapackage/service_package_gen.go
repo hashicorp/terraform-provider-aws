@@ -43,6 +43,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  ResourceOriginEndpoint,
+			TypeName: "aws_media_package_origin_endpoint",
+			Name:     "Origin Endpoint",
+		},
 	}
 }
 
