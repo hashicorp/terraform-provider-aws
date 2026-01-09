@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -54,6 +55,11 @@ const (
 	certificateValidationMethodNone = "NONE"
 )
 
+var (
+	AttrPrivateKeyWo        = fmt.Sprintf("%s_wo", names.AttrPrivateKey)
+	AttrPrivateKeyWoVersion = fmt.Sprintf("%s_wo_version", names.AttrPrivateKey)
+)
+
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -84,7 +90,6 @@ func resourceCertificate() *schema.Resource {
 			"certificate_body": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				RequiredWith:  []string{names.AttrPrivateKey},
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
 			names.AttrCertificateChain: {
@@ -98,7 +103,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey},
+				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
 				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"domain_validation_options": {
@@ -179,7 +184,20 @@ func resourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey},
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
+			},
+			AttrPrivateKeyWo: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				WriteOnly:    true,
+				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, AttrPrivateKeyWo},
+				RequiredWith: []string{AttrPrivateKeyWoVersion},
+			},
+			AttrPrivateKeyWoVersion: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{AttrPrivateKeyWo},
 			},
 			"renewal_eligibility": {
 				Type:     schema.TypeString,
@@ -381,16 +399,20 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		output, err := conn.RequestCertificate(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting ACM Certificate (%s): %s", domainName, err)
 		}
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
+		privateKey := d.Get(names.AttrPrivateKey).(string)
+		privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+		if privateKeyWo != "" {
+			privateKey = privateKeyWo
+		}
 		input := acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
-			PrivateKey:  []byte(d.Get(names.AttrPrivateKey).(string)),
+			PrivateKey:  []byte(privateKey),
 			Tags:        getTagsIn(ctx),
 		}
 
@@ -399,7 +421,6 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		output, err := conn.ImportCertificate(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "importing ACM Certificate: %s", err)
 		}
@@ -496,10 +517,15 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+			privateKey := d.Get(names.AttrPrivateKey).(string)
+			privateKeyWo, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(AttrPrivateKeyWo))
+			if privateKeyWo != "" {
+				privateKey = privateKeyWo
+			}
 			input := acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
 				CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
-				PrivateKey:     []byte(d.Get(names.AttrPrivateKey).(string)),
+				PrivateKey:     []byte(privateKey),
 			}
 
 			if chain, ok := d.GetOk(names.AttrCertificateChain); ok {
@@ -507,7 +533,6 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			_, err := conn.ImportCertificate(ctx, &input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "importing ACM Certificate (%s): %s", d.Id(), err)
 			}
@@ -517,7 +542,6 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 		}
 		_, err := conn.RenewCertificate(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
 		}
@@ -535,7 +559,6 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		_, err := conn.UpdateCertificateOptions(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ACM Certificate options (%s): %s", d.Id(), err)
 		}
@@ -819,7 +842,6 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 	}
 
 	output, err := findCertificate(ctx, conn, &input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -835,7 +857,6 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 
 func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn string) (*types.RenewalSummary, error) {
 	certificate, err := findCertificateByARN(ctx, conn, arn)
-
 	if err != nil {
 		return nil, err
 	}
