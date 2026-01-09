@@ -361,7 +361,7 @@ resource "aws_vpc_ipam_resource_discovery" "test" {
     region_name = data.aws_region.current.region
   }
   organizational_unit_exclusion {
-    organizations_entity_path = %[1]q  
+    organizations_entity_path = %[1]q
   }
 }
 `, exclusion)
