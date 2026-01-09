@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -161,7 +162,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, subscriptionAttributeNameTopicARN)
 
 	protocol := d.Get(names.AttrProtocol).(string)
-	input := &sns.SubscribeInput{
+	input := sns.SubscribeInput{
 		Attributes:            attributes,
 		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
@@ -169,7 +170,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		TopicArn:              aws.String(d.Get(names.AttrTopicARN).(string)),
 	}
 
-	output, err := conn.Subscribe(ctx, input)
+	output, err := conn.Subscribe(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SNS Topic Subscription: %s", err)
@@ -235,7 +236,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s) attributes: %s", d.Id(), err)
 	}
 
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
@@ -264,9 +265,10 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
-	_, err := conn.Unsubscribe(ctx, &sns.UnsubscribeInput{
+	input := sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.Unsubscribe(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Cannot unsubscribe a subscription that is pending confirmation") {
 		return diags
@@ -326,7 +328,7 @@ func putSubscriptionAttribute(ctx context.Context, conn *sns.Client, arn string,
 		value = "{}"
 	}
 
-	input := &sns.SetSubscriptionAttributesInput{
+	input := sns.SetSubscriptionAttributesInput{
 		AttributeName:   aws.String(name),
 		AttributeValue:  aws.String(value),
 		SubscriptionArn: aws.String(arn),
@@ -338,7 +340,7 @@ func putSubscriptionAttribute(ctx context.Context, conn *sns.Client, arn string,
 		input.AttributeValue = nil
 	}
 
-	_, err := conn.SetSubscriptionAttributes(ctx, input)
+	_, err := conn.SetSubscriptionAttributes(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("setting SNS Topic Subscription (%s) attribute (%s): %w", arn, name, err)
@@ -348,10 +350,14 @@ func putSubscriptionAttribute(ctx context.Context, conn *sns.Client, arn string,
 }
 
 func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
-	input := &sns.GetSubscriptionAttributesInput{
+	input := sns.GetSubscriptionAttributesInput{
 		SubscriptionArn: aws.String(arn),
 	}
 
+	return findSubscriptionAttributes(ctx, conn, &input)
+}
+
+func findSubscriptionAttributes(ctx context.Context, conn *sns.Client, input *sns.GetSubscriptionAttributesInput) (map[string]string, error) {
 	output, err := conn.GetSubscriptionAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -377,9 +383,28 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 		TopicArn: aws.String(topicARN),
 	}
 
-	paginator := sns.NewListSubscriptionsByTopicPaginator(conn, &input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	return findSubscriptionByTopic(ctx, conn, &input, func(v *types.Subscription) bool {
+		return aws.ToString(v.SubscriptionArn) == subscriptionARN
+	})
+}
+
+func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) (*types.Subscription, error) {
+	output, err := findSubscriptionsByTopic(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) ([]types.Subscription, error) {
+	var output []types.Subscription
+
+	pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
@@ -391,16 +416,14 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 			return nil, err
 		}
 
-		for _, subscription := range page.Subscriptions {
-			if aws.ToString(subscription.SubscriptionArn) == subscriptionARN {
-				return &subscription, nil
+		for _, v := range page.Subscriptions {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastRequest: input,
-	}
+	return output, nil
 }
 
 // waitForConfirmation indicates whether the subscription should wait for confirmation
