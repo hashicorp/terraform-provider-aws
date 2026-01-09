@@ -810,7 +810,7 @@ func TestAccSNSTopicSubscription_disappears_TopicExternal(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/45863.
-func TestAccSNSTopicSubscription_awsManagedTopic(t *testing.T) {
+func TestAccSNSTopicSubscription_awsManagedTopic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
@@ -1550,7 +1550,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
-func testAccTopicSubscriptionConfig_awsManagedTopic(rName string) string {
+func testAccTopicSubscriptionConfig_awsManagedTopic(rName string) string { // nosemgrep:ci.aws-in-func-name
 	return fmt.Sprintf(`
 data "aws_wafv2_managed_rule_group" "test" {
   name        = "AWSManagedRulesCommonRuleSet"
