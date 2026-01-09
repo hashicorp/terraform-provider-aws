@@ -3255,7 +3255,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 				}
 				keySchema := v.GetAttr("key_schema")
 				if keySchema.IsKnown() && !keySchema.IsNull() {
-					for v := range elementValues(keySchema) {
+					for v := range ctyValueElementValues(keySchema) {
 						name := v.GetAttr("attribute_name")
 						indexedAttributes[name.AsString()] = true
 					}
@@ -3327,7 +3327,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	return errors.Join(errs...)
 }
 
-func elementValues(v cty.Value) iter.Seq[cty.Value] {
+func ctyValueElementValues(v cty.Value) iter.Seq[cty.Value] {
 	return func(yield func(cty.Value) bool) {
 		it := v.ElementIterator()
 		for it.Next() {
@@ -3339,7 +3339,7 @@ func elementValues(v cty.Value) iter.Seq[cty.Value] {
 	}
 }
 
-func elements(v cty.Value) iter.Seq2[cty.Value, cty.Value] {
+func ctyValueElements(v cty.Value) iter.Seq2[cty.Value, cty.Value] {
 	return func(yield func(cty.Value, cty.Value) bool) {
 		it := v.ElementIterator()
 		for it.Next() {
@@ -3447,7 +3447,7 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 		return
 	}
 
-	for i, gsiElem := range elements(gsis) {
+	for i, gsiElem := range ctyValueElements(gsis) {
 		gsiElemPath := gsisPath.Index(i)
 		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
 	}
@@ -3465,7 +3465,7 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
-	for i, gsi := range elements(keySchema) {
+	for i, gsi := range ctyValueElements(keySchema) {
 		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
 		switch keyType {
 		case awstypes.KeyTypeHash:
