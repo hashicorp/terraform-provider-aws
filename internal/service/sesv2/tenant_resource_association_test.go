@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	//	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,7 +44,7 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
 					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 				),
 			},
 			{
