@@ -31,6 +31,9 @@ var listTestTmpl string
 //go:embed testconfig.gtpl
 var lisTestConfigTmpl string
 
+//go:embed query.gtpl
+var queryTmpl string
+
 //go:embed websitedoc.gtpl
 var websiteTmpl string
 
@@ -117,6 +120,12 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 	}
 	if err = writeTemplate("testconfig", tcf, lisTestConfigTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing list resource test config template: %w", err)
+	}
+
+	qf := "main.tfquery.hcl"
+	qf = filepath.Join("testdata", listName, "list_basic", "query.tfquery.hcl")
+	if err = writeTemplate("queryconfig", qf, queryTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing list resource query config template: %w", err)
 	}
 
 	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)

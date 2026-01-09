@@ -3,12 +3,12 @@ subcategory: "{{ .HumanFriendlyService }}"
 layout: "aws"
 page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}"
 description: |-
-  Lists {{ .HumanFriendlyService }} {{ .HumanResourceName }} resources.
+  Lists {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources.
 ---
 
 # List Resource: aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}
 
-Lists {{ .HumanFriendlyService }} {{ .HumanResourceName }} resources.
+Lists {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources.
 
 ## Example Usage
 
