@@ -616,7 +616,7 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 		},
 
-		"add with multiple hash_keys": {
+		"add with multiple hash keys": {
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -635,8 +635,17 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 					"projection_type": "ALL",
 				},
 				map[string]any{
-					names.AttrName:    "att2-index",
-					"hash_keys":       []any{"att2", "att1"},
+					names.AttrName: "att2-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
@@ -668,7 +677,7 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 		},
 
-		"change hash_key to multiple hash_keys": {
+		"change hash_key to multiple hash keys": {
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -680,8 +689,17 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 			New: []any{
 				map[string]any{
-					names.AttrName:    "att1-index",
-					"hash_keys":       []any{"att1", "att2"},
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
@@ -718,11 +736,20 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 		},
 
-		"remove key from hash_keys": {
+		"remove key from hash keys": {
 			Old: []any{
 				map[string]any{
-					names.AttrName:    "att1-index",
-					"hash_keys":       []any{"att1", "att2"},
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
@@ -730,8 +757,13 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 			New: []any{
 				map[string]any{
-					names.AttrName:    "att1-index",
-					"hash_keys":       []any{"att1"},
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
@@ -764,11 +796,20 @@ func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 			},
 		},
 
-		"change multiple hash_keys to hash_key": {
+		"change multiple hash keys to hash_key": {
 			Old: []any{
 				map[string]any{
-					names.AttrName:    "att1-index",
-					"hash_keys":       []any{"att1", "att2"},
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
@@ -1388,7 +1429,7 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			},
 		},
 
-		"add with multiple hash_keys": {
+		"add with multiple hash keys": {
 			Old: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
@@ -1412,7 +1453,16 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 				},
 				map[string]any{
 					names.AttrName: "att2-index",
-					"hash_keys":    []any{"att2", "att1"},
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
@@ -1446,7 +1496,7 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			},
 		},
 
-		"change hash_key to multiple hash_keys": {
+		"change hash_key to multiple hash keys": {
 			Old: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
@@ -1461,7 +1511,16 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			New: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
-					"hash_keys":    []any{"att1", "att2"},
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
@@ -1500,11 +1559,20 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			},
 		},
 
-		"remove key from hash_keys": {
+		"remove key from hash keys": {
 			Old: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
-					"hash_keys":    []any{"att1", "att2"},
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
@@ -1515,7 +1583,12 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			New: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
-					"hash_keys":    []any{"att1"},
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
@@ -1550,11 +1623,20 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 			},
 		},
 
-		"change multiple hash_keys to hash_key": {
+		"change multiple hash keys to hash_key": {
 			Old: []any{
 				map[string]any{
 					names.AttrName: "att1-index",
-					"hash_keys":    []any{"att1", "att2"},
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
 					"on_demand_throughput": []any{map[string]any{
 						"max_read_request_units":  5,
 						"max_write_request_units": 10,
@@ -1636,7 +1718,7 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 func normalizeGSIMapValue(v map[string]any) map[string]any {
 	result := map[string]any{
 		"hash_key":             "",
-		"hash_keys":            nil,
+		"key_schema":           nil,
 		names.AttrName:         "",
 		"non_key_attributes":   nil,
 		"on_demand_throughput": nil,
@@ -1934,9 +2016,15 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_OnCreate(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact(""),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
-								knownvalue.StringExact("TestTableHashKey2"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
@@ -1983,8 +2071,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_Single(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2034,8 +2125,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2064,9 +2158,15 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_transitionFromHashKey(t *t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact(""),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
-								knownvalue.StringExact("TestTableHashKey2"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2116,8 +2216,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2146,9 +2249,15 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_AddHashKey_ToHashKeys(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact(""),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
-								knownvalue.StringExact("TestTableHashKey2"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2202,9 +2311,15 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact(""),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
-								knownvalue.StringExact("TestTableHashKey2"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2229,8 +2344,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_transitionToHashKey(t *
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2284,9 +2402,15 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact(""),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
-								knownvalue.StringExact("TestTableHashKey2"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2311,8 +2435,11 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_RemoveHashKey_toHashKeys(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2379,7 +2506,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						names.AttrName:         "ReplacementTestTableGSI",
-						"hash_keys.#":          "4",
+						"key_schema.#":         "4",
 						"range_keys.#":         "4",
 						"write_capacity":       "5",
 						"read_capacity":        "5",
@@ -2443,8 +2570,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
@@ -2501,8 +2631,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2535,8 +2668,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2597,8 +2733,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -2630,8 +2769,11 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"hash_key": knownvalue.StringExact("TestTableHashKey"),
-							"hash_keys": knownvalue.ListExact([]knownvalue.Check{
-								knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
@@ -8385,8 +8527,15 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "ReplacementTestTableGSI"
-    hash_keys       = ["TestTableHashKey", "TestTableHashKey2"]
+    name = "ReplacementTestTableGSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey2"
+      key_type       = "HASH"
+    }
     range_key       = "ReplacementGSIRangeKey"
     projection_type = "ALL"
     read_capacity   = 1
@@ -8434,8 +8583,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "GSI"
-    hash_keys       = ["TestTableHashKey"]
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
     write_capacity  = 1
     read_capacity   = 1
     projection_type = "KEYS_ONLY"
@@ -8463,8 +8615,15 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "GSI"
-    hash_keys       = ["TestTableHashKey", "TestTableHashKey2"]
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey2"
+      key_type       = "HASH"
+    }
     write_capacity  = 1
     read_capacity   = 1
     projection_type = "KEYS_ONLY"
@@ -8529,8 +8688,23 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_keys          = ["TestTableHashKey", "TestTableHashKey2", "TestTableHashKey3", "TestTableHashKey4"]
+    name = "ReplacementTestTableGSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey2"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey3"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey4"
+      key_type       = "HASH"
+    }
     range_keys         = ["ReplacementGSIRangeKey", "TestTableRangeKey", "TestLSIRangeKey", "ReplacementGSIRangeKey2"]
     write_capacity     = 5
     read_capacity      = 5
@@ -8571,12 +8745,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_key           = "TestTableHashKey"
-    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
-    projection_type    = "ALL"
-    write_capacity     = 1
-    read_capacity      = 1
+    name            = "ReplacementTestTableGSI"
+    hash_key        = "TestTableHashKey"
+    range_keys      = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
+    projection_type = "ALL"
+    write_capacity  = 1
+    read_capacity   = 1
   }
 }
 `, rName)
@@ -8636,12 +8810,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name               = "GSI"
-    hash_key           = "TestTableHashKey"
-    range_keys         = ["TestGSIRangeKey", "TestGSIRangeKey2"]
-    projection_type    = "KEYS_ONLY"
-    write_capacity     = 1
-    read_capacity      = 1
+    name            = "GSI"
+    hash_key        = "TestTableHashKey"
+    range_keys      = ["TestGSIRangeKey", "TestGSIRangeKey2"]
+    projection_type = "KEYS_ONLY"
+    write_capacity  = 1
+    read_capacity   = 1
   }
 }
 `, rName)
@@ -8742,9 +8916,16 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_key           = "TestTableHashKey"
-    hash_keys          = ["TestTableRangeKey", "TestTableHashKey"]
+    name     = "ReplacementTestTableGSI"
+    hash_key = "TestTableHashKey"
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
     range_key          = "ReplacementGSIRangeKey"
     write_capacity     = 5
     read_capacity      = 5
@@ -8859,8 +9040,27 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_keys          = ["TestTableHashKey", "ReplacementGSIRangeKey2", "TestLSIRangeKey", "TestTableRangeKey", "ReplacementGSIRangeKey3"]
+    name = "ReplacementTestTableGSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey3"
+      key_type       = "HASH"
+    }
     range_key          = "ReplacementGSIRangeKey"
     write_capacity     = 5
     read_capacity      = 5

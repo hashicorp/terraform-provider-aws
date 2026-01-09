@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"math/big"
 	"reflect"
@@ -196,15 +197,28 @@ func resourceTable() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:       schema.TypeString,
+								Optional:   true,
+								Computed:   true,
+								Deprecated: "hash_key is deprecated. Use key_schema instead.",
 							},
-							"hash_keys": {
+							"key_schema": {
 								Type:     schema.TypeList,
 								Optional: true,
 								Computed: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-								MaxItems: 4,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attribute_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
+										},
+									},
+								},
 							},
 							names.AttrName: {
 								Type:     schema.TypeString,
@@ -2199,8 +2213,8 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) (bool, e
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
 	if oOk && nOk && oHk == nHk && oHk != "" {
-		delete(oldAttributes, "hash_keys")
-		delete(newAttributes, "hash_keys")
+		delete(oldAttributes, "key_schema")
+		delete(newAttributes, "key_schema")
 	}
 
 	return !reflect.DeepEqual(oldAttributes, newAttributes), nil
@@ -2656,17 +2670,19 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 				rangeKeys = append(rangeKeys, aws.ToString(attribute.AttributeName))
 			}
 		}
+
 		// Set single values or lists based on count
 		if len(hashKeys) == 1 {
 			gsi["hash_key"] = hashKeys[0]
 		}
-		gsi["hash_keys"] = hashKeys
 
 		if len(rangeKeys) == 1 {
 			gsi["range_key"] = rangeKeys[0]
 		} else if len(rangeKeys) > 1 {
 			gsi["range_keys"] = rangeKeys
 		}
+
+		gsi["key_schema"] = flattenKeySchema(g.KeySchema)
 
 		if g.Projection != nil {
 			gsi["projection_type"] = g.Projection.ProjectionType
@@ -2685,6 +2701,24 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	}
 
 	return output
+}
+
+func flattenKeySchema(elements []awstypes.KeySchemaElement) []map[string]any {
+	result := make([]map[string]any, 0, len(elements))
+
+	for _, attribute := range elements {
+		if attribute.KeyType == awstypes.KeyTypeHash {
+			result = append(result, map[string]any{
+				"attribute_name": attribute.AttributeName,
+				"key_type":       attribute.KeyType,
+			})
+		}
+		if attribute.KeyType == awstypes.KeyTypeRange {
+			// noop
+		}
+	}
+
+	return result
 }
 
 func flattenTableServerSideEncryption(description *awstypes.SSEDescription) []any {
@@ -2987,12 +3021,20 @@ func expandProjection(data map[string]any) *awstypes.Projection {
 }
 
 func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
-	keySchema := []awstypes.KeySchemaElement{}
+	var keySchema []awstypes.KeySchemaElement
+
+	hKeys, hKsok := data["key_schema"].([]any)
+	if hKsok {
+		for _, v := range hKeys {
+			element := v.(map[string]any)
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(element["attribute_name"].(string)),
+				KeyType:       awstypes.KeyType(element["key_type"].(string)),
+			})
+		}
+	}
 
 	hKey, hKok := data["hash_key"]
-	hKeys, hKsok := data["hash_keys"].([]any)
-	rKey, rKok := data["range_key"]
-	rKeys, rKsok := data["range_keys"].(*schema.Set)
 
 	if hKok || hKsok {
 		if (hKey != nil && hKey != "") && (len(hKeys) == 0) {
@@ -3001,17 +3043,11 @@ func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 				AttributeName: aws.String(hKey.(string)),
 				KeyType:       awstypes.KeyTypeHash,
 			})
-		} else if len(hKeys) > 0 {
-			//use hash_keys
-			for _, hKeyItem := range hKeys {
-				keySchema = append(keySchema, awstypes.KeySchemaElement{
-					AttributeName: aws.String(hKeyItem.(string)),
-					KeyType:       awstypes.KeyTypeHash,
-				})
-			}
 		}
 	}
 
+	rKey, rKok := data["range_key"]
+	rKeys, rKsok := data["range_keys"].(*schema.Set)
 	if rKok || rKsok {
 		if (rKey != nil && rKey != "") && (rKeys == nil || rKeys.Len() == 0) {
 			// use range_key
@@ -3188,12 +3224,11 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 				if hashKey.IsKnown() && !hashKey.IsNull() {
 					indexedAttributes[hashKey.AsString()] = true
 				}
-				hashKeys := v.GetAttr("hash_keys")
-				if hashKeys.IsKnown() && !hashKeys.IsNull() {
-					it := hashKeys.ElementIterator()
-					for it.Next() {
-						_, v := it.Element()
-						indexedAttributes[v.AsString()] = true
+				keySchema := v.GetAttr("key_schema")
+				if keySchema.IsKnown() && !keySchema.IsNull() {
+					for v := range elementValues(keySchema) {
+						name := v.GetAttr("attribute_name")
+						indexedAttributes[name.AsString()] = true
 					}
 				}
 			}
@@ -3228,8 +3263,19 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 
 		errs = append(errs, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
-
 	return errors.Join(errs...)
+}
+
+func elementValues(v cty.Value) iter.Seq[cty.Value] {
+	return func(yield func(cty.Value) bool) {
+		it := v.ElementIterator()
+		for it.Next() {
+			_, v := it.Element()
+			if !yield(v) {
+				return
+			}
+		}
+	}
 }
 
 func validateGSISchema(d *schema.ResourceDiff) error {
@@ -3242,8 +3288,8 @@ func validateGSISchema(d *schema.ResourceDiff) error {
 			index := idx.(map[string]any)
 
 			hk, hkok := index["hash_key"].(string)
-			hks, hksok := index["hash_keys"].([]any)
-			if (hkok && hksok) && (hk != "" && len(hks) > 0) {
+			keySchema, keySchemaOk := index["key_schema"].([]any)
+			if (hkok && keySchemaOk) && (hk != "" && len(keySchema) > 0) {
 				errs = append(errs, errors.New("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set."))
 			}
 
@@ -3473,77 +3519,28 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 			switch attrName {
 			case "hash_key":
 				if p.IsNull() && !s.IsNull() {
-					// "hash_keys" is set
-					continue // change to "hash_keys" will be caught by equality test
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
 				} else {
-					// case s.Type() == cty.String:
-					if p.IsNull() && s.AsString() == "" {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
+					if !ctyValueLegacyEquals(s, p) {
+						return nil
 					}
 				}
 
-			case "hash_keys":
-				if p.IsNull() && !s.IsNull() {
+			case "key_schema":
+				// key_schema is a block nested list, so the zero-value is an empty list
+				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
 				} else {
-					// case s.Type().IsSetType():
-					if p.IsNull() && s.LengthInt() == 0 {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
+					if !ctyValueLegacyEquals(s, p) {
+						return nil
 					}
 				}
 
 			default:
-				switch {
-				case s.Type().IsSetType():
-					if p.IsNull() && s.LengthInt() == 0 {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
-					}
-
-				case s.Type().IsListType():
-					if p.IsNull() && s.LengthInt() == 0 {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
-					}
-
-				case s.Type() == cty.String:
-					if p.IsNull() && s.AsString() == "" {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
-					}
-
-				case s.Type() == cty.Number:
-					var zero big.Float
-					if p.IsNull() && zero.Cmp(s.AsBigFloat()) == 0 {
-						continue
-					} else {
-						if s.Equals(p).False() {
-							return nil
-						}
-					}
-
-				default:
-					if s.Equals(p).False() {
-						return nil
-					}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
 				}
 			}
 		}
@@ -3563,4 +3560,51 @@ func collectGSI(v cty.Value) map[string]cty.Value {
 		}
 	}
 	return result
+}
+
+func ctyValueLegacyEquals(lhs, rhs cty.Value) bool {
+	if lhs.Equals(rhs).True() {
+		return true
+	}
+
+	if !lhs.Type().Equals(rhs.Type()) {
+		return false
+	}
+
+	switch {
+	case lhs.Type().IsSetType():
+		if rhs.IsNull() && lhs.LengthInt() == 0 {
+			return true
+		}
+		if lhs.IsNull() && rhs.LengthInt() == 0 {
+			return true
+		}
+
+	case lhs.Type().IsListType():
+		if rhs.IsNull() && lhs.LengthInt() == 0 {
+			return true
+		}
+		if lhs.IsNull() && rhs.LengthInt() == 0 {
+			return true
+		}
+
+	case lhs.Type() == cty.String:
+		if rhs.IsNull() && lhs.AsString() == "" {
+			return true
+		}
+		if lhs.IsNull() && rhs.AsString() == "" {
+			return true
+		}
+
+	case lhs.Type() == cty.Number:
+		var zero big.Float
+		if rhs.IsNull() && zero.Cmp(lhs.AsBigFloat()) == 0 {
+			return true
+		}
+		if lhs.IsNull() && zero.Cmp(rhs.AsBigFloat()) == 0 {
+			return true
+		}
+	}
+
+	return false
 }
