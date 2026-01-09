@@ -416,6 +416,56 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackSet_concurrencyMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet awstypes.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_concurrencyMode(rName, "SOFT_FAILURE_TOLERANCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+					"operation_preferences",
+				},
+			},
+			{
+				Config: testAccStackSetConfig_concurrencyMode(rName, "STRICT_FAILURE_TOLERANCE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "STRICT_FAILURE_TOLERANCE"),
+				),
+			},
+			{
+				Config: testAccStackSetConfig_operationPreferences(rName, 1, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 awstypes.StackSet
@@ -1464,6 +1514,25 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_concurrencyMode(rName string, concurrencyMode string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test[0].arn
+  name                    = %[1]q
+
+  operation_preferences {
+    concurrency_mode        = %[2]q
+    failure_tolerance_count = 1
+    max_concurrent_count    = 1
+  }
+
+  template_body = <<TEMPLATE
+%[3]s
+TEMPLATE
+}
+`, rName, concurrencyMode, testAccStackSetTemplateBodyVPC(rName)))
 }
 
 func testAccStackSetConfig_autoDeployment(rName string, enabled, retainStacksOnAccountRemoval bool) string {
