@@ -1553,6 +1553,12 @@ service/mobile:
           - any-glob-to-any-file:
               - 'internal/service/mobile/**/*'
               - 'website/**/mobile_*'
+service/mpa:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/mpa/**/*'
+              - 'website/**/mpa_*'
 service/mq:
   - any:
       - changed-files:

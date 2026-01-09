@@ -170,6 +170,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaaserverless"
@@ -434,6 +435,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
 		mgn.ServicePackage(ctx),
+		mpa.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		mwaaserverless.ServicePackage(ctx),

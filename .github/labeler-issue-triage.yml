@@ -490,6 +490,8 @@ service/migrationhubstrategy:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_migrationhubstrategy_'
 service/mobile:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mobile_'
+service/mpa:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mpa_'
 service/mq:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mq_'
 service/mturk:

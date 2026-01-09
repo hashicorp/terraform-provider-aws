@@ -244,6 +244,7 @@ provider "aws" {
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
+|Multi-party Approval|`mpa`|`AWS_ENDPOINT_URL_MPA`|`mpa`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |MWAA (Managed Workflows for Apache Airflow) Serverless|`mwaaserverless`|`AWS_ENDPOINT_URL_MWAA_SERVERLESS`|`mwaa_serverless`|

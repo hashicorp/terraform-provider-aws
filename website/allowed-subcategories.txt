@@ -172,6 +172,7 @@ Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
 MemoryDB
 Meta Data Sources
+Multi-party Approval
 Neptune
 Neptune Analytics
 Network Firewall
