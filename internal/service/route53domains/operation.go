@@ -29,7 +29,7 @@ func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53domains.GetOperationDetailOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 
 		return output, err
 	}

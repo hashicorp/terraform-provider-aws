@@ -285,7 +285,7 @@ func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*cloudfront.GetTrustStoreOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
 		return out, err
 	}
 
@@ -302,7 +302,7 @@ func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*cloudfront.GetTrustStoreOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.TrustStore.Reason)))
 		return out, err
 	}
 

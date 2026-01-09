@@ -447,7 +447,7 @@ func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
 		return output.ControlOperation, err
 	}

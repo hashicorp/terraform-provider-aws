@@ -33,7 +33,7 @@ func TestAccACMPCACertificate_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccACMPCACertificate_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -257,7 +257,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: testAccCheckCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -266,7 +266,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -280,7 +280,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -335,7 +335,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource_NoRefresh_NoChange(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: testAccCheckCertificateDestroy(ctx),
+		CheckDestroy: testAccCheckCertificateDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -349,7 +349,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource_NoRefresh_NoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -364,7 +364,7 @@ func TestAccACMPCACertificate_Identity_ExistingResource_NoRefresh_NoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExists(ctx, t, resourceName),
 				),
 			},
 		},

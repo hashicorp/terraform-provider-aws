@@ -2114,7 +2114,7 @@ func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAu
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, t *testing.T, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2125,7 +2125,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 

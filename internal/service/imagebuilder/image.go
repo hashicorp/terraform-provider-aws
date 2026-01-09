@@ -511,7 +511,7 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, ar
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
 
 		return output, err
 	}

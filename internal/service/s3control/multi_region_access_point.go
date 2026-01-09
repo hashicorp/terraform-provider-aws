@@ -359,7 +359,7 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 
 	if output, ok := outputRaw.(*types.AsyncOperation); ok {
 		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == asyncOperationRequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
 		}
 
 		return output, err

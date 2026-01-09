@@ -282,7 +282,7 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.WorkspaceConfigurationDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}

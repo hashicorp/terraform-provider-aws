@@ -1157,7 +1157,7 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err

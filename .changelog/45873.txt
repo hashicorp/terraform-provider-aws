@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix `runtime error: invalid memory address or nil pointer dereference` panic when mistakenly importing a multi-tenant distribution
+```
+
+```release-note:bug
+resource/aws_cloudfront_distribution: Prevent mistakenly importing a multi-tenant distribution
+```
+
+```release-note:bug
+resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution
+```

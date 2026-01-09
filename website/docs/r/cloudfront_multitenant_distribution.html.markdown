@@ -52,7 +52,7 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
 
   origin {
     domain_name = "example.com"
-    origin_id   = "example-origin"
+    id          = "example-origin"
 
     custom_origin_config {
       http_port              = 80
@@ -67,8 +67,10 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = aws_cloudfront_cache_policy.example.id
 
-    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods  = ["GET", "HEAD"]
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -80,6 +82,18 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
   viewer_certificate {
     acm_certificate_arn = aws_acm_certificate.example.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 
   tags = {

@@ -259,7 +259,7 @@ func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, 
 
 	if output, ok := outputRaw.(*dynamodb.DescribeContributorInsightsOutput); ok {
 		if status, failureException := output.ContributorInsightsStatus, output.FailureException; status == awstypes.ContributorInsightsStatusFailed && failureException != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
 		}
 
 		return output, err
@@ -280,7 +280,7 @@ func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.Client, 
 
 	if output, ok := outputRaw.(*dynamodb.DescribeContributorInsightsOutput); ok {
 		if status, failureException := output.ContributorInsightsStatus, output.FailureException; status == awstypes.ContributorInsightsStatusFailed && failureException != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
 		}
 
 		return output, err

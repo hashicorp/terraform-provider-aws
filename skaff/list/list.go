@@ -28,6 +28,12 @@ var listTmplSdkV2 string
 //go:embed listtest.gtpl
 var listTestTmpl string
 
+//go:embed testconfig.gtpl
+var lisTestConfigTmpl string
+
+//go:embed query.gtpl
+var queryTmpl string
+
 //go:embed websitedoc.gtpl
 var websiteTmpl string
 
@@ -102,6 +108,24 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 	tf := fmt.Sprintf("%s_list_test.go", snakeName)
 	if err = writeTemplate("listtest", tf, listTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing list resource test template: %w", err)
+	}
+
+	tcf := "main.tf"
+	{
+		tcf = filepath.Join("testdata", listName, "list_basic", tcf)
+		err = os.MkdirAll(filepath.Dir(tcf), 0755)
+		if err != nil {
+			return fmt.Errorf("creating test config directory: %w", err)
+		}
+	}
+	if err = writeTemplate("testconfig", tcf, lisTestConfigTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing list resource test config template: %w", err)
+	}
+
+	qf := "main.tfquery.hcl"
+	qf = filepath.Join("testdata", listName, "list_basic", "query.tfquery.hcl")
+	if err = writeTemplate("queryconfig", qf, queryTmpl, force, templateData); err != nil {
+		return fmt.Errorf("writing list resource query config template: %w", err)
 	}
 
 	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)

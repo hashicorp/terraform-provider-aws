@@ -388,7 +388,7 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID
 
 	if output, ok := outputRaw.(*awstypes.Theme); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, themeError(apiErrors))
+			retry.SetLastError(err, themeError(apiErrors))
 		}
 
 		return output, err
@@ -409,7 +409,7 @@ func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID
 
 	if output, ok := outputRaw.(*awstypes.Theme); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, themeError(apiErrors))
+			retry.SetLastError(err, themeError(apiErrors))
 		}
 
 		return output, err

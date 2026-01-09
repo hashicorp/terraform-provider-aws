@@ -310,7 +310,7 @@ func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

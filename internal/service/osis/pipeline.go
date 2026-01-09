@@ -436,7 +436,7 @@ func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -459,7 +459,7 @@ func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
@@ -482,7 +482,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 
 	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
 		if reason := output.StatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
 		return output, err
