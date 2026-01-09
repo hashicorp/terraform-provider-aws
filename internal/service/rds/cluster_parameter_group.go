@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -126,7 +127,20 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	// Set for update.
 	d.Set(names.AttrARN, output.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
-	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
+	const (
+		timeout := 10 * time.Second
+	)
+	
+	// Allow for tags to propagate so ABAC isn't blocked
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, timeout, func() (interface{}, error) {
+		return resourceClusterParameterGroupUpdate(ctx, d, meta)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating parameters for RDS Cluster Parameter Group (%s): %s", name, err)
+	}
+
+	return diags
 }
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
