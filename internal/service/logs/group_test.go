@@ -331,6 +331,29 @@ func TestAccLogsLogGroup_skipDestroyInconsistentPlan(t *testing.T) {
 	})
 }
 
+func TestAccLogsLogGroup_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 // Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is set.
 // Even if retention_in_days is changed in the configuration, the diff should be suppressed and the plan should be empty.
 func TestAccLogsLogGroup_logGroupClassDELIVERY1(t *testing.T) {
@@ -1000,16 +1023,13 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName)
 }
 
-func testAccGroupConfig_tags1(rName, key1, value1 string) string {
+func testAccGroupConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]s = %[3]q
-  }
+  name          = %[1]q
+  force_destroy = true
 }
-`, rName, key1, value1)
+`, rName)
 }
 
 func testAccGroupConfig_deletionProtectionEnabled(rName string, deletionProtectionEnabled bool) string {
