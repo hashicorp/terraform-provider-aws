@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -9,12 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -24,7 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,19 +61,124 @@ func (r *resourceShareAssociationExclusiveResource) Schema(ctx context.Context, 
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						ramPrincipal(),
+					),
+				},
 			},
 			"resource_arns": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						validators.ARN(),
+					),
+				},
 			},
 			"sources": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						validators.AWSAccountID(),
+					),
+				},
 			},
 		},
 	}
+}
+
+// ValidateConfig validates the resource configuration.
+// - Service principals cannot be mixed with other principal types (account IDs, ARNs)
+// - Sources can only be specified when principals contains only service principals
+func (r *resourceShareAssociationExclusiveResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config resourceShareAssociationExclusiveModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Skip validation if principals is null or unknown
+	if config.Principals.IsNull() || config.Principals.IsUnknown() {
+		// If sources is specified but principals is not, that's an error
+		if !config.Sources.IsNull() && !config.Sources.IsUnknown() && !setContainsUnknownElements(config.Sources) {
+			var sources []string
+			resp.Diagnostics.Append(config.Sources.ElementsAs(ctx, &sources, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(sources) > 0 {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("sources"),
+					"Invalid Configuration",
+					"sources can only be specified when principals contains only service principals (e.g., service-id.amazonaws.com)",
+				)
+			}
+		}
+		return
+	}
+
+	// Skip validation if any element in the set is unknown (e.g., references to other resources)
+	if setContainsUnknownElements(config.Principals) {
+		return
+	}
+
+	var principals []string
+	resp.Diagnostics.Append(config.Principals.ElementsAs(ctx, &principals, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Count service principals and non-service principals
+	var servicePrincipals, otherPrincipals []string
+	for _, principal := range principals {
+		if inttypes.IsServicePrincipal(principal) {
+			servicePrincipals = append(servicePrincipals, principal)
+		} else {
+			otherPrincipals = append(otherPrincipals, principal)
+		}
+	}
+
+	// Validate that service principals are not mixed with other principal types
+	if len(servicePrincipals) > 0 && len(otherPrincipals) > 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("principals"),
+			"Invalid Configuration",
+			"Service principals (e.g., service-id.amazonaws.com) cannot be mixed with other principal types (AWS account IDs, organization ARNs, OU ARNs, IAM role ARNs, or IAM user ARNs)",
+		)
+		return
+	}
+
+	// Validate sources - only allowed when principals contains only service principals
+	if !config.Sources.IsNull() && !config.Sources.IsUnknown() && !setContainsUnknownElements(config.Sources) {
+		var sources []string
+		resp.Diagnostics.Append(config.Sources.ElementsAs(ctx, &sources, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if len(sources) > 0 && len(servicePrincipals) == 0 {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("sources"),
+				"Invalid Configuration",
+				"sources can only be specified when principals contains only service principals (e.g., service-id.amazonaws.com)",
+			)
+		}
+	}
+}
+
+// setContainsUnknownElements checks if any element in the set is unknown.
+// This is needed because ElementsAs with []string target cannot handle unknown values.
+func setContainsUnknownElements(set fwtypes.SetOfString) bool {
+	for _, elem := range set.Elements() {
+		if elem.IsUnknown() {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *resourceShareAssociationExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
