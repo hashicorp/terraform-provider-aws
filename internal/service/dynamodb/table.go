@@ -2679,6 +2679,8 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
 		}
 
+		gsi["key_schema"] = flattenKeySchema(g.KeySchema)
+
 		var hashKeys []string
 		var rangeKeys []string
 
@@ -2701,8 +2703,6 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 		} else if len(rangeKeys) > 1 {
 			gsi["range_keys"] = rangeKeys
 		}
-
-		gsi["key_schema"] = flattenKeySchema(g.KeySchema)
 
 		if g.Projection != nil {
 			gsi["projection_type"] = g.Projection.ProjectionType
@@ -3055,8 +3055,7 @@ func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 	}
 
 	hKey, hKok := data["hash_key"]
-
-	if hKok || hKsok {
+	if hKok {
 		if (hKey != nil && hKey != "") && (len(hKeys) == 0) {
 			// use hash_key
 			keySchema = append(keySchema, awstypes.KeySchemaElement{
