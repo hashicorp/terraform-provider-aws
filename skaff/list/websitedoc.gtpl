@@ -1,19 +1,19 @@
 ---
 subcategory: "{{ .HumanFriendlyService }}"
 layout: "aws"
-page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
+page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}"
 description: |-
   Lists {{ .HumanFriendlyService }} {{ .HumanResourceName }} resources.
 ---
 
-# List Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
+# List Resource: aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}
 
 Lists {{ .HumanFriendlyService }} {{ .HumanResourceName }} resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "example" {
+list "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}" "example" {
   provider = aws
 }
 ```
