@@ -61,7 +61,7 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 			"aws_account_region": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z]{2}-[a-z]{4,10}-\\d$"), "must match ^[a-z]{2}-[a-z]{4,10}-\\d$"),
+					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z]{2,4}-[a-z]{4,10}-\\d$"), "must match ^[a-z]{2}-[a-z]{4,10}-\\d$"),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{

@@ -356,8 +356,8 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 }
 
 var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2,4}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2,4}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
 const ruleResourceIDSeparator = "/"

@@ -12,14 +12,14 @@ import (
 )
 
 var (
-	functionNameRegex = regexache.MustCompile("(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)")
+	functionNameRegex = regexache.MustCompile("(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2,4}((-gov)|(-iso([a-z]?)))?-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)")
 )
 
 var functionNameValidator validator.String = stringvalidator.RegexMatches(functionNameRegex, "must be a valid function name")
 
 func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
+	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2,4}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 	return validation.All(
 		validation.StringMatch(regexache.MustCompile(pattern), "must be valid function name or function ARN"),

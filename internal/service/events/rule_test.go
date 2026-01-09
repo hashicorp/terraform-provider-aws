@@ -89,6 +89,14 @@ func TestRuleParseResourceID(t *testing.T) {
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
+        {
+            TestName: "ARN event bus for EU cloud",
+            //lintignore:AWSAT003,AWSAT005
+            InputID: tfevents.RuleCreateResourceID("arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default", "TestRule"),
+            //lintignore:AWSAT003,AWSAT005
+            ExpectedPart0: "arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default",
+            ExpectedPart1: "TestRule",
+        },
 		{
 			TestName: "ARN based partner event bus",
 			// lintignore:AWSAT003,AWSAT005

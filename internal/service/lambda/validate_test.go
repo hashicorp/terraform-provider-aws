@@ -18,6 +18,7 @@ func TestValidFunctionName(t *testing.T) {
 		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
 		"FunctionName",
 		"function-name",
 	}

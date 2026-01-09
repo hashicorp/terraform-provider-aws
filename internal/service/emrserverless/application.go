@@ -316,7 +316,7 @@ func resourceApplication() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10280),
 											validation.StringMatch(
-												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2,4}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
 												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
 											),
 										),
