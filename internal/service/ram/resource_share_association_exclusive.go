@@ -43,7 +43,7 @@ const (
 )
 
 type resourceShareAssociationExclusiveResource struct {
-	framework.ResourceWithModel[resourceShareAssociationExclusiveModel]
+	framework.ResourceWithModel[resourceShareAssociationExclusiveResourceModel]
 	framework.WithImportByIdentity
 }
 
@@ -95,7 +95,7 @@ func (r *resourceShareAssociationExclusiveResource) Schema(ctx context.Context, 
 // - Service principals cannot be mixed with other principal types (account IDs, ARNs)
 // - Sources can only be specified when principals contains only service principals
 func (r *resourceShareAssociationExclusiveResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var config resourceShareAssociationExclusiveModel
+	var config resourceShareAssociationExclusiveResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -182,7 +182,7 @@ func setContainsUnknownElements(set fwtypes.SetOfString) bool {
 }
 
 func (r *resourceShareAssociationExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceShareAssociationExclusiveModel
+	var plan resourceShareAssociationExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -232,7 +232,7 @@ func (r *resourceShareAssociationExclusiveResource) Create(ctx context.Context, 
 }
 
 func (r *resourceShareAssociationExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceShareAssociationExclusiveModel
+	var state resourceShareAssociationExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -274,7 +274,7 @@ func (r *resourceShareAssociationExclusiveResource) Read(ctx context.Context, re
 }
 
 func (r *resourceShareAssociationExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceShareAssociationExclusiveModel
+	var plan, state resourceShareAssociationExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -313,7 +313,7 @@ func (r *resourceShareAssociationExclusiveResource) Update(ctx context.Context, 
 }
 
 func (r *resourceShareAssociationExclusiveResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceShareAssociationExclusiveModel
+	var state resourceShareAssociationExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -538,7 +538,7 @@ func findAssociationsForResourceShare(ctx context.Context, conn *ram.Client, res
 	return principals, resources, nil
 }
 
-type resourceShareAssociationExclusiveModel struct {
+type resourceShareAssociationExclusiveResourceModel struct {
 	framework.WithRegionModel
 	ID               types.String        `tfsdk:"id"`
 	ResourceShareARN types.String        `tfsdk:"resource_share_arn"`
