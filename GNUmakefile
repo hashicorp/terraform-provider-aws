@@ -583,12 +583,25 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
