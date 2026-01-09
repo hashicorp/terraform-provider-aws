@@ -115,6 +115,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_security_context
 
+* `allow_privilege_escalation` - Whether or not a container or a Kubernetes pod is allowed to gain more privileges than its parent process. The default value is false.
 * `privileged` - When this parameter is true, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is false.
 * `read_only_root_filesystem` - When this parameter is true, the container is given read-only access to its root file system. The default value is false.
 * `run_as_user` - When this parameter is specified, the container is run as the specified user ID (uid). If this parameter isn't specified, the default is the user that's specified in the image metadata.
