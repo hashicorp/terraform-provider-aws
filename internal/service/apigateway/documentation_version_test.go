@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -112,7 +112,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +152,7 @@ func testAccCheckDocumentationVersionDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfapigateway.FindDocumentationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrVersion])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

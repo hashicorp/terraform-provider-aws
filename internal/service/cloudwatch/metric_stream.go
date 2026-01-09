@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -269,7 +269,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findMetricStreamByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
@@ -376,7 +376,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	output, err := conn.GetMetricStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		})
@@ -393,11 +393,11 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	return output, nil
 }
 
-func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) retry.StateRefreshFunc {
+func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMetricStreamByName(ctx, conn, name)
 
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -415,7 +415,7 @@ const (
 )
 
 func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{metricStreamStateRunning, metricStreamStateStopped},
 		Target:  []string{},
 		Refresh: statusMetricStream(ctx, conn, name),
@@ -432,7 +432,7 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name 
 }
 
 func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{metricStreamStateStopped},
 		Target:  []string{metricStreamStateRunning},
 		Refresh: statusMetricStream(ctx, conn, name),

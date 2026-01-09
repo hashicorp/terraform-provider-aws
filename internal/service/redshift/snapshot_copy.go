@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -17,12 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -126,7 +125,7 @@ func (r *snapshotCopyResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	out, err := findSnapshotCopyByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -211,44 +210,6 @@ func (r *snapshotCopyResource) Delete(ctx context.Context, req resource.DeleteRe
 func (r *snapshotCopyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), req, resp)
-}
-
-func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {
-	in := &redshift.DescribeClustersInput{
-		ClusterIdentifier: aws.String(id),
-	}
-
-	out, err := conn.DescribeClusters(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-	// API should return a ClusterNotFound fault in this case, but check length for
-	// extra safety
-	if len(out.Clusters) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   errors.New("not found"),
-			LastRequest: in,
-		}
-	}
-	if out.Clusters[0].ClusterSnapshotCopyStatus == nil {
-		return nil, &retry.NotFoundError{
-			LastError:   errors.New("snapshot copy not enabled"),
-			LastRequest: in,
-		}
-	}
-
-	return out.Clusters[0].ClusterSnapshotCopyStatus, nil
 }
 
 type snapshotCopyResourceModel struct {

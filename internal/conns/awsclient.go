@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -377,7 +378,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 				if client, ok := raw.(T); ok {
 					return client, nil
 				} else {
-					var zero T
+					zero := inttypes.Zero[T]()
 					return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
 				}
 			}
@@ -386,24 +387,21 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 
 	sp := c.ServicePackage(ctx, servicePackageName)
 	if sp == nil {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("unknown service package: %s", servicePackageName)
 	}
 
 	v, ok := sp.(interface {
 		NewClient(context.Context, map[string]any) (T, error)
 	})
 	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
 	config := c.apiClientConfig(ctx, servicePackageName)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	client, err := v.NewClient(ctx, config)
 	if err != nil {
-		var zero T
-		return zero, err
+		return inttypes.Zero[T](), err
 	}
 
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.

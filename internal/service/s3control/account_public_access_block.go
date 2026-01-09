@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -15,10 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -113,7 +114,7 @@ func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resourc
 
 	output, err := findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Account Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +197,7 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 	output, err := conn.GetPublicAccessBlock(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchPublicAccessBlockConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -213,11 +214,11 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 	return output.PublicAccessBlockConfiguration, nil
 }
 
-func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) retry.StateRefreshFunc {
+func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -230,7 +231,7 @@ func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, a
 }
 
 func waitPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) (*types.PublicAccessBlockConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{strconv.FormatBool(false)},
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusPublicAccessBlockEqual(ctx, conn, accountID, target),

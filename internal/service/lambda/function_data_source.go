@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -37,6 +37,34 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"lambda_managed_instances_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,6 +88,22 @@ func dataSourceFunction() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"durable_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrRetentionPeriod: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrEnvironment: {
 				Type:     schema.TypeList,
@@ -173,6 +217,10 @@ func dataSourceFunction() *schema.Resource {
 			},
 			"reserved_concurrent_executions": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrRole: {
@@ -326,6 +374,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []any{
@@ -339,6 +390,11 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("dead_letter_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	}
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
@@ -369,6 +425,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
@@ -405,7 +462,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	setTagsOut(ctx, output.Tags)
 
 	// See r/aws_lambda_function.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		if function.PackageType == awstypes.PackageTypeZip {

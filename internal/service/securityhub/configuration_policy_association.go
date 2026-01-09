@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -16,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -99,7 +100,7 @@ func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.R
 
 	output, err := findConfigurationPolicyAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +149,7 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	output, err := conn.GetConfigurationPolicyAssociation(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -165,11 +166,11 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	return output, nil
 }
 
-func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) retry.StateRefreshFunc {
+func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConfigurationPolicyAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -182,7 +183,7 @@ func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub
 }
 
 func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *securityhub.Client, id string, timeout time.Duration) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationPolicyAssociationStatusPending),
 		Target:  enum.Slice(types.ConfigurationPolicyAssociationStatusSuccess),
 		Refresh: statusConfigurationPolicyAssociation(ctx, conn, id),
@@ -191,7 +192,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.TimedOut(err) {
+	if retry.TimedOut(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) still in PENDING state. It can take up to 24 hours for the status to change from PENDING to SUCCESS or FAILURE", id)
 		// We try to wait until SUCCESS state is reached but don't error if still in PENDING state.
 		// We must attempt to wait/retry in order for Policy Disassociations to take effect
@@ -199,7 +200,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 	}
 
 	if output, ok := outputRaw.(*securityhub.GetConfigurationPolicyAssociationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
 
 		return output, err
 	}

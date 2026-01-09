@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -202,9 +202,10 @@ func main() {
 			}
 
 			commonConfig := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				RequiredEnvVars:  resource.RequiredEnvVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:     additionalTfVars,
+				RequiredEnvVars:      resource.RequiredEnvVars,
+				RequiredEnvVarValues: resource.RequiredEnvVarValues,
+				WithRName:            (resource.Generator != ""),
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
@@ -437,11 +438,12 @@ func (r ResourceDatum) LatestIdentityVersion() int64 {
 }
 
 type commonConfig struct {
-	AdditionalTfVars  []string
-	WithRName         bool
-	WithRegion        bool
-	ExternalProviders map[string]requiredProvider
-	RequiredEnvVars   []string
+	AdditionalTfVars     []string
+	WithRName            bool
+	WithRegion           bool
+	ExternalProviders    map[string]requiredProvider
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 }
 
 type requiredProvider struct {
@@ -743,6 +745,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if d.HasResourceIdentity() {
 		if !skip {
+			if err := d.Validate(); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+			}
+
 			if err := tests.Configure(&d.CommonArgs); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return

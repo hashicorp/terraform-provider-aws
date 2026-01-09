@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -19,11 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/go-cty/cty"
-	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -33,11 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -213,14 +205,6 @@ func resourceRole() *schema.Resource {
 	}
 }
 
-// @SDKListResource("aws_iam_role")
-func roleResourceAsListResource() inttypes.ListResourceForSDK {
-	l := roleListResource{}
-	l.SetResourceSchema(resourceRole())
-
-	return &l
-}
-
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -312,7 +296,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return findRoleByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -534,7 +518,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return fmt.Errorf("reading IAM Policies attached to Role (%s): %w", roleName, err)
 		default:
@@ -548,7 +532,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
 		default:
@@ -576,7 +560,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName string) error {
 	instanceProfiles, err := findInstanceProfilesForRole(ctx, conn, roleName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 
@@ -673,7 +657,7 @@ func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findRoleByName(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, roleNotFoundState, nil
 		}
 
@@ -1124,154 +1108,4 @@ func roleTags(ctx context.Context, conn *iam.Client, identifier string, optFns .
 	}
 
 	return output, nil
-}
-
-type roleListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type roleListResourceModel struct {
-}
-
-func (l *roleListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-	}
-}
-
-func (l *roleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.IAMClient(ctx)
-
-	var query roleListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input iam.ListRolesInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for role, err := range listNonServiceLinkedRoles(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			ctx := resourceRoleListItemLoggingContext(ctx, role)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(aws.ToString(role.RoleName))
-
-			tflog.Info(ctx, "Reading resource")
-			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &role, rd))...)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			// set tags
-			err = l.SetTags(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.DisplayName = resourceRoleDisplayName(role)
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-func resourceRoleDisplayName(role awstypes.Role) string {
-	var buf strings.Builder
-
-	path := aws.ToString(role.Path)
-	buf.WriteString(strings.TrimPrefix(path, "/"))
-
-	buf.WriteString(aws.ToString(role.RoleName))
-
-	return buf.String()
-}
-
-func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
-	out := make(frameworkdiag.Diagnostics, len(in))
-	for i, diagIn := range in {
-		var diagOut frameworkdiag.Diagnostic
-		if diagIn.Severity == diag.Error {
-			if len(diagIn.AttributePath) == 0 {
-				diagOut = frameworkdiag.NewErrorDiagnostic(diagIn.Summary, diagIn.Detail)
-			} else {
-				diagOut = frameworkdiag.NewAttributeErrorDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
-			}
-		} else {
-			if len(diagIn.AttributePath) == 0 {
-				diagOut = frameworkdiag.NewWarningDiagnostic(diagIn.Summary, diagIn.Detail)
-			} else {
-				diagOut = frameworkdiag.NewAttributeWarningDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
-			}
-		}
-		out[i] = diagOut
-	}
-	return out
-}
-
-func translatePath(in cty.Path) path.Path {
-	var out path.Path
-
-	if len(in) == 0 {
-		return out
-	}
-
-	step := in[0]
-	switch v := step.(type) {
-	case cty.GetAttrStep:
-		out = path.Root(v.Name)
-	}
-
-	for i := 1; i < len(in); i++ {
-		step := in[i]
-		switch v := step.(type) {
-		case cty.GetAttrStep:
-			out = out.AtName(v.Name)
-
-		case cty.IndexStep:
-			switch v.Key.Type() {
-			case cty.Number:
-				v, _ := v.Key.AsBigFloat().Int64()
-				out = out.AtListIndex(int(v))
-			case cty.String:
-				out = out.AtMapKey(v.Key.AsString())
-			}
-		}
-	}
-
-	return out
-}
-
-func resourceRoleListItemLoggingContext(ctx context.Context, role awstypes.Role) context.Context {
-	return tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), aws.ToString(role.RoleName))
 }

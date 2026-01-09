@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -656,7 +657,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1111,7 +1112,7 @@ func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.DescribeC
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1140,7 +1141,7 @@ func findClusterV2(ctx context.Context, conn *kafka.Client, input *kafka.Describ
 	output, err := conn.DescribeClusterV2(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1169,7 +1170,7 @@ func findClusterOperation(ctx context.Context, conn *kafka.Client, input *kafka.
 	output, err := conn.DescribeClusterOperation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1198,7 +1199,7 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	output, err := conn.GetBootstrapBrokers(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1215,11 +1216,11 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	return output, nil
 }
 
-func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterV2ByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1231,11 +1232,11 @@ func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) ret
 	}
 }
 
-func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterOperationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1248,7 +1249,7 @@ func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn st
 }
 
 func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateCreating),
 		Target:  enum.Slice(types.ClusterStateActive),
 		Refresh: statusClusterState(ctx, conn, arn),
@@ -1259,7 +1260,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, tim
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
 		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -1269,7 +1270,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, tim
 }
 
 func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateDeleting),
 		Target:  []string{},
 		Refresh: statusClusterState(ctx, conn, arn),
@@ -1280,7 +1281,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, tim
 
 	if output, ok := outputRaw.(*types.Cluster); ok {
 		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -1290,7 +1291,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, tim
 }
 
 func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.ClusterOperationInfo, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterOperationStatePending, clusterOperationStateUpdateInProgress},
 		Target:  []string{clusterOperationStateUpdateComplete},
 		Refresh: statusClusterOperationState(ctx, conn, arn),
@@ -1301,7 +1302,7 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn 
 
 	if output, ok := outputRaw.(*types.ClusterOperationInfo); ok {
 		if state, errorInfo := aws.ToString(output.OperationState), output.ErrorInfo; state == clusterOperationStateUpdateFailed && errorInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(errorInfo.ErrorCode), aws.ToString(errorInfo.ErrorString)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(errorInfo.ErrorCode), aws.ToString(errorInfo.ErrorString)))
 		}
 
 		return output, err

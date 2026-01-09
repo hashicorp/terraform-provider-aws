@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -30,12 +30,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -355,7 +357,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -372,7 +374,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
@@ -406,7 +408,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -428,7 +430,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -445,7 +447,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
@@ -588,7 +590,7 @@ func (r *tableResource) Update(ctx context.Context, request resource.UpdateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -661,7 +663,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -691,7 +693,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -721,7 +723,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -1001,9 +1003,9 @@ func (id tableIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, dia
 
 var tableNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type tableMetadataModel struct {

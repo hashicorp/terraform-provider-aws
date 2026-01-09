@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -14,13 +14,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -179,7 +180,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	dataSet, err := findDataSetByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Data Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,7 +236,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	refreshProperties, err := findDataSetRefreshPropertiesByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Set (%s) refresh properties: %s", d.Id(), err)
 	default:
@@ -394,7 +395,7 @@ func findDataSet(ctx context.Context, conn *quicksight.Client, input *quicksight
 	output, err := conn.DescribeDataSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -424,7 +425,7 @@ func findDataSetRefreshProperties(ctx context.Context, conn *quicksight.Client, 
 	output, err := conn.DescribeDataSetRefreshProperties(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "not a SPICE dataset") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -454,7 +455,7 @@ func findDataSetPermissions(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeDataSetPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

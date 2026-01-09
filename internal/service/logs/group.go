@@ -1,20 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
 
 import (
 	"context"
-	"fmt"
-	"iter"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,14 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,6 +44,11 @@ func resourceGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrKMSKeyID: {
@@ -108,14 +106,6 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// @SDKListResource("aws_cloudwatch_log_group")
-func logGroupResourceAsListResource() inttypes.ListResourceForSDK {
-	l := logGroupListResource{}
-	l.SetResourceSchema(resourceGroup())
-
-	return &l
-}
-
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
@@ -125,6 +115,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		LogGroupClass: awstypes.LogGroupClass(d.Get("log_group_class").(string)),
 		LogGroupName:  aws.String(name),
 		Tags:          getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+		input.DeletionProtectionEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -206,6 +200,29 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		var deletionProtectionEnabled bool
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			deletionProtectionEnabled = v.(bool)
+		} else {
+			deletionProtectionEnabled = false
+		}
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutLogGroupDeletionProtectionInput{
+			LogGroupIdentifier:        loggroup.LogGroupArn,
+			DeletionProtectionEnabled: aws.Bool(deletionProtectionEnabled),
+		}
+
+		_, err = conn.PutLogGroupDeletionProtection(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) deletion protection: %s", d.Id(), err)
 		}
 	}
 
@@ -292,98 +309,9 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) iter.Seq2[awstypes.LogGroup, error] {
-	return func(yield func(awstypes.LogGroup, error) bool) {
-		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.LogGroup{}, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
-				return
-			}
-
-			for _, v := range page.LogGroups {
-				if filter(&v) {
-					if !yield(v, nil) {
-						return
-					}
-				}
-			}
-		}
-	}
-}
-
-var _ inttypes.ListResourceForSDK = &logGroupListResource{}
-
-type logGroupListResource struct {
-	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Resource
-	framework.ListResourceWithSDKv2Tags
-}
-
-type logGroupListResourceModel struct {
-	framework.WithRegionModel
-}
-
-// ListResourceConfigSchema defines the schema for the List configuration
-// might be able to intercept or wrap this for simplicity
-func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
-	}
-}
-
-func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.LogsClient(ctx)
-
-	var query logGroupListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
-		var input cloudwatchlogs.DescribeLogGroupsInput
-		for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.LogGroupName))
-			resourceGroupFlatten(ctx, rd, output)
-
-			// set tags
-			err = l.SetTags(ctx, awsClient, rd)
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			result.DisplayName = aws.ToString(output.LogGroupName)
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
 	d.Set("log_group_class", lg.LogGroupClass)
 	d.Set(names.AttrName, lg.LogGroupName)

@@ -1,5 +1,5 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 service "accessanalyzer" {
   sdk {
@@ -655,8 +655,8 @@ service "arcregionswitch" {
   }
 
   sdk {
-    id             = "ARC Region Switch"
-    arn_namespace  = "arcregionswitch"
+    id            = "ARC Region Switch"
+    arn_namespace = "arcregionswitch"
   }
 
   names {
@@ -677,6 +677,35 @@ service "arcregionswitch" {
 
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
+  brand                    = "AWS"
+}
+
+service "arczonalshift" {
+  cli_v2_command {
+    aws_cli_v2_command           = "arc-zonal-shift"
+    aws_cli_v2_command_no_dashes = "arczonalshift"
+  }
+
+  sdk {
+    id            = "ARC Zonal Shift"
+    arn_namespace = "arczonalswitch"
+  }
+
+  names {
+    provider_name_upper = "ARCZonalShift"
+    human_friendly      = "Application Recovery Controller Zonal Shift"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListZonalShifts"
+  }
+
+  resource_prefix {
+    correct = "aws_arczonalshift_"
+  }
+
+  provider_package_correct = "arczonalshift"
+  doc_prefix               = ["arczonalshift_"]
   brand                    = "AWS"
 }
 
@@ -908,36 +937,36 @@ service "bedrockagent" {
 }
 
 service "bedrockagentcore" {
-   cli_v2_command {
-     aws_cli_v2_command           = "bedrock-agentcore-control"
-     aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
-   }
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-agentcore-control"
+    aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
+  }
 
-   go_packages {
-     v2_package = "bedrockagentcorecontrol"
-   }
+  go_packages {
+    v2_package = "bedrockagentcorecontrol"
+  }
 
-   sdk {
-     id            = "Bedrock AgentCore Control"
-     arn_namespace = "bedrock-agentcore"
-   }
+  sdk {
+    id            = "Bedrock AgentCore Control"
+    arn_namespace = "bedrock-agentcore"
+  }
 
-   names {
-     provider_name_upper = "BedrockAgentCore"
-     human_friendly      = "Bedrock AgentCore"
-   }
+  names {
+    provider_name_upper = "BedrockAgentCore"
+    human_friendly      = "Bedrock AgentCore"
+  }
 
-   endpoint_info {
-     endpoint_api_call = "ListAgentRuntimes"
-   }
+  endpoint_info {
+    endpoint_api_call = "ListAgentRuntimes"
+  }
 
-   resource_prefix {
-     correct = "aws_bedrockagentcore_"
-   }
+  resource_prefix {
+    correct = "aws_bedrockagentcore_"
+  }
 
-   provider_package_correct = "bedrockagentcore"
-   doc_prefix               = ["bedrockagentcore_"]
-   brand                    = "Amazon"
+  provider_package_correct = "bedrockagentcore"
+  doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {

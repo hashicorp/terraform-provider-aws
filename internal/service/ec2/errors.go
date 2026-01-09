@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -144,6 +144,7 @@ const (
 	errCodeTransitGatewayMulticastGroupMemberNotFound              = "TransitGatewayMulticastGroupMember.NotFound"
 	errCodeTransitGatewayMulticastGroupSourceNotFound              = "TransitGatewayMulticastGroupSource.NotFound"
 	errCodeTransitGatewayRouteTablePropagationNotFound             = "TransitGatewayRouteTablePropagation.NotFound"
+	errCodeUnauthorizedOperation                                   = "UnauthorizedOperation"
 	errCodeUnsupportedOperation                                    = "UnsupportedOperation"
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"

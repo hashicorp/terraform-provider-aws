@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glacier
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -116,7 +117,7 @@ func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findVaultLockByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glaier Vault Lock (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -169,7 +170,7 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	output, err := conn.GetVaultLock(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -186,11 +187,11 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	return output, nil
 }
 
-func statusLockState(ctx context.Context, conn *glacier.Client, name string) retry.StateRefreshFunc {
+func statusLockState(ctx context.Context, conn *glacier.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVaultLockByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -203,7 +204,7 @@ func statusLockState(ctx context.Context, conn *glacier.Client, name string) ret
 }
 
 func waitVaultLockLocked(ctx context.Context, conn *glacier.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{lockStateInProgress},
 		Target:  []string{lockStateLocked},
 		Refresh: statusLockState(ctx, conn, name),

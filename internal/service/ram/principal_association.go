@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -82,7 +82,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	switch {
 	case err == nil:
 		return sdkdiag.AppendFromErr(diags, fmt.Errorf("RAM Principal Association (%s) already exists", id))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RAM Principal Association: %s", err)
@@ -126,7 +126,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	principalAssociation, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RAM Principal Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,7 +187,7 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -196,11 +196,11 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 	return output, err
 }
 
-func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) retry.StateRefreshFunc {
+func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -216,7 +216,7 @@ func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:         enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
 		Refresh:        statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
@@ -227,7 +227,7 @@ func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, reso
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -239,7 +239,7 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
 		Refresh: statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
@@ -249,7 +249,7 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

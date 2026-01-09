@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package observabilityadmin
@@ -418,7 +418,7 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(out.FailureReason)))
+		retry.SetLastError(err, errors.New(string(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +78,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroupMembership(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -181,7 +181,7 @@ func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfidentitystore.FindGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["membership_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

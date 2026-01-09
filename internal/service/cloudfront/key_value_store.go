@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -21,12 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -142,7 +143,7 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 
 	output, err := findKeyValueStoreByName(ctx, conn, data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -254,7 +255,7 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	output, err := conn.DescribeKeyValueStore(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -270,11 +271,11 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	return output, nil
 }
 
-func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) retry.StateRefreshFunc {
+func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findKeyValueStoreByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -287,7 +288,7 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 }
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{keyValueStoreStatusProvisioning},
 		Target:  []string{keyValueStoreStatusReady},
 		Refresh: statusKeyValueStore(ctx, conn, name),

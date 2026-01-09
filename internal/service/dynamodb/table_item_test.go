@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -388,7 +388,7 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 				Config: testAccTableItemConfig_basic(rName, hashKey, itemContent),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableItemExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTableItem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -495,7 +495,7 @@ func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfdynamodb.FindTableItemByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrTableName], key)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

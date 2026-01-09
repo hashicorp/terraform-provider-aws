@@ -51,11 +51,11 @@ data "archive_file" "example" {
 
 # Lambda function
 resource "aws_lambda_function" "example" {
-  filename         = data.archive_file.example.output_path
-  function_name    = "example_lambda_function"
-  role             = aws_iam_role.example.arn
-  handler          = "index.handler"
-  source_code_hash = data.archive_file.example.output_base64sha256
+  filename      = data.archive_file.example.output_path
+  function_name = "example_lambda_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  code_sha256   = data.archive_file.example.output_base64sha256
 
   runtime = "nodejs20.x"
 
@@ -476,6 +476,77 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with Durable Configuration
+
+Stopping durable executions and deleting the Lambda function may take up to `60m`. Use configured `timeouts` as shown below.
+
+```terraform
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_durable_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs22.x"
+  memory_size   = 512
+  timeout       = 30
+
+  # Durable function configuration for long-running processes
+  durable_config {
+    execution_timeout = 3600 # 1 hour maximum execution time
+    retention_period  = 7    # Retain execution state for 7 days
+  }
+
+  environment {
+    variables = {
+      DURABLE_MODE = "enabled"
+    }
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+
+  tags = {
+    Environment = "production"
+    Type        = "durable"
+  }
+}
+```
+
+### Capacity Provider Configuration
+
+```terraform
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  memory_size   = 2048
+
+  publish = true
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.example.arn
+    }
+  }
+}
+
+resource "aws_lambda_capacity_provider" "example" {
+  name = "example"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.example.id]
+    security_group_ids = [aws_security_group.example.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.example.arn
+  }
+}
+```
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -494,9 +565,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
+* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
+* `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
+* `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-configuration-block). `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 * `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
 * `file_system_config` - (Optional) Configuration block for EFS file system. [See below](#file_system_config-configuration-block).
@@ -510,6 +584,7 @@ The following arguments are optional:
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
+* `publish_to` - (Optional) Whether to publish to a alias or version number. Omit for regular version publishing. Option is `LATEST_PUBLISHED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction. Default is `false`.
 * `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction. Required if `replace_security_groups_on_destroy` is `true`.
@@ -520,7 +595,7 @@ The following arguments are optional:
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
-* `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_code_hash` - (Optional) User-defined hash of the source code package file. Use this argument to trigger updates when the local function source code changes. This is a synthetic argument tracked only by the AWS provider and does not need to match the hashing algorithm used by Lambda to compute the `CodeSha256` response value. Out-of-band changes to the source code _will not_ be captured by this argument. To include out-of-band source code changes as an update trigger, use the `code_sha256` argument instead.
 * `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
@@ -528,9 +603,26 @@ The following arguments are optional:
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
+### capacity_provider_config Configuration
+
+* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
+
+### lambda_managed_instances_capacity_provider_config Configuration Block
+
+* `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
+* `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
+* `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
+
 ### dead_letter_config Configuration Block
 
 * `target_arn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails.
+
+### durable_config Configuration Block
+
+`durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
+
+* `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
+* `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
 
 ### environment Configuration Block
 
@@ -583,7 +675,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN identifying your Lambda Function.
-* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
@@ -592,6 +683,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
+* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.

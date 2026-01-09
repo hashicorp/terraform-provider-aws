@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -244,7 +245,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findSigningJobByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -292,7 +293,7 @@ func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*s
 	output, err := conn.DescribeSigningJob(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -308,11 +309,11 @@ func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*s
 	return output, nil
 }
 
-func statusSigningJob(ctx context.Context, conn *signer.Client, id string) retry.StateRefreshFunc {
+func statusSigningJob(ctx context.Context, conn *signer.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSigningJobByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -325,7 +326,7 @@ func statusSigningJob(ctx context.Context, conn *signer.Client, id string) retry
 }
 
 func waitSigningJobSucceeded(ctx context.Context, conn *signer.Client, id string, timeout time.Duration) (*signer.DescribeSigningJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.SigningStatusInProgress),
 		Target:  enum.Slice(types.SigningStatusSucceeded),
 		Refresh: statusSigningJob(ctx, conn, id),
@@ -335,7 +336,7 @@ func waitSigningJobSucceeded(ctx context.Context, conn *signer.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*signer.DescribeSigningJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

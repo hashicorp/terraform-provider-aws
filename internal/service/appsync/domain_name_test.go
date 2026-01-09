@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,7 +103,7 @@ func testAccDomainName_disappears(t *testing.T) {
 				Config: testAccDomainNameConfig_basic(rName, appsyncCertDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceDomainName(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +122,7 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappsync.FindDomainNameByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

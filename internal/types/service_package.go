@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -492,8 +492,4 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
-}
-
-type SDKv2Tagger interface {
-	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }

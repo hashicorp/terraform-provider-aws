@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -25,13 +25,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -162,7 +163,7 @@ func (r *logicallyAirGappedVaultResource) Read(ctx context.Context, request reso
 	name := fwflex.StringValueFromFramework(ctx, data.ID)
 	output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -237,11 +238,11 @@ func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.C
 	return output, nil
 }
 
-func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
+func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,7 +255,7 @@ func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, nam
 }
 
 func waitLogicallyAirGappedVaultCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeBackupVaultOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VaultStateCreating),
 		Target:                    enum.Slice(awstypes.VaultStateAvailable),
 		Refresh:                   statusLogicallyAirGappedVault(ctx, conn, name),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -134,7 +134,7 @@ func TestAccVPCVPCEncryptionControl_disappears(t *testing.T) {
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEncryptionControl, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCEncryptionControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -809,7 +809,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_monitor(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -853,7 +853,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWi
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -899,7 +899,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWi
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -974,7 +974,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_monitor(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1019,7 +1019,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_enforce(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1064,7 +1064,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_monitor(
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1108,7 +1108,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_enforce(
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1350,20 +1350,6 @@ resource "aws_vpc_encryption_control" "test" {
 `, mode))
 }
 
-func testAccVPCEncryptionControlConfig_subnetBase(count int) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-resource "aws_subnet" "test" {
-  count = %[1]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-`, count))
-}
-
 // Test for associated resources that can be excluded, such as Internet Gateway
 func testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enableWithExclusions(mode awstypes.VpcEncryptionControlMode) string {
 	return acctest.ConfigCompose(
@@ -1385,7 +1371,7 @@ resource "aws_vpc_encryption_control" "test" {
 // Test for associated resources that can be migrated to encrypted hardward, such as load balancer
 func testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEncryptionControlConfig_subnetBase(2),
+		acctest.ConfigSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1418,7 +1404,7 @@ resource "aws_vpc_encryption_control" "test" {
 // Test for associated resources that are not supported, such as RDS
 func testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVPCEncryptionControlConfig_subnetBase(2),
+		acctest.ConfigSubnets(rName, 2),
 		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassPostgres(),
 		fmt.Sprintf(`

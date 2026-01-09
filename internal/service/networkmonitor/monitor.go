@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor
@@ -22,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -135,7 +136,7 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 
 	output, err := findMonitorByName(ctx, conn, data.MonitorName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -239,7 +240,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	output, err := conn.GetMonitor(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -256,11 +257,11 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
+func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -276,7 +277,7 @@ func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name str
 	const (
 		timeout = time.Minute * 10
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStatePending),
 		Target:     enum.Slice(awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Refresh:    statusMonitor(ctx, conn, name),
@@ -297,7 +298,7 @@ func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, name s
 	const (
 		timeout = time.Minute * 10
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStateDeleting, awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Target:     []string{},
 		Refresh:    statusMonitor(ctx, conn, name),
