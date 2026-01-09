@@ -3370,7 +3370,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 	})
 }
 
-func TestAccElastiCacheReplicationGroupRemoveNodes_Valkey7(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey7(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3437,7 +3437,7 @@ func TestAccElastiCacheReplicationGroupRemoveNodes_Valkey7(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroupRemoveNodes_Valkey8(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey8(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3504,7 +3504,7 @@ func TestAccElastiCacheReplicationGroupRemoveNodes_Valkey8(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroupRemoveNodes_Redis7(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
