@@ -32,9 +32,18 @@ type managedRuleGroupDataSource struct {
 func (d *managedRuleGroupDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"available_labels": framework.DataSourceComputedListOfObjectAttribute[labelSummaryModel](ctx),
+			"capacity": schema.Int64Attribute{
+				Computed: true,
+			},
+			"consumed_labels": framework.DataSourceComputedListOfObjectAttribute[labelSummaryModel](ctx),
+			"label_namespace": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
+			"rules": framework.DataSourceComputedListOfObjectAttribute[ruleSummaryModel](ctx),
 			names.AttrScope: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.Scope](),
 				Required:   true,
@@ -105,9 +114,23 @@ func findManagedRuleGroup(ctx context.Context, conn *wafv2.Client, input *wafv2.
 
 type managedRuleGroupDataSourceModel struct {
 	framework.WithRegionModel
-	Name        types.String                       `tfsdk:"name"`
-	Scope       fwtypes.StringEnum[awstypes.Scope] `tfsdk:"scope"`
-	SNSTopicARN types.String                       `tfsdk:"sns_topic_arn"`
-	VendorName  types.String                       `tfsdk:"vendor_name"`
-	VersionName types.String                       `tfsdk:"version_name"`
+	AvailableLabels fwtypes.ListNestedObjectValueOf[labelSummaryModel] `tfsdk:"available_labels"`
+	Capacity        types.Int64                                        `tfsdk:"capacity"`
+	ConsumedLabels  fwtypes.ListNestedObjectValueOf[labelSummaryModel] `tfsdk:"consumed_labels"`
+	LabelNamespace  types.String                                       `tfsdk:"label_namespace"`
+	Name            types.String                                       `tfsdk:"name"`
+	Rules           fwtypes.ListNestedObjectValueOf[ruleSummaryModel]  `tfsdk:"rules"`
+	Scope           fwtypes.StringEnum[awstypes.Scope]                 `tfsdk:"scope"`
+	SNSTopicARN     types.String                                       `tfsdk:"sns_topic_arn"`
+	VendorName      types.String                                       `tfsdk:"vendor_name"`
+	VersionName     types.String                                       `tfsdk:"version_name"`
+}
+
+type labelSummaryModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type ruleSummaryModel struct {
+	Action fwtypes.ListNestedObjectValueOf[ruleActionModel] `tfsdk:"action"`
+	Name   types.String                                     `tfsdk:"name"`
 }
