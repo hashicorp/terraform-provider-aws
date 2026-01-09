@@ -118,7 +118,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
 			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
-			diags := resource{{. ListResource }}Read(ctx, rd, awsClient)
+			diags := resource{{ .ListResource }}Read(ctx, rd, awsClient)
 			if diags.HasError() {
 				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
 				yield(result)
