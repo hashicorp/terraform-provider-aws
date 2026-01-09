@@ -28,6 +28,7 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) { // nosemgrep:ci.vpc-in-
 			"modify":             testAccIPAMResourceDiscovery_modify,
 			acctest.CtDisappears: testAccIPAMResourceDiscovery_disappears,
 			"tags":               testAccIPAMResourceDiscovery_tags,
+			"ouExclusionConfig":  testAccVPCIPAMResourceDiscovery_organizationalUnitExclusions,
 		},
 		"ResourceDiscoveryAssociation": {
 			acctest.CtBasic:      testAccIPAMResourceDiscoveryAssociation_basic,
@@ -187,6 +188,46 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 	})
 }
 
+func testAccVPCIPAMResourceDiscovery_organizationalUnitExclusions(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	var rd awstypes.IpamResourceDiscovery
+	resourceName := "aws_vpc_ipam_resource_discovery.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMResourceDiscoveryConfig_base,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_exclusions.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCIPAMResourceDiscoveryConfig_organizationalUnitExclusions("o-a1b2c3d4e5/r-f6g7h8i9j0example/ou-ghi0-awsccccc/ou-jkl0-awsddddd/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_exclusions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "organizational_unit_exclusions.*", "o-a1b2c3d4e5/r-f6g7h8i9j0example/ou-ghi0-awsccccc/ou-jkl0-awsddddd/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *awstypes.IpamResourceDiscovery) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -308,4 +349,20 @@ resource "aws_vpc_ipam_resource_discovery" "test" {
   }
 }
 	`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVPCIPAMResourceDiscoveryConfig_organizationalUnitExclusions(exclusion string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam_resource_discovery" "test" {
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+  organizational_unit_exclusion {
+    organizations_entity_path = %[1]q  
+  }
+}
+`, exclusion)
 }
