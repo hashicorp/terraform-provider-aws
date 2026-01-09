@@ -2809,7 +2809,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiHashKey_singleAndMultiSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_validate_exactlyOneOfKeySchemaHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2821,8 +2821,8 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_singleAndMultiSet(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_addSecondaryGSI_multipleHashKeys_singleAndMultiSet(rName),
-				ExpectError: regexache.MustCompile(`At most one can be set for hash_key`),
+				Config:      testAccTableConfig_GSI_setKeySchemaAndHashKey(rName),
+				ExpectError: regexache.MustCompile(`2 attributes specified when one \(and only one\) of \[key_schema, hash_key\]`),
 			},
 		},
 	})
@@ -8973,62 +8973,29 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleHashKeys_singleAndMultiSet(rName string) string {
+func testAccTableConfig_GSI_setKeySchemaAndHashKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
-  read_capacity  = 2
-  write_capacity = 2
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "TestTableHashKey"
-  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "ReplacementGSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "ReplacementGSIRangeKey2"
-    type = "N"
-  }
-
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
     name     = "ReplacementTestTableGSI"
     hash_key = "TestTableHashKey"
     key_schema {
-      attribute_name = "TestTableRangeKey"
-      key_type       = "HASH"
-    }
-    key_schema {
       attribute_name = "TestTableHashKey"
       key_type       = "HASH"
     }
-    range_key          = "ReplacementGSIRangeKey"
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    projection_type = "ALL"
+    write_capacity  = 1
+    read_capacity   = 1
   }
 }
 `, rName)

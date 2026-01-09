@@ -3359,12 +3359,6 @@ func validateGSISchema(d *schema.ResourceDiff) error {
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
 
-			hk, hkok := index["hash_key"].(string)
-			keySchema, keySchemaOk := index["key_schema"].([]any)
-			if (hkok && keySchemaOk) && (hk != "" && len(keySchema) > 0) {
-				errs = append(errs, errors.New("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set."))
-			}
-
 			rk, rkok := index["range_key"].(string)
 			rks, rksok := index["range_keys"].(*schema.Set)
 			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
@@ -3454,10 +3448,24 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 }
 
 func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath cty.Path, diags *diag.Diagnostics) {
+	hashKey := gsi.GetAttr("hash_key")
+	hashKeyIsZero := hashKey.IsKnown() && hashKey.IsNull()
+
 	keySchemaPath := gsiPath.GetAttr("key_schema")
 	keySchema := gsi.GetAttr("key_schema")
+	keySchemaIsZero := keySchema.IsKnown() && (keySchema.IsNull() || keySchema.LengthInt() == 0)
 
-	if keySchema.IsKnown() && !keySchema.IsNull() && keySchema.LengthInt() > 0 {
+	if hashKeyIsZero && keySchemaIsZero {
+		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
+			gsiPath, 0, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"),
+		))
+	} else if !hashKeyIsZero && !keySchemaIsZero {
+		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
+			gsiPath, 2, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"),
+		))
+	}
+
+	if !keySchemaIsZero {
 		validateGSIKeySchema(ctx, keySchema, keySchemaPath, diags)
 	}
 }
