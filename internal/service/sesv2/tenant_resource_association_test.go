@@ -175,12 +175,16 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccTenantResourceAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
+resource "aws_sesv2_tenant" "test" {
+  tenant_name = %[1]q
+}
+
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 }
 
 resource "aws_sesv2_tenant_resource_association" "test" {
-  tenant_name   = %[1]q
+  tenant_name   = aws_sesv2_tenant.test.tenant_name
   resource_arn  = aws_sesv2_configuration_set.test.arn
   resource_type = "CONFIGURATION_SET"
 }
