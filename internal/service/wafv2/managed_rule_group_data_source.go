@@ -48,7 +48,7 @@ func (d *managedRuleGroupDataSource) Schema(ctx context.Context, request datasou
 				CustomType: fwtypes.StringEnumType[awstypes.Scope](),
 				Required:   true,
 			},
-			"sns_topic_arn": schema.StringAttribute{
+			names.AttrSNSTopicARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"vendor_name": schema.StringAttribute{

@@ -32,7 +32,7 @@ func TestAccWAFV2ManagedRuleGroupDataSource_basic(t *testing.T) {
 				Config: testAccManagedRuleGroupDataSourceConfig_basic,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("capacity"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("sns_topic_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrSNSTopicARN), knownvalue.NotNull()),
 				},
 			},
 		},
