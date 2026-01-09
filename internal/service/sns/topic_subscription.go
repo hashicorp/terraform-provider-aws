@@ -389,7 +389,7 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 }
 
 func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) (*types.Subscription, error) {
-	output, err := findSubscriptionsByTopic(ctx, conn, input, filter)
+	output, err := findSubscriptionsByTopic(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -398,8 +398,9 @@ func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) ([]types.Subscription, error) {
+func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription], optFns ...tfslices.FinderOptionsFunc) ([]types.Subscription, error) {
 	var output []types.Subscription
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -419,6 +420,9 @@ func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.
 		for _, v := range page.Subscriptions {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}
