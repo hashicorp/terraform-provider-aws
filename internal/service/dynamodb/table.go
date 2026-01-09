@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -598,6 +599,10 @@ func resourceTable() *schema.Resource {
 					ConflictsWith: []string{"on_demand_throughput"},
 				},
 			}
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validateGlobalSecondaryIndexes,
 		},
 	}
 }
@@ -3334,6 +3339,17 @@ func elementValues(v cty.Value) iter.Seq[cty.Value] {
 	}
 }
 
+func elements(v cty.Value) iter.Seq2[cty.Value, cty.Value] {
+	return func(yield func(cty.Value, cty.Value) bool) {
+		it := v.ElementIterator()
+		for it.Next() {
+			if !yield(it.Element()) {
+				return
+			}
+		}
+	}
+}
+
 func validateGSISchema(d *schema.ResourceDiff) error {
 	var errs []error
 
@@ -3420,6 +3436,78 @@ func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDif
 	}
 
 	return nil
+}
+
+func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	gsisPath := cty.GetAttrPath("global_secondary_index")
+
+	gsis, err := gsisPath.Apply(req.RawConfig)
+	if err != nil {
+		resp.Diagnostics = sdkdiag.AppendFromErr(resp.Diagnostics, err)
+		return
+	}
+
+	for i, gsiElem := range elements(gsis) {
+		gsiElemPath := gsisPath.Index(i)
+		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
+	}
+}
+
+func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath cty.Path, diags *diag.Diagnostics) {
+	keySchemaPath := gsiPath.GetAttr("key_schema")
+	keySchema := gsi.GetAttr("key_schema")
+
+	if keySchema.IsKnown() && !keySchema.IsNull() && keySchema.LengthInt() > 0 {
+		validateGSIKeySchema(ctx, keySchema, keySchemaPath, diags)
+	}
+}
+
+func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
+	var hashCount, rangeCount int
+	var lastKeyType awstypes.KeyType
+	for i, gsi := range elements(keySchema) {
+		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
+		switch keyType {
+		case awstypes.KeyTypeHash:
+			if lastKeyType == awstypes.KeyTypeRange {
+				elementPath := keySchemaPath.Index(i)
+				*diags = append(*diags, errs.NewAttributeErrorDiagnostic(
+					elementPath,
+					"Invalid Attribute Value",
+					fmt.Sprintf(`All elements of %s with "key_type" "`+string(awstypes.KeyTypeHash)+`" must be before elements with "key_type" "`+string(awstypes.KeyTypeRange)+`"`, errs.PathString(keySchemaPath)),
+				))
+			}
+			hashCount++
+
+		case awstypes.KeyTypeRange:
+			rangeCount++
+		}
+		lastKeyType = keyType
+	}
+
+	if hashCount < minNumberOfHashes || hashCount > maxNumberOfHashes {
+		*diags = append(*diags, errs.NewInvalidValueAttributeError(
+			keySchemaPath,
+			fmt.Sprintf(`The attribute %q must contain at least %d and at most %d elements with "key_type" %q, got %s`,
+				errs.PathString(keySchemaPath),
+				minNumberOfHashes, maxNumberOfHashes,
+				awstypes.KeyTypeHash,
+				strconv.Itoa(hashCount),
+			),
+		))
+	}
+
+	if rangeCount > maxNumberOfRanges {
+		*diags = append(*diags, errs.NewInvalidValueAttributeError(
+			keySchemaPath,
+			fmt.Sprintf(`The attribute %q must contain at most %d elements with "key_type" %q, got %s`,
+				errs.PathString(keySchemaPath),
+				maxNumberOfRanges,
+				awstypes.KeyTypeRange,
+				strconv.Itoa(rangeCount),
+			),
+		))
+	}
 }
 
 func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {

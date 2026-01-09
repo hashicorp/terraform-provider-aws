@@ -2841,7 +2841,7 @@ func TestAccDynamoDBTable_GSI_MultiHashKey_tooMany(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_addSecondaryGSI_multipleHashKeys_tooMany(rName),
-				ExpectError: regexache.MustCompile(`Too many list items`),
+				ExpectError: regexache.MustCompile(`at least 1 and at most 4 elements with "key_type" "HASH"`),
 			},
 		},
 	})
