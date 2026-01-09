@@ -524,7 +524,7 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

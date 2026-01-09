@@ -290,7 +290,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	}
 
 	if output == nil || output.AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccessPoint, nil
@@ -319,7 +319,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	}
 
 	if output == nil || output.AsyncOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AsyncOperation, nil

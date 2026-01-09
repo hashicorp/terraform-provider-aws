@@ -309,7 +309,7 @@ func findTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id str
 	}
 
 	if out == nil || out.TrustAnchor == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.TrustAnchor, nil

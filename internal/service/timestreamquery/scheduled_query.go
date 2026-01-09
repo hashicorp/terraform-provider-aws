@@ -836,7 +836,7 @@ func findScheduledQueryByARN(ctx context.Context, conn *timestreamquery.Client, 
 	}
 
 	if out == nil || out.ScheduledQuery == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ScheduledQuery, nil

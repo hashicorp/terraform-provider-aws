@@ -476,7 +476,7 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, input *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -504,7 +504,7 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -532,7 +532,7 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -271,7 +271,7 @@ func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognito
 	}
 
 	if out == nil || out.LogDeliveryConfiguration == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.LogDeliveryConfiguration, nil

@@ -294,7 +294,7 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StorediSCSIVolumes, nil

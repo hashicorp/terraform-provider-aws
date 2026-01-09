@@ -241,7 +241,7 @@ func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) 
 	}
 
 	if output == nil || output.Policy == nil || output.Policy.PolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

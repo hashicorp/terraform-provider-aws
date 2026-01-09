@@ -197,7 +197,7 @@ func findSQLInjectionMatchSetByID(ctx context.Context, conn *wafregional.Client,
 	}
 
 	if output == nil || output.SqlInjectionMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SqlInjectionMatchSet, nil

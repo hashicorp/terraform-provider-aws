@@ -465,7 +465,7 @@ func findCapability(ctx context.Context, conn *eks.Client, input *eks.DescribeCa
 	}
 
 	if output == nil || output.Capability == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Capability, nil

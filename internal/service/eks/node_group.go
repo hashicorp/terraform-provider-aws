@@ -697,7 +697,7 @@ func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNod
 	}
 
 	if output == nil || output.Nodegroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Nodegroup, nil

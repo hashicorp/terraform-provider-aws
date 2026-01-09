@@ -221,7 +221,7 @@ func findClusterByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*aw
 	}
 
 	if output == nil || output.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil

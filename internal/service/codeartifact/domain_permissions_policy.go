@@ -184,7 +184,7 @@ func findDomainPermissionsPolicyByTwoPartKey(ctx context.Context, conn *codearti
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

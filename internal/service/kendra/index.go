@@ -638,7 +638,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

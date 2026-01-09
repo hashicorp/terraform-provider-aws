@@ -368,7 +368,7 @@ func findGraph(ctx context.Context, conn *neptunegraph.Client, input *neptunegra
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

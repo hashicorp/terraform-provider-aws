@@ -176,7 +176,7 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 	}
 
 	if output == nil || output.AppBundle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppBundle, nil

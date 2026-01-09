@@ -200,7 +200,7 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	}
 
 	if output == nil || output.TrafficPolicyInstance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicyInstance, nil

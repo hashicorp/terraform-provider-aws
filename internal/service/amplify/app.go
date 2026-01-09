@@ -671,7 +671,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	}
 
 	if output == nil || output.App == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.App, nil

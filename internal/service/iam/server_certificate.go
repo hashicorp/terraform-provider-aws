@@ -304,7 +304,7 @@ func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.Get
 	}
 
 	if output == nil || output.ServerCertificate == nil || output.ServerCertificate.ServerCertificateMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServerCertificate, nil

@@ -239,7 +239,7 @@ func findOutboundConnectionByID(ctx context.Context, conn *opensearch.Client, id
 	}
 
 	if output.ConnectionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ConnectionStatus.StatusCode; status == awstypes.OutboundConnectionStatusCodeDeleted {

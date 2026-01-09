@@ -418,7 +418,7 @@ func FindSlotTypeByID(ctx context.Context, conn *lexmodelsv2.Client, id string) 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

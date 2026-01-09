@@ -336,7 +336,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 	}
 
 	if output == nil || output.AgentCollaborator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentCollaborator, nil

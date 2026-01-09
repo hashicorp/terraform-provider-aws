@@ -200,7 +200,7 @@ func findContributorInsightsByTwoPartKey(ctx context.Context, conn *dynamodb.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -221,7 +221,7 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

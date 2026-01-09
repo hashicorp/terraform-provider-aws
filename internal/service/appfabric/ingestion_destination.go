@@ -405,7 +405,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	}
 
 	if output == nil || output.IngestionDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IngestionDestination, nil

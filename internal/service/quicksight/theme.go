@@ -324,7 +324,7 @@ func findTheme(ctx context.Context, conn *quicksight.Client, input *quicksight.D
 	}
 
 	if output == nil || output.Theme == nil || output.Theme.Version == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Theme, nil
@@ -354,7 +354,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

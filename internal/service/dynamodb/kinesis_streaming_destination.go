@@ -219,7 +219,7 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.KinesisDataStreamDestinations, filter), nil

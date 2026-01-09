@@ -141,7 +141,7 @@ func findResourcePolicy(ctx context.Context, conn *glue.Client) (*glue.GetResour
 	}
 
 	if output == nil || aws.ToString(output.PolicyInJson) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

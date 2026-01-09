@@ -193,7 +193,7 @@ func findRepositoryPermissionsPolicyByThreePartKey(ctx context.Context, conn *co
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

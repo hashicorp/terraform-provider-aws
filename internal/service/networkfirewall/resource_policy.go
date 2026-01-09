@@ -148,7 +148,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *networkfirewall.Client, 
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

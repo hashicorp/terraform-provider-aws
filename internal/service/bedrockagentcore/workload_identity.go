@@ -207,7 +207,7 @@ func findWorkloadIdentity(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

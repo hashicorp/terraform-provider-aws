@@ -229,7 +229,7 @@ func findApprovalRuleTemplateByName(ctx context.Context, conn *codecommit.Client
 	}
 
 	if output == nil || output.ApprovalRuleTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApprovalRuleTemplate, nil

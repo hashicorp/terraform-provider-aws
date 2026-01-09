@@ -309,7 +309,7 @@ func findOriginRequestPolicyByID(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	if output == nil || output.OriginRequestPolicy == nil || output.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

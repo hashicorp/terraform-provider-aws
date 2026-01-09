@@ -606,7 +606,7 @@ func findONTAPVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*aws
 	}
 
 	if output.OntapConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

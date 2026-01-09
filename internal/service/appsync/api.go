@@ -419,7 +419,7 @@ func findAPI(ctx context.Context, conn *appsync.Client, input *appsync.GetApiInp
 	}
 
 	if output == nil || output.Api == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.Api, nil

@@ -214,7 +214,7 @@ func findMembers(ctx context.Context, conn *securityhub.Client, input *securityh
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Members, nil

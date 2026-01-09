@@ -230,7 +230,7 @@ func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshift
 	}
 
 	if output == nil || output.CustomDomainCertificateExpiryTime == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

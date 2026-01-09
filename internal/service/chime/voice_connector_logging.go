@@ -163,7 +163,7 @@ func findVoiceConnectorLoggingByID(ctx context.Context, conn *chimesdkvoice.Clie
 	}
 
 	if resp == nil || resp.LoggingConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

@@ -256,7 +256,7 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

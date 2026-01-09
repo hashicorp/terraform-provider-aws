@@ -376,7 +376,7 @@ func findWebACLByID(ctx context.Context, conn *waf.Client, id string) (*awstypes
 	}
 
 	if output == nil || output.WebACL == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACL, nil

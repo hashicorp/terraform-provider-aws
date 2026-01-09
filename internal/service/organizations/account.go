@@ -387,7 +387,7 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 	}
 
 	if output == nil || output.Account == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.Account.State; state == awstypes.AccountStateClosed {
@@ -462,7 +462,7 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client
 	}
 
 	if output == nil || output.CreateAccountStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CreateAccountStatus, nil

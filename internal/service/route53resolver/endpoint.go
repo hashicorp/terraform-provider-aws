@@ -357,7 +357,7 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	}
 
 	if output == nil || output.ResolverEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverEndpoint, nil

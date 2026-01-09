@@ -241,7 +241,7 @@ func findConfigurationByID(ctx context.Context, conn *mq.Client, id string) (*mq
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

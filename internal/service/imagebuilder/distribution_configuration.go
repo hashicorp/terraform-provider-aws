@@ -474,7 +474,7 @@ func findDistributionConfigurationByARN(ctx context.Context, conn *imagebuilder.
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DistributionConfiguration, nil

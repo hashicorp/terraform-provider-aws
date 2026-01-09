@@ -265,7 +265,7 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	}
 
 	if output == nil || output.KeyValueStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -251,7 +251,7 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	}
 
 	if output == nil || output.Vocabulary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Vocabulary, nil

@@ -223,7 +223,7 @@ func findFunctionRecursionConfigByName(ctx context.Context, conn *lambda.Client,
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

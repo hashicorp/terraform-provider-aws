@@ -246,7 +246,7 @@ func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.Des
 	}
 
 	if environment.Lifecycle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return environment, nil
@@ -267,7 +267,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environments, nil

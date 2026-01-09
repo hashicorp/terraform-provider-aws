@@ -471,7 +471,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

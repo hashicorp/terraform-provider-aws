@@ -175,7 +175,7 @@ func findProjectByARN(ctx context.Context, conn *devicefarm.Client, arn string) 
 	}
 
 	if output == nil || output.Project == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Project, nil

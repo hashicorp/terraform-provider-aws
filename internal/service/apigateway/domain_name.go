@@ -577,7 +577,7 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

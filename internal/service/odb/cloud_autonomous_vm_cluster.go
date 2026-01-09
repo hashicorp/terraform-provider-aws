@@ -663,7 +663,7 @@ func findCloudAutonomousVmClusterByID(ctx context.Context, conn *odb.Client, id 
 	}
 
 	if out == nil || out.CloudAutonomousVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudAutonomousVmCluster, nil

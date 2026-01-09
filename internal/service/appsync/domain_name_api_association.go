@@ -162,7 +162,7 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 	}
 
 	if output == nil || output.ApiAssociation == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ApiAssociation, nil

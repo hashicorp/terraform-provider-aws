@@ -254,7 +254,7 @@ func findLinkByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetLin
 	}
 
 	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

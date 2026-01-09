@@ -1123,7 +1123,7 @@ func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.DescribeC
 	}
 
 	if output == nil || output.ClusterInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClusterInfo, nil
@@ -1152,7 +1152,7 @@ func findClusterV2(ctx context.Context, conn *kafka.Client, input *kafka.Describ
 	}
 
 	if output == nil || output.ClusterInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClusterInfo, nil
@@ -1181,7 +1181,7 @@ func findClusterOperation(ctx context.Context, conn *kafka.Client, input *kafka.
 	}
 
 	if output == nil || output.ClusterOperationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClusterOperationInfo, nil
@@ -1210,7 +1210,7 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

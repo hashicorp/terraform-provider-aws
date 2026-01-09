@@ -189,7 +189,7 @@ func findAPNSSandboxChannelByApplicationId(ctx context.Context, conn *pinpoint.C
 	}
 
 	if output == nil || output.APNSSandboxChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.APNSSandboxChannelResponse, nil

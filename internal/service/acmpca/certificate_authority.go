@@ -577,7 +577,7 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 	}
 
 	if output == nil || output.CertificateAuthority == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CertificateAuthority, nil

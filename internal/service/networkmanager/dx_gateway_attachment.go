@@ -359,7 +359,7 @@ func findDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanage
 	}
 
 	if output == nil || output.DirectConnectGatewayAttachment == nil || output.DirectConnectGatewayAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DirectConnectGatewayAttachment, nil

@@ -1221,7 +1221,7 @@ func findProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Projects, nil

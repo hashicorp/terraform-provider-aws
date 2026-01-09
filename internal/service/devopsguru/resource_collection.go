@@ -267,7 +267,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	}
 
 	if out == nil || out.ResourceCollection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	switch collectionType {

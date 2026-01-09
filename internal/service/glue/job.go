@@ -563,7 +563,7 @@ func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstyp
 	}
 
 	if output == nil || output.Job == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Job, nil

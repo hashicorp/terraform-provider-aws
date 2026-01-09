@@ -180,7 +180,7 @@ func findEmailChannelByApplicationId(ctx context.Context, conn *pinpoint.Client,
 	}
 
 	if output == nil || output.EmailChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmailChannelResponse, nil
