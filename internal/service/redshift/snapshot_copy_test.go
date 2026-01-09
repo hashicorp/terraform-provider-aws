@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -178,7 +178,7 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context, t *testing.T) resource
 			}
 
 			_, err := tfredshift.FindSnapshotCopyByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*sdkretry.NotFoundError](err) {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {
