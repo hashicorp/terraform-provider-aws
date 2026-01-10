@@ -1722,7 +1722,6 @@ func normalizeGSIMapValue(v map[string]any) map[string]any {
 		"on_demand_throughput": nil,
 		"projection_type":      "",
 		"range_key":            "",
-		"range_keys":           nil,
 		"read_capacity":        0,
 		"warm_throughput":      nil,
 		"write_capacity":       0,
@@ -1988,7 +1987,7 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) 
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_multipleHashKeys_singleRangeKey(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2001,14 +2000,6 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) 
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name": knownvalue.StringExact("TestTableHashKey2"),
 							"type": knownvalue.StringExact("S"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableRangeKey"),
-							"type": knownvalue.StringExact("S"),
-						}),
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("ReplacementGSIRangeKey"),
-							"type": knownvalue.StringExact("N"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2024,10 +2015,9 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) 
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
 							}),
-							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
-							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
-							"range_key":       knownvalue.StringExact("ReplacementGSIRangeKey"),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
 						}),
 					})),
 				},
@@ -2078,7 +2068,6 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2132,7 +2121,6 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2161,7 +2149,6 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2220,7 +2207,6 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2249,7 +2235,6 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2308,7 +2293,6 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2345,7 +2329,6 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2399,7 +2382,6 @@ func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2436,7 +2418,6 @@ func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2498,7 +2479,6 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2527,7 +2507,6 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2589,7 +2568,6 @@ func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2618,7 +2596,6 @@ func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2652,45 +2629,12 @@ func TestAccDynamoDBTable_GSI_keySchema_maxSet(t *testing.T) {
 				Config: testAccTableConfig_keySchema_maxKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
-					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "8"),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableHashKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestTableRangeKey",
-						names.AttrType: "S",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "TestLSIRangeKey",
-						names.AttrType: "N",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: "ReplacementGSIRangeKey",
-						names.AttrType: "N",
-					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						names.AttrName:         "ReplacementTestTableGSI",
-						"key_schema.#":         "4",
-						"range_keys.#":         "4",
-						"write_capacity":       "5",
-						"read_capacity":        "5",
-						"projection_type":      "INCLUDE",
-						"non_key_attributes.#": "1",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-						names.AttrName:    "TestTableLSI",
-						"range_key":       "TestLSIRangeKey",
+						names.AttrName:    "ReplacementTestTableGSI",
+						"key_schema.#":    "8",
+						"write_capacity":  "1",
+						"read_capacity":   "1",
 						"projection_type": "ALL",
 					}),
 				),
@@ -2749,14 +2693,18 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("ReplacementGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("ReplacementGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys": knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("ReplacementGSIRangeKey"),
-								knownvalue.StringExact("ReplacementGSIRangeKey2"),
-							}),
 						}),
 					})),
 				},
@@ -2810,11 +2758,14 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2847,14 +2798,18 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys": knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("TestGSIRangeKey"),
-								knownvalue.StringExact("TestGSIRangeKey2"),
-							}),
 						}),
 					})),
 				},
@@ -2912,14 +2867,18 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact(""),
-							"range_keys": knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("TestGSIRangeKey"),
-								knownvalue.StringExact("TestGSIRangeKey2"),
-							}),
 						}),
 					})),
 				},
@@ -2948,11 +2907,14 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
 									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
 								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
 							}),
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
-							"range_keys":      knownvalue.SetExact([]knownvalue.Check{}),
 						}),
 					})),
 				},
@@ -2966,7 +2928,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
+func TestAccDynamoDBTable_GSI_validate_rangeKeyConflictsWithKeySchema(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2978,8 +2940,8 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_singleAndMultiSet(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_addSecondaryGSI_multipleRangeKeys_singleAndMultiSet(rName),
-				ExpectError: regexache.MustCompile(`At most one can be set for range_key`),
+				Config:      testAccTableConfig_GSI_setKeySchemaAndRangeKey(rName),
+				ExpectError: regexache.MustCompile(`Attribute "global_secondary_index\[.+\]\.range_key"\s+cannot be specified when "global_secondary_index`),
 			},
 		},
 	})
@@ -3016,7 +2978,7 @@ func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHASHKeys(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_GSI_keySchema_tooManyHASHKeys(rName),
+				Config:      testAccTableConfig_GSI_keySchema_tooManyHashKeys(rName),
 				ExpectError: regexache.MustCompile(`at least 1 and at most 4 elements with "key_type" "HASH"`),
 			},
 		},
@@ -3036,7 +2998,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_tooMany(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_addSecondaryGSI_multipleRangeKeys_tooMany(rName),
-				ExpectError: regexache.MustCompile(`Too many list items`),
+				ExpectError: regexache.MustCompile(`at most 4 elements with "key_type" "RANGE"`),
 			},
 		},
 	})
@@ -8771,54 +8733,6 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_GSI_multipleHashKeys_singleRangeKey(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  read_capacity  = 2
-  write_capacity = 2
-  hash_key       = "TestTableHashKey"
-  range_key      = "TestTableRangeKey"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestTableHashKey2"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "ReplacementGSIRangeKey"
-    type = "N"
-  }
-
-  global_secondary_index {
-    name = "ReplacementTestTableGSI"
-    key_schema {
-      attribute_name = "TestTableHashKey"
-      key_type       = "HASH"
-    }
-    key_schema {
-      attribute_name = "TestTableHashKey2"
-      key_type       = "HASH"
-    }
-    range_key       = "ReplacementGSIRangeKey"
-    projection_type = "ALL"
-    read_capacity   = 1
-    write_capacity  = 1
-  }
-}
-`, rName)
-}
-
 func testAccTableConfig_GSI_singleHashKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -8910,8 +8824,8 @@ func testAccTableConfig_keySchema_maxKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
-  read_capacity  = 2
-  write_capacity = 2
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "TestTableHashKey"
   range_key      = "TestTableRangeKey"
 
@@ -8955,12 +8869,6 @@ resource "aws_dynamodb_table" "test" {
     type = "N"
   }
 
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
     name = "ReplacementTestTableGSI"
     key_schema {
@@ -8979,11 +8887,27 @@ resource "aws_dynamodb_table" "test" {
       attribute_name = "TestTableHashKey4"
       key_type       = "HASH"
     }
-    range_keys         = ["ReplacementGSIRangeKey", "TestTableRangeKey", "TestLSIRangeKey", "ReplacementGSIRangeKey2"]
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "ALL"
   }
 }
 `, rName)
@@ -9019,9 +8943,22 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "ReplacementTestTableGSI"
-    hash_key        = "TestTableHashKey"
-    range_keys      = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
     projection_type = "ALL"
     write_capacity  = 1
     read_capacity   = 1
@@ -9084,9 +9021,22 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "GSI"
-    hash_key        = "TestTableHashKey"
-    range_keys      = ["TestGSIRangeKey", "TestGSIRangeKey2"]
+    name = "GSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "TestGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
     projection_type = "KEYS_ONLY"
     write_capacity  = 1
     read_capacity   = 1
@@ -9095,7 +9045,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI_multipleRangeKeys_singleAndMultiSet(rName string) string {
+func testAccTableConfig_GSI_setKeySchemaAndRangeKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -9115,11 +9065,6 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
     name = "ReplacementGSIRangeKey"
     type = "N"
   }
@@ -9129,21 +9074,27 @@ resource "aws_dynamodb_table" "test" {
     type = "N"
   }
 
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_key           = "TestTableHashKey"
-    range_key          = "ReplacementGSIRangeKey"
-    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    range_key = "ReplacementGSIRangeKey"
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
   }
 }
 `, rName)
@@ -9216,26 +9167,44 @@ resource "aws_dynamodb_table" "test" {
     type = "N"
   }
 
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
-    name               = "ReplacementTestTableGSI"
-    hash_key           = "TestTableHashKey"
-    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2", "TestLSIRangeKey", "TestTableRangeKey", "ReplacementGSIRangeKey3"]
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey3"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
   }
 }
 `, rName)
 }
 
-func testAccTableConfig_GSI_keySchema_tooManyHASHKeys(rName string) string {
+func testAccTableConfig_GSI_keySchema_tooManyHashKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -9274,12 +9243,6 @@ resource "aws_dynamodb_table" "test" {
     type = "N"
   }
 
-  local_secondary_index {
-    name            = "TestTableLSI"
-    range_key       = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   global_secondary_index {
     name = "ReplacementTestTableGSI"
     key_schema {
@@ -9302,11 +9265,10 @@ resource "aws_dynamodb_table" "test" {
       attribute_name = "ReplacementGSIRangeKey3"
       key_type       = "HASH"
     }
-    range_key          = "ReplacementGSIRangeKey"
-    write_capacity     = 5
-    read_capacity      = 5
-    projection_type    = "INCLUDE"
-    non_key_attributes = ["TestNonKeyAttribute"]
+    range_key       = "ReplacementGSIRangeKey"
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
   }
 }
 `, rName)

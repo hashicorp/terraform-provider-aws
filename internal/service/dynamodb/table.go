@@ -77,9 +77,6 @@ func resourceTable() *schema.Resource {
 				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateGSISchema(diff)
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isTableOptionDisabled(o) && isTableOptionDisabled(n) {
@@ -251,15 +248,9 @@ func resourceTable() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
 							},
 							"range_key": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"range_keys": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Computed: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-								MaxItems: 4,
+								Type:       schema.TypeString,
+								Optional:   true,
+								Deprecated: "range_key is deprecated. Use key_schema instead.",
 							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
@@ -2700,8 +2691,6 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 
 		if len(rangeKeys) == 1 {
 			gsi["range_key"] = rangeKeys[0]
-		} else if len(rangeKeys) > 1 {
-			gsi["range_keys"] = rangeKeys
 		}
 
 		if g.Projection != nil {
@@ -2724,17 +2713,12 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 }
 
 func flattenKeySchema(elements []awstypes.KeySchemaElement) []map[string]any {
-	result := make([]map[string]any, 0, len(elements))
+	result := make([]map[string]any, len(elements))
 
-	for _, attribute := range elements {
-		if attribute.KeyType == awstypes.KeyTypeHash {
-			result = append(result, map[string]any{
-				"attribute_name": attribute.AttributeName,
-				"key_type":       attribute.KeyType,
-			})
-		}
-		if attribute.KeyType == awstypes.KeyTypeRange {
-			// noop
+	for i, attribute := range elements {
+		result[i] = map[string]any{
+			"attribute_name": attribute.AttributeName,
+			"key_type":       attribute.KeyType,
 		}
 	}
 
@@ -3066,22 +3050,13 @@ func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 	}
 
 	rKey, rKok := data["range_key"]
-	rKeys, rKsok := data["range_keys"].(*schema.Set)
-	if rKok || rKsok {
-		if (rKey != nil && rKey != "") && (rKeys == nil || rKeys.Len() == 0) {
+	if rKok {
+		if rKey != nil && rKey != "" {
 			// use range_key
 			keySchema = append(keySchema, awstypes.KeySchemaElement{
 				AttributeName: aws.String(rKey.(string)),
 				KeyType:       awstypes.KeyTypeRange,
 			})
-		} else if rKeys != nil && rKeys.Len() > 0 {
-			// use range_keys
-			for _, rKeyItem := range rKeys.List() {
-				keySchema = append(keySchema, awstypes.KeySchemaElement{
-					AttributeName: aws.String(rKeyItem.(string)),
-					KeyType:       awstypes.KeyTypeRange,
-				})
-			}
 		}
 	}
 
@@ -3219,26 +3194,6 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
 	}
 
-	if v, ok := d.GetOk("global_secondary_index"); ok && hasConfiguredGsi {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]any)
-
-			if rangeKey, ok := index["range_key"]; ok && rangeKey != "" {
-				indexedAttributes[rangeKey.(string)] = true
-			}
-			if v, ok := index["range_keys"]; ok {
-				if rangeKeys, ok := v.(*schema.Set); ok {
-					for _, v := range rangeKeys.List() {
-						if key, ok := v.(string); ok && key != "" {
-							indexedAttributes[key] = true
-						}
-					}
-				}
-			}
-		}
-	}
-
 	// schema.ResourceDiff.GetOk() has a bug when retrieving a list inside a set
 	planRaw := d.GetRawPlan()
 	if planRaw.IsKnown() && !planRaw.IsNull() {
@@ -3251,6 +3206,10 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 				hashKey := v.GetAttr("hash_key")
 				if hashKey.IsKnown() && !hashKey.IsNull() {
 					indexedAttributes[hashKey.AsString()] = true
+				}
+				rangeKey := v.GetAttr("range_key")
+				if rangeKey.IsKnown() && !rangeKey.IsNull() {
+					indexedAttributes[rangeKey.AsString()] = true
 				}
 				keySchema := v.GetAttr("key_schema")
 				if keySchema.IsKnown() && !keySchema.IsNull() {
@@ -3349,26 +3308,6 @@ func ctyValueElements(v cty.Value) iter.Seq2[cty.Value, cty.Value] {
 	}
 }
 
-func validateGSISchema(d *schema.ResourceDiff) error {
-	var errs []error
-
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-
-		for _, idx := range indexes {
-			index := idx.(map[string]any)
-
-			rk, rkok := index["range_key"].(string)
-			rks, rksok := index["range_keys"].(*schema.Set)
-			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
-				errs = append(errs, errors.New("At most one can be set for range_key (String type) or range_keys (Set type) but both are set."))
-			}
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
 func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.BillingMode) error {
 	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
 	if billingMode == awstypes.BillingModePayPerRequest {
@@ -3447,12 +3386,12 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 }
 
 func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath cty.Path, diags *diag.Diagnostics) {
-	hashKey := gsi.GetAttr("hash_key")
-	hashKeyIsZero := hashKey.IsKnown() && hashKey.IsNull()
-
 	keySchemaPath := gsiPath.GetAttr("key_schema")
 	keySchema := gsi.GetAttr("key_schema")
 	keySchemaIsZero := keySchema.IsKnown() && (keySchema.IsNull() || keySchema.LengthInt() == 0)
+
+	hashKey := gsi.GetAttr("hash_key")
+	hashKeyIsZero := hashKey.IsKnown() && hashKey.IsNull()
 
 	if hashKeyIsZero && keySchemaIsZero {
 		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
@@ -3461,6 +3400,16 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 	} else if !hashKeyIsZero && !keySchemaIsZero {
 		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
 			gsiPath, 2, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"),
+		))
+	}
+
+	rangeKey := gsi.GetAttr("range_key")
+	rangeKeyIsZero := rangeKey.IsKnown() && rangeKey.IsNull()
+
+	if !rangeKeyIsZero && !keySchemaIsZero {
+		*diags = append(*diags, errs.NewAttributeConflictsWithError(
+			gsiPath.GetAttr("range_key"),
+			keySchemaPath,
 		))
 	}
 
