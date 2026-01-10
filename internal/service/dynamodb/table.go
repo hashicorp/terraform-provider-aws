@@ -3359,11 +3359,6 @@ func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDif
 		return err
 	}
 
-	// Handle GSI warm throughput suppression
-	if err := suppressGSIWarmThroughputDefaults(d, configRaw); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -3493,13 +3488,6 @@ func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.V
 		return d.Clear("warm_throughput")
 	}
 
-	return nil
-}
-
-func suppressGSIWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
-	// GSI warm throughput defaults are now handled in the flattenGSIWarmThroughput function
-	// by filtering out AWS default values during the read operation.
-	// This approach is more reliable than trying to suppress diffs on Set-based fields.
 	return nil
 }
 
