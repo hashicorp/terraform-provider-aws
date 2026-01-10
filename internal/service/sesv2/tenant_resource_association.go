@@ -195,7 +195,7 @@ func findTenantResourceAssociationByID(
 	parts := strings.SplitN(resourceID, "|", 2)
 	if len(parts) != 2 {
 		return nil, smarterr.NewError(
-			tfresource.NewEmptyResultError(resourceID),
+			tfresource.NewEmptyResultError(),
 		)
 	}
 
