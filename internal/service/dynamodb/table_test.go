@@ -1994,12 +1994,12 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2052,8 +2052,8 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2105,8 +2105,8 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2133,8 +2133,8 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2191,8 +2191,8 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2219,8 +2219,8 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2277,8 +2277,8 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2305,12 +2305,12 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2366,8 +2366,8 @@ func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2394,12 +2394,12 @@ func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2455,12 +2455,12 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2491,8 +2491,8 @@ func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2544,12 +2544,12 @@ func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2580,8 +2580,8 @@ func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2669,20 +2669,20 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableRangeKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("ReplacementGSIRangeKey"),
-							"type": knownvalue.StringExact("N"),
+							names.AttrName: knownvalue.StringExact("ReplacementGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("N"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("ReplacementGSIRangeKey2"),
-							"type": knownvalue.StringExact("N"),
+							names.AttrName: knownvalue.StringExact("ReplacementGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("N"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2742,12 +2742,12 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2778,16 +2778,16 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2847,16 +2847,16 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey2"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
@@ -2891,12 +2891,12 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestTableHashKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"name": knownvalue.StringExact("TestGSIRangeKey"),
-							"type": knownvalue.StringExact("S"),
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
