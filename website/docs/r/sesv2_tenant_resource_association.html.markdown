@@ -36,9 +36,6 @@ resource "aws_sesv2_tenant_resource_association" "example" {
 The following arguments are required:
 
 * `tenant_name` - (Required) Name of SES Tenant.
-
-The following arguments are optional:
-
 * `resource_arn` - (Required) ARN of the SES resource to associate with the tenant.
 
 ## Attribute Reference
