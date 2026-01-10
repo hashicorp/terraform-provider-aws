@@ -3185,12 +3185,6 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 		}
 	}
 
-	config := d.GetRawConfig()
-	hasConfiguredGsi := false
-	if config.IsKnown() {
-		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
-	}
-
 	// schema.ResourceDiff.GetOk() has a bug when retrieving a list inside a set
 	planRaw := d.GetRawPlan()
 	if planRaw.IsKnown() && !planRaw.IsNull() {
@@ -3233,6 +3227,12 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 				delete(indexedAttributes, aws.ToString(ks.AttributeName))
 			}
 		}
+	}
+
+	var hasConfiguredGsi bool
+	config := d.GetRawConfig()
+	if config.IsKnown() {
+		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
 	}
 
 	// Check if all indexed attributes have an attribute definition
