@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"iter"
 	"log"
 	"math/big"
 	"reflect"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -3210,7 +3210,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 				}
 				keySchema := v.GetAttr("key_schema")
 				if keySchema.IsKnown() && !keySchema.IsNull() {
-					for v := range ctyValueElementValues(keySchema) {
+					for v := range tfcty.ValueElementValues(keySchema) {
 						name := v.GetAttr("attribute_name")
 						indexedAttributes[name.AsString()] = true
 					}
@@ -3282,29 +3282,6 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	return errors.Join(errs...)
 }
 
-func ctyValueElementValues(v cty.Value) iter.Seq[cty.Value] {
-	return func(yield func(cty.Value) bool) {
-		it := v.ElementIterator()
-		for it.Next() {
-			_, v := it.Element()
-			if !yield(v) {
-				return
-			}
-		}
-	}
-}
-
-func ctyValueElements(v cty.Value) iter.Seq2[cty.Value, cty.Value] {
-	return func(yield func(cty.Value, cty.Value) bool) {
-		it := v.ElementIterator()
-		for it.Next() {
-			if !yield(it.Element()) {
-				return
-			}
-		}
-	}
-}
-
 func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.BillingMode) error {
 	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
 	if billingMode == awstypes.BillingModePayPerRequest {
@@ -3371,7 +3348,7 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 		return
 	}
 
-	for i, gsiElem := range ctyValueElements(gsis) {
+	for i, gsiElem := range tfcty.ValueElements(gsis) {
 		gsiElemPath := gsisPath.Index(i)
 		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
 	}
@@ -3413,7 +3390,7 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
-	for i, gsi := range ctyValueElements(keySchema) {
+	for i, gsi := range tfcty.ValueElements(keySchema) {
 		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
 		switch keyType {
 		case awstypes.KeyTypeHash:
