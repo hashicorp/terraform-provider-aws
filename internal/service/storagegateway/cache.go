@@ -187,7 +187,7 @@ func findCache(ctx context.Context, conn *storagegateway.Client, input *storageg
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

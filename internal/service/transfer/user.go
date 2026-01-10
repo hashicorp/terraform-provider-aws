@@ -333,7 +333,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, 
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil

@@ -211,7 +211,7 @@ func findVoiceConnectorGroupByID(ctx context.Context, conn *chimesdkvoice.Client
 	}
 
 	if resp == nil || resp.VoiceConnectorGroup == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

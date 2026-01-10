@@ -309,7 +309,7 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	}
 
 	if output == nil || output.Workspace == nil || output.Workspace.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil
@@ -410,7 +410,7 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	}
 
 	if output == nil || output.LoggingConfiguration == nil || output.LoggingConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingConfiguration, nil

@@ -174,7 +174,7 @@ func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awsty
 	}
 
 	if output == nil || output.ResourcePolicy == nil || output.ResourcePolicy.ResourcePolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourcePolicy, nil

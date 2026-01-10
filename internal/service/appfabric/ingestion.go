@@ -224,7 +224,7 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 	}
 
 	if output == nil || output.Ingestion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Ingestion, nil

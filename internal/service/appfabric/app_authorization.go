@@ -423,7 +423,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 	}
 
 	if output == nil || output.AppAuthorization == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppAuthorization, nil

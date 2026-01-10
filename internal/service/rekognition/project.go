@@ -316,7 +316,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 	}
 
 	if out == nil || len(out.ProjectDescriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &out.ProjectDescriptions[0], nil

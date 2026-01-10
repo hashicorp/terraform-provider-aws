@@ -519,7 +519,7 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

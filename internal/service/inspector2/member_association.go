@@ -171,7 +171,7 @@ func findMember(ctx context.Context, conn *inspector2.Client, input *inspector2.
 	}
 
 	if output == nil || output.Member == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Member, nil

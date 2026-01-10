@@ -832,7 +832,7 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	}
 
 	if output == nil || output.VirtualGateway == nil || output.VirtualGateway.Metadata == nil || output.VirtualGateway.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualGateway, nil

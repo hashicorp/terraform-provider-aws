@@ -226,7 +226,7 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	}
 
 	if output == nil || output.SnapshotDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SnapshotDetails, nil

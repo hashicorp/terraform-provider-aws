@@ -263,7 +263,7 @@ func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.
 	}
 
 	if output == nil || output.LoggingConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

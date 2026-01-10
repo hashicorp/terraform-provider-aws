@@ -130,7 +130,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		output, err := conn.SearchAvailablePhoneNumbers(ctx, input)
 
 		if err == nil && (output == nil || len(output.AvailableNumbersList) == 0) {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {
@@ -288,7 +288,7 @@ func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.D
 	}
 
 	if output == nil || output.ClaimedPhoneNumberSummary == nil || output.ClaimedPhoneNumberSummary.PhoneNumberStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClaimedPhoneNumberSummary, nil

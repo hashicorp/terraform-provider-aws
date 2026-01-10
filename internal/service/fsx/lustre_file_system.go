@@ -814,7 +814,7 @@ func findLustreFileSystemByID(ctx context.Context, conn *fsx.Client, id string) 
 	}
 
 	if output.LustreConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

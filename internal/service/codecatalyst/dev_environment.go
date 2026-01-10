@@ -338,7 +338,7 @@ func findDevEnvironmentByID(ctx context.Context, conn *codecatalyst.Client, id s
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

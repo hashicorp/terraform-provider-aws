@@ -642,7 +642,7 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 	}
 
 	if output == nil || output.Role == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Role, nil

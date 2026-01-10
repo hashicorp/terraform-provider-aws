@@ -176,7 +176,7 @@ func findGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

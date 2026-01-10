@@ -461,7 +461,7 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 	}
 
 	if out == nil || out.Membership == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

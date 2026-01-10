@@ -270,7 +270,7 @@ func findIntelligentTieringConfiguration(ctx context.Context, conn *s3.Client, b
 	}
 
 	if output == nil || output.IntelligentTieringConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IntelligentTieringConfiguration, nil

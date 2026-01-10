@@ -211,7 +211,7 @@ func findTypeByThreePartKey(ctx context.Context, conn *appsync.Client, apiID str
 	}
 
 	if output == nil || output.Type == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.Type, nil

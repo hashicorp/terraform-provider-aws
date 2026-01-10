@@ -242,7 +242,7 @@ func findLocationNFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

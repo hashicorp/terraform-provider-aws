@@ -287,7 +287,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	}
 
 	if out == nil || out.ProfileResourceAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileResourceAssociation, nil

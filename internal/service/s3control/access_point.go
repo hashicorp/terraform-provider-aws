@@ -424,7 +424,7 @@ func findAccessPointByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

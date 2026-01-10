@@ -249,7 +249,7 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 	}
 
 	if output == nil || output.LandingZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LandingZone, nil
@@ -274,7 +274,7 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	}
 
 	if output == nil || output.OperationDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OperationDetails, nil

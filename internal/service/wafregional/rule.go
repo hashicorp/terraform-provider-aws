@@ -217,7 +217,7 @@ func findRuleByID(ctx context.Context, conn *wafregional.Client, id string) (*aw
 	}
 
 	if output == nil || output.Rule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Rule, nil

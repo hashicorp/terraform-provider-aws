@@ -1222,7 +1222,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

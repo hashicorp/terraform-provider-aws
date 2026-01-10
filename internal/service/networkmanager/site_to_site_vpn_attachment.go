@@ -247,7 +247,7 @@ func findSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Clien
 	}
 
 	if output == nil || output.SiteToSiteVpnAttachment == nil || output.SiteToSiteVpnAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SiteToSiteVpnAttachment, nil

@@ -174,7 +174,7 @@ func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *light
 	}
 
 	if out == nil || out.LoadBalancer.HttpsRedirectionEnabled == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.LoadBalancer.HttpsRedirectionEnabled, nil

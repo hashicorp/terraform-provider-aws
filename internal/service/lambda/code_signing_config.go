@@ -235,7 +235,7 @@ func findCodeSigningConfig(ctx context.Context, conn *lambda.Client, input *lamb
 	}
 
 	if output == nil || output.CodeSigningConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CodeSigningConfig, nil

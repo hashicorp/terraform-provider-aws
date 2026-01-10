@@ -494,7 +494,7 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -249,7 +249,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.WorkspaceConfiguration == nil || output.WorkspaceConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WorkspaceConfiguration, nil

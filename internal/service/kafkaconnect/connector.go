@@ -606,7 +606,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

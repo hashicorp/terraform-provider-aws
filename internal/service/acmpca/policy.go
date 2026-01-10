@@ -138,7 +138,7 @@ func findPolicyByARN(ctx context.Context, conn *acmpca.Client, arn string) (*str
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

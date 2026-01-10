@@ -322,7 +322,7 @@ func findSessionLoggerByARN(ctx context.Context, conn *workspacesweb.Client, arn
 	}
 
 	if output == nil || output.SessionLogger == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SessionLogger, nil

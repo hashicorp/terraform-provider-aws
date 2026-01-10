@@ -209,7 +209,7 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, inp
 	}
 
 	if output == nil || output.OrganizationalUnit == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OrganizationalUnit, nil

@@ -276,7 +276,7 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil

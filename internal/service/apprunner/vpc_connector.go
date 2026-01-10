@@ -179,7 +179,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 	}
 
 	if output == nil || output.VpcConnector == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.VpcConnector.Status; status == types.VpcConnectorStatusInactive {

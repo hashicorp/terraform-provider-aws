@@ -179,7 +179,7 @@ func findBackendEnvironmentByTwoPartKey(ctx context.Context, conn *amplify.Clien
 	}
 
 	if output == nil || output.BackendEnvironment == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackendEnvironment, nil

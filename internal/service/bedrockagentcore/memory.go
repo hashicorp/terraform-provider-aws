@@ -334,7 +334,7 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	}
 
 	if out == nil || out.Memory == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Memory, nil

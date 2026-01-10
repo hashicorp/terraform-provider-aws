@@ -466,7 +466,7 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	}
 
 	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HealthCheck, nil

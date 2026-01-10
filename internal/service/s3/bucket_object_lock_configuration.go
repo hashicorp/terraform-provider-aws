@@ -298,7 +298,7 @@ func findObjectLockConfiguration(ctx context.Context, conn *s3.Client, bucket, e
 	}
 
 	if output == nil || output.ObjectLockConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ObjectLockConfiguration, nil

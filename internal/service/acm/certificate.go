@@ -808,7 +808,7 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 	}
 
 	if output == nil || output.Certificate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Certificate, nil
@@ -842,7 +842,7 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn stri
 	}
 
 	if certificate.RenewalSummary == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return certificate.RenewalSummary, nil

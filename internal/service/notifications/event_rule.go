@@ -259,7 +259,7 @@ func findEventRuleByARN(ctx context.Context, conn *notifications.Client, arn str
 	}
 
 	if output == nil || output.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

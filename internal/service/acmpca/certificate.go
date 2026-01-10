@@ -277,7 +277,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -1036,7 +1036,7 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil
@@ -1065,7 +1065,7 @@ func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *el
 	}
 
 	if output == nil || output.DomainConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainConfig, nil
@@ -1094,7 +1094,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

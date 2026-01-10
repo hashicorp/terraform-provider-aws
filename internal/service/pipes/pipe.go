@@ -353,7 +353,7 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	}
 
 	if output == nil || output.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

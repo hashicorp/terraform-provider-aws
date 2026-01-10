@@ -645,7 +645,7 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	}
 
 	if out == nil || out.MediaInsightsPipelineConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.MediaInsightsPipelineConfiguration, nil

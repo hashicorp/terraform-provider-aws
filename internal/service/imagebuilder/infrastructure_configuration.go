@@ -451,7 +451,7 @@ func findInfrastructureConfigurationByARN(ctx context.Context, conn *imagebuilde
 	}
 
 	if output == nil || output.InfrastructureConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InfrastructureConfiguration, nil

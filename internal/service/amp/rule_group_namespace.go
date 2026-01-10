@@ -215,7 +215,7 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 	}
 
 	if output == nil || output.RuleGroupsNamespace == nil || output.RuleGroupsNamespace.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuleGroupsNamespace, nil

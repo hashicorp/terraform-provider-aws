@@ -434,7 +434,7 @@ func findCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn s
 	}
 
 	if output == nil || output.CostCategory == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CostCategory, nil

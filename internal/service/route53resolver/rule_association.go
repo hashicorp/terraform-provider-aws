@@ -159,7 +159,7 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	}
 
 	if output == nil || output.ResolverRuleAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverRuleAssociation, nil

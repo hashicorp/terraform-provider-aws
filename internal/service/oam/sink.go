@@ -157,7 +157,7 @@ func findSinkByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetSin
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

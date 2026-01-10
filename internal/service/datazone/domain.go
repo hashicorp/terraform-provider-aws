@@ -336,7 +336,7 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -559,7 +559,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	}
 
 	if output == nil || output.Agent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Agent, nil

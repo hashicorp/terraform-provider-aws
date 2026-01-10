@@ -189,7 +189,7 @@ func findUsageLimitByName(ctx context.Context, conn *redshiftserverless.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UsageLimit, nil

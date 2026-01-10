@@ -364,7 +364,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
@@ -394,7 +394,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

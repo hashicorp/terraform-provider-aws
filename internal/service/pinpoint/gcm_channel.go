@@ -171,7 +171,7 @@ func findGCMChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, a
 	}
 
 	if output == nil || output.GCMChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GCMChannelResponse, nil

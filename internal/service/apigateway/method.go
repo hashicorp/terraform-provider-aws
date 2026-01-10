@@ -405,7 +405,7 @@ func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, http
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
