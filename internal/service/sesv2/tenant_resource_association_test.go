@@ -167,8 +167,8 @@ resource "aws_sesv2_configuration_set" "test" {
 }
 
 resource "aws_sesv2_tenant_resource_association" "test" {
-  tenant_name   = aws_sesv2_tenant.test.tenant_name
-  resource_arn  = aws_sesv2_configuration_set.test.arn
+  tenant_name  = aws_sesv2_tenant.test.tenant_name
+  resource_arn = aws_sesv2_configuration_set.test.arn
 }
 `, name)
 }
