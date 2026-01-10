@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -195,7 +195,7 @@ func findTenantResourceAssociationByID(
 	parts := strings.SplitN(resourceID, "|", 2)
 	if len(parts) != 2 {
 		return nil, smarterr.NewError(
-			tfresource.NewEmptyResultError(),
+			tfresource.NewEmptyResultError(resourceID),
 		)
 	}
 
