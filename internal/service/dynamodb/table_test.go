@@ -2648,7 +2648,7 @@ func TestAccDynamoDBTable_GSI_keySchema_maxSet(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleRangeKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var conf awstypes.TableDescription
@@ -2662,7 +2662,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_GSI_multipleRangeKeys_singleHashKey(rName),
+				Config: testAccTableConfig_GSI_keySchema_multipleRangeKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
@@ -2718,7 +2718,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_addRangeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2823,7 +2823,7 @@ func TestAccDynamoDBTable_GSI_MultiRangeKey_AddRangeKey(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey_RemoveRangeKey(t *testing.T) {
+func TestAccDynamoDBTable_GSI_keySchema_removeRangeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2966,7 +2966,7 @@ func TestAccDynamoDBTable_GSI_validate_exactlyOneOfKeySchemaHashKey(t *testing.T
 	})
 }
 
-func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHASHKeys(t *testing.T) {
+func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHashKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2985,7 +2985,7 @@ func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHASHKeys(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_GSI_MultiRangeKey_tooMany(t *testing.T) {
+func TestAccDynamoDBTable_GSIvalidate_keySchema_tooManyRangeKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -8913,7 +8913,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_GSI_multipleRangeKeys_singleHashKey(rName string) string {
+func testAccTableConfig_GSI_keySchema_multipleRangeKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
