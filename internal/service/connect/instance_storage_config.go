@@ -340,7 +340,7 @@ func findInstanceStorageConfig(ctx context.Context, conn *connect.Client, input 
 	}
 
 	if output == nil || output.StorageConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StorageConfig, nil

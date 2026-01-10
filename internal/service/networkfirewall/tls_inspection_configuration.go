@@ -481,7 +481,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	}
 
 	if output == nil || output.TLSInspectionConfigurationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

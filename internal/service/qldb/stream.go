@@ -266,7 +266,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.Client, input *qld
 	}
 
 	if output == nil || output.Stream == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Stream, nil

@@ -196,7 +196,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	}
 
 	if output == nil || output.VpcIngressConnection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.VpcIngressConnection.Status; status == types.VpcIngressConnectionStatusDeleted {

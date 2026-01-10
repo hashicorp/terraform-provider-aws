@@ -319,7 +319,7 @@ func findConnectAttachment(ctx context.Context, conn *networkmanager.Client, inp
 	}
 
 	if output == nil || output.ConnectAttachment == nil || output.ConnectAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConnectAttachment, nil

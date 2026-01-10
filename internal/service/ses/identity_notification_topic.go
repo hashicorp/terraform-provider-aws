@@ -214,7 +214,7 @@ func findIdentityNotificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	if output == nil || output.NotificationAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NotificationAttributes, nil

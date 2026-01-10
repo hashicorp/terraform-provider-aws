@@ -145,7 +145,7 @@ func findADMChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, a
 	}
 
 	if output == nil || output.ADMChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ADMChannelResponse, nil

@@ -227,7 +227,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.State; state == types.LedgerStateDeleted {

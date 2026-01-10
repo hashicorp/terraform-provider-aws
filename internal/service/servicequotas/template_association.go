@@ -136,7 +136,7 @@ func findTemplateAssociation(ctx context.Context, conn *servicequotas.Client) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ServiceQuotaTemplateAssociationStatus; status == awstypes.ServiceQuotaTemplateAssociationStatusDisassociated {

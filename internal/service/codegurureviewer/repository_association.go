@@ -382,7 +382,7 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil

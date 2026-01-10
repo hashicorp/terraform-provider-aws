@@ -384,7 +384,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if err == nil && endpoint.S3Settings == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

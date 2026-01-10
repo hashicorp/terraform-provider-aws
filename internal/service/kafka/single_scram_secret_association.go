@@ -181,7 +181,7 @@ func findSingleSCRAMSecretAssociationByTwoPartKey(ctx context.Context, conn *kaf
 	}
 
 	if !slices.Contains(output, secretARN) {
-		return tfresource.NewEmptyResultError(nil)
+		return tfresource.NewEmptyResultError()
 	}
 
 	return nil

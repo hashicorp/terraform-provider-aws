@@ -256,7 +256,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

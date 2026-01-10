@@ -444,7 +444,7 @@ func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, br
 	}
 
 	if output == nil || output.Branch == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Branch, nil

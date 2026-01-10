@@ -373,7 +373,7 @@ func findRoute(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -390,7 +390,7 @@ func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

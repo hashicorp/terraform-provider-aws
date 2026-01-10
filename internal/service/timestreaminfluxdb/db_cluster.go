@@ -809,7 +809,7 @@ func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *tim
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -837,7 +837,7 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

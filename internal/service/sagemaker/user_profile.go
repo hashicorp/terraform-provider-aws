@@ -1115,7 +1115,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

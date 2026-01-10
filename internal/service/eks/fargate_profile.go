@@ -246,7 +246,7 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	}
 
 	if output == nil || output.FargateProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FargateProfile, nil

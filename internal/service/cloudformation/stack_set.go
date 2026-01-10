@@ -498,7 +498,7 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	}
 
 	if output == nil || output.StackSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSet, nil
@@ -561,7 +561,7 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	}
 
 	if output == nil || output.StackSetOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSetOperation, nil

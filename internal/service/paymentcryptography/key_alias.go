@@ -225,7 +225,7 @@ func findkeyAliasByName(ctx context.Context, conn *paymentcryptography.Client, n
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

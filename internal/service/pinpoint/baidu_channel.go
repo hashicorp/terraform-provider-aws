@@ -145,7 +145,7 @@ func findBaiduChannelByApplicationId(ctx context.Context, conn *pinpoint.Client,
 	}
 
 	if output == nil || output.BaiduChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BaiduChannelResponse, nil

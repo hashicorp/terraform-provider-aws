@@ -250,7 +250,7 @@ func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))

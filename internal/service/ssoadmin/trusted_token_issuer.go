@@ -293,7 +293,7 @@ func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

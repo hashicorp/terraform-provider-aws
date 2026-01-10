@@ -607,7 +607,7 @@ func findTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, 
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Table, nil

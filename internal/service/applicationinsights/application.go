@@ -231,7 +231,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	}
 
 	if output == nil || output.ApplicationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationInfo, nil

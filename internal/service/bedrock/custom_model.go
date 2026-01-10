@@ -489,7 +489,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -531,7 +531,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

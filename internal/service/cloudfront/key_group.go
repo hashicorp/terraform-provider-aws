@@ -179,7 +179,7 @@ func findKeyGroupByID(ctx context.Context, conn *cloudfront.Client, id string) (
 	}
 
 	if output == nil || output.KeyGroup == nil || output.KeyGroup.KeyGroupConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

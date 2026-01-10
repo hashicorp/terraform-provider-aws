@@ -238,7 +238,7 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	}
 
 	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

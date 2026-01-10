@@ -385,7 +385,7 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 	}
 
 	if output == nil || output.Name == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	host := &awstypes.Host{

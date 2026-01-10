@@ -1506,7 +1506,7 @@ func findKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, input *be
 	}
 
 	if output == nil || output.KnowledgeBase == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KnowledgeBase, nil

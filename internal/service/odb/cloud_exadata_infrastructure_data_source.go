@@ -254,7 +254,7 @@ func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id
 	}
 
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudExadataInfrastructure, nil

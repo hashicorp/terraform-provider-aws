@@ -231,7 +231,7 @@ func findContactList(ctx context.Context, conn *sesv2.Client, input *sesv2.GetCo
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

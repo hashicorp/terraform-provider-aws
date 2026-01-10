@@ -387,7 +387,7 @@ func findPlan(ctx context.Context, conn *backup.Client, input *backup.GetBackupP
 	}
 
 	if output == nil || output.BackupPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

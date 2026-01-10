@@ -176,7 +176,7 @@ func findWebhookByID(ctx context.Context, conn *amplify.Client, id string) (*typ
 	}
 
 	if output == nil || output.Webhook == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Webhook, nil

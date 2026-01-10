@@ -260,7 +260,7 @@ func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.Descri
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

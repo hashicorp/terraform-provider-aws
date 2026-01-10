@@ -140,7 +140,7 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	}
 
 	if output == nil || output.ResolverQueryLogConfigAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfigAssociation, nil

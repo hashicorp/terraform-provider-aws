@@ -236,7 +236,7 @@ func FindKxScalingGroupById(ctx context.Context, conn *finspace.Client, id strin
 	}
 
 	if out == nil || out.ScalingGroupName == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out, nil
 }

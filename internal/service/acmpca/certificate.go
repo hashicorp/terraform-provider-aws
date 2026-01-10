@@ -43,6 +43,8 @@ import (
 // @CustomImport
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
 // @Testing(plannableImportAction="Replace")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -275,7 +277,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

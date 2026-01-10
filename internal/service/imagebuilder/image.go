@@ -471,7 +471,7 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 	}
 
 	if output == nil || output.Image == nil || output.Image.State == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Image, nil

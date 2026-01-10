@@ -521,7 +521,7 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	}
 
 	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Scraper, nil

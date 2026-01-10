@@ -441,7 +441,7 @@ func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBuc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -469,7 +469,7 @@ func findBucketLocation(ctx context.Context, conn *s3.Client, bucket, expectedBu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

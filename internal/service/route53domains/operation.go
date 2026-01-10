@@ -72,7 +72,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

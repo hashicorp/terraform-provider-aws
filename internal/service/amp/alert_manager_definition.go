@@ -161,7 +161,7 @@ func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.AlertManagerDefinition == nil || output.AlertManagerDefinition.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AlertManagerDefinition, nil

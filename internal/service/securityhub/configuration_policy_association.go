@@ -160,7 +160,7 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

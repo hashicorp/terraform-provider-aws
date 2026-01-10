@@ -151,7 +151,7 @@ func findFirewallRuleGroupByID(ctx context.Context, conn *route53resolver.Client
 	}
 
 	if output == nil || output.FirewallRuleGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallRuleGroup, nil

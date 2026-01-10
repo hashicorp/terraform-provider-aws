@@ -259,7 +259,7 @@ func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client,
 	}
 
 	if output == nil || output.ServerSideEncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServerSideEncryptionConfiguration, nil

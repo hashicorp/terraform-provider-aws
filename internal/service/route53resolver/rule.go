@@ -283,7 +283,7 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	}
 
 	if output == nil || output.ResolverRule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverRule, nil

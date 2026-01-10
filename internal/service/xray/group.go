@@ -190,7 +190,7 @@ func findGroupByARN(ctx context.Context, conn *xray.Client, arn string) (*types.
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil

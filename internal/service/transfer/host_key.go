@@ -296,7 +296,7 @@ func findHostKey(ctx context.Context, conn *transfer.Client, input *transfer.Des
 	}
 
 	if output == nil || output.HostKey == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HostKey, nil

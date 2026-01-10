@@ -253,7 +253,7 @@ func findAuthenticationProfiles(ctx context.Context, conn *redshift.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AuthenticationProfiles, nil
@@ -461,7 +461,7 @@ func findPartners(ctx context.Context, conn *redshift.Client, input *redshift.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PartnerIntegrationInfoList, nil
@@ -557,7 +557,7 @@ func findResourcePolicy(ctx context.Context, conn *redshift.Client, input *redsh
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourcePolicy, nil
@@ -628,7 +628,7 @@ func findLoggingStatus(ctx context.Context, conn *redshift.Client, input *redshi
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -714,7 +714,7 @@ func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, clusterID 
 	}
 
 	if output.ClusterSnapshotCopyStatus == nil {
-		return nil, tfresource.NewEmptyResultError(clusterID)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClusterSnapshotCopyStatus, nil

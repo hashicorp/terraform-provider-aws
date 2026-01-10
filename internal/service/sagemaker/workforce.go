@@ -355,7 +355,7 @@ func findWorkforceByName(ctx context.Context, conn *sagemaker.Client, name strin
 	}
 
 	if output == nil || output.Workforce == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workforce, nil

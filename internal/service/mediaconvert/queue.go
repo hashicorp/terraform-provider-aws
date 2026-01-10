@@ -237,7 +237,7 @@ func findQueueByName(ctx context.Context, conn *mediaconvert.Client, name string
 	}
 
 	if output == nil || output.Queue == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Queue, nil

@@ -400,7 +400,7 @@ func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*a
 	}
 
 	if output == nil || output.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Pipeline, nil

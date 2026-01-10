@@ -464,7 +464,7 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -795,7 +795,7 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

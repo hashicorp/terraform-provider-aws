@@ -157,7 +157,7 @@ func findSourceCredentials(ctx context.Context, conn *codebuild.Client, input *c
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.SourceCredentialsInfos {

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -145,9 +144,8 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 	return output, nil
 }
 
-func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
+func statusCertificate(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
@@ -167,10 +165,10 @@ func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkret
 }
 
 func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateStatusPendingValidation),
 		Target:  enum.Slice(types.CertificateStatusIssued),
-		Refresh: statusCertificate(ctx, conn, arn),
+		Refresh: statusCertificate(conn, arn),
 		Timeout: timeout,
 	}
 

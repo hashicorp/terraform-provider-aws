@@ -294,7 +294,7 @@ func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerato
 	}
 
 	if output == nil || output.CrossAccountAttachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CrossAccountAttachment, nil

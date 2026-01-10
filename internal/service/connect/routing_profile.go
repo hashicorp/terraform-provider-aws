@@ -438,7 +438,7 @@ func findRoutingProfile(ctx context.Context, conn *connect.Client, input *connec
 	}
 
 	if output == nil || output.RoutingProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoutingProfile, nil

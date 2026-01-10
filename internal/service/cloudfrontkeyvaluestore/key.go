@@ -278,7 +278,7 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	}
 
 	if output == nil || output.Key == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -303,7 +303,7 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	}
 
 	if output == nil || output.ETag == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ETag, nil
