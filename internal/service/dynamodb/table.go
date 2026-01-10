@@ -2132,10 +2132,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
 
-			recreateAttributesChanged, err := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
-			if err != nil {
-				return ops, err
-			}
+			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
 
 			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
 
@@ -2215,7 +2212,7 @@ func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
 	return oldNkaExists != newNkaExists
 }
 
-func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) (bool, error) {
+func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 	oldAttributes := stripGSIUpdatableAttributes(oldMap)
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
@@ -2227,7 +2224,7 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) (bool, e
 		delete(newAttributes, "key_schema")
 	}
 
-	return !reflect.DeepEqual(oldAttributes, newAttributes), nil
+	return !reflect.DeepEqual(oldAttributes, newAttributes)
 }
 
 func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) error {
@@ -3399,7 +3396,7 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 		))
 	} else if !hashKeyIsZero && !keySchemaIsZero {
 		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
-			gsiPath, 2, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"),
+			gsiPath, 2, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"), //nolint:mnd
 		))
 	}
 
@@ -3608,10 +3605,9 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 				if p.IsNull() && !s.IsNull() {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
-				} else {
-					if !ctyValueLegacyEquals(s, p) {
-						return nil
-					}
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
 				}
 
 			case "key_schema":
@@ -3619,10 +3615,9 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
-				} else {
-					if !ctyValueLegacyEquals(s, p) {
-						return nil
-					}
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
 				}
 
 			default:
