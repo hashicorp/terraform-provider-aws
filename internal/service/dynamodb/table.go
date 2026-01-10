@@ -3190,10 +3190,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	if planRaw.IsKnown() && !planRaw.IsNull() {
 		planGSI := planRaw.GetAttr("global_secondary_index")
 		if planGSI.IsKnown() && !planGSI.IsNull() {
-			it := planGSI.ElementIterator()
-			for it.Next() {
-				_, v := it.Element()
-
+			for v := range tfcty.ValueElementValues(planGSI) {
 				hashKey := v.GetAttr("hash_key")
 				if hashKey.IsKnown() && !hashKey.IsNull() {
 					indexedAttributes[hashKey.AsString()] = true
@@ -3596,12 +3593,10 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 	return diff.Clear("global_secondary_index")
 }
 
-func collectGSI(v cty.Value) map[string]cty.Value {
-	result := make(map[string]cty.Value, v.LengthInt())
-	if v.IsKnown() && !v.IsNull() {
-		it := v.ElementIterator()
-		for it.Next() {
-			_, v := it.Element()
+func collectGSI(gsi cty.Value) map[string]cty.Value {
+	result := make(map[string]cty.Value, gsi.LengthInt())
+	if gsi.IsKnown() && !gsi.IsNull() {
+		for v := range tfcty.ValueElementValues(gsi) {
 			name := v.GetAttr(names.AttrName)
 			result[name.AsString()] = v
 		}
