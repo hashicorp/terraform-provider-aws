@@ -3571,23 +3571,12 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 		return nil
 	}
 
-	configRaw := diff.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
-	}
-	configGSI := configRaw.GetAttr("global_secondary_index")
-	config := collectGSI(configGSI)
-	if len(config) > 0 {
-	}
-
 	stateRaw := diff.GetRawState()
 	if !stateRaw.IsKnown() || stateRaw.IsNull() {
 		return nil
 	}
 	stateGSI := stateRaw.GetAttr("global_secondary_index")
 	state := collectGSI(stateGSI)
-	if len(state) > 0 {
-	}
 
 	planRaw := diff.GetRawPlan()
 	if !planRaw.IsKnown() || planRaw.IsNull() {
@@ -3595,8 +3584,6 @@ func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDi
 	}
 	planGSI := planRaw.GetAttr("global_secondary_index")
 	plan := collectGSI(planGSI)
-	if len(plan) > 0 {
-	}
 
 	// Adding or removing GSIs
 	if len(plan) != len(state) {
