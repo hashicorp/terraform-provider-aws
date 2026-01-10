@@ -306,7 +306,7 @@ func flattenRoutingModeValues(t []awstypes.RoutingMode) []string {
 	return out
 }
 
-func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
+func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDomainName(ctx, conn, name)
 

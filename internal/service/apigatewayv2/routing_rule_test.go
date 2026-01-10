@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,7 +132,7 @@ func TestAccAPIGatewayV2RoutingRule_disappears(t *testing.T) {
 				Config: testAccRoutingRuleConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceRoutingRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigatewayv2.ResourceRoutingRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,7 +150,7 @@ func testAccCheckRoutingRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tfapigatewayv2.FindRoutingRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {

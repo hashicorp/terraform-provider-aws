@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -242,7 +243,7 @@ func (r *resourceRoutingRule) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	out, err := findRoutingRuleByARN(ctx, conn, state.ARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -366,7 +367,7 @@ func findRoutingRuleByARN(ctx context.Context, conn *apigatewayv2.Client, id str
 	out, err := conn.GetRoutingRule(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, tfresource.NewEmptyResultError(&input)
+			return nil, tfresource.NewEmptyResultError()
 		}
 		return nil, err
 	}
