@@ -93,7 +93,6 @@ func (r *resourceTenantResourceAssociation) Create(ctx context.Context, req reso
 
 	out, err := conn.CreateTenantResourceAssociation(ctx, &input)
 	if err != nil {
-
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TenantName.String())
 		return
 	}
@@ -113,7 +112,6 @@ func (r *resourceTenantResourceAssociation) Create(ctx context.Context, req reso
 }
 
 func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().SESV2Client(ctx)
 
 	var state resourceTenantResourceAssociationModel
@@ -143,7 +141,6 @@ func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resour
 }
 
 func (r *resourceTenantResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().SESV2Client(ctx)
 
 	var state resourceTenantResourceAssociationModel
@@ -229,39 +226,6 @@ type resourceTenantResourceAssociationModel struct {
 	ResourceArn types.String `tfsdk:"resource_arn"`
 	ID          types.String `tfsdk:"id"`
 	TenantName  types.String `tfsdk:"tenant_name"`
-}
-
-func sweepTenantResourceAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sesv2.ListResourceTenantsInput{}
-	conn := client.SESV2Client(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := sesv2.NewListResourceTenantsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.ResourceTenants {
-			sweepResources = append(
-				sweepResources,
-				sweepfw.NewSweepResource(
-					newResourceTenantResourceAssociation,
-					client,
-					sweepfw.NewAttribute(
-						names.AttrID,
-						createID(
-							aws.ToString(v.TenantName),
-							aws.ToString(v.ResourceArn),
-						),
-					),
-				),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
 
 func createID(tenantName, resourceARN string) string {
