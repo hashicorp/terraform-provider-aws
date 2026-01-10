@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -105,17 +106,22 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 			"kms_key_identifier": schema.StringAttribute{
 				Description: "Specifies a KMS key to use to encrypt data in the new graph.  Value must be ARN of KMS Key.",
 				Optional:    true,
-				Computed:    true, //value will default to AWS_OWNED_KEY if no KMS key ARN is specified
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"provisioned_memory": schema.Int32Attribute{
-				Description: "The provisioned memory-optimized Neptune Capacity Units (m-NCUs) to use for the graph.",
-				Required:    true,
+				Description: "The provisioned memory-optimized Neptune Capacity Units (m-NCUs) to use for the graph. Required when max_provisioned_memory and min_provisioned_memory are not specified.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Int32{
 					int32validator.OneOf(8, 16, 32, 64, 128, 256, 384, 512, 768, 1024, 2048, 3072, 4096),
+					int32validator.ConflictsWith(path.MatchRoot("import_task")),
 				},
 			},
 			"public_connectivity": schema.BoolAttribute{
@@ -152,6 +158,128 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 				Update: true,
 				Delete: true,
 			}),
+			"import_task": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[importTaskModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: "Configuration for importing data into the graph during creation. Forces replacement if changed.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"source": schema.StringAttribute{
+							Description: "URL identifying the location of data to import (S3 path, Neptune endpoint, or snapshot).",
+							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"role_arn": schema.StringAttribute{
+							Description: "ARN of the IAM role that allows access to the data to be imported.",
+							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(
+									regexache.MustCompile(`^arn:aws[^:]*:iam::\d{12}:(role|role/service-role)(/[\w+=,.@-]+)+$`),
+									"must be a valid IAM role ARN",
+								),
+							},
+						},
+						"format": schema.StringAttribute{
+							Description: `Specifies the format of S3 data to be imported. Valid values are CSV, PARQUET, OPEN_CYPHER, or NTRIPLES.`,
+							Optional:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.OneOf("CSV", "PARQUET", "OPEN_CYPHER", "NTRIPLES"),
+							},
+						},
+						"fail_on_error": schema.BoolAttribute{
+							Description: "If true, task halts on import error. If false, skips problem data and continues.",
+							Optional:    true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
+						},
+						"max_provisioned_memory": schema.Int32Attribute{
+							Description: "Maximum m-NCUs for the import task. Default: 1024.",
+							Optional:    true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+							Validators: []validator.Int32{
+								int32validator.OneOf(8, 16, 32, 64, 128, 256, 384, 512, 768, 1024, 2048, 3072, 4096),
+							},
+						},
+						"min_provisioned_memory": schema.Int32Attribute{
+							Description: "Minimum m-NCUs for the import task. Default: 16",
+							Optional:    true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+							Validators: []validator.Int32{
+								int32validator.OneOf(8, 16, 32, 64, 128, 256, 384, 512, 768, 1024, 2048, 3072, 4096),
+							},
+						},
+						"blank_node_handling": schema.StringAttribute{
+							Description: `The method to handle blank nodes in the dataset. Currently, only convertToIri is supported.`,
+							Optional:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.OneOf("convertToIri"),
+							},
+						},
+						"parquet_type": schema.StringAttribute{
+							Description: "Parquet type for import processing.",
+							Optional:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.OneOf("COLUMNAR"),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"import_options": schema.SingleNestedBlock{
+							Description: "Options for controlling the import process.",
+							Blocks: map[string]schema.Block{
+								"neptune": schema.SingleNestedBlock{
+									Description: "Options for importing data from a Neptune database.",
+									Attributes: map[string]schema.Attribute{
+										"s3_export_path": schema.StringAttribute{
+											Description: "The path to an S3 bucket from which to import data.",
+											Optional:    true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 1024),
+											},
+										},
+										"s3_export_kms_key_id": schema.StringAttribute{
+											Description: "The KMS key to use to encrypt data in the S3 bucket where the graph data is exported.",
+											Optional:    true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 1024),
+											},
+										},
+										"preserve_default_vertex_labels": schema.BoolAttribute{
+											Description: "Whether to preserve default vertex labels.",
+											Optional:    true,
+										},
+										"preserve_edge_ids": schema.BoolAttribute{
+											Description: "Whether to preserve edge IDs as properties.",
+											Optional:    true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"vector_search_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorSearchConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -186,49 +314,124 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
-	var input neptunegraph.CreateGraphInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	// Generate graph name
+	graphName := create.NewNameGenerator(
+		create.WithConfiguredName(data.Name.ValueString()),
+		create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+
+	// Determine whether to use CreateGraphUsingImportTask or CreateGraph API
+	if !data.ImportTask.IsNull() && !data.ImportTask.IsUnknown() {
+
+		var importInput neptunegraph.CreateGraphUsingImportTaskInput
+
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &importInput)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		var importTaskData []importTaskModel
+		response.Diagnostics.Append(data.ImportTask.ElementsAs(ctx, &importTaskData, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if len(importTaskData) > 0 {
+			task := importTaskData[0]
+
+			taskImportOptions := task.ImportOptions
+			task.ImportOptions = fwtypes.NewObjectValueOfNull[importOptionsModel](ctx)
+
+			response.Diagnostics.Append(fwflex.Expand(ctx, task, &importInput)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if !taskImportOptions.IsNull() && !taskImportOptions.IsUnknown() {
+				var importOptionsData importOptionsModel
+				response.Diagnostics.Append(taskImportOptions.As(ctx, &importOptionsData, basetypes.ObjectAsOptions{})...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+
+				if !importOptionsData.Neptune.IsNull() {
+					var neptuneOptionsData neptuneImportOptionsModel
+					response.Diagnostics.Append(importOptionsData.Neptune.As(ctx, &neptuneOptionsData, basetypes.ObjectAsOptions{})...)
+					if response.Diagnostics.HasError() {
+						return
+					}
+
+					neptuneOpts := &awstypes.NeptuneImportOptions{}
+					response.Diagnostics.Append(fwflex.Expand(ctx, neptuneOptionsData, neptuneOpts)...)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					importInput.ImportOptions = &awstypes.ImportOptionsMemberNeptune{
+						Value: *neptuneOpts,
+					}
+				}
+			}
+		}
+
+		importInput.GraphName = aws.String(graphName)
+		importInput.Tags = getTagsIn(ctx)
+
+		output, err := conn.CreateGraphUsingImportTask(ctx, &importInput)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("creating Neptune Graph with import task (%s)", graphName), err.Error())
+			return
+		}
+
+		data.ID = fwflex.StringToFramework(ctx, output.GraphId)
+
+		_, err = waitGraphImportTaskCompleted(ctx, conn, aws.ToString(output.TaskId), r.CreateTimeout(ctx, data.Timeouts))
+		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph import task (%s) completion", data.ID.ValueString()), err.Error())
+			return
+		}
+
+		graph, err := findGraphByID(ctx, conn, data.ID.ValueString())
+		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+			response.Diagnostics.AddError(fmt.Sprintf("reading Neptune Graph (%s) after import", data.ID.ValueString()), err.Error())
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data)...)
+	} else {
+		// Use existing CreateGraph API
+		var input neptunegraph.CreateGraphInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.GraphName = aws.String(graphName)
+		input.Tags = getTagsIn(ctx)
+
+		output, err := conn.CreateGraph(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("creating Neptune Graph (%s)", graphName), err.Error())
+			return
+		}
+
+		data.ID = fwflex.StringToFramework(ctx, output.Id)
+
+		graph, err := waitGraphCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph (%s) create", data.ID.ValueString()), err.Error())
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data)...)
+	}
+
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Additional fields.
-	// NeptuneGraph Sdk GetGraphOutput param for Name differs from CreateGraphInput param as GraphName
-	input.GraphName = aws.String(
-		create.NewNameGenerator(
-			create.WithConfiguredName(data.Name.ValueString()),
-			create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
-			create.WithDefaultPrefix("tf-"),
-		).Generate(),
-	)
-	input.Tags = getTagsIn(ctx)
-
-	output, err := conn.CreateGraph(ctx, &input)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Neptune Graph Graph (%s)", aws.ToString(input.GraphName)), err.Error())
-
-		return
-	}
-
-	// Set values for unknowns.
-	data.ID = fwflex.StringToFramework(ctx, output.Id)
-
-	graph, err := waitGraphCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph Graph (%s) create", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -256,7 +459,6 @@ func (r *graphResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -320,8 +522,6 @@ func (r *graphResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().NeptuneGraphClient(ctx)
 
-	//SkipSnapshot is hardcoded here as this is the same behavior currently supported
-	//in AWS CloudFormation.
 	input := neptunegraph.DeleteGraphInput{
 		GraphIdentifier: data.ID.ValueStringPointer(),
 		SkipSnapshot:    aws.Bool(true),
@@ -335,13 +535,11 @@ func (r *graphResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Neptune Graph Graph (%s)", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
 	if _, err := waitGraphDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Neptune Graph Graph (%s) delete", data.ID.ValueString()), err.Error())
-
 		return
 	}
 }
@@ -403,7 +601,65 @@ func waitGraphCreated(ctx context.Context, conn *neptunegraph.Client, id string,
 
 	if output, ok := outputRaw.(*neptunegraph.GetGraphOutput); ok {
 		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		return output, err
+	}
 
+	return nil, err
+}
+
+func findImportTaskByID(ctx context.Context, conn *neptunegraph.Client, taskID string) (*neptunegraph.GetImportTaskOutput, error) {
+	input := &neptunegraph.GetImportTaskInput{
+		TaskIdentifier: aws.String(taskID),
+	}
+
+	output, err := conn.GetImportTask(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusImportTask(conn *neptunegraph.Client, taskID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findImportTaskByID(ctx, conn, taskID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitGraphImportTaskCompleted(ctx context.Context, conn *neptunegraph.Client, taskID string, timeout time.Duration) (*neptunegraph.GetImportTaskOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ImportTaskStatusInitializing, awstypes.ImportTaskStatusImporting, awstypes.ImportTaskStatusExporting,
+			awstypes.ImportTaskStatusAnalyzingData, awstypes.ImportTaskStatusReprovisioning),
+		Target:  enum.Slice(awstypes.ImportTaskStatusSucceeded),
+		Refresh: statusImportTask(conn, taskID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptunegraph.GetImportTaskOutput); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		return output, err
 	}
 
@@ -469,6 +725,30 @@ type graphResourceModel struct {
 	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
 	VectorSearchConfiguration fwtypes.ListNestedObjectValueOf[vectorSearchConfigurationModel] `tfsdk:"vector_search_configuration"`
+	ImportTask                fwtypes.ListNestedObjectValueOf[importTaskModel]                `tfsdk:"import_task"`
+}
+
+type importTaskModel struct {
+	Source               types.String                              `tfsdk:"source"`
+	RoleArn              types.String                              `tfsdk:"role_arn"`
+	Format               types.String                              `tfsdk:"format"`
+	FailOnError          types.Bool                                `tfsdk:"fail_on_error"`
+	MaxProvisionedMemory types.Int32                               `tfsdk:"max_provisioned_memory"`
+	MinProvisionedMemory types.Int32                               `tfsdk:"min_provisioned_memory"`
+	BlankNodeHandling    types.String                              `tfsdk:"blank_node_handling"`
+	ParquetType          types.String                              `tfsdk:"parquet_type"`
+	ImportOptions        fwtypes.ObjectValueOf[importOptionsModel] `tfsdk:"import_options"`
+}
+
+type importOptionsModel struct {
+	Neptune fwtypes.ObjectValueOf[neptuneImportOptionsModel] `tfsdk:"neptune"`
+}
+
+type neptuneImportOptionsModel struct {
+	S3ExportPath                types.String `tfsdk:"s3_export_path"`
+	S3ExportKmsKeyId            types.String `tfsdk:"s3_export_kms_key_id"`
+	PreserveDefaultVertexLabels types.Bool   `tfsdk:"preserve_default_vertex_labels"`
+	PreserveEdgeIds             types.Bool   `tfsdk:"preserve_edge_ids"`
 }
 
 type vectorSearchConfigurationModel struct {
