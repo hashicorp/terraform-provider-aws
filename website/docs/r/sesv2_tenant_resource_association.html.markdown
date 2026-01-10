@@ -38,6 +38,9 @@ The following arguments are required:
 * `tenant_name` - (Required) Name of SES Tenant.
 * `resource_arn` - (Required) ARN of the SES resource to associate with the tenant.
 
+The following arguments are optional:
+* `region` - (Optional) AWS region for SESv2 operations. If not specified, the default provider region is used.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

@@ -180,12 +180,7 @@ func (r *resourceTenantResourceAssociation) ImportState(ctx context.Context, req
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findTenantResourceAssociationByID(
-	ctx context.Context,
-	conn *sesv2.Client,
-	resourceID string,
-) (*awstypes.TenantResource, error) {
-
+func findTenantResourceAssociationByID(ctx context.Context, conn *sesv2.Client, resourceID string) (*awstypes.TenantResource, error) {
 	parts := strings.SplitN(resourceID, "|", 2)
 	if len(parts) != 2 {
 		return nil, smarterr.NewError(
