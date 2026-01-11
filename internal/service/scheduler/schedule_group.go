@@ -5,14 +5,13 @@ package scheduler
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_scheduler_schedule_group", name="Schedule Group")
 // @Tags(identifierAttribute="arn")
-func ResourceScheduleGroup() *schema.Resource {
+func resourceScheduleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleGroupCreate,
 		ReadWithoutTimeout:   resourceScheduleGroupRead,
@@ -89,34 +90,26 @@ func ResourceScheduleGroup() *schema.Resource {
 	}
 }
 
-const (
-	ResNameScheduleGroup = "Schedule Group"
-)
-
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-
-	in := &scheduler.CreateScheduleGroupInput{
+	in := scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateScheduleGroup(ctx, in)
-	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, err)
-	}
+	_, err := conn.CreateScheduleGroup(ctx, &in)
 
-	if out == nil || out.ScheduleGroupArn == nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, errors.New("empty output"))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Scheduler Schedule Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitScheduleGroupActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionWaitingForCreation, ResNameScheduleGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Scheduler Schedule Group (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceScheduleGroupRead(ctx, d, meta)...)
@@ -135,7 +128,7 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameScheduleGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Scheduler Schedule Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -157,50 +150,53 @@ func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup %s", d.Id())
-
-	_, err := conn.DeleteScheduleGroup(ctx, &scheduler.DeleteScheduleGroupInput{
+	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup: %s", d.Id())
+	in := scheduler.DeleteScheduleGroupInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteScheduleGroup(ctx, &in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameScheduleGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Scheduler Schedule Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitScheduleGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionWaitingForDeletion, ResNameScheduleGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Scheduler Schedule Group (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
 func findScheduleGroupByName(ctx context.Context, conn *scheduler.Client, name string) (*scheduler.GetScheduleGroupOutput, error) {
-	in := &scheduler.GetScheduleGroupInput{
+	in := scheduler.GetScheduleGroupInput{
 		Name: aws.String(name),
 	}
-	out, err := conn.GetScheduleGroup(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findScheduleGroup(ctx, conn, &in)
+}
+
+func findScheduleGroup(ctx context.Context, conn *scheduler.Client, input *scheduler.GetScheduleGroupInput) (*scheduler.GetScheduleGroupOutput, error) {
+	output, err := conn.GetScheduleGroup(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Arn == nil {
+	if output == nil || output.Arn == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }
 
 const (

@@ -5,6 +5,9 @@ package scheduler
 
 // Exports for use in tests only.
 var (
+	ResourceSchedule      = resourceSchedule
+	ResourceScheduleGroup = resourceScheduleGroup
+
 	FindScheduleByTwoPartKey = findScheduleByTwoPartKey
-	ResourceSchedule         = resourceSchedule
+	FindScheduleGroupByName  = findScheduleGroupByName
 )

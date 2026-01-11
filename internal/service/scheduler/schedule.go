@@ -689,6 +689,15 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	return out, nil
 }
 
+const scheduleResourceIDSeparator = "/"
+
+func scheduleCreateResourceID(groupName, scheduleName string) string {
+	parts := []string{groupName, scheduleName}
+	id := strings.Join(parts, scheduleResourceIDSeparator)
+
+	return id
+}
+
 // ResourceScheduleIDFromARN constructs a string of the form "group_name/schedule_name"
 // from the given Schedule ARN.
 func ResourceScheduleIDFromARN(arn string) (id string, err error) {
