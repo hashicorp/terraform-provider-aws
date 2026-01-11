@@ -144,7 +144,7 @@ func findSCRAMSecretAssociation(ctx context.Context, conn *kafka.Client, cluster
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

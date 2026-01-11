@@ -521,7 +521,7 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	}
 
 	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Scraper, nil
@@ -554,7 +554,7 @@ func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -573,7 +573,7 @@ func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -593,7 +593,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

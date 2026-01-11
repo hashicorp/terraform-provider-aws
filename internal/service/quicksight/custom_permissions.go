@@ -266,7 +266,7 @@ func findCustomPermissions(ctx context.Context, conn *quicksight.Client, input *
 	}
 
 	if output == nil || output.CustomPermissions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CustomPermissions, nil

@@ -106,5 +106,5 @@ func findAddonVersionByTwoPartKey(ctx context.Context, conn *eks.Client, addonNa
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }

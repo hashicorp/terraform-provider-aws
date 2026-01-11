@@ -198,7 +198,7 @@ func findByteMatchSetByID(ctx context.Context, conn *wafregional.Client, id stri
 	}
 
 	if output == nil || output.ByteMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ByteMatchSet, nil

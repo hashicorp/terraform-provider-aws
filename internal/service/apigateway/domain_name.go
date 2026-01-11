@@ -577,7 +577,7 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -612,7 +612,7 @@ func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainN
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DomainName); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
 
 		return err
 	}

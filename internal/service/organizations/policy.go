@@ -243,7 +243,7 @@ func findPolicy(ctx context.Context, conn *organizations.Client, input *organiza
 	}
 
 	if output == nil || output.Policy == nil || output.Policy.PolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

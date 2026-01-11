@@ -231,7 +231,7 @@ func findTargetAccountConfigurationByID(ctx context.Context, conn *fis.Client, a
 	}
 
 	if out == nil || out.TargetAccountConfiguration == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.TargetAccountConfiguration, nil

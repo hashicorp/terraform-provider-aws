@@ -144,7 +144,7 @@ func findSinkPolicy(ctx context.Context, conn *oam.Client, input *oam.GetSinkPol
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

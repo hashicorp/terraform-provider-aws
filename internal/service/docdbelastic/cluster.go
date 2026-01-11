@@ -483,7 +483,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	}
 
 	if out == nil || out.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Cluster, nil

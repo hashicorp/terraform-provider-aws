@@ -73,7 +73,7 @@ func findSigningCertificateByID(ctx context.Context, conn *cognitoidentityprovid
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

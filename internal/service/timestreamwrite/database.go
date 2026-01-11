@@ -181,7 +181,7 @@ func findDatabaseByName(ctx context.Context, conn *timestreamwrite.Client, name 
 	}
 
 	if output == nil || output.Database == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Database, nil

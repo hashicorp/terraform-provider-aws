@@ -523,7 +523,7 @@ func findUsagePlanByID(ctx context.Context, conn *apigateway.Client, id string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

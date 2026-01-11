@@ -468,7 +468,7 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))

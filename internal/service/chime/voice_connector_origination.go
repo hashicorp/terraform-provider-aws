@@ -240,7 +240,7 @@ func findVoiceConnectorOriginationByID(ctx context.Context, conn *chimesdkvoice.
 	}
 
 	if resp == nil || resp.Origination == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

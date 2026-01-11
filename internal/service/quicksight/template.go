@@ -339,7 +339,7 @@ func findTemplate(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	}
 
 	if output == nil || output.Template == nil || output.Template.Version == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Template, nil
@@ -370,7 +370,7 @@ func findTemplateDefinition(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil || output.Definition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Definition, nil
@@ -400,7 +400,7 @@ func findTemplatePermissions(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -434,7 +434,7 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Template); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, templateError(apiErrors))
+			retry.SetLastError(err, templateError(apiErrors))
 		}
 
 		return output, err
@@ -455,7 +455,7 @@ func waitTemplateUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Template); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, templateError(apiErrors))
+			retry.SetLastError(err, templateError(apiErrors))
 		}
 
 		return output, err

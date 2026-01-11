@@ -177,7 +177,7 @@ func findContainerByName(ctx context.Context, conn *mediastore.Client, id string
 	}
 
 	if output == nil || output.Container == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Container, nil

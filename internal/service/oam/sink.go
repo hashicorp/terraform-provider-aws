@@ -156,7 +156,7 @@ func findSink(ctx context.Context, conn *oam.Client, input *oam.GetSinkInput) (*
 	}
 
 	if output == nil || output.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

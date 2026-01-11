@@ -119,7 +119,7 @@ func findVirtualInterfaces(ctx context.Context, conn *directconnect.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.VirtualInterfaces, tfslices.PredicateValue(filter)), nil

@@ -313,7 +313,7 @@ func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name stri
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil
@@ -338,7 +338,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	}
 
 	if output == nil || output.GroupConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GroupConfiguration, nil
@@ -372,7 +372,7 @@ func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.Cli
 
 	if output, ok := outputRaw.(*types.GroupConfiguration); ok {
 		if status := output.Status; status == types.GroupConfigurationStatusUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

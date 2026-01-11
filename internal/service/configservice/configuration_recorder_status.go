@@ -156,7 +156,7 @@ func findConfigurationRecorderStatuses(ctx context.Context, conn *configservice.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConfigurationRecordersStatus, nil

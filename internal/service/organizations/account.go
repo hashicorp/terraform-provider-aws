@@ -403,7 +403,7 @@ func findAccount(ctx context.Context, conn *organizations.Client, input *organiz
 	}
 
 	if output == nil || output.Account == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Account, nil
@@ -475,7 +475,7 @@ func findCreateAccountStatus(ctx context.Context, conn *organizations.Client, in
 	}
 
 	if output == nil || output.CreateAccountStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CreateAccountStatus, nil
@@ -510,7 +510,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.CreateAccountStatus); ok {
 		if state := output.State; state == awstypes.CreateAccountStateFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err

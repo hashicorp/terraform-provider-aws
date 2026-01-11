@@ -256,7 +256,7 @@ func findExtension(ctx context.Context, conn *appconfig.Client, input *appconfig
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

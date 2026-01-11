@@ -233,7 +233,7 @@ func findHubByName(ctx context.Context, conn *sagemaker.Client, name string) (*s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

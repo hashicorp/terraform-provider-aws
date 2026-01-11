@@ -532,7 +532,7 @@ func findResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.Client,
 	}
 
 	if output == nil || output.ResponseHeadersPolicy == nil || output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

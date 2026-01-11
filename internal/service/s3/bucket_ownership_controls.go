@@ -206,7 +206,7 @@ func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) 
 	}
 
 	if output == nil || output.OwnershipControls == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OwnershipControls, nil

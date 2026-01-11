@@ -266,7 +266,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Endpoint, nil

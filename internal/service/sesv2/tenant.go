@@ -171,7 +171,7 @@ func findTenant(ctx context.Context, conn *sesv2.Client, input *sesv2.GetTenantI
 	}
 
 	if out == nil || out.Tenant == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Tenant, nil

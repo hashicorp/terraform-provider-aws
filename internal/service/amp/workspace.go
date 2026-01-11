@@ -309,7 +309,7 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	}
 
 	if output == nil || output.Workspace == nil || output.Workspace.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil
@@ -410,7 +410,7 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	}
 
 	if output == nil || output.LoggingConfiguration == nil || output.LoggingConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingConfiguration, nil
@@ -447,7 +447,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -471,7 +471,7 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err

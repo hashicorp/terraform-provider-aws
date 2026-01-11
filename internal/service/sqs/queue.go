@@ -476,7 +476,7 @@ func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url s
 		return &v, nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[types.QueueAttributeName]string, error) {
@@ -494,7 +494,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfmaps.ApplyToAllKeys(output.Attributes, func(v string) types.QueueAttributeName {

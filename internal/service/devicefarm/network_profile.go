@@ -320,7 +320,7 @@ func findNetworkProfileByARN(ctx context.Context, conn *devicefarm.Client, arn s
 	}
 
 	if output == nil || output.NetworkProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NetworkProfile, nil

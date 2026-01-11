@@ -202,7 +202,7 @@ func findKxUserByID(ctx context.Context, conn *finspace.Client, id string) (*fin
 	}
 
 	if out == nil || out.UserArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

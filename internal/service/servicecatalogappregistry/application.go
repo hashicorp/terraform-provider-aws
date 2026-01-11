@@ -221,7 +221,7 @@ func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Cl
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

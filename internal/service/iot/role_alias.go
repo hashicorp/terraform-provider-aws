@@ -179,7 +179,7 @@ func findRoleAliasByID(ctx context.Context, conn *iot.Client, alias string) (*aw
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoleAliasDescription, nil

@@ -284,7 +284,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Lags, tfslices.PredicateValue(filter)), nil

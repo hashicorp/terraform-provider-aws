@@ -340,7 +340,7 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 	}
 
 	if output == nil || output.ChannelNamespace == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ChannelNamespace, nil

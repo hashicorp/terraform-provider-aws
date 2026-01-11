@@ -248,7 +248,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -270,7 +270,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

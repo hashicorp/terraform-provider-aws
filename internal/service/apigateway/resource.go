@@ -199,7 +199,7 @@ func findResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, reso
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -260,7 +260,7 @@ func findUser(ctx context.Context, conn *quicksight.Client, input *quicksight.De
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil

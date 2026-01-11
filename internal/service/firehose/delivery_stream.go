@@ -1854,7 +1854,7 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	}
 
 	if output == nil || output.DeliveryStreamDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamDescription, nil
@@ -1888,7 +1888,7 @@ func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name 
 
 	if output, ok := outputRaw.(*types.DeliveryStreamDescription); ok {
 		if status, failureDescription := output.DeliveryStreamStatus, output.FailureDescription; status == types.DeliveryStreamStatusCreatingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1909,7 +1909,7 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name 
 
 	if output, ok := outputRaw.(*types.DeliveryStreamDescription); ok {
 		if status, failureDescription := output.DeliveryStreamStatus, output.FailureDescription; status == types.DeliveryStreamStatusDeletingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1925,7 +1925,7 @@ func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *
 	}
 
 	if output.DeliveryStreamEncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamEncryptionConfiguration, nil
@@ -1959,7 +1959,7 @@ func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Cli
 
 	if output, ok := outputRaw.(*types.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := output.Status, output.FailureDescription; status == types.DeliveryStreamEncryptionStatusEnablingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1980,7 +1980,7 @@ func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Cl
 
 	if output, ok := outputRaw.(*types.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := output.Status, output.FailureDescription; status == types.DeliveryStreamEncryptionStatusDisablingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err

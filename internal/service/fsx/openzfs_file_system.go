@@ -903,7 +903,7 @@ func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.Client, id string)
 	}
 
 	if output.OpenZFSConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

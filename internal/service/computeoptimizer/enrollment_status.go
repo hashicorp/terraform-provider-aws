@@ -193,7 +193,7 @@ func findEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -226,7 +226,7 @@ func waitEnrollmentStatusUpdated(ctx context.Context, conn *computeoptimizer.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*computeoptimizer.GetEnrollmentStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

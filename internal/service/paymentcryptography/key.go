@@ -499,7 +499,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	}
 
 	if out == nil || out.Key == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.

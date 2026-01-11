@@ -268,6 +268,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newResourceSecurityGroupRulesExclusive,
+			TypeName: "aws_vpc_security_group_rules_exclusive",
+			Name:     "Security Group Rules Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newSecurityGroupVPCAssociationResource,
 			TypeName: "aws_vpc_security_group_vpc_association",
 			Name:     "Security Group VPC Association",

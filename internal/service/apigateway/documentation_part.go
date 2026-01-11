@@ -221,7 +221,7 @@ func findDocumentationPartByTwoPartKey(ctx context.Context, conn *apigateway.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

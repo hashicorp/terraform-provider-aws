@@ -459,7 +459,7 @@ func findContainerRecipeByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	}
 
 	if output == nil || output.ContainerRecipe == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContainerRecipe, nil

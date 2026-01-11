@@ -294,7 +294,7 @@ func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name 
 	}
 
 	if output.Webhook == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Webhook, nil

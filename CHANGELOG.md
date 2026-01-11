@@ -1,3 +1,17 @@
+## 6.29.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_distribution: Fix `runtime error: invalid memory address or nil pointer dereference` panic when mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_cloudfront_distribution: Prevent mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
+* resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
+
 ## 6.28.0 (January 7, 2026)
 
 NOTES:

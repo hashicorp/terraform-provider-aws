@@ -177,7 +177,7 @@ func findDefaultPatchBaselineByOperatingSystem(ctx context.Context, conn *ssm.Cl
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

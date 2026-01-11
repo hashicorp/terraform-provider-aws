@@ -518,7 +518,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	}
 
 	if out == nil || out.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Policy, nil

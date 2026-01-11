@@ -176,7 +176,7 @@ func findApplication(ctx context.Context, conn *appconfig.Client, input *appconf
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

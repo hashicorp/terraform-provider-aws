@@ -309,7 +309,7 @@ func findVirtualRouter(ctx context.Context, conn *appmesh.Client, input *appmesh
 	}
 
 	if output == nil || output.VirtualRouter == nil || output.VirtualRouter.Metadata == nil || output.VirtualRouter.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualRouter, nil

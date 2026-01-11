@@ -45,20 +45,21 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, "AWS_OWNED_KMS_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, "AWS_OWNED_KMS_KEY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5439"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
@@ -1220,6 +1221,63 @@ func TestAccRedshiftCluster_passwordWriteOnly(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftCluster_port(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	const (
+		portInitial = "5431"
+		portUpdated = "8191"
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_port(rName, portInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, portInitial),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					names.AttrApplyImmediately,
+				},
+			},
+			{
+				Config: testAccClusterConfig_port(rName, portUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, portUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					names.AttrApplyImmediately,
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
@@ -1934,4 +1992,20 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot   = true
 }
 `, rName, username)
+}
+
+func testAccClusterConfig_port(rName, port string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+
+  port = %[2]s
+}
+`, rName, port)
 }

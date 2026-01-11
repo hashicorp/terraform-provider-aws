@@ -205,7 +205,7 @@ func findEnvironmentMembershipByTwoPartKey(ctx context.Context, conn *cloud9.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.Memberships)

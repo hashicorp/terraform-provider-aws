@@ -256,7 +256,7 @@ func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client
 	}
 
 	if out == nil || out.ProfilingGroup == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfilingGroup, nil

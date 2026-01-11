@@ -997,7 +997,7 @@ func findCluster(ctx context.Context, conn *eks.Client, input *eks.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
@@ -1069,7 +1069,7 @@ func findUpdate(ctx context.Context, conn *eks.Client, input *eks.DescribeUpdate
 	}
 
 	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Update, nil
@@ -1157,7 +1157,7 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err
