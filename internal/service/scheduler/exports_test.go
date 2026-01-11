@@ -11,6 +11,6 @@ var (
 	FindScheduleByTwoPartKey = findScheduleByTwoPartKey
 	FindScheduleGroupByName  = findScheduleGroupByName
 
-	ScheduleResourceIDFromARN = scheduleResourceIDFromARN
+	ScheduleResourceIDFromARN = scheduleResourceIDFromARN // nosemgrep:ci.scheduler-in-var-name
 	ScheduleParseResourceID   = scheduleParseResourceID
 )

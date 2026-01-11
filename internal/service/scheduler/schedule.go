@@ -684,7 +684,7 @@ func findSchedule(ctx context.Context, conn *scheduler.Client, input *scheduler.
 	return output, nil
 }
 
-const scheduleResourceIDSeparator = "/"
+const scheduleResourceIDSeparator = "/" // nosemgrep:ci.scheduler-in-var-name,ci.scheduler-in-const-name
 
 func scheduleCreateResourceID(groupName, scheduleName string) string {
 	parts := []string{groupName, scheduleName}
@@ -695,7 +695,7 @@ func scheduleCreateResourceID(groupName, scheduleName string) string {
 
 // scheduleResourceIDFromARN constructs a string of the form "group_name/schedule_name"
 // from the given Schedule ARN.
-func scheduleResourceIDFromARN(s string) (id string, err error) {
+func scheduleResourceIDFromARN(s string) (id string, err error) { // nosemgrep:ci.scheduler-in-func-name
 	v, err := arn.Parse(s)
 	if err != nil {
 		return "", err
