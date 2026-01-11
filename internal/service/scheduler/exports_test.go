@@ -10,4 +10,7 @@ var (
 
 	FindScheduleByTwoPartKey = findScheduleByTwoPartKey
 	FindScheduleGroupByName  = findScheduleGroupByName
+
+	ScheduleResourceIDFromARN = scheduleResourceIDFromARN
+	ScheduleParseResourceID   = scheduleParseResourceID
 )

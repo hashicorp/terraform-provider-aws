@@ -15,17 +15,18 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -50,7 +51,7 @@ func resourceSchedule() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ActionAfterCompletion](),
+				ValidateDiagFunc: enum.Validate[awstypes.ActionAfterCompletion](),
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -80,7 +81,7 @@ func resourceSchedule() *schema.Resource {
 						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.FlexibleTimeWindowMode](),
+							ValidateDiagFunc: enum.Validate[awstypes.FlexibleTimeWindowMode](),
 						},
 					},
 				},
@@ -117,7 +118,7 @@ func resourceSchedule() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 64-sdkid.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
@@ -140,8 +141,8 @@ func resourceSchedule() *schema.Resource {
 			names.AttrState: {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          types.ScheduleStateEnabled,
-				ValidateDiagFunc: enum.Validate[types.ScheduleState](),
+				Default:          awstypes.ScheduleStateEnabled,
+				ValidateDiagFunc: enum.Validate[awstypes.ScheduleState](),
 			},
 			names.AttrTarget: {
 				Type:     schema.TypeList,
@@ -215,7 +216,7 @@ func resourceSchedule() *schema.Resource {
 									"launch_type": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.LaunchType](),
+										ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
 									},
 									names.AttrNetworkConfiguration: {
 										Type:     schema.TypeList,
@@ -256,7 +257,7 @@ func resourceSchedule() *schema.Resource {
 												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
+													ValidateDiagFunc: enum.Validate[awstypes.PlacementConstraintType](),
 												},
 											},
 										},
@@ -278,7 +279,7 @@ func resourceSchedule() *schema.Resource {
 												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
+													ValidateDiagFunc: enum.Validate[awstypes.PlacementStrategyType](),
 												},
 											},
 										},
@@ -290,7 +291,7 @@ func resourceSchedule() *schema.Resource {
 									names.AttrPropagateTags: {
 										Type:             schema.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.PropagateTags](),
+										ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
 									},
 									"reference_id": {
 										Type:     schema.TypeString,
@@ -434,23 +435,18 @@ func resourceSchedule() *schema.Resource {
 	}
 }
 
-const (
-	ResNameSchedule = "Schedule"
-)
-
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-
-	in := &scheduler.CreateScheduleInput{
+	in := scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 	}
 
 	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
-		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
+		in.ActionAfterCompletion = awstypes.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -484,7 +480,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if v, ok := d.Get(names.AttrState).(string); ok && v != "" {
-		in.State = types.ScheduleState(v)
+		in.State = awstypes.ScheduleState(v)
 	}
 
 	if v, ok := d.Get(names.AttrTarget).([]any); ok && len(v) > 0 {
@@ -492,15 +488,11 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func(ctx context.Context) (*scheduler.CreateScheduleOutput, error) {
-		return conn.CreateSchedule(ctx, in)
+		return conn.CreateSchedule(ctx, &in)
 	})
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, err)
-	}
-
-	if out == nil || out.ScheduleArn == nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, errors.New("empty output"))
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Scheduler Schedule (%s): %s", name, err)
 	}
 
 	// When the schedule is created without specifying a group, it is assigned
@@ -509,11 +501,9 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 	//
 	// To prevent having this implicit knowledge in the provider, derive the
 	// group name from the resource ARN.
-
-	id, err := ResourceScheduleIDFromARN(aws.ToString(out.ScheduleArn))
-
+	id, err := scheduleResourceIDFromARN(aws.ToString(out.ScheduleArn))
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, fmt.Errorf("invalid resource id: %w", err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(id)
@@ -525,10 +515,9 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
-
+	groupName, scheduleName, err := scheduleParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
@@ -540,40 +529,34 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Scheduler Schedule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("action_after_completion", out.ActionAfterCompletion)
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrDescription, out.Description)
-
 	if out.EndDate != nil {
 		d.Set("end_date", aws.ToTime(out.EndDate).Format(time.RFC3339))
 	} else {
 		d.Set("end_date", nil)
 	}
-
 	if err := d.Set("flexible_time_window", []any{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting flexible_time_window: %s", err)
 	}
-
 	d.Set(names.AttrGroupName, out.GroupName)
 	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set(names.AttrScheduleExpression, out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
-
 	if out.StartDate != nil {
 		d.Set("start_date", aws.ToTime(out.StartDate).Format(time.RFC3339))
 	} else {
 		d.Set("start_date", nil)
 	}
-
-	d.Set(names.AttrState, string(out.State))
-
+	d.Set(names.AttrState, out.State)
 	if err := d.Set(names.AttrTarget, []any{flattenTarget(ctx, out.Target)}); err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 
 	return diags
@@ -583,16 +566,21 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	in := &scheduler.UpdateScheduleInput{
+	groupName, scheduleName, err := scheduleParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	in := scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]any)[0].(map[string]any)),
-		GroupName:          aws.String(d.Get(names.AttrGroupName).(string)),
-		Name:               aws.String(d.Get(names.AttrName).(string)),
+		GroupName:          aws.String(groupName),
+		Name:               aws.String(scheduleName),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
 	}
 
 	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
-		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
+		in.ActionAfterCompletion = awstypes.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -618,17 +606,15 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if v, ok := d.Get(names.AttrState).(string); ok && v != "" {
-		in.State = types.ScheduleState(v)
+		in.State = awstypes.ScheduleState(v)
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
-
-	_, err := retryWhenIAMNotPropagated(ctx, func(ctx context.Context) (*scheduler.UpdateScheduleOutput, error) {
-		return conn.UpdateSchedule(ctx, in)
+	_, err = retryWhenIAMNotPropagated(ctx, func(ctx context.Context) (*scheduler.UpdateScheduleOutput, error) {
+		return conn.UpdateSchedule(ctx, &in)
 	})
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionUpdating, ResNameSchedule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Scheduler Schedule (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
@@ -638,43 +624,52 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
-
+	groupName, scheduleName, err := scheduleParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[INFO] Deleting EventBridge Scheduler Schedule %s", d.Id())
-
-	_, err = conn.DeleteSchedule(ctx, &scheduler.DeleteScheduleInput{
+	log.Printf("[INFO] Deleting EventBridge Scheduler Schedule: %s", d.Id())
+	in := scheduler.DeleteScheduleInput{
 		GroupName: aws.String(groupName),
 		Name:      aws.String(scheduleName),
-	})
+	}
+	_, err = conn.DeleteSchedule(ctx, &in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
-		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Scheduler Schedule (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)
+
+func retryWhenIAMNotPropagated[T any](ctx context.Context, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenIsAErrorMessageContains[T, *awstypes.ValidationException](ctx, iamPropagationTimeout, f, "The execution role you provide must allow AWS EventBridge Scheduler to assume the role.")
+}
+
 func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, groupName, scheduleName string) (*scheduler.GetScheduleOutput, error) {
-	in := &scheduler.GetScheduleInput{
+	in := scheduler.GetScheduleInput{
 		GroupName: aws.String(groupName),
 		Name:      aws.String(scheduleName),
 	}
 
-	out, err := conn.GetSchedule(ctx, in)
+	return findSchedule(ctx, conn, &in)
+}
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+func findSchedule(ctx context.Context, conn *scheduler.Client, input *scheduler.GetScheduleInput) (*scheduler.GetScheduleOutput, error) {
+	output, err := conn.GetSchedule(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -682,11 +677,11 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 		return nil, err
 	}
 
-	if out == nil || out.Arn == nil {
+	if output == nil || output.Arn == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }
 
 const scheduleResourceIDSeparator = "/"
@@ -698,28 +693,28 @@ func scheduleCreateResourceID(groupName, scheduleName string) string {
 	return id
 }
 
-// ResourceScheduleIDFromARN constructs a string of the form "group_name/schedule_name"
+// scheduleResourceIDFromARN constructs a string of the form "group_name/schedule_name"
 // from the given Schedule ARN.
-func ResourceScheduleIDFromARN(arn string) (id string, err error) {
-	parts := strings.Split(arn, "/")
+func scheduleResourceIDFromARN(s string) (id string, err error) {
+	v, err := arn.Parse(s)
+	if err != nil {
+		return "", err
+	}
 
+	parts := strings.Split(v.Resource, "/")
 	if len(parts) != 3 || parts[1] == "" || parts[2] == "" {
-		err = errors.New("expected an schedule arn")
+		err = errors.New("expected an schedule ARN")
 		return
 	}
 
-	groupName := parts[1]
-	scheduleName := parts[2]
-
-	return fmt.Sprintf("%s/%s", groupName, scheduleName), nil
+	return scheduleCreateResourceID(parts[1], parts[2]), nil
 }
 
-func ResourceScheduleParseID(id string) (groupName, scheduleName string, err error) {
-	parts := strings.Split(id, "/")
+func scheduleParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, scheduleResourceIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = errors.New("expected a resource id in the form: schedule-group-id/schedule-id")
-		return
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected schedule-group-name%[2]sschedule-name", id, scheduleResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
