@@ -1974,11 +1974,15 @@ func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[stri
 	tfMap := map[string]any{}
 
 	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []any{flattenSASL(v)}
+		if v := flattenSASL(v); v != nil {
+			tfMap["sasl"] = []any{v}
+		}
 	}
 
 	if v := apiObject.Tls; v != nil {
-		tfMap["tls"] = []any{flattenTLS(v)}
+		if v := flattenTLS(v); v != nil {
+			tfMap["tls"] = []any{v}
+		}
 	}
 
 	if v := apiObject.Unauthenticated; v != nil {
@@ -1987,7 +1991,11 @@ func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[stri
 		}
 	}
 
-	return tfMap
+	if len(tfMap) > 0 {
+		return tfMap
+	}
+
+	return nil
 }
 
 func flattenSASL(apiObject *types.Sasl) map[string]any {
@@ -2009,7 +2017,11 @@ func flattenSASL(apiObject *types.Sasl) map[string]any {
 		}
 	}
 
-	return tfMap
+	if len(tfMap) > 0 {
+		return tfMap
+	}
+
+	return nil
 }
 
 func flattenTLS(apiObject *types.Tls) map[string]any {
@@ -2023,7 +2035,11 @@ func flattenTLS(apiObject *types.Tls) map[string]any {
 		tfMap["certificate_authority_arns"] = v
 	}
 
-	return tfMap
+	if len(tfMap) > 0 {
+		return tfMap
+	}
+
+	return nil
 }
 
 func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]any {
