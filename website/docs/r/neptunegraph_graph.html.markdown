@@ -49,10 +49,10 @@ resource "aws_neptunegraph_graph" "example" {
   replica_count       = 1
 
   import_task {
-    source = "s3://example-bucket/prefix"
-    role_arn = "arn:aws:iam::123456789012:role/NeptuneGraphImportRole"
-    format = "CSV"
-    fail_on_error = false
+    source                 = "s3://example-bucket/prefix"
+    role_arn               = "arn:aws:iam::123456789012:role/NeptuneGraphImportRole"
+    format                 = "CSV"
+    fail_on_error          = false
     max_provisioned_memory = 32
     min_provisioned_memory = 16
   }
@@ -81,8 +81,8 @@ resource "aws_neptunegraph_graph" "example" {
 
     import_options {
       neptune {
-        s3_export_path       = "s3://example-export-bucket/export/"
-        s3_export_kms_key_id = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+        s3_export_path                 = "s3://example-export-bucket/export/"
+        s3_export_kms_key_id           = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
         preserve_default_vertex_labels = true
         preserve_edge_ids              = true
       }
