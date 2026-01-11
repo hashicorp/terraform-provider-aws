@@ -62,4 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-You cannot import DynamoDB table items.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table items using the `table_name|hash_key_name|hash_key_value[|range_key_value]`. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_table_item.example
+  id = "example-table|exampleHashKey|exampleHashValue"
+}
+```
+
+Using `terraform import`, import DynamoDB table items using the `table_name|hash_key_name|hash_key_value[|range_key_value]`. For example:
+
+```console
+% terraform import aws_dynamodb_table_item.example 'example-table|exampleHashKey|exampleHashValue'
+```
