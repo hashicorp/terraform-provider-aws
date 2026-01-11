@@ -15,12 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -175,4 +177,82 @@ func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func findScheduleGroupByName(ctx context.Context, conn *scheduler.Client, name string) (*scheduler.GetScheduleGroupOutput, error) {
+	in := &scheduler.GetScheduleGroupInput{
+		Name: aws.String(name),
+	}
+	out, err := conn.GetScheduleGroup(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.Arn == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return out, nil
+}
+
+const (
+	scheduleGroupStatusActive   = "ACTIVE"
+	scheduleGroupStatusDeleting = "DELETING"
+)
+
+func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findScheduleGroupByName(ctx, conn, name)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.State), nil
+	}
+}
+
+func waitScheduleGroupActive(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{scheduleGroupStatusActive},
+		Refresh:                   statusScheduleGroup(ctx, conn, name),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*scheduler.GetScheduleGroupOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitScheduleGroupDeleted(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{scheduleGroupStatusDeleting, scheduleGroupStatusActive},
+		Target:  []string{},
+		Refresh: statusScheduleGroup(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*scheduler.GetScheduleGroupOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
