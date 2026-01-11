@@ -645,7 +645,7 @@ func findImportTaskByID(ctx context.Context, conn *neptunegraph.Client, taskID s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -655,7 +655,7 @@ func statusImportTask(conn *neptunegraph.Client, taskID string) retry.StateRefre
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findImportTaskByID(ctx, conn, taskID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
