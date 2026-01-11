@@ -14,11 +14,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -199,14 +199,10 @@ func findScheduleGroup(ctx context.Context, conn *scheduler.Client, input *sched
 	return output, nil
 }
 
-const (
-	scheduleGroupStatusActive   = "ACTIVE"
-	scheduleGroupStatusDeleting = "DELETING"
-)
-
-func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScheduleGroup(conn *scheduler.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findScheduleGroupByName(ctx, conn, name)
+
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -220,12 +216,11 @@ func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name strin
 }
 
 func waitScheduleGroupActive(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{scheduleGroupStatusActive},
-		Refresh:                   statusScheduleGroup(ctx, conn, name),
+		Target:                    enum.Slice(awstypes.ScheduleGroupStateActive),
+		Refresh:                   statusScheduleGroup(conn, name),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -238,10 +233,10 @@ func waitScheduleGroupActive(ctx context.Context, conn *scheduler.Client, name s
 }
 
 func waitScheduleGroupDeleted(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{scheduleGroupStatusDeleting, scheduleGroupStatusActive},
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ScheduleGroupStateDeleting, awstypes.ScheduleGroupStateActive),
 		Target:  []string{},
-		Refresh: statusScheduleGroup(ctx, conn, name),
+		Refresh: statusScheduleGroup(conn, name),
 		Timeout: timeout,
 	}
 
