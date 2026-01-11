@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -166,14 +165,14 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 				Description: "Configuration for importing data into the graph during creation. Forces replacement if changed.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"source": schema.StringAttribute{
+						names.AttrSource: schema.StringAttribute{
 							Description: "URL identifying the location of data to import (S3 path, Neptune endpoint, or snapshot).",
 							Required:    true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							Description: "ARN of the IAM role that allows access to the data to be imported.",
 							Required:    true,
 							PlanModifiers: []planmodifier.String{
@@ -186,7 +185,7 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 								),
 							},
 						},
-						"format": schema.StringAttribute{
+						names.AttrFormat: schema.StringAttribute{
 							Description: `Specifies the format of S3 data to be imported. Valid values are CSV, PARQUET, OPEN_CYPHER, or NTRIPLES.`,
 							Optional:    true,
 							PlanModifiers: []planmodifier.String{
@@ -245,33 +244,45 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"import_options": schema.SingleNestedBlock{
+						"import_options": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[importOptionsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							Description: "Options for controlling the import process.",
-							Blocks: map[string]schema.Block{
-								"neptune": schema.SingleNestedBlock{
-									Description: "Options for importing data from a Neptune database.",
-									Attributes: map[string]schema.Attribute{
-										"s3_export_path": schema.StringAttribute{
-											Description: "The path to an S3 bucket from which to import data.",
-											Optional:    true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(1, 1024),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"neptune": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneImportOptionsModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										Description: "Options for importing data from a Neptune database.",
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"s3_export_path": schema.StringAttribute{
+													Description: "The path to an S3 bucket from which to import data.",
+													Optional:    true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+													},
+												},
+												"s3_export_kms_key_id": schema.StringAttribute{
+													Description: "The KMS key to use to encrypt data in the S3 bucket where the graph data is exported.",
+													Optional:    true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+													},
+												},
+												"preserve_default_vertex_labels": schema.BoolAttribute{
+													Description: "Whether to preserve default vertex labels.",
+													Optional:    true,
+												},
+												"preserve_edge_ids": schema.BoolAttribute{
+													Description: "Whether to preserve edge IDs as properties.",
+													Optional:    true,
+												},
 											},
-										},
-										"s3_export_kms_key_id": schema.StringAttribute{
-											Description: "The KMS key to use to encrypt data in the S3 bucket where the graph data is exported.",
-											Optional:    true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(1, 1024),
-											},
-										},
-										"preserve_default_vertex_labels": schema.BoolAttribute{
-											Description: "Whether to preserve default vertex labels.",
-											Optional:    true,
-										},
-										"preserve_edge_ids": schema.BoolAttribute{
-											Description: "Whether to preserve edge IDs as properties.",
-											Optional:    true,
 										},
 									},
 								},
@@ -323,7 +334,6 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 
 	// Determine whether to use CreateGraphUsingImportTask or CreateGraph API
 	if !data.ImportTask.IsNull() && !data.ImportTask.IsUnknown() {
-
 		var importInput neptunegraph.CreateGraphUsingImportTaskInput
 
 		response.Diagnostics.Append(fwflex.Expand(ctx, data, &importInput)...)
@@ -341,7 +351,7 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 			task := importTaskData[0]
 
 			taskImportOptions := task.ImportOptions
-			task.ImportOptions = fwtypes.NewObjectValueOfNull[importOptionsModel](ctx)
+			task.ImportOptions = fwtypes.NewListNestedObjectValueOfNull[importOptionsModel](ctx)
 
 			response.Diagnostics.Append(fwflex.Expand(ctx, task, &importInput)...)
 			if response.Diagnostics.HasError() {
@@ -349,26 +359,33 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 			}
 
 			if !taskImportOptions.IsNull() && !taskImportOptions.IsUnknown() {
-				var importOptionsData importOptionsModel
-				response.Diagnostics.Append(taskImportOptions.As(ctx, &importOptionsData, basetypes.ObjectAsOptions{})...)
+				var importOptionsDataSlice []importOptionsModel
+				response.Diagnostics.Append(taskImportOptions.ElementsAs(ctx, &importOptionsDataSlice, false)...)
 				if response.Diagnostics.HasError() {
 					return
 				}
 
-				if !importOptionsData.Neptune.IsNull() {
-					var neptuneOptionsData neptuneImportOptionsModel
-					response.Diagnostics.Append(importOptionsData.Neptune.As(ctx, &neptuneOptionsData, basetypes.ObjectAsOptions{})...)
-					if response.Diagnostics.HasError() {
-						return
-					}
+				if len(importOptionsDataSlice) > 0 {
+					importOptionsData := importOptionsDataSlice[0]
 
-					neptuneOpts := &awstypes.NeptuneImportOptions{}
-					response.Diagnostics.Append(fwflex.Expand(ctx, neptuneOptionsData, neptuneOpts)...)
-					if response.Diagnostics.HasError() {
-						return
-					}
-					importInput.ImportOptions = &awstypes.ImportOptionsMemberNeptune{
-						Value: *neptuneOpts,
+					if !importOptionsData.Neptune.IsNull() {
+						var neptuneOptionsDataSlice []neptuneImportOptionsModel
+						response.Diagnostics.Append(importOptionsData.Neptune.ElementsAs(ctx, &neptuneOptionsDataSlice, false)...)
+						if response.Diagnostics.HasError() {
+							return
+						}
+						if len(neptuneOptionsDataSlice) > 0 {
+							neptuneOptionsData := neptuneOptionsDataSlice[0]
+
+							neptuneOpts := &awstypes.NeptuneImportOptions{}
+							response.Diagnostics.Append(fwflex.Expand(ctx, neptuneOptionsData, neptuneOpts)...)
+							if response.Diagnostics.HasError() {
+								return
+							}
+							importInput.ImportOptions = &awstypes.ImportOptionsMemberNeptune{
+								Value: *neptuneOpts,
+							}
+						}
 					}
 				}
 			}
@@ -399,7 +416,7 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 			return
 		}
 
-		response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, graph, &data, fwflex.WithIgnoredFieldNames([]string{"ImportTask"}))...)
 	} else {
 		// Use existing CreateGraph API
 		var input neptunegraph.CreateGraphInput
@@ -608,11 +625,11 @@ func waitGraphCreated(ctx context.Context, conn *neptunegraph.Client, id string,
 }
 
 func findImportTaskByID(ctx context.Context, conn *neptunegraph.Client, taskID string) (*neptunegraph.GetImportTaskOutput, error) {
-	input := &neptunegraph.GetImportTaskInput{
+	input := neptunegraph.GetImportTaskInput{
 		TaskIdentifier: aws.String(taskID),
 	}
 
-	output, err := conn.GetImportTask(ctx, input)
+	output, err := conn.GetImportTask(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -729,19 +746,19 @@ type graphResourceModel struct {
 }
 
 type importTaskModel struct {
-	Source               types.String                              `tfsdk:"source"`
-	RoleArn              types.String                              `tfsdk:"role_arn"`
-	Format               types.String                              `tfsdk:"format"`
-	FailOnError          types.Bool                                `tfsdk:"fail_on_error"`
-	MaxProvisionedMemory types.Int32                               `tfsdk:"max_provisioned_memory"`
-	MinProvisionedMemory types.Int32                               `tfsdk:"min_provisioned_memory"`
-	BlankNodeHandling    types.String                              `tfsdk:"blank_node_handling"`
-	ParquetType          types.String                              `tfsdk:"parquet_type"`
-	ImportOptions        fwtypes.ObjectValueOf[importOptionsModel] `tfsdk:"import_options"`
+	Source               types.String                                        `tfsdk:"source"`
+	RoleArn              types.String                                        `tfsdk:"role_arn"`
+	Format               types.String                                        `tfsdk:"format"`
+	FailOnError          types.Bool                                          `tfsdk:"fail_on_error"`
+	MaxProvisionedMemory types.Int32                                         `tfsdk:"max_provisioned_memory"`
+	MinProvisionedMemory types.Int32                                         `tfsdk:"min_provisioned_memory"`
+	BlankNodeHandling    types.String                                        `tfsdk:"blank_node_handling"`
+	ParquetType          types.String                                        `tfsdk:"parquet_type"`
+	ImportOptions        fwtypes.ListNestedObjectValueOf[importOptionsModel] `tfsdk:"import_options"`
 }
 
 type importOptionsModel struct {
-	Neptune fwtypes.ObjectValueOf[neptuneImportOptionsModel] `tfsdk:"neptune"`
+	Neptune fwtypes.ListNestedObjectValueOf[neptuneImportOptionsModel] `tfsdk:"neptune"`
 }
 
 type neptuneImportOptionsModel struct {

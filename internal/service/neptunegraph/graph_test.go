@@ -577,7 +577,7 @@ resource "aws_neptunegraph_graph" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func TestAccNeptuneGraphGraph_importFromS3(t *testing.T) {
+func TestAccNeptuneGraphGraph_fromS3(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -603,7 +603,7 @@ func TestAccNeptuneGraphGraph_importFromS3(t *testing.T) {
 		CheckDestroy: testAccCheckGraphDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphConfig_importFromS3(rName),
+				Config: testAccGraphConfig_fromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, "import_task.#", "1"),
@@ -613,26 +613,26 @@ func TestAccNeptuneGraphGraph_importFromS3(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGraphConfig_importFromS3_removed(rName),
+				Config: testAccGraphConfig_fromS3_removed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, "import_task.#", "0"),
 				),
 			},
 			{
-				Config: testAccGraphConfig_importFromS3_modified(rName),
+				Config: testAccGraphConfig_fromS3_modified(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, "import_task.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "import_task.0.format", "CSV"),
-					resource.TestCheckResourceAttr(resourceName, "import_task.0.fail_on_error", "true"),
+					resource.TestCheckResourceAttr(resourceName, "import_task.0.fail_on_error", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func testAccGraphConfig_importFromS3(rName string) string {
+func testAccGraphConfig_fromS3(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -664,7 +664,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-		Service = "neptune-graph.amazonaws.com"
+        Service = "neptune-graph.amazonaws.com"
       }
     }]
   })
@@ -691,7 +691,7 @@ resource "aws_iam_role_policy" "test" {
 
 # Allow time for IAM role to propagate
 resource "time_sleep" "wait" {
-  depends_on = [aws_iam_role_policy.test]
+  depends_on      = [aws_iam_role_policy.test]
   create_duration = "10s"
 }
 
@@ -716,7 +716,7 @@ resource "aws_neptunegraph_graph" "test" {
 `, rName)
 }
 
-func testAccGraphConfig_importFromS3_removed(rName string) string {
+func testAccGraphConfig_fromS3_removed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -732,7 +732,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-		Service = "neptune-graph.amazonaws.com"
+        Service = "neptune-graph.amazonaws.com"
       }
     }]
   })
@@ -748,7 +748,7 @@ resource "aws_neptunegraph_graph" "test" {
 `, rName)
 }
 
-func testAccGraphConfig_importFromS3_modified(rName string) string {
+func testAccGraphConfig_fromS3_modified(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -779,7 +779,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-		Service = "neptune-graph.amazonaws.com"
+        Service = "neptune-graph.amazonaws.com"
       }
     }]
   })
@@ -805,7 +805,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "time_sleep" "wait" {
-  depends_on = [aws_iam_role_policy.test]
+  depends_on      = [aws_iam_role_policy.test]
   create_duration = "10s"
 }
 
@@ -831,7 +831,7 @@ resource "aws_neptunegraph_graph" "test" {
 `, rName)
 }
 
-func TestAccNeptuneGraphGraph_importFromNeptuneDB(t *testing.T) {
+func TestAccNeptuneGraphGraph_fromNeptuneDB(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -861,12 +861,12 @@ func TestAccNeptuneGraphGraph_importFromNeptuneDB(t *testing.T) {
 		CheckDestroy: testAccCheckGraphDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphConfig_importFromNeptuneDB(rName),
+				Config: testAccGraphConfig_fromNeptuneDB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGraphExists(ctx, t, resourceName, &graph),
 					resource.TestCheckResourceAttr(resourceName, "import_task.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.import_options.neptune.s3_export_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.import_options.neptune.s3_export_kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.import_options.0.neptune.0.s3_export_path"),
+					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.import_options.0.neptune.0.s3_export_kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.source"),
 					resource.TestCheckResourceAttrSet(resourceName, "import_task.0.role_arn"),
 				),
@@ -875,13 +875,13 @@ func TestAccNeptuneGraphGraph_importFromNeptuneDB(t *testing.T) {
 	})
 }
 
-func testAccGraphConfig_importFromNeptuneDB(rName string) string {
+func testAccGraphConfig_fromNeptuneDB(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_neptune_engine_version" "latest" {
-    latest = true
+  latest = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -969,14 +969,14 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier          = %[1]q
-  engine                      = "neptune"
-  engine_version              = data.aws_neptune_engine_version.latest.version_actual
-  skip_final_snapshot         = true
-  neptune_subnet_group_name   = aws_neptune_subnet_group.test.name
-  apply_immediately           = true
-  iam_roles                   = [aws_iam_role.neptune_load.arn]
-  vpc_security_group_ids      = [aws_security_group.test.id]
+  cluster_identifier                  = %[1]q
+  engine                              = "neptune"
+  engine_version                      = data.aws_neptune_engine_version.latest.version_actual
+  skip_final_snapshot                 = true
+  neptune_subnet_group_name           = aws_neptune_subnet_group.test.name
+  apply_immediately                   = true
+  iam_roles                           = [aws_iam_role.neptune_load.arn]
+  vpc_security_group_ids              = [aws_security_group.test.id]
   iam_database_authentication_enabled = true
 }
 
@@ -1038,39 +1038,37 @@ resource "null_resource" "bulk_load" {
 }
 
 resource "aws_iam_role" "graph_import" {
-  name = "%[1]s-graph"
-
+  name               = "%[1]s-graph"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = [
-			"neptune-graph.amazonaws.com",
-			"export.rds.amazonaws.com"
-		]
+    Version   = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = {
+          Service = [
+            "neptune-graph.amazonaws.com",
+            "export.rds.amazonaws.com"
+          ]
+        }
       }
-    }]
+    ]
   })
 }
 
 resource "aws_iam_role_policy" "graph_import" {
-  role = aws_iam_role.graph_import.id
-
+  role   = aws_iam_role.graph_import.id
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
-        {
-            Effect = "Allow",
-            Action = [
-                "iam:PassRole"
-            ],
-            Resource = aws_iam_role.graph_import.arn
-        },
       {
-        Effect = "Allow"
-        Action = [
+          Effect   = "Allow",
+          Action   = "iam:PassRole"
+          Resource = aws_iam_role.graph_import.arn
+      },
+      {
+        Effect  = "Allow"
+        Action  = [
           "s3:GetObject*",
           "s3:ListBucket",
           "s3:PutObject*",
@@ -1083,8 +1081,8 @@ resource "aws_iam_role_policy" "graph_import" {
         ]
       },
       {
-        Effect = "Allow"
-        Action = [
+        Effect  = "Allow"
+        Action  = [
           "kms:ListGrants",
           "kms:CreateGrant",
           "kms:RevokeGrant",
@@ -1097,16 +1095,16 @@ resource "aws_iam_role_policy" "graph_import" {
         Resource = aws_kms_key.test.arn
       },
       {
-        Effect = "Allow"
-        Action = [
+        Effect  = "Allow"
+        Action  = [
           "rds:DescribeDBClusters",
           "rds:StartExportTask"
         ]
         Resource = aws_neptune_cluster.test.arn
       },
       {
-        Effect = "Allow"
-        Action = [
+        Effect  = "Allow"
+        Action  = [
           "rds:DescribeExportTasks",
           "rds:CancelExportTask"
         ]
@@ -1126,41 +1124,38 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = {
           AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
-        Action   = "kms:*"
-        Resource = "*"
+        Action    = "kms:*"
+        Resource  = "*"
       },
       {
-        Sid    = "Allow Neptune Graph to use the key"
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = {
           Service = "neptune-graph.amazonaws.com"
         }
-        Action = [
+        Action    = [
           "kms:Decrypt",
           "kms:DescribeKey",
           "kms:CreateGrant"
         ]
-        Resource = "*"
+        Resource  = "*"
       },
       {
-        Sid    = "Allow S3 to use the key"
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = {
           Service = "s3.amazonaws.com"
         }
-        Action = [
+        Action    = [
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = "*"
+        Resource  = "*"
       }
     ]
   })
@@ -1178,8 +1173,8 @@ resource "aws_neptunegraph_graph" "test" {
 
     import_options {
       neptune {
-        s3_export_path       = "s3://${aws_s3_bucket.test.bucket}/export/"
-        s3_export_kms_key_id = aws_kms_key.test.arn
+        s3_export_path                 = "s3://${aws_s3_bucket.test.bucket}/export/"
+        s3_export_kms_key_id           = aws_kms_key.test.arn
         preserve_default_vertex_labels = true
         preserve_edge_ids              = true
       }
